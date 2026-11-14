@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 7 · Measure It</title>
+<link rel="stylesheet" href="common.css">
+<script type="application/json" id="level-info">
+{"t":"Measure It","d":"Grab the multimeter! Measure current and voltage in series and parallel, then see what more cells do.","s":"Current & voltage","c":"#2ec4b6",
+ "parts":{"v-0-0":"battery","h-0-0":"bulb","h-0-1":"bulb","v-0-2":"wire","h-1-1":"wire","h-1-0":"wire"},"power":1}
+</script>
+<style>
+.meter{display:flex;gap:14px;align-items:center;background:#ffd23f;border-radius:20px;padding:12px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.15);margin-top:12px}
+.meter .scr{flex:1;background:#b8d4a8;border:4px solid #2b2d42;border-radius:12px;padding:8px 12px;font:600 30px 'Courier New',monospace;color:#1b2a1b;min-height:92px}
+.meter .scr small{display:block;font:800 13px Nunito;color:#38533a}
+.meter .dial{width:70px;height:70px;border-radius:50%;background:#2b2d42;display:flex;align-items:center;justify-content:center;color:#ffd23f;font:700 15px Fredoka;text-align:center}
+table.rd{border-collapse:collapse;width:100%;margin-top:10px;font-weight:700}
+table.rd td,table.rd th{border:2px solid #dde7f3;padding:8px 10px;text-align:center}
+table.rd th{background:#f2f7fd}
+table.rd td.got{background:#dcfaf0}
+.srcbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.srcbtns .btn.sel{background:var(--orange);color:#3a2300}
+</style>
+</head>
+<body>
+<script src="common.js"></script>
+<script src="circuit.js"></script>
+<script>
+const SER={'v-0-0':'battery!','h-0-0':'bulb!@A','h-0-1':'bulb!@B','v-0-2':'wire!','h-1-1':'wire!','h-1-0':'wire!'};
+const PAR={'v-0-0':'battery!','h-0-0':'wire!','h-0-1':'wire!','v-0-1':'bulb!@A','v-0-2':'bulb!@B','h-1-1':'wire!','h-1-0':'wire!'};
+const NAME={battery:'Battery',cell:'Cell',bulb:'Bulb',motor:'Motor',wire:'Wire',resistor:'Resistor',buzzer:'Buzzer'};
+function reading(b,k){const p=b.parts.get(k),s=b.res.edges.get(k),I=Math.abs(s.I);
+ const R={bulb:p.blown?0:10,motor:8,buzzer:40,resistor:p.value,wire:0}[p.type];
+ let V=R!=null?I*R:0;
+ if(p.type==='battery'||p.type==='cell')V=Circuit.INFO[p.type].V-I*Circuit.INFO[p.type].r;
+ if(p.type==='bulb'&&p.blown)V=null;
+ return{name:(NAME[p.type]||p.type)+(p.label?' '+p.label:''),I,V};}
+function meter(host){const m=h('div',{class:'meter',html:'<div class="dial">MULTI<br>METER</div><div class="scr"><small>Tap a component to measure it</small>– – –</div>'});host.append(m);
+ return r=>{m.querySelector('.scr').innerHTML=`<small>${r.name}</small>${r.I.toFixed(2)} A<br>${r.V==null?'– – –':r.V.toFixed(1)+' V'}`;Sfx.click();};}
+
+function measureStep(st,api,cfg){
+ const w=h('div',{class:'split'});st.append(w);const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+ L.append(h('div',{class:'kicker'},cfg.kicker),h('h2',{},cfg.title),h('div',{class:'lead',html:cfg.text}));
+ const keys=cfg.keys,tbl=h('table',{class:'rd',html:`<tr><th>Component</th><th>Current (A)</th><th>Voltage (V)</th></tr>`+keys.map(k=>`<tr data-k="${k}"><td>${cfg.names[k]}</td><td>?</td><td>?</td></tr>`).join('')});
+ L.append(tbl);const q=h('div');L.append(q);
+ const got=new Set();let asked=false;
+ const show=meter(R);
+ const b=new Circuit.Board(R,{parts:cfg.parts,editable:false,noStatus:true,onPartTap:k=>{
+   const r=reading(b,k);show(r);const tr=tbl.querySelector(`tr[data-k="${k}"]`);
+   if(tr){tr.children[1].textContent=r.I.toFixed(2);tr.children[2].textContent=r.V.toFixed(1);tr.children[1].className=tr.children[2].className='got';got.add(k);}
+   if(got.size===keys.length&&!asked){asked=true;Sfx.good();ask(0);}return false;}});
+ R.querySelector('.board').before(R.querySelector('.meter'));
+ function ask(i){if(i>=cfg.qs.length){q.append(h('div',{class:'row',style:'margin-top:12px'},api.nextBtn()));return;}
+  mcq(q,cfg.qs[i],ok=>{api.add(ok?1:0,1);setTimeout(()=>ask(i+1),300);});}
+}
+
+Level({n:7,title:'Measure It',summary:'current (amps, A) is how much electricity flows; voltage (volts, V) is the push. In series the current is the same everywhere and the voltage is shared. In parallel each branch gets the full voltage and the currents add up. More cells = more push = more current – but too much voltage blows a bulb.',steps:[
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  c.append(h('div',{class:'kicker'},'Step 1 · Two things to measure'),h('h2',{},'Current and voltage'),
+   h('div',{class:'mini two',html:`<div class="fact" style="margin:0;border-color:var(--orange)"><h3 style="margin-top:0">⚡ Current</h3>How much electricity is <b>flowing</b> round the circuit. Measured in <b>amps (A)</b>.<br><br>💧 Like the amount of water flowing through a pipe.</div>
+    <div class="fact" style="margin:0;border-color:var(--blue);background:#e8f6fc"><h3 style="margin-top:0">🔋 Voltage</h3>The <b>push</b> that the battery gives the current. Measured in <b>volts (V)</b>.<br><br>💧 Like the pressure from a water pump.</div>`}),
+   h('p',{class:'lead',html:'Engineers measure both with a <b>multimeter</b>. In this level, tap any component and the multimeter will show the current through it and the voltage across it.'}),
+   h('div',{class:'row'},api.nextBtn('Grab the multimeter →')));
+ },
+ (st,api)=>measureStep(st,api,{kicker:'Step 2 · Series',title:'Measure a series circuit',
+  text:'<p>Tap <b>bulb A</b>, <b>bulb B</b> and the <b>battery</b> to fill in the table.</p>',
+  parts:SER,keys:['h-0-0','h-0-1','v-0-0'],names:{'h-0-0':'Bulb A','h-0-1':'Bulb B','v-0-0':'Battery'},
+  qs:[{q:'Look at the currents. In a series circuit, the current is…',opts:['The same everywhere','Biggest near the battery','Used up by the first bulb'],a:0,why:'There is only one path, so the same current flows through every part. Current is NOT used up!'},
+      {q:'Add the voltages of bulb A and bulb B. What do you notice?',opts:['They add up to the battery voltage','Each bulb has the full battery voltage','They add up to zero'],a:0,why:'In series the bulbs share the battery\'s push – that\'s why they are dimmer.'}]}),
+ (st,api)=>measureStep(st,api,{kicker:'Step 3 · Parallel',title:'Measure a parallel circuit',
+  text:'<p>Now tap <b>bulb A</b>, <b>bulb B</b> and the <b>battery</b> in this parallel circuit.</p>',
+  parts:PAR,keys:['v-0-1','v-0-2','v-0-0'],names:{'v-0-1':'Bulb A','v-0-2':'Bulb B','v-0-0':'Battery'},
+  qs:[{q:'Compare the battery current with the bulb currents. What do you notice?',opts:['The battery current = bulb A + bulb B','The battery current is the same as one bulb','The bulbs have more current than the battery'],a:0,why:'The current splits at the junction and joins up again. The battery has to supply both branches.'},
+      {q:'What voltage does each bulb get in parallel?',opts:['About the full battery voltage','Half the battery voltage','No voltage'],a:0,why:'Each branch gets the full push – so each bulb is bright.'}]}),
+ (st,api)=>{
+  const w=h('div',{class:'split'});st.append(w);const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+  L.append(h('div',{class:'kicker'},'Step 4 · More push'),h('h2',{},'What do more cells do?'),
+   h('div',{class:'lead',html:'<p>This bulb is made for <b>3 V</b>. Try all three power supplies using the buttons. Tap the bulb to measure it each time.</p>'}));
+  const goals=h('ul',{class:'goals'},['Try the 1.5 V cell','Try the 3 V battery','Try two batteries (6 V)'].map(t=>h('li',{},t)));L.append(goals);
+  const msg=h('div',{class:'msg hide'}),q=h('div');L.append(msg,q);
+  const show=meter(R);
+  const base={'h-0-0':'wire!','h-0-1':'bulb!','v-0-2':'wire!','h-1-1':'wire!'};
+  const SRC=[{t:'1.5 V cell',p:{'v-0-0':'cell!','h-1-0':'wire!'}},{t:'3 V battery',p:{'v-0-0':'battery!','h-1-0':'wire!'}},{t:'2 batteries (6 V)',p:{'v-0-0':'battery!','h-1-0':'battery!'}}];
+  const tried=new Set();let asked=false;
+  const b=new Circuit.Board(R,{parts:Object.assign({},base,SRC[0].p),editable:false,statusMode:'plain',onPartTap:k=>{show(reading(b,k));return false;}});
+  R.querySelector('.board').before(R.querySelector('.meter'));
+  const btns=h('div',{class:'srcbtns'});R.append(btns);
+  const pick=i=>{b.load(Object.assign({},base,SRC[i].p));b.changed();[...btns.children].forEach((x,j)=>x.classList.toggle('sel',j===i));tried.add(i);goals.children[i].classList.add('done');
+   show(reading(b,'h-0-1'));
+   const bl=b.parts.get('h-0-1').blown;
+   msg.className='msg '+(bl?'bad':'');msg.innerHTML=[`With 1.5 V the bulb is <b>dim</b> – not enough push.`,`3 V is just right for this bulb.`,`💥 With 6 V the current is too big and the bulb <b>blew</b>! Components have a <b>voltage rating</b> – don\'t go over it.`][i];
+   if(tried.size===3&&!asked){asked=true;
+    mcq(q,{q:'What happens when you add more cells (more voltage)?',opts:['More current flows, so the bulb is brighter','Less current flows','Nothing changes'],a:0,why:'More push = more current = brighter… up to a point!'},ok=>{api.add(ok?1:0,1);
+     mcq(q,{q:'Why did the bulb blow with 6 V?',opts:['The voltage was higher than the bulb\'s rating, so too much current flowed','The batteries were the wrong way round','6 V batteries are faulty'],a:0,why:'Always match the battery to what the components are rated for.'},ok2=>{api.add(ok2?1:0,1);q.append(h('div',{class:'row',style:'margin-top:12px'},api.nextBtn()));});});}};
+  SRC.forEach((s,i)=>btns.append(h('button',{class:'btn ghost',onclick:()=>pick(i)},s.t)));
+  pick(0);
+ },
+ (st,api)=>quiz(st,api,{title:'Check your understanding',qs:[
+  {q:'What is current measured in?',opts:['Amps (A)','Volts (V)','Ohms (Ω)'],a:0,why:'Amps. Volts measure voltage and ohms measure resistance.'},
+  {q:'Which tool measures both current and voltage?',opts:['A multimeter','A thermometer','A voltage stick'],a:0,why:'A multimeter can be switched to measure amps, volts or ohms.'},
+  {q:'Three bulbs are in series with a 3 V battery. Roughly what voltage does each bulb get?',opts:['1 V','3 V','9 V'],a:0,why:'In series the 3 V is shared between the three bulbs.'},
+  {q:'Is current "used up" by a bulb?',opts:['No – the same current comes out as goes in','Yes – there is less after each bulb'],a:0,two:true,why:'The current is the same all the way round. It is the energy that is transferred to the bulb as light and heat.'}
+ ]})
+]});
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 5 · Fault Finder</title>
+<link rel="stylesheet" href="common.css">
+<style>.should{font:600 20px Fredoka;background:#13233b;color:#fff;border-radius:14px;padding:12px 16px;margin:8px 0}.should b{color:var(--yellow)}
+.tool-row{display:flex;gap:8px;align-items:center;font-weight:800;color:#5a6f8c;margin-top:8px}</style>
+</head>
+<body>
+<script src="common.js"></script>
+<script src="circuit.js"></script>
+<script>
+const F=[
+ {t:'The torch that won\'t turn on',should:'This torch should <b>light up</b>.',p:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-2':'wire','h-1-1':'wire'},keys:['h-1-0'],
+  opts:['There\'s a gap – a wire is missing, so the circuit isn\'t complete','The battery is flat','The bulb is the wrong way round'],
+  why:'Look for hollow rings – they are loose ends. A circuit must be a complete loop.',fix:b=>b.set('h-1-0','wire')},
+ {t:'Two switches',should:'S1 is switched on, so the bulb <b>should light</b>.',p:{'v-0-0':'battery','h-0-0':'switch+@S1','h-0-1':'bulb','v-0-2':'wire','h-1-1':'switch@S2','h-1-0':'wire'},keys:['h-1-1'],
+  opts:['Switch S2 is open – the switches are in series, so both must be closed','The bulb needs a bigger battery','S1 is broken'],
+  why:'In series, every switch in the loop must be closed for current to flow.',fix:b=>{b.parts.get('h-1-1').on=true;b.changed();}},
+ {t:'Party lights',should:'<b>Both bulbs</b> should light.',p:{'v-0-0':'battery','h-0-0':'bulb#','h-0-1':'bulb','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},keys:['h-0-0'],
+  opts:['One bulb has blown – in series, that breaks the whole loop','The right-hand bulb is broken','There are too many wires'],
+  why:'A blown bulb has a broken filament, which acts like a gap.',fix:b=>b.set('h-0-0','bulb')},
+ {t:'Dark LED',should:'The LED <b>should glow</b>.',p:{'v-0-0':'battery','h-0-0':'resistor','h-0-1':'led~','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},keys:['h-0-1'],
+  opts:['The LED is in backwards – it only lets current through one way','The resistor is missing','There is a gap in the circuit'],
+  why:'The LED triangle must point away from the + side of the battery.',fix:b=>{b.parts.get('h-0-1').flip=false;b.changed();}},
+ {t:'The bulb that won\'t shine',should:'The bulb <b>should light</b>.',p:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-1':'wire','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},keys:['v-0-1'],
+  opts:['An extra wire is joined where it shouldn\'t be – a short circuit','The bulb has blown','There is a gap in the circuit'],
+  why:'Current always takes the easiest path. The extra wire lets it skip the bulb completely.',fix:b=>b.set('v-0-1',null)},
+ {t:'Twice the cells, no light',should:'With two cells, the bulb <b>should light</b>.',p:{'v-0-0':'cell','h-1-0':'cell~','h-0-0':'wire','h-0-1':'bulb','v-0-2':'wire','h-1-1':'wire'},keys:['v-0-0','h-1-0'],
+  opts:['The two cells face opposite ways, so their pushes cancel out','You need three cells','The bulb is broken'],
+  why:'Cells must be joined + to − so their pushes add up. Check the long lines (+).',fix:b=>{b.parts.get('h-1-0').flip=false;b.changed();}},
+ {t:'Burnt out',should:'The LED <b>should glow</b> – but it smells of burning…',p:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'led#','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},keys:['h-0-1','h-0-0'],
+  opts:['There\'s no resistor, so too much current burnt the LED out','The LED is the wrong way round','The battery is flat'],
+  why:'An LED needs a resistor in series with it to limit the current.',fix:b=>{b.parts.set('h-0-0',Circuit.parse('resistor'));b.parts.set('h-0-1',Circuit.parse('led'));b.changed();}},
+ {t:'The hot battery',should:'The bulb <b>should light</b>. Careful – the battery is getting <b>hot</b>!',cols:3,rows:3,
+  p:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-2':'wire','v-1-2':'wire','h-2-1':'wire','h-2-0':'wire','v-1-0':'wire','h-1-0':'wire','v-0-1':'wire'},keys:['h-1-0','v-0-1'],
+  opts:['Two wires make a shortcut straight across the battery – a short circuit','The bulb is too far from the battery','The battery is the wrong way round'],
+  why:'A short circuit lets a huge current flow. The battery heats up and goes flat fast – it can even be dangerous!',fix:b=>{b.parts.delete('h-1-0');b.parts.delete('v-0-1');b.changed();}}
+];
+function mark(b,k,col){const [d,r,c]=k.split('-');const n=+r*b.cols+ +c;const [x,y]=b.pos(n);const mx=d==='h'?x+b.S/2:x,my=d==='v'?y+b.S/2:y;
+ const ns='http://www.w3.org/2000/svg',e=document.createElementNS(ns,'circle');e.setAttribute('cx',mx);e.setAttribute('cy',my);e.setAttribute('r',34);e.setAttribute('fill','none');e.setAttribute('stroke',col);e.setAttribute('stroke-width',5);e.setAttribute('stroke-dasharray','8 6');e.classList.add('pulse');b.svg.append(e);}
+
+Level({n:5,title:'Fault Finder',summary:'when a circuit doesn\'t work, check for: gaps and loose ends, open switches, blown bulbs, parts in backwards (LEDs and cells), missing resistors, and short circuits where wires join things that shouldn\'t be joined.',steps:[
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  c.append(h('div',{class:'kicker'},'Fault Finder'),h('h2',{},'Become a circuit detective 🔍'),
+   h('div',{class:'lead',html:'<p>Eight circuits have been built wrong. For each one:</p><ol><li><b>Look</b> at the circuit – which parts are working?</li><li><b>Tap</b> the part (or gap) that is causing the problem.</li><li><b>Explain</b> what is wrong – then watch it get fixed.</li></ol>'}),
+   h('div',{class:'fact'},'Detective checklist: loose ends (hollow rings) · open switches · blown bulbs · things in backwards · missing resistors · wires that make a shortcut'),
+   h('div',{class:'row',style:'margin-top:14px'},api.nextBtn('Start investigating →')));
+ },
+ (st,api)=>{
+  let i=0;
+  function show(){
+   st.innerHTML='';const f=F[i];
+   const w=h('div',{class:'split'});st.append(w);const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+   L.append(h('div',{class:'kicker'},`Fault ${i+1} of ${F.length}`),h('h2',{},f.t),h('div',{class:'should',html:f.should}),
+    h('p',{class:'lead',html:'<b>Tap the faulty part</b> (or the gap) in the circuit.'}));
+   const msg=h('div',{class:'msg hide'}),area=h('div');L.append(msg,area);
+   let wrong=0,found=false;
+   const b=new Circuit.Board(R,{cols:f.cols||3,rows:f.rows||2,S:f.rows===3?100:110,mode:'inspect',parts:f.p,statusMode:'plain',onInspect:k=>{
+    if(found)return;
+    if(f.keys.includes(k)){found=true;const pt=wrong===0?1:0;api.add(pt,1);Sfx.good();f.keys.forEach(x=>mark(b,x,'#06d6a0'));
+     msg.className='msg good';msg.textContent=wrong===0?'🎯 Spotted it first time!':'🎯 Found it!';
+     mcq(area,{q:'What is the problem?',opts:f.opts,a:0,why:f.why},ok=>{api.add(ok?1:0,1);
+      area.append(h('div',{class:'row',style:'margin-top:12px'},h('button',{class:'btn warm',onclick:e=>{e.currentTarget.remove();f.fix(b);Sfx.win();confetti(50);
+       area.append(h('div',{class:'msg good'},'🔧 Fixed! Now it works.'),h('div',{class:'row',style:'margin-top:12px'},h('button',{class:'btn go',onclick:()=>{i++;i<F.length?show():api.next();}},i<F.length-1?'Next fault →':'Finish level →')));}},'🔧 Fix it')));});
+    }else{wrong++;Sfx.bad();R.querySelector('.board').classList.add('shake');setTimeout(()=>R.querySelector('.board').classList.remove('shake'),400);
+     msg.className='msg bad';msg.textContent=wrong>=2?'Still not it. Hint: look where the problem is marked with a flashing ring.':'That part looks fine. Look again…';
+     if(wrong===2)f.keys.slice(0,1).forEach(x=>mark(b,x,'#ff9f1c'));}
+   }});
+  }
+  show();
+ }
+]});
+</script>
+</body>
+</html>

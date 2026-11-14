@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 4 · Resistors &amp; LEDs</title>
+<link rel="stylesheet" href="common.css">
+<style>.legs{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:10px}.legs svg{width:170px;height:150px;background:var(--paper);border-radius:14px;border:3px solid #d3e0f0}</style>
+</head>
+<body>
+<script src="common.js"></script>
+<script src="circuit.js"></script>
+<script>
+const ledOn=b=>[...b.parts].some(([k,p])=>p.type==='led'&&b.res.edges.get(k).on);
+Level({n:4,title:'Resistors & LEDs',summary:'a resistor reduces the current. The bigger the resistance (measured in ohms, Ω), the smaller the current. An LED only works one way round (long leg to +) and almost always needs a resistor to stop it burning out.',steps:[
+ // 1. resistor explorer
+ (st,api)=>{
+  const w=h('div',{class:'split'});st.append(w);
+  const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+  L.append(h('div',{class:'kicker'},'Step 1 · Resistors'),h('h2',{},'Turn down the current'),
+   h('div',{class:'lead',html:'<p>A <b>resistor</b> makes it harder for current to flow. Its resistance is measured in <b>ohms (Ω)</b>.</p><p><b>Tap the resistor</b> to change its value. Watch the bulb and the meter. Try at least four different values.</p>'}));
+  const goals=h('ul',{class:'goals'},h('li',{},'Try 4 different resistor values (0/4)'));L.append(goals);
+  const q=h('div');L.append(q);
+  const ro=h('div',{class:'readout'});
+  const tried=new Set();let asked=false;
+  const b=new Circuit.Board(R,{parts:{'v-0-0':'battery!','h-0-0':'resistor!:10','h-0-1':'bulb!','v-0-2':'wire!','h-1-1':'wire!','h-1-0':'wire!'},editable:false,noStatus:true,
+   onChange:()=>{const r=b.parts.get('h-0-0').value,s=b.res.edges.get('h-0-1');tried.add(r);
+    ro.innerHTML=`<span>Resistance: <b>${r} Ω</b></span><span>Current: <b>${Math.round(Math.abs(s.I)*1000)} mA</b></span><span>Brightness: <b>${Math.round(Math.min(1,s.bright)*100)}%</b></span>`;
+    goals.firstChild.textContent=`Try 4 different resistor values (${Math.min(4,tried.size)}/4)`;
+    if(tried.size>=4&&!asked){asked=true;goals.firstChild.classList.add('done');Sfx.good();
+     mcq(q,{q:'What happens when you use a BIGGER resistor?',opts:['Less current flows, so the bulb is dimmer','More current flows, so the bulb is brighter','Nothing changes'],a:0,why:'More resistance = less current. Resistors are used to control how much current reaches a component.'},ok=>{api.add(ok?1:0,1);q.append(h('div',{class:'row',style:'margin-top:12px'},api.nextBtn()));});}}});
+  R.append(ro);b.onChange();
+  R.append(h('div',{class:'fact'},'💡 1000 mA (milliamps) = 1 A (amp). Current is measured in amps.'));
+ },
+ // 2. save the LED
+ (st,api)=>{let burnt=false;Circuit.challenge(st,api,{kicker:'Step 2 · LEDs',title:'Light the LED (without blowing it up!)',
+  text:'<p>An <b>LED</b> (Light Emitting Diode) uses much less energy than a bulb. But it is delicate – too much current and it burns out.</p><p>Fill the gap to light the LED. What happens with just a wire?</p>',
+  goals:['Fill the gap','Light the LED','Keep it safe with a resistor'],
+  board:{parts:{'v-0-0':'battery!','h-0-1':'led!','v-0-2':'wire!','h-1-1':'wire!','h-1-0':'wire!'},slots:['h-0-0']},tools:['wire','resistor','bin'],
+  check:(b,ev)=>{const g=b.parts.get('h-0-0'),led=b.parts.get('h-0-1');
+   if(ev.includes('burn')){burnt=true;return{g:[1,0,0],msg:'💥 POP! With only a wire, too much current rushed through and the LED <b>burnt out</b>. Remove the wire, put in a <b>resistor</b>, then tap the LED to fit a new one.',kind:'bad'};}
+   if(led.burnt)return{g:[!!g,0,0],msg:'The LED is still burnt out – tap it to fit a new one.',kind:'warn'};
+   const ok=ledOn(b),res=g&&g.type==='resistor';
+   if(ok&&!res)return{g:[1,1,0],msg:'It lit… for now. Use a resistor to protect it.',kind:'warn'};
+   if(res&&!ok&&led.flip)return{g:[1,0,1],msg:'The LED is the wrong way round – tap it to turn it back.',kind:'warn'};
+   return{g:[!!g,ok,ok&&res],done:ok&&res};},
+  win:'✅ The resistor limits the current so the LED glows safely. <b>Try this:</b> tap the resistor to change its value. A tiny resistor still burns the LED; a huge one makes it very dim.'});},
+ // 3. LED backwards
+ (st,api)=>{
+  const w=h('div',{class:'split'});st.append(w);const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+  L.append(h('div',{class:'kicker'},'Step 3 · Which way round?'),h('h2',{},'Why won\'t it light?'),
+   h('div',{class:'lead',html:'<p>This circuit has a resistor, but the LED is off. LEDs only let current flow <b>one way</b> – the way the triangle points.</p><p><b>Tap the LED</b> to turn it round.</p>'}));
+  const q=h('div');L.append(q);let won=false;
+  const b=new Circuit.Board(R,{parts:{'v-0-0':'battery!','h-0-0':'resistor!','h-0-1':'led~!','v-0-2':'wire!','h-1-1':'wire!','h-1-0':'wire!'},editable:false,noStatus:true,
+   onChange:()=>{if(won||!ledOn(b))return;won=true;Sfx.good();confetti(50);api.add(1);
+    q.append(h('div',{class:'msg good',html:'✅ Now the triangle points away from + towards −, so current can flow through.'}),
+     h('div',{class:'legs',html:`<svg viewBox="0 0 170 150"><path d="M65 60 L65 34 A20 20 0 0 1 105 34 L105 60 Z" fill="#ff4d6d"/><rect x="60" y="60" width="50" height="9" rx="2" fill="#e5383b"/><rect x="104" y="58" width="6" height="12" fill="#fff"/><rect x="72" y="69" width="5" height="70" fill="#9aa5b1"/><rect x="93" y="69" width="5" height="48" fill="#9aa5b1"/><text x="30" y="132" font-family="Nunito" font-weight="800" font-size="13" fill="#1b2a41">long leg</text><text x="40" y="146" font-family="Nunito" font-weight="800" font-size="13" fill="#118ab2">anode +</text><text x="100" y="112" font-family="Nunito" font-weight="800" font-size="13" fill="#1b2a41">short leg</text><text x="100" y="126" font-family="Nunito" font-weight="800" font-size="13" fill="#ef476f">cathode −</text><text x="112" y="56" font-family="Nunito" font-weight="800" font-size="11" fill="#5a6f8c">flat side</text></svg>`}),
+     h('p',{},'On a real LED the long leg (anode) goes to the + side. The short leg (cathode) is next to the flat edge of the rim.'));
+    mcq(q,{q:'Which LED leg should connect towards the + of the battery?',opts:['The long leg (anode)','The short leg (cathode)','It doesn\'t matter'],a:0,why:'Long leg to +. Remember: "long = plus".'},ok=>{api.add(ok?1:0,1);q.append(h('div',{class:'row',style:'margin-top:12px'},api.nextBtn()));});}});
+  b.onChange();
+ },
+ // 4. quiz
+ (st,api)=>quiz(st,api,{title:'Check your understanding',qs:[
+  {q:'What does LED stand for?',opts:['Light Emitting Diode','Low Energy Device','Light Electric Display'],a:0,why:'Light Emitting Diode – a diode only lets current flow one way.'},
+  {q:'Why do LEDs need a resistor?',opts:['To limit the current so the LED doesn\'t burn out','To make the LED change colour','To store electricity'],a:0,why:'Without a resistor, too much current flows and destroys the LED.'},
+  {q:'Resistance is measured in…',opts:['Ohms (Ω)','Volts (V)','Amps (A)'],a:0,why:'Ohms. Volts measure the push; amps measure the current.'},
+  {q:'Why are LEDs used instead of bulbs in most new products?',opts:['They use less energy and last much longer','They are always brighter','They work either way round'],a:0,why:'LEDs are far more efficient – less energy is wasted as heat.'}
+ ]})
+]});
+</script>
+</body>
+</html>

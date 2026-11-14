@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 2 · Make It Work</title>
+<link rel="stylesheet" href="common.css">
+</head>
+<body>
+<script src="common.js"></script>
+<script src="circuit.js"></script>
+<script>
+const allOff=c=>c.forEach(p=>{if(p.type==='switch')p.on=false;if(p.type==='push')p.pressed=false;});
+const has=(b,t)=>[...b.parts.values()].filter(p=>p.type===t).length;
+const on=(b,t,res=b.res)=>[...b.parts].some(([k,p])=>p.type===t&&res.edges.get(k).on);
+const shortMsg='⚠️ Short circuit! A wire is letting the current rush straight back to the battery without going through anything. Remove a wire.';
+
+const QF=[
+ {q:'Will the bulb light?',a:true,p:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},why:'Yes – there is a complete loop from + all the way round to −.'},
+ {q:'Will the bulb light?',a:false,p:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','h-1-1':'wire','h-1-0':'wire'},why:'No – there is a gap on the right-hand side, so the circuit is not complete.'},
+ {q:'Will the bulb light?',a:false,p:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-2':'wire','h-1-1':'wire','h-1-0':'switch'},why:'No – the switch is open (off). An open switch makes a gap.'},
+ {q:'Will the motor spin?',a:true,p:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'motor','v-0-2':'wire','h-1-1':'wire','h-1-0':'switch+'},why:'Yes – the switch is closed, so the loop is complete.'},
+ {q:'Will both bulbs light?',a:true,p:{'v-0-0':'battery','h-0-0':'bulb','h-0-1':'bulb','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},why:'Yes – one complete loop through both bulbs (they will be dimmer – more on that in Level 3).'},
+ {q:'Will the bulb light?',a:false,p:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-1':'wire','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},why:'No – the middle wire is a shortcut. Current takes the easy path and misses the bulb. This is a short circuit.'},
+ {q:'Will the LED light?',a:true,p:{'v-0-0':'battery','h-0-0':'resistor','h-0-1':'led','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},why:'Yes – the LED points the right way (triangle pointing away from +) and the resistor protects it.'},
+ {q:'Will the LED light?',a:false,p:{'v-0-0':'battery','h-0-0':'resistor','h-0-1':'led~','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},why:'No – the LED is the wrong way round. LEDs only let current through one way.'}
+];
+
+Level({n:2,title:'Make It Work',summary:'current only flows when there is a complete loop from the + of the battery, through the components and back to the −. Any gap – a missing wire or an open switch – stops everything.',steps:[
+ (st,api)=>Circuit.challenge(st,api,{kicker:'Step 1 · What is a circuit?',title:'Close the gap',
+  text:'<p>Electricity needs a <b>complete loop</b> to flow – out of the battery, through the bulb and back again. This circuit has a gap.</p><p>The <b>hollow rings</b> show loose ends. Tap the dotted gap to add a wire.</p>',
+  goals:['Fill the gap with a wire','Light the bulb'],
+  board:{parts:{'v-0-0':'battery!','h-0-0':'wire!','h-0-1':'bulb!','v-0-2':'wire!','h-1-1':'wire!'},slots:['h-1-0']},tools:['wire'],
+  check:b=>{const g=[b.parts.has('h-1-0'),on(b,'bulb')];return{g,done:g[1]};},
+  win:'💡 It works! See the orange dots? They show the <b>current</b> flowing from the + side of the battery, round the loop, back to the − side. Scientists call this <b>conventional current</b>.'}),
+
+ (st,api)=>Circuit.challenge(st,api,{kicker:'Step 2 · Build it',title:'Wire it up',
+  text:'<p>Only the battery and bulb are here. Add wires to make a complete loop and light the bulb.</p>',
+  goals:['Make a complete loop','Light the bulb brightly','No short circuits!'],
+  board:{parts:{'v-0-0':'battery!','h-0-1':'bulb!'}},tools:['wire','bin'],
+  hint:'Tip: pick <b>Remove</b> then tap a part to take it away.',
+  check:b=>{const lit=on(b,'bulb'),sh=b.res.short;return{g:[lit,lit,lit&&!sh],done:lit&&!sh,msg:sh?shortMsg:null,kind:'bad'};},
+  win:'✅ Complete circuit! Every part is joined in one loop.'}),
+
+ (st,api)=>{let seenOn=false,seenOff=false;Circuit.challenge(st,api,{kicker:'Step 3 · Switches',title:'Take control',
+  text:'<p>A <b>switch</b> makes or breaks a gap in the circuit. Put a switch in the gap, then tap the switch to turn the bulb <b>on</b> and <b>off</b>.</p>',
+  goals:['Put a switch in the gap','Switch it ON','Switch it OFF again'],
+  board:{parts:{'v-0-0':'battery!','h-0-0':'wire!','h-0-1':'bulb!','v-0-2':'wire!','h-1-1':'wire!'},slots:['h-1-0']},tools:['switch','wire','bin'],
+  check:b=>{const sw=b.parts.get('h-1-0');const isSw=sw&&sw.type==='switch';
+   if(sw&&!isSw)return{g:[0,0,0],msg:'The bulb works, but with a wire you can\'t turn it off! Remove the wire and use a switch.',kind:'warn'};
+   if(isSw&&sw.on)seenOn=true;if(isSw&&seenOn&&!sw.on)seenOff=true;
+   return{g:[isSw,seenOn,seenOff],done:seenOn&&seenOff,msg:isSw&&!seenOn?'Now tap the switch to close it.':null,kind:''};},
+  win:'✅ When the switch is <b>open</b> there is a gap, so no current flows. When it is <b>closed</b> the loop is complete.'});},
+
+ (st,api)=>{let spun=false,stopped=false;const b=Circuit.challenge(st,api,{kicker:'Step 4 · Motors',title:'Build a fan',
+  text:'<p>Design a fan from scratch: a <b>motor</b> that you can turn on and off with a <b>switch</b>.</p>',
+  goals:['Add a motor and a switch','Make the motor spin','Turn it off with the switch'],
+  board:{parts:{'v-0-0':'battery!'}},tools:['motor','switch','wire','bin'],
+  check:b=>{const ok=has(b,'motor')&&has(b,'switch');const spin=on(b,'motor');
+   const ctrl=ok&&!on(b,'motor',b.simulate(allOff).res);
+   if(spin&&ctrl)spun=true;if(spun&&!spin)stopped=true;
+   if(b.res.short)return{g:[ok,spun,stopped],msg:shortMsg,kind:'bad'};
+   if(spin&&!ctrl)return{g:[ok,true,false],msg:'The motor spins, but the switch can\'t stop it. Make sure the switch is in the same loop as the motor.',kind:'warn'};
+   return{g:[ok,spun,stopped],done:spun&&stopped};},
+  win:'✅ Nice fan! <b>Bonus:</b> tap the battery to turn it round – watch which way the motor spins now.',
+  after:(b,say,ev)=>{if(ev.includes('flip'))say('🔄 Flipping the battery makes the current flow the other way, so the motor spins in the <b>opposite direction</b>. That is how a toy car reverses!','good');}});},
+
+ (st,api)=>Circuit.challenge(st,api,{kicker:'Step 5 · Push switches',title:'Ding dong! Make a doorbell',
+  text:'<p>A doorbell should only ring <b>while the button is held down</b>. Build one using a <b>push switch</b> and a <b>buzzer</b>, then press and hold the button.</p><p>🔊 Turn your sound on!</p>',
+  goals:['Use a push switch and a buzzer','Silent when nobody presses it','Press and hold to ring'],
+  board:{parts:{'v-0-0':'battery!'}},tools:['push','buzzer','wire','switch','bin'],
+  check:b=>{const ok=has(b,'push')&&has(b,'buzzer');const quiet=ok&&!on(b,'buzzer',b.simulate(allOff).res);
+   const pressed=[...b.parts.values()].some(p=>p.type==='push'&&p.pressed);const ring=on(b,'buzzer')&&pressed;
+   if(has(b,'switch'))return{g:[ok,0,0],msg:'A normal switch stays on when you let go – a doorbell needs a push switch.',kind:'warn'};
+   if(b.res.short)return{g:[ok,quiet,0],msg:shortMsg,kind:'bad'};
+   if(ok&&!quiet)return{g:[ok,0,0],msg:'The buzzer sounds all the time! The push switch must be in the same loop as the buzzer.',kind:'warn'};
+   return{g:[ok,quiet,ring],done:ok&&quiet&&ring,keep:true};},
+  win:'✅ The push switch only closes the gap while you press it. Let go and the spring pushes it open again.'}),
+
+ // quick-fire
+ (st,api)=>{
+  const qs=shuffle(QF);let k=0;
+  const c=h('div',{class:'card'});st.append(c);
+  function show(){
+   c.innerHTML='';const q=qs[k];
+   c.append(h('div',{class:'kicker'},`Step 6 · Will it work? · ${k+1} of ${qs.length}`),h('h2',{},q.q));
+   const holder=h('div',{style:'max-width:560px'});c.append(holder);
+   const b=new Circuit.Board(holder,{mode:'view',parts:q.p,power:false,noStatus:true});
+   const row=h('div',{class:'opts two',style:'max-width:560px'});c.append(row);
+   let done=false;
+   [['✅ Yes, it works',true],['❌ No, it won\'t',false]].forEach(([t,v])=>row.append(h('button',{class:'opt',style:'text-align:center',onclick:e=>{
+     if(done)return;done=true;const ok=v===q.a;e.currentTarget.classList.add(ok?'right':'wrong');ok?Sfx.good():Sfx.bad();api.add(ok?1:0,1);
+     b.power=true;b.draw();
+     c.append(h('div',{class:'msg '+(ok?'good':'bad')},(ok?'Correct! ':'Not quite. ')+q.why),
+      h('div',{class:'row',style:'margin-top:12px'},h('button',{class:'btn go',onclick:()=>{k++;k<qs.length?show():api.next();}},k<qs.length-1?'Next circuit →':'Finish level →')));
+   }},t)));
+  }
+  show();
+ }
+]});
+</script>
+</body>
+</html>

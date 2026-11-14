@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 13 · Brightness Battle</title>
+<link rel="stylesheet" href="common.css">
+<script type="application/json" id="level-info">
+{"t":"Brightness Battle","d":"Which bulb glows brighter? Build a winning streak, then rank circuits from brightest to dimmest.","s":"Game · predicting","c":"#ffb703",
+ "parts":{"v-0-0":"battery","h-0-0":"wire","h-0-1":"bulb","v-0-1":"bulb","v-0-2":"wire","h-1-0":"wire","h-1-1":"wire"},"power":1}
+</script>
+<style>
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+.vs .mid{font:700 30px Fredoka;color:#c0cde0}
+.vs h3{text-align:center;margin:4px 0}
+.streak{font:700 22px Fredoka}
+.rank{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin-top:10px}
+.rk{border:3px solid #dde7f3;border-radius:16px;padding:6px;cursor:pointer;position:relative;background:#fff}
+.rk .num{position:absolute;top:8px;left:8px;width:38px;height:38px;border-radius:50%;background:var(--orange);color:#fff;font:700 21px Fredoka;display:none;align-items:center;justify-content:center;z-index:2}
+.rk.pick .num{display:flex}
+.rk.right{border-color:var(--green)}.rk.wrong{border-color:var(--red)}
+.rk .lbl2{font:800 14px Nunito;color:#5a6f8c;text-align:center;padding:4px}
+</style>
+</head>
+<body>
+<script src="common.js"></script>
+<script src="circuit.js"></script>
+<script>
+const L3=(o)=>Object.assign({'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb@X','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},o);
+const POOL={
+ one:{p:L3({}),d:'One bulb, battery'},
+ series2:{p:L3({'h-0-0':'bulb@X','h-0-1':'bulb'}),d:'Two bulbs in series'},
+ parallel2:{p:L3({'h-0-1':'wire','v-0-1':'bulb@X','v-0-2':'bulb'}),d:'Two bulbs in parallel'},
+ cell:{p:L3({'v-0-0':'cell'}),d:'One bulb, one cell'},
+ res10:{p:L3({'h-0-0':'resistor:10'}),d:'Bulb + 10 Ω resistor'},
+ res47:{p:L3({'h-0-0':'resistor:47'}),d:'Bulb + 47 Ω resistor'},
+ series3:{p:L3({'h-0-0':'bulb','v-0-2':'bulb'}),d:'Three bulbs in series'},
+ cell2:{p:L3({'v-0-0':'cell','h-0-0':'bulb'}),d:'Two bulbs, one cell'},
+ shorted:{p:L3({'v-0-1':'wire','h-0-0':'resistor:10'}),d:'Bulb with a wire across it'}
+};
+function bright(spec){const m=new Map(Object.entries(spec.p).map(([k,v])=>[k,Circuit.parse(v)]));const r=Circuit.solve(3,2,m);const k=[...m].find(([k,p])=>p.label==='X')[0];return Math.min(1,r.edges.get(k).bright||0);}
+for(const k in POOL)POOL[k].b=bright(POOL[k]);
+const same=(a,b)=>Math.abs(a-b)<=.2*Math.max(a,b,.02);
+const view=(host,spec,cap)=>{host.append(h('h3',{},cap));return new Circuit.Board(host,{mode:'view',parts:spec.p,power:false,noStatus:true,small:true});};
+
+Level({n:13,title:'Brightness Battle',summary:'more bulbs in series = dimmer; bulbs in parallel stay bright; a cell gives less push than a battery; resistors dim things down; and a wire across a bulb shorts it out completely.',steps:[
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  const keys=Object.keys(POOL);const rounds=[];
+  while(rounds.length<10){const a=keys[Math.random()*keys.length|0],b=keys[Math.random()*keys.length|0];if(a!==b&&!rounds.some(r=>r[0]===a&&r[1]===b))rounds.push([a,b]);}
+  let i=0,streak=0,bestS=0,right=0;
+  function show(){c.innerHTML='';const [ka,kb]=rounds[i],A=POOL[ka],B=POOL[kb];
+   const sk=h('span',{class:'streak'},`🔥 Streak ${streak}`);
+   c.append(h('div',{class:'hud',style:'display:flex;justify-content:space-between;flex-wrap:wrap'},h('div',{class:'kicker'},`Game 1 · Higher or lower? · Round ${i+1} of ${rounds.length}`),sk),
+    h('h2',{},'Which bulb marked X glows brighter?'));
+   const vs=h('div',{class:'vs'}),la=h('div'),lb=h('div');vs.append(la,h('div',{class:'mid'},'VS'),lb);c.append(vs);
+   const ba=view(la,A,'A'),bb=view(lb,B,'B');
+   const ans=same(A.b,B.b)?2:A.b>B.b?0:1;
+   const row=h('div',{class:'opts',style:'grid-template-columns:1fr 1fr 1fr'});c.append(row);let d=false;
+   ['A is brighter','About the same','B is brighter'].forEach((t,j)=>{const v=[0,2,1][j];row.append(h('button',{class:'opt',style:'text-align:center',onclick:e=>{if(d)return;d=true;
+    const ok=v===ans;e.currentTarget.classList.add(ok?'right':'wrong');if(!ok)row.children[[0,2,1].indexOf(ans)].classList.add('right');
+    ok?(streak++,right++,Sfx.good()):(streak=0,Sfx.bad());bestS=Math.max(bestS,streak);sk.textContent=`🔥 Streak ${streak}`;api.add(ok?1:0,1);
+    ba.power=bb.power=true;ba.draw();bb.draw();
+    c.append(h('div',{class:'msg '+(ok?'good':'bad')},`A: ${A.d} (${Math.round(A.b*100)}%) · B: ${B.d} (${Math.round(B.b*100)}%)`),
+     h('div',{class:'row',style:'margin-top:12px'},h('button',{class:'btn go',onclick:()=>{i++;i<rounds.length?show():end();}},i<rounds.length-1?'Next round →':'See results →')));}},t));});
+  }
+  function end(){c.innerHTML='';if(bestS>=5)confetti(100);Sfx.win();
+   c.append(h('h2',{},`${right} out of ${rounds.length}!`),h('p',{class:'lead'},`Your best streak was 🔥 ${bestS}.`),h('div',{class:'row'},api.nextBtn('Next game →')));}
+  show();
+ },
+ (st,api)=>{
+  const sets=[['one','series2','series3','cell2'],['parallel2','res47','cell','shorted']];let si=0;
+  const c=h('div',{class:'card'});st.append(c);
+  function show(){c.innerHTML='';const ks=shuffle(sets[si]);
+   c.append(h('div',{class:'kicker'},`Game 2 · Rank them · Round ${si+1} of ${sets.length}`),h('h2',{},'Tap the circuits from BRIGHTEST to DIMMEST'),h('p',{style:'font-weight:700;color:#5a6f8c'},'Look at the bulb marked X in each circuit. Tap again to undo.'));
+   const g=h('div',{class:'rank'});c.append(g);const order=[];const boards={};
+   ks.forEach(k=>{const box=h('div',{class:'rk'},h('div',{class:'num'}));g.append(box);boards[k]=new Circuit.Board(box,{mode:'view',parts:POOL[k].p,power:false,noStatus:true,small:true});box.append(h('div',{class:'lbl2 hide'},POOL[k].d));
+    box.onclick=()=>{if(checked)return;const i=order.indexOf(k);if(i>=0)order.splice(i,1);else order.push(k);Sfx.click();
+     g.querySelectorAll('.rk').forEach((b,j)=>{const kk=ks[j],p=order.indexOf(kk);b.classList.toggle('pick',p>=0);b.querySelector('.num').textContent=p+1;});chk.disabled=order.length<4;};});
+   let checked=false;const out=h('div');
+   const chk=h('button',{class:'btn warm',style:'margin-top:12px',disabled:true,onclick:()=>{checked=true;chk.remove();
+    const sorted=[...ks].sort((a,b)=>POOL[b].b-POOL[a].b);let ok=0;
+    order.forEach((k,j)=>{const pos=sorted[j]===k||same(POOL[sorted[j]].b,POOL[k].b);const box=g.children[ks.indexOf(k)];box.classList.add(pos?'right':'wrong');if(pos)ok++;boards[k].power=true;boards[k].draw();box.querySelector('.lbl2').classList.remove('hide');box.querySelector('.lbl2').textContent=`${POOL[k].d} · ${Math.round(POOL[k].b*100)}%`;});
+    api.add(ok,4);ok===4?(Sfx.win(),confetti(70)):Sfx.bad();
+    out.append(h('div',{class:'msg '+(ok===4?'good':'warn')},`${ok}/4 in the right place. Correct order: `+sorted.map((k,j)=>`${j+1}. ${POOL[k].d}`).join(' · ')),
+     h('div',{class:'row',style:'margin-top:12px'},h('button',{class:'btn go',onclick:()=>{si++;si<sets.length?show():api.next();}},si<sets.length-1?'Next round →':'Finish level →')));}},'✔ Check my order');
+   c.append(chk,out);}
+  show();
+ }
+]});
+</script>
+</body>
+</html>

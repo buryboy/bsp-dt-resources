@@ -1,6 +1,8 @@
-# Building pages for the Material properties exercise book
+# Building pages for a D&T exercise-book workbook
 
-Year 10 AQA GCSE D&T students use this on **iPads** (Safari, touch only, landscape ~1180×820 or portrait ~820×1180, sometimes a laptop). It's a lined exercise book drawn in blue biro: you turn pages, read short notes, watch pen-drawn animations, run little experiments, play games and answer questions. **Every answer is auto-saved to the teacher** (blanks too), so every activity must be recorded through the ui kit.
+**Layout of the repo (/home/claude/bsp-dt-resources):** `book-kit/` is the shared engine (book.js, ink.js, book.css, harness.js, sound.js, tools/, docs/SPEC.md — never edit it; report needed changes). Each workbook is a folder (`material-properties/` is the finished reference: read some of its pages) with `index.html`, `config.js`, `docs/CONTENT.md` (the facts for that workbook), `pages/pNN-*.js`, `final-quiz.js`, `manifest.js` (generated). Wherever this spec says `lib/x` read `book-kit/x`, and `docs/CONTENT.md` is the one inside your workbook folder.
+
+AQA GCSE D&T students (the year group is in the workbook's config/CONTENT) use this on **iPads** (Safari, touch only, landscape ~1180×820 or portrait ~820×1180, sometimes a laptop). It's a lined exercise book drawn in blue biro: you turn pages, read short notes, watch pen-drawn animations, run little experiments, play games and answer questions. **Every answer is auto-saved to the teacher** (blanks too), so every activity must be recorded through the ui kit.
 
 The whole lesson is 60 minutes over 11 pages → each page is **4–7 minutes** of work. Keep reading short; make students *do* things.
 
@@ -14,9 +16,16 @@ The whole lesson is 60 minutes over 11 pages → each page is **4–7 minutes** 
 - Use the ui kit (`ui.mcq`, `ui.tf`, `ui.fill`, `ui.write`, `ui.sort`, `ui.match`, `ui.predict`, `ui.rate`). For custom interactives (experiments, games) use `const r = ui.record(id, { label, type, max })` and call `r.set({ answer, correct, score, max, mis })` whenever the student does something meaningful (answer = a short human-readable string the teacher can read, e.g. `"predicted: oak floats ✓, ebony floats ✗"`).
 - **ids** are stable and unique: `'p03.float-predict'`. **label** = what the teacher sees in the dashboard, short and specific (e.g. `"Float/sink predictions (8 blocks)"`).
 - **mis** = misconception tags (comma-separated) when a wrong answer reveals one. Use these tags only:
-  `hard-vs-tough` · `strong-vs-hard` · `malleable-vs-ductile` · `density-vs-weight` · `elastic-vs-stretchy` · `metal-feels-cold` · `brittle-vs-weak` · `heat-vs-electricity` · `absorbency` · `fusibility-thermoset` · `physical-vs-working` · `conductor-insulator`
+  the tags listed in your workbook's `config.js` under `mis:` (also listed at the end of its CONTENT.md).
 - Wrong answers must **teach**: show why it's wrong and what's right (the kit does this when you give `why`/`explain`).
 - Every page ends with something that checks understanding of that page.
+
+## Never give the answer away on the page (the teacher checked this!)
+- Nothing visible before or while a student answers may state that answer: no notes box, caption, canvas label, animation text or earlier feedback on the same page that hands over the exact answer to a question, sort, match, blank or prediction below it.
+- Teach first, then make them **recall**: put the notes above, and blur them during the activity with `ui.hideWhile(actEl, activityId, [elements])` (every `ui.*` activity builder returns its element; it blurs from the first tap until the activity is right or checked 3 times; works for retryable activities: sort, fill, match, mcq). For one-shot activities (tf) or custom ones, add/remove the CSS class `peek-lock` on the elements yourself (on an `.ink-anim` canvas put it on its `.ink-anim-wrap` parent). Tell students in one line that the notes will blur.
+- Experiments: the result (values, order, labels like "VERY HARD") appears only after the student has predicted/tested. Captions describe what happened, not the name of the property being asked about next.
+- Calculations: never print an intermediate answer the student was asked to work out; echo **their own** earlier answer into the next line instead (see p03 `p03.calc` in material-properties: `.vol-echo`).
+- MCQ options: similar length and detail; the right one must not stand out. Wrong-answer explanations must not give away the next question.
 
 ## Interaction & layout (iPad!)
 - Touch first: tap targets ≥ 44 px, no hover-only things, no tiny drag handles. For canvas interactions use **pointer events** (`pointerdown/move/up`), `touch-action: none` on the canvas while dragging, and map coordinates with `getBoundingClientRect()` (canvases are CSS-scaled; their logical size is the width/height you set).
@@ -28,10 +37,10 @@ The whole lesson is 60 minutes over 11 pages → each page is **4–7 minutes** 
 
 ## Testing
 ```
-cd /home/claude/bsp-dt-resources/material-properties
-python3 tools/shot.py /tmp/nb-NN --pages 3 --full                 # iPad landscape, scrolls through long pages
-python3 tools/shot.py /tmp/nb-NN-p --pages 3 --full --size 820x1180  # portrait
-python3 tools/shot.py /tmp/x --pages 3 --script "document.querySelector('.ink-anim')._inkAnim.seek(6)"
+cd /home/claude/bsp-dt-resources
+python3 book-kit/tools/shot.py /tmp/nb-NN --book <folder> --pages 3 --full                 # iPad landscape, scrolls through long pages
+python3 book-kit/tools/shot.py /tmp/nb-NN-p --book <folder> --pages 3 --full --size 820x1180  # portrait
+python3 book-kit/tools/shot.py /tmp/x --book <folder> --pages 3 --script "document.querySelector('.ink-anim')._inkAnim.seek(6)"
 ```
 (Google Fonts are blocked in this sandbox so screenshots use fallback fonts; that's expected.) **Look at every screenshot** with the Read tool. Also script real interactions with Playwright (tap answers, run your experiment) and check that `Book.state.items` holds what you expect. Zero console errors.
 

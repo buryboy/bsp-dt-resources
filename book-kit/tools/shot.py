@@ -11,7 +11,7 @@ ap.add_argument('--size', default='1180x820'); ap.add_argument('--full', action=
 ap.add_argument('--book', default='material-properties', help='workbook folder')
 ap.add_argument('--wait', type=float, default=1.2)
 a = ap.parse_args(); out = pathlib.Path(a.out); out.mkdir(parents=True, exist_ok=True)
-root = pathlib.Path(__file__).resolve().parent.parent
+root = pathlib.Path(__file__).resolve().parent.parent.parent
 class Q(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *x): pass
 srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(Q, directory=str(root)))

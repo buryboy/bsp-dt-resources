@@ -91,12 +91,13 @@ const loadScript = (src) => new Promise((res) => { const e = document.createElem
 async function pickBook(i) {
   BOOKI = i; const b = WB.books[i]; C = { lesson: b.lesson, backend: WB.backend, title: b.title, folder: b.folder };
   localStorage.setItem('dash.book', b.folder); window.BOOK_MANIFEST = null; FQ = null; data = null;
+  window.BOOK_CONFIG = null; await loadScript('../' + b.folder + '/config.js?t=' + Date.now()); MIS = (window.BOOK_CONFIG && window.BOOK_CONFIG.mis) || {};
   await loadScript('../' + b.folder + '/manifest.js?t=' + Date.now()); await loadScript('../' + b.folder + '/final-quiz.js?t=' + Date.now());
   MAN = window.BOOK_MANIFEST; document.title = b.title + ' · results';
 }
 let API = localStorage.getItem('dash.api') || WB.backend || '', PIN = localStorage.getItem('dash.pin') || '';
 let data = null, view = 'live';
-const MIS = { 'hard-vs-tough': 'Thinks hard = tough (glass)', 'strong-vs-hard': 'Mixes up strength and hardness', 'malleable-vs-ductile': 'Mixes up malleable and ductile', 'density-vs-weight': 'Thinks heavy = dense (ignores size)', 'elastic-vs-stretchy': 'Thinks elastic = stretchy', 'metal-feels-cold': 'Thinks metals are colder', 'brittle-vs-weak': 'Thinks brittle = weak', 'heat-vs-electricity': 'Mixes up heat and electrical conductivity', 'absorbency': 'Unsure about absorbency / finishes', 'fusibility-thermoset': 'Thinks thermosets melt', 'physical-vs-working': 'Mixes up physical and working properties', 'conductor-insulator': 'Mixes up conductors and insulators' };
+let MIS = {};
 
 function login() {
   $('#login').style.display = 'block'; $('#lg-api').value = API; $('#lg-pin').value = '';

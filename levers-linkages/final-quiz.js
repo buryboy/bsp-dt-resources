@@ -1,0 +1,1 @@
+Book.finalQuiz({ questions: [] });

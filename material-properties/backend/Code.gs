@@ -1,0 +1,79 @@
+/**
+ * Exercise-book results server (Google Apps Script web app on the SCHOOL Google account).
+ * Students' books POST each page's answers when they turn the page; the teacher dashboard reads them back.
+ * Data lives in a Google Sheet in the owner's Drive ("Exercise book results"), one row per student per activity
+ * (sheet "Latest"), plus a raw event log ("Log") and a student list with where they are now ("Students").
+ *
+ * Set-up: paste into a new Apps Script project → Project Settings → Script properties → add PIN = <teacher PIN>
+ * → Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone → Deploy → copy the /exec link.
+ * After editing: Deploy → Manage deployments → edit → Version: New version → Deploy (keeps the same link).
+ */
+const PROPS = PropertiesService.getScriptProperties();
+const LATEST_COLS = ['key', 'lesson', 'email', 'name', 'class', 'pageN', 'pageId', 'pageTitle', 'itemId', 'label', 'type', 'answer', 'correct', 'first', 'score', 'max', 'attempts', 'mis', 'updated'];
+const STUDENT_COLS = ['key', 'lesson', 'email', 'name', 'class', 'session', 'pageN', 'pageTitle', 'lastSeen', 'lastEvent', 'pagesVisited', 'secondsByPage', 'finished'];
+
+function book() {
+  let id = PROPS.getProperty('SHEET_ID'), ss = null;
+  if (id) try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; }
+  if (!ss) {
+    ss = SpreadsheetApp.create('Exercise book results');
+    PROPS.setProperty('SHEET_ID', ss.getId());
+    const l = ss.getSheets()[0]; l.setName('Latest'); l.appendRow(LATEST_COLS); l.setFrozenRows(1);
+    const s = ss.insertSheet('Students'); s.appendRow(STUDENT_COLS); s.setFrozenRows(1);
+    const g = ss.insertSheet('Log'); g.appendRow(['time', 'lesson', 'email', 'name', 'class', 'event', 'pageId', 'json']); g.setFrozenRows(1);
+  }
+  return ss;
+}
+const json = (o) => ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+
+function doPost(e) {
+  let d;
+  try { d = JSON.parse(e.postData.contents); } catch (err) { return json({ ok: false, error: 'bad json' }); }
+  if (!d || !d.student || !d.student.email || !d.lesson) return json({ ok: false, error: 'missing student' });
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const ss = book(), now = new Date(), st = d.student, email = String(st.email).toLowerCase().slice(0, 120);
+    const clip = (s, n) => String(s == null ? '' : s).slice(0, n);
+    // students sheet (upsert)
+    const S = ss.getSheetByName('Students'), skey = d.lesson + '|' + email;
+    const sv = S.getDataRange().getValues(); let srow = -1;
+    for (let i = 1; i < sv.length; i++) if (sv[i][0] === skey) { srow = i + 1; break; }
+    const prev = srow > 0 ? sv[srow - 1] : null;
+    let visited = {}; try { visited = JSON.parse((prev && prev[10]) || '{}'); } catch (x) {}
+    let secs = {}; try { secs = JSON.parse((prev && prev[11]) || '{}'); } catch (x) {}
+    if (d.page && d.page.id) { visited[d.page.id] = 1; if (d.seconds != null) secs[d.page.id] = d.seconds; }
+    const finished = (prev && prev[12]) || (d.event === 'finish' ? now : '');
+    const srowVals = [skey, d.lesson, email, clip(st.name, 80), clip(st.cls, 20), clip(d.session, 20), d.page ? d.page.n : '', d.page ? clip(d.page.title, 80) : '', now, d.event, JSON.stringify(visited), JSON.stringify(secs), finished];
+    if (srow > 0) S.getRange(srow, 1, 1, srowVals.length).setValues([srowVals]); else S.appendRow(srowVals);
+    // latest answers (upsert per item)
+    if (d.items && d.items.length) {
+      const L = ss.getSheetByName('Latest'), lv = L.getRange(1, 1, Math.max(1, L.getLastRow()), 1).getValues(), index = {};
+      for (let i = 1; i < lv.length; i++) index[lv[i][0]] = i + 1;
+      const appends = [];
+      d.items.forEach((it) => {
+        const key = d.lesson + '|' + email + '|' + it.id;
+        const row = [key, d.lesson, email, clip(st.name, 80), clip(st.cls, 20), d.page.n, d.page.id, clip(d.page.title, 80), clip(it.id, 60), clip(it.label, 160), clip(it.type, 20), clip(it.answer, 1500),
+          it.correct == null ? '' : !!it.correct, it.first == null ? '' : !!it.first, it.score == null ? '' : it.score, it.max == null ? '' : it.max, it.attempts || 0, clip(it.mis, 120), now];
+        if (index[key]) L.getRange(index[key], 1, 1, row.length).setValues([row]); else appends.push(row);
+      });
+      if (appends.length) L.getRange(L.getLastRow() + 1, 1, appends.length, appends[0].length).setValues(appends);
+    }
+    if (d.event !== 'ping') ss.getSheetByName('Log').appendRow([now, d.lesson, email, clip(st.name, 80), clip(st.cls, 20), d.event, d.page ? d.page.id : '', clip(JSON.stringify({ unanswered: d.unanswered, seconds: d.seconds, visits: d.visits }), 2000)]);
+    return json({ ok: true });
+  } finally { lock.releaseLock(); }
+}
+
+function doGet(e) {
+  const p = e.parameter || {};
+  try {
+    if (p.a === 'ping') return json({ ok: true, now: Date.now() });
+    const pin = PROPS.getProperty('PIN') || '';
+    if (!pin || String(p.pin || '') !== pin) return json({ ok: false, error: 'Wrong PIN' });
+    const ss = book(), lesson = p.lesson || '';
+    const rows = (name) => { const v = ss.getSheetByName(name).getDataRange().getValues(), h = v[0]; return v.slice(1).filter((r) => !lesson || r[1] === lesson).map((r) => { const o = {}; h.forEach((k, i) => (o[k] = r[i] instanceof Date ? r[i].getTime() : r[i])); return o; }); };
+    return json({ ok: true, now: Date.now(), sheet: ss.getUrl(), students: rows('Students'), latest: rows('Latest') });
+  } catch (err) { return json({ ok: false, error: String(err.message || err) }); }
+}
+
+// Run once from the editor to create the results Sheet and grant permissions.
+function setup() { Logger.log(book().getUrl()); }

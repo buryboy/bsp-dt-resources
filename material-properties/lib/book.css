@@ -133,3 +133,5 @@ textarea.lines:focus, input.blank:focus { outline: 2px solid rgba(30,46,150,.25)
 
 @media (max-width: 700px) { :root { --pad-l: 70px; --pad-r: 18px; } .holes { left: 10px; } .holes i { width: 26px; height: 26px; } .content { font-size: 18px; } .navbtn { min-width: 110px; } }
 @media (max-width: 900px) { .navbtn { min-width: 112px; font-size: 19px; } #pagenum { min-width: 54px; } #topbar #savechip { max-width: 150px; } }
+
+.peek-lock { position: relative; filter: blur(7px); opacity: .55; pointer-events: none; user-select: none; transition: filter .4s, opacity .4s; }

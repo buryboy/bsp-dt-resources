@@ -97,11 +97,11 @@
     const W = 860, Hh = 440, S = stage(host, W, Hh), out = ui.el('div', 'p06-out', 'Drag the nail across all five samples.', host);
     const TW = 156, TY = 64, TH = 220;
     const M = [
-      { k: 'glass', name: 'glass', d: 'barely a mark', v: 'VERY HARD', snd: ['pencil', 0.5, 6200] },
-      { k: 'steel', name: 'mild steel', d: 'a light scratch', v: 'HARD', snd: ['pen', 0.9] },
-      { k: 'copper', name: 'copper', d: 'a clear groove', v: 'SOFTER', snd: ['marker', 0.6] },
-      { k: 'acrylic', name: 'acrylic', d: 'deep scratches', v: 'SCRATCHES EASILY', snd: ['chalk', 0.55] },
-      { k: 'rubber', name: 'rubber', d: 'squashes in, no groove', v: 'SOFT (dents easily)', snd: null },
+      { k: 'glass', name: 'glass', d: 'barely a mark', v: '', snd: ['pencil', 0.5, 6200] },
+      { k: 'steel', name: 'mild steel', d: 'a light scratch', v: '', snd: ['pen', 0.9] },
+      { k: 'copper', name: 'copper', d: 'a clear groove', v: '', snd: ['marker', 0.6] },
+      { k: 'acrylic', name: 'acrylic', d: 'deep scratches', v: '', snd: ['chalk', 0.55] },
+      { k: 'rubber', name: 'rubber', d: 'squashes in, no groove', v: 'dents easily!', snd: null },
     ];
     M.forEach((m, i) => { m.x = 8 + i * (TW + 13); m.dist = 0; m.done = false; m.P = geo.rect(m.x, TY, TW, TH, 10); });
     const prev = rec.get(); if (prev && prev.done) prev.done.forEach((k) => { const m = M.find((q) => q.k === k); if (m) { m.done = true; m.dist = 99; } });
@@ -204,7 +204,7 @@
       }
       M.forEach((m) => {
         if (!m.done) return;
-        const ls = wrap(ctx, m.d, TW - 4, HAND(22)), vs = wrap(ctx, m.v, TW - 4, LAB(22));
+        const ls = wrap(ctx, m.d, TW - 4, HAND(22)), vs = m.v ? wrap(ctx, m.v, TW - 4, LAB(22)) : [];
         let y = TY + TH + 34;
         ls.forEach((s) => { text(ctx, s, m.x + TW / 2, y, { size: 22, align: 'center' }); y += 28; });
         vs.forEach((s) => { text(ctx, s, m.x + TW / 2, y + 2, { font: 'lab', size: 22, align: 'center', color: R }); y += 26; });
@@ -233,11 +233,11 @@
       glass: { name: 'Glass', max: 1 }, steel: { name: 'Mild steel', max: 4 }, copper: { name: 'Copper', max: 4 }, castiron: { name: 'Cast iron', max: 2 }, rubber: { name: 'Rubber', max: 99 },
     };
     const RES = {
-      glass: () => 'It <b>shattered</b>! Glass is very hard, but it is <b>brittle</b>, not tough.',
-      steel: (h) => h >= 2 ? 'Dented, but still in <b>one piece</b>: mild steel is <b>tough</b>. It soaks up the blows without cracking.' : 'A dent, but no cracks. Hit it again!',
-      copper: (h) => h >= 2 ? 'It <b>spreads out flat</b> without cracking: copper is <b>malleable</b> (it can be shaped by hammering).' : 'Look at the top: it is getting wider and flatter. Hit it again!',
-      castiron: (h) => h >= 2 ? 'A chunk <b>snapped off</b>! Cast iron is <b>brittle</b>: it cracks instead of bending or denting.' : 'It <b>cracked</b>! No dent, no bending. Hit it again…',
-      rubber: () => 'Boing! It squashed, then <b>sprang straight back</b> to its shape: rubber is <b>elastic</b>.',
+      glass: () => 'It <b>shattered</b> into pieces at the very first hit!',
+      steel: (h) => h >= 2 ? 'Dented, but still in <b>one piece</b>, with no cracks. It soaks up blow after blow.' : 'A dent, but no cracks. Hit it again!',
+      copper: (h) => h >= 2 ? 'It <b>spreads out flat</b> without cracking: the hammer squashes it into a new shape.' : 'Look at the top: it is getting wider and flatter. Hit it again!',
+      castiron: (h) => h >= 2 ? 'A chunk <b>snapped off</b>! It cracks instead of bending or denting.' : 'It <b>cracked</b>! No dent, no bending. Hit it again…',
+      rubber: () => 'Boing! It squashed, then <b>sprang straight back</b> to its shape.',
     };
     const prev = rec.get(); const done = new Map((prev && prev.done) || []);
     let mat = 'glass', st, ang = REST, phase = 'rest', pt = 0, fromA = REST, toA = 0, words = [], used = done.size > 0;
@@ -558,11 +558,11 @@
       let msg, say;
       const sm = Math.round(T.sMax);
       if (T.broken) {
-        if (mat === 'copper') { msg = `Copper stretched about <b>${sm}%</b> and <b>necked</b> (went thin in the middle) before it snapped. It is very <b>ductile</b>: perfect for drawing into wire.`; say = `stretched ${sm}%, necked, snapped`; }
+        if (mat === 'copper') { msg = `Copper stretched about <b>${sm}%</b> and <b>necked</b> (went thin in the middle) before it snapped. The stretch stayed: it did not spring back.`; say = `stretched ${sm}%, necked, snapped`; }
         else if (mat === 'steel') { msg = `Mild steel stretched about <b>${sm}%</b>, necked, then snapped. Much less stretch than copper.`; say = `stretched ${sm}%, necked, snapped`; }
-        else { msg = `${m.name} snapped <b>almost straight away</b>, with no stretching or necking. It is <b>brittle</b>.`; say = 'snapped straight away'; }
-      } else if (m.elastic) { msg = `Rubber stretched <b>${sm}%</b> and sprang right back to its original length: it is <b>elastic</b>.`; say = `stretched ${sm}%, sprang back`; }
-      else { const p = Math.round(perm()); msg = `You let go: ${m.name.toLowerCase()} stayed <b>${p}% longer</b>. It didn't spring back, so that stretch is permanent (not elastic). Drag again to keep pulling!`; say = `stretched ${sm}%, stayed ${p}% longer`; }
+        else { msg = `${m.name} snapped <b>almost straight away</b>, with no stretching or necking.`; say = 'snapped straight away'; }
+      } else if (m.elastic) { msg = `Rubber stretched <b>${sm}%</b> and sprang right back to its original length.`; say = `stretched ${sm}%, sprang back`; }
+      else { const p = Math.round(perm()); msg = `You let go: ${m.name.toLowerCase()} stayed <b>${p}% longer</b>. It didn't spring back, so that stretch is permanent. Drag again to keep pulling!`; say = `stretched ${sm}%, stayed ${p}% longer`; }
       out.innerHTML = msg;
       if (T.broken || m.elastic || T.sMax > 2) {
         results.set(mat, say);
@@ -616,7 +616,7 @@
     build(ui, root) {
       css();
       ui.h('The test lab');
-      ui.p('Time to test some real samples. Use your finger at each of the three stations and <b>watch closely</b>: the questions at the bottom ask what you saw.');
+      ui.p('Time to test some real samples. Use your finger at each of the three stations and <b>watch closely</b>: the questions at the bottom ask what you saw. The stations tell you <b>what happened</b>. Working out <b>which property</b> that shows is your job!');
 
       const station = (n, title, sub) => {
         const d = ui.el('div', 'box p06-st'); requestAnimationFrame(() => Ink.frame(d));
@@ -637,35 +637,40 @@
       pk3.appendChild(rb); rb.style.flex = '1 1 160px'; rb.style.minHeight = '48px';
 
       ui.h('What did you find?', { size: 40 });
-      ui.mcq({ id: 'p06.hardest', label: 'Test lab: which sample was hardest?', q: 'Which sample was the <b>hardest</b>, and why?',
+      const qs = [];
+      qs.push(ui.mcq({ id: 'p06.hardest', label: 'Test lab: which sample was hardest?', q: 'Which sample was the <b>hardest</b>, and why?',
         options: [
           { t: 'Glass: the steel nail barely marked it', ok: true, why: 'Yes! Hardness = resisting scratches, wear and dents. The nail barely marked the glass.' },
-          { t: 'Mild steel: it survived the hammer without breaking', mis: 'hard-vs-tough', why: 'Surviving the hammer shows steel is TOUGH. Hardness is about resisting scratches and dents: the nail barely marked the glass.' },
+          { t: 'Mild steel: it survived the hammer without breaking', mis: 'hard-vs-tough', why: 'Surviving the hammer is a different property. Hardness is about resisting scratches and dents: the nail barely marked the glass.' },
           { t: 'Rubber: the nail didn’t leave a groove', why: 'The rubber just squashed out of the way, so it dents very easily: that makes it soft, not hard. The nail barely marked the glass.' },
           { t: 'Copper: it’s a metal, so it must be hard', why: 'The nail left a clear groove in copper, so it is quite soft. The glass was barely marked.' },
-        ] });
-      ui.mcq({ id: 'p06.toughest', label: 'Test lab: which sample was toughest?', q: 'In the hammer test, which sample was the <b>toughest</b>?',
+        ] }));
+      qs.push(ui.mcq({ id: 'p06.toughest', label: 'Test lab: which sample was toughest?', q: 'In the hammer test, which sample was the <b>toughest</b>?',
         options: [
           { t: 'Mild steel: it dented but stayed in one piece', ok: true, why: 'Yes! Toughness = absorbing an impact without breaking or cracking.' },
           { t: 'Glass: it was the hardest to scratch', mis: 'hard-vs-tough', why: 'Glass is hard, but it shattered: it is BRITTLE, the opposite of tough. Hard and tough are different properties.' },
           { t: 'Cast iron: it’s a strong, heavy metal', mis: 'brittle-vs-weak', why: 'Cast iron is strong when squashed, but it cracked and snapped when hit: it is brittle, not tough.' },
-        ] });
-      ui.mcq({ id: 'p06.ductile', label: 'Test lab: which sample was most ductile?', q: 'Which sample was the most <b>ductile</b>, and what showed it?',
+        ] }));
+      qs.push(ui.mcq({ id: 'p06.ductile', label: 'Test lab: which sample was most ductile?', q: 'Which sample was the most <b>ductile</b>, and what showed it?',
         options: [
-          { t: 'Copper: it stretched a long way in the pull test before it snapped', ok: true, why: 'Yes! Ductile = can be stretched (drawn) out into a thin wire under tension. That’s why copper is used for wires.' },
+          { t: 'Copper: it stretched a long way before it snapped', ok: true, why: 'Yes! Ductile = can be stretched (drawn) out into a thin wire under tension. That’s why copper is used for wires.' },
           { t: 'Copper: it spread out flat when I hammered it', mis: 'malleable-vs-ductile', why: 'Right material, wrong reason! Spreading flat under the hammer shows copper is MALLEABLE (shaped by squashing). Ductile is about STRETCHING.' },
-          { t: 'Rubber: it stretched the furthest', mis: 'elastic-vs-stretchy', why: 'Rubber stretched but sprang back: that’s ELASTIC. Ductile means it stays stretched out, like a wire.' },
+          { t: 'Rubber: it stretched the furthest of them all', mis: 'elastic-vs-stretchy', why: 'Think about what the rubber did when you let go. Ductile means it STAYS stretched out, like a wire.' },
           { t: 'Cast iron: it’s a metal, so it can be pulled into wire', why: 'Cast iron snapped almost straight away: it is brittle, not ductile.' },
-        ] });
-      ui.mcq({ id: 'p06.elastic', label: 'Test lab: which sample was elastic?', q: 'Which sample was the most <b>elastic</b>?',
+        ] }));
+      qs.push(ui.mcq({ id: 'p06.elastic', label: 'Test lab: which sample was elastic?', q: 'Which sample was the most <b>elastic</b>?',
         options: [
           { t: 'Rubber: it went back to its original length when I let go', ok: true, why: 'Yes! Elastic = returns to its original shape when the force is removed.' },
           { t: 'Copper: it stretched a really long way before it snapped', mis: 'elastic-vs-stretchy', why: 'Copper stretched a lot, but it STAYED stretched when you let go. Elastic means it springs back to its original shape, like the rubber.' },
           { t: 'Mild steel: it stretched, then necked', why: 'Mild steel stayed stretched (and got thin in the middle): that isn’t elastic. Rubber sprang back.' },
           { t: 'Glass: it didn’t change shape at all', why: 'Glass just snapped: it is brittle. Elastic means it stretches and then springs back, like rubber.' },
-        ] });
+        ] }));
 
-      ui.box('<b>Glass</b>: very hard, but brittle (shatters). <b>Mild steel</b>: tough (dents, stays in one piece). <b>Copper</b>: malleable (spreads when hammered) and ductile (stretches a long way). <b>Cast iron</b>: brittle (cracks and snaps). <b>Rubber</b>: elastic (springs back).', { tag: 'Lab notes' });
+      // the lab notes list every answer, so they stay blurred until all four questions are right
+      ui.p('<span class="small">The lab notes un-blur when you have got all four questions right.</span>');
+      const labNotes = ui.box('<b>Glass</b>: very hard, but brittle (shatters). <b>Mild steel</b>: tough (dents, stays in one piece). <b>Copper</b>: malleable (spreads when hammered) and ductile (stretches a long way). <b>Cast iron</b>: brittle (cracks and snaps). <b>Rubber</b>: elastic (springs back).', { tag: 'Lab notes' });
+      const allRight = () => ['hardest', 'toughest', 'ductile', 'elastic'].every((k) => { const it = Book.state.items['p06.' + k]; return it && it.correct === true; });
+      if (!allRight()) { labNotes.classList.add('peek-lock'); qs.forEach((q) => q.addEventListener('click', () => setTimeout(() => { if (allRight()) labNotes.classList.remove('peek-lock'); }, 50))); }
     },
   });
 })();

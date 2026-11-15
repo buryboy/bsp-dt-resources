@@ -306,21 +306,25 @@
           dim([[fx - 22, fy], [fx - 22, fy + s]], '2 cm', fx - 62, fy + s / 2 + 8, 3.0);
           dim([[fx + 4, fy - d - 14], [fx + s + 4, fy - d - 14]], '2 cm', fx + 30, fy - d - 26, 3.6);
           dim([[fx + s + 14, fy + s + 2], [fx + s + d + 14, fy + s - d + 2]], '2 cm', fx + s + d + 50, fy + s - 6, 4.2);
-          k.text('volume = 2 × 2 × 2', 640, 110, 4.8, 5.6, { size: 22 });
+          k.text('volume = L × W × H', 640, 110, 4.8, 5.6, { size: 22 });
         },
         sound(k) { k.play('stroke', 0.1, { material: 'pen', dur: 1.4, gain: 0.45 }); k.play('stroke', 2, { material: 'pen', dur: 1, gain: 0.45 }); [3, 3.6, 4.2].forEach((a) => k.play('stroke', a, { material: 'pen', dur: 0.4, gain: 0.4 })); k.play('stroke', 4.8, { material: 'pen', dur: 0.8, gain: 0.4 }); },
       });
-      ui.fill({
+      const calc = ui.fill({
         id: 'p03.calc', label: 'Density calculation: 2 cm cube, 21.6 g',
         q: '<b>Calculate:</b> a block is <b>2 cm × 2 cm × 2 cm</b> and has a mass of <b>21.6 g</b>.',
-        html: 'Volume = 2 × 2 × 2 = {{8|8.0}} cm³<br>Density = mass ÷ volume = 21.6 ÷ 8 = {{2.7|2.70}} g/cm³<br>Use the numbers under the tank: the block is made of {{aluminium|aluminum}}.',
-        explain: '21.6 ÷ 8 = <b>2.7 g/cm³</b>, the density of <b>aluminium</b>. It is more than 1.00, so it sinks.',
+        html: 'Volume = length × width × height = {{8|8.0}} cm³<br>Density = mass ÷ volume = 21.6 ÷ <b class="vol-echo">(your volume)</b> = {{2.7|2.70}} g/cm³<br>Compare your answer with the numbers under the tank: the block is made of {{aluminium|aluminum}}.',
+        explain: 'Volume = 2 × 2 × 2 = 8 cm³. 21.6 ÷ 8 = <b>2.7 g/cm³</b>, the density of <b>aluminium</b>. It is more than 1.00, so it sinks.',
       });
+      { const inp = calc.querySelector('input.blank'), echo = calc.querySelector('.vol-echo');
+        const upd = () => { echo.textContent = inp.value.trim() || '(your volume)'; };
+        inp.addEventListener('input', upd); upd(); }
+
 
       // ---------------------------------------------------------------- 3. Absorbency drip test
       ui.el('h2', '', 'Experiment 2: the drip test');
-      ui.box('<b>Absorbency</b> is how well a material <span class="key">soaks up moisture</span> (liquid). Paper, cotton, untreated softwood and MDF edges are very absorbent. Acrylic, glass, metals and polypropylene are not.', { tag: 'Notes' });
-      ui.p('<b>Tap each sample</b> to drip a drop of water on it. Does it <b>soak in</b> or <b>bead up</b>?');
+      ui.box('<b>Absorbency</b> is how well a material <span class="key">soaks up moisture</span> (liquid).', { tag: 'Notes' });
+      ui.p('<b>Tap each sample</b> to drip a drop of water on it. Does it <b>soak in</b> or <b>bead up</b>? <span class="small">Test all five to un-blur the notes underneath.</span>');
       const DW = 860, DH = 470, BENCH = 342;
       const SAMP = [
         { k: 'towel', n: ['paper towel'], abs: true, th: 7, dur: 0.9, R: 60 },
@@ -445,6 +449,11 @@
         s.t = 0; queue = s; Book.sfx('tick', { gain: 0.4 }); DS.go();
       });
       DS.go();
+
+      // the examples are the results of the drip test, so they stay blurred until all five samples have been tested
+      const absNotes = ui.box('<b>Very absorbent:</b> paper, cotton, untreated softwood and MDF edges. <b>Not absorbent:</b> acrylic, glass, metals and polypropylene.', { tag: 'Notes' });
+      { const allTested = () => /\(5\/5 tested\)/.test((rDrip.get() || {}).answer || '');
+        if (!allTested()) { absNotes.classList.add('peek-lock'); const set0 = rDrip.set; rDrip.set = (v) => { set0(v); if (allTested()) absNotes.classList.remove('peek-lock'); }; } }
 
       ui.mcq({
         id: 'p03.absorb', label: 'Why is outdoor timber painted or varnished?',

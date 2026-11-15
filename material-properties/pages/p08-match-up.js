@@ -22,7 +22,7 @@ Book.page({
 
     // ---- working properties ----
     ui.el('h2', '', 'Working properties <span class="small">(how it <i>behaves</i> under a force)</span>');
-    ui.match({
+    const workMatch = ui.match({
       id: 'p08.working', label: 'Match 6 working properties to definitions',
       q: 'Now the <b>working properties</b>. Careful: some of these look alike!',
       pairs: [
@@ -36,7 +36,7 @@ Book.page({
     });
 
     // ---- memory trick animation: malleable = mallet, ductile = drawn ----
-    ui.p('The two that everyone mixes up are <span class="key">malleable</span> and <span class="key">ductile</span>. Tap to watch a memory trick.');
+    ui.p('The two that everyone mixes up are <span class="key">malleable</span> and <span class="key">ductile</span>. Tap to watch a memory trick. <span class="small">(It un-blurs when you have finished the working properties match above.)</span>');
     const blockDims = (t) => {
       // the metal block gets squashed flatter and wider by two hammer blows (area roughly constant)
       const s = [[0, 120, 70], [4.75, 175, 48], [5.95, 260, 32]];
@@ -129,6 +129,10 @@ Book.page({
       },
     });
 
+    // the memory trick shows two of the matches, so it stays blurred until the working properties match is finished
+    { const trick = ui.root.lastElementChild, fin = () => { const it = Book.state.items['p08.working']; return !!(it && it.correct != null); };
+      if (!fin()) { trick.classList.add('peek-lock'); workMatch.addEventListener('click', () => setTimeout(() => { if (fin()) trick.classList.remove('peek-lock'); }, 50)); } }
+
     // ---- opposites ----
     ui.el('h2', '', 'Opposites');
     ui.fill({
@@ -137,7 +141,7 @@ Book.page({
       html: '<div style="line-height:2.4">' +
         '<b>tough</b> &nbsp;⟷&nbsp; {{brittle|britle|brittel|brittal|brital|brittle material}} <span class="small">(snaps or shatters on impact, like glass)</span><br>' +
         '<b>conductor</b> &nbsp;⟷&nbsp; {{insulator|insulater|insulators|an insulator|insulater|insolator|insulator material}} <span class="small">(lets little heat or electricity through)</span><br>' +
-        '<b>elastic</b> &nbsp;⟷&nbsp; {{plastic|plastik|plasticity|plastic deformation}} <span class="small">(stays deformed, like plasticine)</span></div>',
+        '<b>elastic</b> &nbsp;⟷&nbsp; {{plastic|plastik|plasticity|plastic deformation}} <span class="small">(stays in its new shape, like clay)</span></div>',
       explain: 'Tough ⟷ <b>brittle</b>, conductor ⟷ <b>insulator</b>, elastic ⟷ <b>plastic</b> (it stays in its new shape).',
     });
   },

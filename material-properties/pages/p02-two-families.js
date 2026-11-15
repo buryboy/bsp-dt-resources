@@ -281,15 +281,17 @@
         },
       });
 
-      ui.box('<p style="margin:0 0 10px"><span class="key">Physical properties</span> describe what a material <b>is like</b> (its make-up), whatever you do to it: absorbency, density, fusibility, electrical conductivity and thermal conductivity.</p>' +
+      const famNotes = ui.box('<p style="margin:0 0 10px"><span class="key">Physical properties</span> describe what a material <b>is like</b> (its make-up), whatever you do to it: absorbency, density, fusibility, electrical conductivity and thermal conductivity.</p>' +
         '<p style="margin:0 0 10px"><span class="key">Working properties</span> (sometimes called <i>mechanical</i> properties) describe how a material <b>behaves when a force is applied or it is worked</b>: strength, hardness, toughness, malleability, ductility and elasticity.</p>' +
         '<p class="small" style="margin:0">Quick test: if you have to <b>push, pull, hit, bend or shape</b> it to find out, it\'s a working property.</p>', { tag: 'Notes' });
 
       const flat = (n) => n.replace(/\n/g, ' ');
       const all = [...PHYS.map(([n]) => ({ t: flat(n), b: 0, mis: 'physical-vs-working' })), ...WORK.map(([n]) => ({ t: flat(n), b: 1, mis: 'physical-vs-working' }))];
-      ui.sort({ id: 'p02.families', label: 'Sort 11 properties: physical or working', q: '<b>Sort them!</b> Tap a property, then tap its family.',
+      ui.p('<span class="small">Read the notes first. When you start sorting, the notes and the drawing <b>blur out</b> until you get all 11 right (or after 3 checks).</span>');
+      const famSort = ui.sort({ id: 'p02.families', label: 'Sort 11 properties: physical or working', q: '<b>Sort them!</b> Tap a property, then tap its family.',
         buckets: ['Physical: what it IS like', 'Working: how it BEHAVES under a force'], items: all,
         explain: 'All 11 sorted! 5 physical, 6 working.' });
+      ui.hideWhile(famSort, 'p02.families', [famNotes, ...ui.root.querySelectorAll('canvas.ink-anim')]);
 
       ui.mcq({ id: 'p02.dent', label: 'Which family: "will it dent if a child drops it?"',
         q: 'A designer asks: <i>"Will it dent if a child drops it?"</i> Which family is that question about?',

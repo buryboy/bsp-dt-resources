@@ -114,6 +114,16 @@
     const fb = (d) => el('div', 'fb', '', d);
     const showFb = (f, ok, html) => { f.className = 'fb on ' + (ok ? 'good' : 'bad'); f.innerHTML = html; };
 
+    // ui.hideWhile(actEl, id, [els]): once the student starts the activity, blur the notes that give the answers
+    // away until they get it fully right (or have had 3 tries).
+    ui.hideWhile = (actEl, id, els) => {
+      const done = () => { const it = st.items[id]; return it && (it.correct === true || it.attempts >= 3); };
+      const set = (on) => els.forEach((e) => { const w = e.closest('.ink-anim-wrap') || e; w.classList.toggle('peek-lock', on); });
+      if (done()) return;
+      const start = () => { if (!done()) { set(true); Ink.stopAll(root); } };
+      actEl.addEventListener('pointerdown', start, { passive: true });
+      actEl.addEventListener('click', () => setTimeout(() => { if (done()) set(false); }, 50));
+    };
     ui.record = (id, o = {}) => rec(pageObj, id, { label: o.label || id, type: o.type || 'custom', max: o.max ?? 1 });
 
     ui.mcq = (o) => {

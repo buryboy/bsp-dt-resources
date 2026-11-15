@@ -47,7 +47,7 @@ Book.page({
         k.text('ouch!', 230, 90, 8.6, 9.0, { size: 34, color: Ink.RED, font: 'bubble' });
         k.text('still cool', 560, 110, 9.2, 9.8, { size: 26 });
         k.arrow(k.curve([600, 120], [640, 150], [640, 200], [610, 230]), 9.6, 10.2, { w: 2 });
-        k.text('Metals are good THERMAL CONDUCTORS', 430, 425, 10.2, 11.6, { size: 26, align: 'center', color: Ink.RED });
+        k.text('Only the METAL handle got hot. Why?', 430, 425, 10.2, 11.6, { size: 26, align: 'center', color: Ink.RED });
       },
       sound(k) {
         k.bed('room', 0, 12, { gain: 0.35 });
@@ -60,15 +60,18 @@ Book.page({
       },
     });
 
-    ui.box('<b>Why?</b> Heat travels through some materials much faster than others. This is a <span class="key">physical property</span> called <span class="key">thermal conductivity</span>. Metals like steel are good <b>thermal conductors</b>. Wood and polymers are <b>thermal insulators</b>, which is why pan handles are often made from them.<br><span class="small">Fun fact: a metal spoon in a cold drawer feels colder than a wooden one, but they are the same temperature! The metal conducts heat away from your hand faster.</span>', { tag: 'Notes' });
 
-    ui.mcq({ id: 'p01.check', label: 'Why does the steel spoon get hot?', q: 'So, why did the steel spoon handle get hot?',
+    const check = ui.mcq({ id: 'p01.check', label: 'Why does the steel spoon get hot?', q: 'So, why did the steel spoon handle get hot? <span class="small">(Work it out from what you saw. The notes below un-blur when you get it right.)</span>',
       options: [
-        { t: 'Steel has high thermal conductivity, so heat travels along it quickly', ok: true },
-        { t: 'Steel is a hard material', mis: 'physical-vs-working', why: 'Hardness is about resisting scratches and dents, not heat.' },
-        { t: 'Steel is heavier (denser) than wood', mis: 'density-vs-weight', why: 'Density is mass for its size: it doesn\'t decide how heat travels.' },
-        { t: 'Metal is naturally warmer than wood', mis: 'metal-feels-cold', why: 'All three started at room temperature. It\'s about how fast heat moves.' },
+        { t: 'Steel has high thermal conductivity: heat travels along it fast', ok: true },
+        { t: 'Steel is a hard material, so it heats up more than wood', mis: 'physical-vs-working', why: 'Hardness is about resisting scratches and dents, not heat.' },
+        { t: 'Steel is heavier (denser) than wood, so it holds more heat', mis: 'density-vs-weight', why: 'Density is mass for its size: it doesn\'t decide how heat travels.' },
+        { t: 'Metal is naturally warmer than wood or polypropylene', mis: 'metal-feels-cold', why: 'All three started at room temperature. It\'s about how fast heat moves.' },
       ] });
+    const notes = ui.box('<b>Why?</b> Heat travels through some materials much faster than others. This is a <span class="key">physical property</span> called <span class="key">thermal conductivity</span>. Metals like steel are good <b>thermal conductors</b>. Wood and polymers are <b>thermal insulators</b>, which is why pan handles are often made from them.<br><span class="small">Fun fact: a metal spoon in a cold drawer feels colder than a wooden one, but they are the same temperature! The metal conducts heat away from your hand faster.</span>', { tag: 'Notes' });
+    // the notes give the answer away, so they stay blurred until the question has been answered correctly
+    const answered = () => { const it = Book.state.items['p01.check']; return !!(it && it.correct === true); };
+    if (!answered()) { notes.classList.add('peek-lock'); check.addEventListener('click', () => setTimeout(() => { if (answered()) notes.classList.remove('peek-lock'); }, 50)); }
     ui.rate({ id: 'p01.conf', label: 'Confidence: I can explain thermal conductivity', q: 'How confident do you feel explaining this to a friend?' });
   },
 });

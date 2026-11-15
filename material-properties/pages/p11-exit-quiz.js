@@ -41,13 +41,13 @@ Book.page({
       { t: 'Only a small piece would float', mis: 'density-vs-weight', why: 'Big and small pieces of pine have the same density (0.50 g/cm³), so both float.' },
     ]);
     Q(3, 'why metal spoon feels cold', 'A metal spoon and a wooden spoon have been in the same drawer all day. The metal one <b>feels</b> colder. Why?', [
-      { t: 'Metal has a high thermal conductivity, so it conducts heat away from your hand faster', ok: true, why: 'Both spoons are at room temperature. The metal conducts heat away from your hand quickly, so it feels cold.' },
+      { t: 'Metal conducts heat away from your hand faster than wood', ok: true, why: 'Both spoons are at room temperature. The metal conducts heat away from your hand quickly, so it feels cold.' },
       { t: 'The metal spoon really is at a lower temperature', mis: 'metal-feels-cold', why: 'They have been in the same drawer, so both are at room temperature. It is about how fast heat leaves your hand.' },
-      { t: 'Wood makes its own warmth', mis: 'metal-feels-cold', why: 'Wood does not make heat. It is a thermal insulator, so it takes heat from your hand slowly and feels warm.' },
+      { t: 'Wood makes its own warmth, so it never feels cold', mis: 'metal-feels-cold', why: 'Wood does not make heat. It is a thermal insulator, so it takes heat from your hand slowly and feels warm.' },
       { t: 'Metal is denser, so it holds more cold', mis: 'density-vs-weight', why: 'Density is mass per unit volume, and "cold" is not something a material holds. Metal conducts heat away from your hand faster.' },
     ]);
     Q(4, 'why PVC on cables', 'Why is the outside of an electrical cable made from <b>PVC</b>?', [
-      { t: 'PVC is an electrical insulator, so electricity cannot flow through it and give you a shock', ok: true, why: 'PVC is an electrical insulator (and flexible), so it keeps the electricity inside the copper core.' },
+      { t: 'PVC is an electrical insulator, so you cannot get a shock', ok: true, why: 'PVC is an electrical insulator (and flexible), so it keeps the electricity inside the copper core.' },
       { t: 'PVC is a good electrical conductor, so the current flows well', mis: 'conductor-insulator', why: 'Polymers like PVC are INSULATORS. The copper inside is the conductor.' },
       { t: 'PVC has a low thermal conductivity, which stops electricity', mis: 'heat-vs-electricity', why: 'Thermal conductivity is about heat. Stopping electricity needs an ELECTRICAL insulator.' },
       { t: 'PVC is tough, so electricity cannot get through it', mis: 'physical-vs-working', why: 'Toughness is a working property (absorbing impacts). Letting electricity through or not is a physical property: electrical conductivity.' },
@@ -67,10 +67,10 @@ Book.page({
 
     ui.el('h2', '', 'Working properties');
     Q(7, 'glass: hard but brittle', 'Glass is very <b>hard</b>. Which statement is correct?', [
-      { t: 'Glass resists scratches, but it is brittle, so it can shatter on impact', ok: true, why: 'Hard (resists scratches and wear) is not the same as tough (absorbs impact). Glass is hard but brittle.' },
-      { t: 'Glass is tough, because it is hard', mis: 'hard-vs-tough', why: 'Hard does not mean tough. Glass is hard but brittle: it cannot absorb an impact without shattering.' },
+      { t: 'Glass resists scratches, but it can shatter on impact', ok: true, why: 'Hard (resists scratches and wear) is not the same as tough (absorbs impact). Glass is hard but brittle.' },
+      { t: 'Glass is tough, because hard materials absorb impacts', mis: 'hard-vs-tough', why: 'Hard does not mean tough. Glass is hard but brittle: it cannot absorb an impact without shattering.' },
       { t: 'Glass is brittle, so it is weak and cannot hold any load', mis: 'brittle-vs-weak', why: 'Brittle does not mean weak. Brittle materials can be strong in compression; they snap or shatter under impact.' },
-      { t: 'Glass is brittle because it is soft', mis: 'hard-vs-tough', why: 'Glass is very hard. Brittle is the opposite of TOUGH, not of hard: glass is hard AND brittle.' },
+      { t: 'Glass is brittle because its surface is so soft', mis: 'hard-vs-tough', why: 'Glass is very hard. Brittle is the opposite of TOUGH, not of hard: glass is hard AND brittle.' },
     ]);
     Q(8, 'pressing a car panel', 'A flat sheet of low-carbon steel is <b>pressed</b> into a curved car door without cracking. Which property makes this possible?', [
       { t: 'Malleability', ok: true, why: 'Malleable = permanently shaped by compression (hammered, pressed, rolled) without cracking.' },
@@ -92,8 +92,8 @@ Book.page({
     ]);
 
     ui.el('h2', '', 'How do you feel?');
-    ui.rate({ id: 'p11.conf-physical', label: 'Confidence: physical properties', q: 'How confident are you with the <b>physical properties</b> (absorbency, density, fusibility, electrical and thermal conductivity)?' });
-    ui.rate({ id: 'p11.conf-working', label: 'Confidence: working properties', q: 'How confident are you with the <b>working properties</b> (strength, hardness, toughness, malleability, ductility, elasticity)?' });
+    ui.rate({ id: 'p11.conf-physical', label: 'Confidence: physical properties', q: 'How confident are you with the <b>physical properties</b> (what a material is like: think of the float tank, the wax-and-pin race, the bulb tester and the furnace)?' });
+    ui.rate({ id: 'p11.conf-working', label: 'Confidence: working properties', q: 'How confident are you with the <b>working properties</b> (how a material behaves under a force: think of the scratch, hammer and pull tests)?' });
     ui.write({ id: 'p11.unsure', label: 'Still not sure about…', marks: 0, lines: 2,
       q: "What's one thing about material properties you're still not sure about?",
       scheme: ['Any honest answer'] });

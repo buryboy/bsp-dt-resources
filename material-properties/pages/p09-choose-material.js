@@ -119,8 +119,8 @@ Book.page({
     brief(1, 'pan', 'saucepan', ['"The pan must heat', 'the soup quickly', 'on the hob."'], pan('body'),
       { label: 'Saucepan body: material', options: [
         { t: 'Aluminium', ok: true, why: 'Good choice: aluminium (or stainless steel) is used for pan bodies. Now justify it.' },
-        { t: 'Polypropylene', why: 'Polypropylene is a thermal insulator and melts at about 160 °C: it would melt on the hob.' },
-        { t: 'Oak', why: 'Wood is a thermal insulator (slow to heat) and it burns.' },
+        { t: 'Polypropylene', why: 'Polypropylene melts at about 160 °C: the pan would melt on the hob.' },
+        { t: 'Oak', why: 'An oak pan would take ages to heat the soup, and it would burn on the hob.' },
       ] },
       { label: 'Saucepan body: justifying property', options: [
         { t: 'High thermal conductivity', ok: true, why: 'Heat travels through it quickly, so the food heats up fast. Its high melting point helps too.' },
@@ -131,20 +131,20 @@ Book.page({
     brief(2, 'handle', 'pan handle', ['"Customers must be able', 'to hold the handle', 'while it cooks."'], pan('handle'),
       { label: 'Saucepan handle: material', options: [
         { t: 'Phenol formaldehyde (a thermosetting polymer)', ok: true, why: 'Good choice: phenol formaldehyde, a thermoset (wood also works). Now justify it.' },
-        { t: 'Polypropylene (a thermoforming polymer)', mis: 'fusibility-thermoset', why: 'Polypropylene is fusible: it melts at about 160 °C, so it could soften right next to the hot pan.' },
-        { t: 'Aluminium', why: 'Aluminium is a good thermal conductor: the handle would get hot.' },
+        { t: 'Polypropylene (a thermoforming polymer)', mis: 'fusibility-thermoset', why: 'Polypropylene melts at about 160 °C, so it could go soft right next to the hot pan.' },
+        { t: 'Aluminium', why: 'An aluminium handle would soon be far too hot to hold.' },
       ] },
       { label: 'Saucepan handle: justifying property', options: [
         { t: 'Low thermal conductivity, and a thermoset does not soften when hot', ok: true, why: 'It is a thermal insulator, so the handle stays cool, and a thermoset does not melt (it chars).' },
-        { t: 'It is an electrical insulator', mis: 'heat-vs-electricity', why: 'True, but the hob problem is HEAT. The key property is low thermal conductivity.' },
+        { t: 'It is an electrical insulator, so the handle is safe to hold', mis: 'heat-vs-electricity', why: 'True, but the hob problem is HEAT. The key property is low thermal conductivity.' },
         { t: 'High fusibility, so it melts and seals onto the pan', mis: 'fusibility-thermoset', why: 'Thermosets are not fusible: they char instead of melting. That is exactly why they suit hot handles.' },
       ] });
 
     brief(3, 'core', 'cable', ['"Carry electricity to', 'a lamp along a thin,', 'bendy wire."'], cable('core'),
       { label: 'Cable core: material', options: [
         { t: 'Copper', ok: true, why: 'Good choice: copper is used for wires. Now justify it.' },
-        { t: 'PVC', mis: 'conductor-insulator', why: 'PVC is an electrical insulator: electricity cannot flow through it. It goes on the OUTSIDE.' },
-        { t: 'Glass', mis: 'conductor-insulator', why: 'Glass is an electrical insulator, and brittle too.' },
+        { t: 'PVC', mis: 'conductor-insulator', why: 'Electricity cannot flow through PVC, so the lamp would never light.' },
+        { t: 'Glass', mis: 'conductor-insulator', why: 'Electricity cannot flow through glass, and a glass wire would snap instead of bending.' },
       ] },
       { label: 'Cable core: justifying property', options: [
         { t: 'High electrical conductivity, and ductile (can be drawn into wire)', ok: true, why: 'Electricity flows through it easily, and it can be drawn out into thin wire.' },
@@ -156,8 +156,8 @@ Book.page({
     brief(4, 'insul', 'cable', ['"Cover the wire so', 'nobody gets a shock,', 'and let it bend."'], cable('insul'),
       { label: 'Cable insulation: material', options: [
         { t: 'PVC', ok: true, why: 'Good choice: PVC is the usual cable insulation. Now justify it.' },
-        { t: 'Aluminium', mis: 'conductor-insulator', why: 'Aluminium is a metal: all metals conduct electricity, so it would not protect you.' },
-        { t: 'Glass', why: 'Glass is an electrical insulator, but it is brittle and cannot bend with the cable.' },
+        { t: 'Aluminium', mis: 'conductor-insulator', why: 'Aluminium is a metal: touch it and you would still get a shock.' },
+        { t: 'Glass', why: 'Glass would stop the shock, but it cannot bend with the cable: it would snap.' },
       ] },
       { label: 'Cable insulation: justifying property', options: [
         { t: 'Electrical insulator, and flexible', ok: true, why: 'Electricity cannot flow through it, so you do not get a shock, and it bends with the wire.' },
@@ -168,37 +168,37 @@ Book.page({
     brief(5, 'drill', 'drill bit', ['"Drill holes in steel', 'and stay sharp for', 'a long time."'], drill,
       { label: 'Drill bit: material', options: [
         { t: 'High-speed steel', ok: true, why: 'Good choice: high-speed steel (HSS) is used for drill bits. Now justify it.' },
-        { t: 'Lead', why: 'Lead is very soft (low hardness): it would be blunt straight away.' },
-        { t: 'Acrylic', why: 'Acrylic is brittle and much softer than steel: it would snap or wear away.' },
+        { t: 'Lead', why: 'Lead is far softer than the steel it has to cut: it would be blunt straight away.' },
+        { t: 'Acrylic', why: 'Acrylic is much softer than steel: it would snap or wear away.' },
       ] },
       { label: 'Drill bit: justifying property', options: [
-        { t: 'Hardness: resists wear, so it stays sharp', ok: true, why: 'Hardness is resisting scratching, wear and indentation, so the cutting edges stay sharp.' },
-        { t: 'Toughness', mis: 'hard-vs-tough', why: 'Toughness is absorbing an impact without breaking. Staying sharp (resisting wear) is HARDNESS.' },
-        { t: 'Strength', mis: 'strong-vs-hard', why: 'Strength is withstanding a force without breaking. Resisting wear is HARDNESS.' },
+        { t: 'Hardness: resists scratching, wear and denting', ok: true, why: 'Hardness is resisting scratching, wear and indentation, so the cutting edges stay sharp.' },
+        { t: 'Toughness: absorbs an impact without breaking', mis: 'hard-vs-tough', why: 'True of toughness, but the brief is about staying sharp. Resisting wear is HARDNESS.' },
+        { t: 'Strength: withstands a force without breaking', mis: 'strong-vs-hard', why: 'True of strength, but the brief is about staying sharp. Resisting wear is HARDNESS.' },
       ] });
 
     brief(6, 'panel', 'car door', ['"Press a flat sheet', 'into a curved door', 'with no cracks."'], car,
       { label: 'Car body panel: material', options: [
         { t: 'Low-carbon (mild) steel', ok: true, why: 'Good choice: low-carbon steel (or aluminium) sheet is used for car panels. Now justify it.' },
-        { t: 'Cast iron', why: 'Cast iron is not malleable: it would crack when pressed.' },
-        { t: 'Glass', why: 'Glass is not malleable and is brittle: it would crack.' },
+        { t: 'Cast iron', why: 'Cast iron would crack as soon as the press squashed it.' },
+        { t: 'Glass', why: 'A glass sheet would shatter in the press.' },
       ] },
       { label: 'Car body panel: justifying property', options: [
-        { t: 'Malleable: can be pressed into shape without cracking', ok: true, why: 'Pressing is compression, and malleable materials take the new shape without cracking. Steel is also tough.' },
-        { t: 'Ductile', mis: 'malleable-vs-ductile', why: 'Ductile is stretching into wire (tension). Pressing a sheet is compression: MALLEABLE.' },
-        { t: 'Elastic', mis: 'elastic-vs-stretchy', why: 'An elastic material springs back to its original shape: the door would go flat again!' },
+        { t: 'Malleable: shaped by compression without cracking', ok: true, why: 'Pressing is compression, and malleable materials take the new shape without cracking. Steel is also tough.' },
+        { t: 'Ductile: drawn out under tension without breaking', mis: 'malleable-vs-ductile', why: 'Ductile is stretching into wire (tension). Pressing a sheet is compression: MALLEABLE.' },
+        { t: 'Elastic: returns to its shape when the force is removed', mis: 'elastic-vs-stretchy', why: 'An elastic material springs back to its original shape: the door would go flat again!' },
       ] });
 
     brief(7, 'bungee', 'bungee cord', ['"Stretch round the', 'luggage, then spring', 'back every time."'], bungee,
       { label: 'Bungee cord: material', options: [
         { t: 'Rubber', ok: true, why: 'Good choice: rubber is used for bungee cords and bike tyres. Now justify it.' },
         { t: 'Lead', mis: 'elastic-vs-stretchy', why: 'Lead bends easily but stays bent: it does not spring back.' },
-        { t: 'Copper wire', mis: 'elastic-vs-stretchy', why: 'Copper can be drawn into wire (ductile), but stretched copper stays stretched.' },
+        { t: 'Copper wire', mis: 'elastic-vs-stretchy', why: 'Stretched copper wire stays stretched: it would go slack after one use.' },
       ] },
       { label: 'Bungee cord: justifying property', options: [
-        { t: 'Elasticity: returns to its original shape', ok: true, why: 'Elastic means it returns to its original shape when the force is removed.' },
-        { t: 'It stretches a long way', mis: 'elastic-vs-stretchy', why: 'Stretching is not enough: plasticine stretches but stays stretched. Elastic means it RETURNS to shape.' },
-        { t: 'Ductility', mis: 'elastic-vs-stretchy', why: 'Ductile means it can be drawn into wire and stays that way. Springing back is ELASTICITY.' },
+        { t: 'Elasticity: it returns to its original shape', ok: true, why: 'Elastic means it returns to its original shape when the force is removed.' },
+        { t: 'Stretchiness: it can be pulled a very long way', mis: 'elastic-vs-stretchy', why: 'Stretching is not enough: plasticine stretches but stays stretched. Elastic means it RETURNS to shape.' },
+        { t: 'Ductility: it can be drawn out long and thin', mis: 'elastic-vs-stretchy', why: 'Ductile means it can be drawn into wire and stays that way. Springing back is ELASTICITY.' },
       ] });
 
     // ---- final brief: the kayak, as an exam-style written answer ----

@@ -356,7 +356,8 @@
         ES.go();
       });
       ES.go();
-      ui.sort({
+      ui.p('<span class="small">Test every sample first. When you start sorting, the tester <b>blurs out</b> until you get them all right (or after 3 checks).</span>');
+      const condSort = ui.sort({
         id: 'p04.conductors', label: 'Sort: electrical conductors vs insulators', q: 'Sort the materials. <b>Tap a card</b>, then tap the box it belongs in.',
         buckets: ['Conductors (bulb lights)', 'Insulators (no light)'],
         items: [
@@ -365,6 +366,7 @@
         ],
         explain: 'All metals conduct electricity (and heat). Polymers, wood, glass and ceramics are insulators. That is why copper cable is covered in PVC.',
       });
+      ui.hideWhile(condSort, 'p04.conductors', [ES.wrap]);
 
       ui.tf({
         id: 'p04.heat-vs-elec', label: 'T/F: the wax-and-pin race tests electrical conductivity',
@@ -492,9 +494,9 @@
         q: 'Polypropylene melted at about 160 °C, so it can be melted and remoulded. <b>Why can\'t the melamine plate be melted down and recycled the same way?</b>',
         options: [
           { t: 'Melamine is a thermosetting polymer: when heated it chars and burns instead of melting', ok: true, why: 'Exactly. Thermosetting polymers have no melting point, so they cannot be melted and remoulded.' },
-          { t: 'Its melting point is higher than steel\'s, so it just needs a hotter furnace', mis: 'fusibility-thermoset', why: 'Even at 1600 °C (hotter than molten steel) it only charred. Thermosetting polymers never melt.' },
-          { t: 'It is a thermoforming polymer, so it only softens a little', mis: 'fusibility-thermoset', why: 'Thermoforming polymers like polypropylene DO melt. Melamine is a thermosetting polymer: it chars instead.' },
-          { t: 'It is too dense to turn into a liquid', mis: 'fusibility-thermoset', why: 'Density does not decide this: steel is far denser and it melted. Thermosetting polymers char instead of melting.' },
+          { t: 'Melamine has a higher melting point than steel: it just needs a hotter furnace', mis: 'fusibility-thermoset', why: 'Even at 1600 °C (hotter than molten steel) it only charred. Thermosetting polymers never melt.' },
+          { t: 'Melamine is a thermoforming polymer: when heated it only softens a little', mis: 'fusibility-thermoset', why: 'Thermoforming polymers like polypropylene DO melt. Melamine is a thermosetting polymer: it chars instead.' },
+          { t: 'Melamine is too dense: a material that heavy for its size cannot become a liquid', mis: 'fusibility-thermoset', why: 'Density does not decide this: steel is far denser and it melted. Thermosetting polymers char instead of melting.' },
         ],
         explain: 'This is also why saucepan handles are made from thermosetting polymers: they don\'t soften when hot.',
       });

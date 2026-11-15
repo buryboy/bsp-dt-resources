@@ -367,21 +367,34 @@
     build(ui) {
       ui.h('Working properties', { size: 52 });
       ui.p('Working properties are about how a material <b>behaves when a force is applied</b>. There are <b>six</b> to learn. Tap each picture to watch the forces at work.');
+      const notes = []; // everything that hands over the answers to the check at the bottom
       DEFS.forEach(([name, def, good, poor, spec], i) => {
         ui.el('h2', '', `${i + 1}. ${name}`);
-        ui.box(`<p style="margin:0 0 6px"><span class="key">${name}</span>: ${def}</p><p class="small" style="margin:0"><b class="green">Good:</b> ${good} &nbsp; <b class="red">Poor:</b> ${poor}</p>`);
-        ui.anim(spec);
-        if (WATCH[name]) ui.box(WATCH[name], { tag: 'Don\'t mix them up!', color: R });
+        notes.push(ui.box(`<p style="margin:0 0 6px"><span class="key">${name}</span>: ${def}</p><p class="small" style="margin:0"><b class="green">Good:</b> ${good} &nbsp; <b class="red">Poor:</b> ${poor}</p>`));
+        ui.anim(spec); notes.push(ui.root.lastElementChild);
+        if (WATCH[name]) notes.push(ui.box(WATCH[name], { tag: 'Don\'t mix them up!', color: R }));
       });
 
       ui.el('h2', '', 'Now check you\'ve got them');
-      ui.fill({ id: 'p05.blanks', label: 'Working properties: fill the blanks (5)', q: '<b>Fill in the blanks.</b>',
+      ui.p('<span class="small">This is a <b>memory</b> check. As soon as you start it, all the notes and pictures above <b>blur out</b>. They come back when you have finished all three questions.</span>');
+      const checks = [];
+      checks.push(ui.fill({ id: 'p05.blanks', label: 'Working properties: fill the blanks (5)', q: '<b>Fill in the blanks.</b>',
         html: 'Malleable materials can be permanently shaped by {{compression|hammering|squashing|pressing|rolling|squeezing|compressing}} without cracking. Ductile materials can be drawn into a thin {{wire|wires}} under {{tension|stretching|pulling|tensile force}}. The opposite of tough is {{brittle}}. A material that returns to its original shape when the force is removed is {{elastic}}.',
-        explain: 'All five right! Malleable = compression, ductile = tension into a wire, tough vs brittle, elastic = returns.' });
-      ui.tf({ id: 'p05.tf-glass', label: 'T/F: glass is hard so it is tough', statement: 'Glass is very hard, so it must be tough as well.', answer: false, mis: 'hard-vs-tough',
-        explain: '<b>False.</b> Hard means it resists scratches and dents. Tough means it absorbs an impact without cracking. Glass is hard but <b>brittle</b>: hit it and it shatters.' });
-      ui.tf({ id: 'p05.tf-elastic', label: 'T/F: stretchy plasticine is elastic', statement: 'Plasticine stretches a long way, so it is very elastic.', answer: false, mis: 'elastic-vs-stretchy',
-        explain: '<b>False.</b> Elastic means it <b>returns to its original shape</b> when you let go. Plasticine stays stretched: that is <b>plastic</b> behaviour, not elastic.' });
+        explain: 'All five right! Malleable = compression, ductile = tension into a wire, tough vs brittle, elastic = returns.' }));
+      checks.push(ui.tf({ id: 'p05.tf-glass', label: 'T/F: glass is hard so it is tough', statement: 'Glass is very hard, so it must be tough as well.', answer: false, mis: 'hard-vs-tough',
+        explain: '<b>False.</b> Hard means it resists scratches and dents. Tough means it absorbs an impact without cracking. Glass is hard but <b>brittle</b>: hit it and it shatters.' }));
+      checks.push(ui.tf({ id: 'p05.tf-elastic', label: 'T/F: stretchy plasticine is elastic', statement: 'Plasticine stretches a long way, so it is very elastic.', answer: false, mis: 'elastic-vs-stretchy',
+        explain: '<b>False.</b> Elastic means it <b>returns to its original shape</b> when you let go. Plasticine stays stretched: that is <b>plastic</b> behaviour, not elastic.' }));
+
+      // blur the notes from the first tap on any check until all three are finished
+      // (blanks: all right or 3 checks; true/false: answered)
+      const it = (id) => Book.state.items[id];
+      const fin = () => { const f = it('p05.blanks'); return !!(f && (f.correct === true || f.attempts >= 3) && it('p05.tf-glass') && it('p05.tf-elastic')); };
+      const lock = (on) => notes.forEach((e) => e.classList.toggle('peek-lock', on));
+      if (!fin()) checks.forEach((c) => {
+        c.addEventListener('pointerdown', () => { if (!fin()) { lock(true); Ink.stopAll(ui.root); } }, { passive: true });
+        c.addEventListener('click', () => setTimeout(() => { if (fin()) lock(false); }, 50));
+      });
     },
   });
 })();

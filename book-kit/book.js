@@ -33,6 +33,7 @@
   const $ = (s, r = document) => r.querySelector(s);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const shuffle = (a, seed) => { const r = H.rng(seed || 1), b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  const idSeed = (id) => { let h = 7; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0; return h || 1; };
   Book.shuffle = shuffle; Book.esc = esc;
 
   // ---------------- sound ----------------
@@ -130,7 +131,7 @@
     ui.mcq = (o) => {
       const r = rec(pageObj, o.id, { label: o.label || o.q, type: 'mcq', max: 1 });
       const d = act(o.id, o.label, o.q), box = el('div', 'opts', '', d), f = fb(d);
-      const opts = o.shuffle === false ? o.options : shuffle(o.options, o.id.length * 31 + 7);
+      const opts = o.shuffle === false ? o.options : shuffle(o.options, idSeed(o.id));
       const prev = r.get();
       opts.forEach((op) => {
         const b = el('button', 'opt', esc(op.t), box); b.type = 'button';
@@ -204,7 +205,7 @@
       const tray = el('div', 'tray', '', d), bk = el('div', 'buckets', '', d), btn = el('button', 'btn', 'Check', d), f = fb(d);
       const buckets = o.buckets.map((name, k) => { const b = el('div', 'bucket', `<h4>${esc(name)}</h4>`, bk); b.dataset.k = k; return b; });
       let picked = null;
-      const cards = shuffle(o.items, o.id.length * 17).map((it) => { const c = el('span', 'card', esc(it.t), tray); c._it = it; return c; });
+      const cards = shuffle(o.items, idSeed(o.id) + 17).map((it) => { const c = el('span', 'card', esc(it.t), tray); c._it = it; return c; });
       const pick = (c) => { if (picked) picked.classList.remove('picked'); picked = picked === c ? null : c; if (picked) picked.classList.add('picked'); Book.sfx('tick', { gain: 0.5 }); };
       cards.forEach((c) => (c.onclick = (e) => { e.stopPropagation(); const bk2 = c.parentElement.closest('.bucket'); if (picked && picked !== c && bk2) { bk2.appendChild(picked); picked.classList.remove('picked'); picked = null; Book.scribble(0.12); return; } c.classList.remove('right', 'wrong'); pick(c); }));
       buckets.forEach((b) => (b.onclick = () => { if (!picked) return; b.appendChild(picked); picked.classList.remove('picked'); picked = null; Book.scribble(0.12); }));
@@ -222,7 +223,7 @@
     ui.match = (o) => {
       const r = rec(pageObj, o.id, { label: o.label || o.q, type: 'match', max: o.pairs.length });
       const d = act(o.id, o.label, o.q || 'Tap a word, then tap its meaning.'), grid = el('div', 'pairs', '', d), f = fb(d);
-      const defs = shuffle(o.pairs.map((p, k) => ({ t: p[1], k, mis: p[2] })), o.id.length * 13 + 3);
+      const defs = shuffle(o.pairs.map((p, k) => ({ t: p[1], k, mis: p[2] })), idSeed(o.id) + 13);
       let sel = null, score = 0, done = 0; const wrongs = [];
       const terms = o.pairs.map((p, k) => { const c = el('span', 'card', `<b style="font-family:Fredoka">${esc(p[0])}</b>`, grid); c._k = k; const dc = el('span', 'card', esc(defs[k].t), grid); dc._k = defs[k].k; dc._def = true; return [c, dc]; }).flat();
       terms.forEach((c) => (c.onclick = () => {

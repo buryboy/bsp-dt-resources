@@ -92,7 +92,7 @@
         Object.assign(it, v);
         if (it.first == null && v.correct != null) it.first = !!v.correct;
         if (v.max != null) it.max = v.max;
-        save(); updateContents();
+        save(); updateContents(); updateQuizChip();
       },
     };
   }
@@ -351,16 +351,98 @@
   }
   let p_finish;
 
+
+  // ---------------- progress (this device + what the server already has for this email) ----------------
+  const MAN = () => window.BOOK_MANIFEST || { ids: [] };
+  function progress() {
+    const ids = MAN().ids || []; if (!ids.length) return 0;
+    const remote = new Set(st.remoteDone || []);
+    const done = ids.filter((id) => remote.has(id) || (st.items[id] && (st.items[id].attempts || st.items[id].answer))).length;
+    return done / ids.length;
+  }
+  Book.progress = progress;
+  async function pullProgress() {
+    if (!C.backend || !st.student) return;
+    try {
+      const r = await fetch(C.backend + '?a=progress&lesson=' + encodeURIComponent(LESSON) + '&email=' + encodeURIComponent(st.student.email), { cache: 'no-store' });
+      const j = await r.json(); if (!j.ok) return;
+      st.remoteDone = j.done || [];
+      if (j.quiz && j.quiz.submitted) st.quiz = Object.assign({}, st.quiz, { submitted: true, score: j.quiz.score, max: j.quiz.max });
+      save(); updateQuizChip();
+    } catch (e) {}
+  }
+
+  // ---------------- final quiz (one go, unlocks at 75%) ----------------
+  let FQ = null;
+  Book.finalQuiz = (def) => { FQ = def; };
+  const UNLOCK = C.quizUnlock ?? 0.75;
+  function updateQuizChip() {
+    const c = $('#quizchip'); if (!c || !FQ) return;
+    const p = progress(), q = st.quiz || {};
+    c.style.display = st.student ? '' : 'none';
+    c.classList.toggle('locked', !q.submitted && p < UNLOCK);
+    c.textContent = q.submitted ? `✓ Final quiz ${q.score}/${q.max}` : p < UNLOCK ? `🔒 Final quiz · ${Math.round(p * 100)}% done` : '★ Final quiz';
+  }
+  function hashStr(s) { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+  function openQuiz() {
+    if (!st.student) return Book.toast('Sign in on the cover first');
+    const q = st.quiz || (st.quiz = { answers: {} });
+    if (!q.submitted && progress() < UNLOCK) return Book.toast(`Finish ${Math.round(UNLOCK * 100)}% of the book to unlock the final quiz (you're at ${Math.round(progress() * 100)}%)`);
+    Ink.stopAll(document);
+    const o = $('#quiz'); o.classList.add('on');
+    const N = FQ.questions.length, seed = hashStr(st.student.email);
+    if (q.submitted) {
+      o.innerHTML = `<div class="qsheet"><div class="content" style="padding-top:40px"></div></div>`;
+      const c = o.querySelector('.content'); c.appendChild(Ink.bubble('Final quiz', { size: 56 }));
+      c.insertAdjacentHTML('beforeend', `<div class="box" id="qdone"><p class="lede" style="margin:0 0 10px">Submitted. You scored <b class="key">${q.score} / ${q.max}</b>.</p><p style="margin:0">Your teacher has your answers and can send you a breakdown of what you got right and wrong.</p></div><button class="btn" id="qclose">◂ Back to the book</button>`);
+      requestAnimationFrame(() => Ink.frame(c.querySelector('#qdone')));
+      c.querySelector('#qclose').onclick = () => o.classList.remove('on');
+      return;
+    }
+    q.answers = q.answers || {};
+    o.innerHTML = `<div class="qsheet"><div class="content" style="padding-top:40px"></div></div>`;
+    const c = o.querySelector('.content'); c.appendChild(Ink.bubble('Final quiz', { size: 56 }));
+    c.insertAdjacentHTML('beforeend', `<div class="box" id="qrules"><span class="tag">Read this first</span><b>${N} questions. One go only.</b> Pick one answer for each question. You can change your answers until you press <b>Submit</b>; after that they are locked and sent to your teacher. No notes, no helping each other!</div>`);
+    requestAnimationFrame(() => Ink.frame(c.querySelector('#qrules'), { color: Ink.RED }));
+    FQ.questions.forEach((qu, i) => {
+      const id = 'fq.q' + String(i + 1).padStart(2, '0');
+      const d = document.createElement('div'); d.className = 'act'; c.appendChild(d);
+      d.innerHTML = `<div class="q"><b>${i + 1}.</b> ${qu.q}</div><div class="opts"></div>`;
+      requestAnimationFrame(() => Ink.frame(d, { shadow: false, w: 2.2 }));
+      const opts = shuffle([qu.a, ...qu.d], seed + i * 101 + 3), box = d.querySelector('.opts');
+      opts.forEach((t) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt' + (q.answers[id] === t ? ' sel' : ''); b.textContent = t; box.appendChild(b);
+        b.onclick = () => { box.querySelectorAll('.opt').forEach((x) => x.classList.remove('sel')); b.classList.add('sel'); q.answers[id] = t; save(); Book.scribble(0.1); count(); }; });
+    });
+    c.insertAdjacentHTML('beforeend', `<p id="qcount" style="font-family:Fredoka;font-weight:600"></p><button class="btn" id="qsubmit">Submit my answers</button> <button class="btn ghost" id="qclose">◂ Back to the book (answers kept)</button><p class="small" style="margin-top:10px">&nbsp;</p>`);
+    const count = () => { const n = Object.keys(q.answers).length; c.querySelector('#qcount').textContent = `Answered ${n} of ${N}.` + (n < N ? ' Unanswered questions score 0.' : ''); };
+    count();
+    c.querySelector('#qclose').onclick = () => o.classList.remove('on');
+    let armed = 0;
+    const sb = c.querySelector('#qsubmit');
+    sb.onclick = () => {
+      if (Date.now() - armed > 6000) { armed = Date.now(); sb.textContent = 'Sure? Tap again to submit. You only get one go.'; setTimeout(() => { if (!q.submitted) sb.textContent = 'Submit my answers'; }, 6000); return; }
+      let score = 0;
+      const items = FQ.questions.map((qu, i) => { const id = 'fq.q' + String(i + 1).padStart(2, '0'), a = q.answers[id] || '', ok = a === qu.a; if (ok) score++;
+        return { id, label: 'Final quiz Q' + (i + 1), type: 'quiz', answer: a, correct: ok, first: ok, score: ok ? 1 : 0, max: 1, attempts: a ? 1 : 0, mis: ok ? '' : qu.mis || '' }; });
+      q.submitted = true; q.score = score; q.max = N; q.at = Date.now(); save();
+      queue.push({ v: 1, lesson: LESSON, event: 'quiz', session: st.session, student: st.student, page: { id: 'fq', title: 'Final quiz', n: 99 }, seconds: 0, visits: 1, items, unanswered: items.filter((x) => !x.answer).map((x) => x.id), ts: Date.now() });
+      localStorage.setItem(LS + '.q', JSON.stringify(queue)); flush();
+      Book.sfx('success', { gain: 0.5 }); updateQuizChip(); openQuiz();
+    };
+  }
+  Book.openQuiz = openQuiz;
+
   // ---------------- start ----------------
   Book.start = () => {
     document.body.insertAdjacentHTML('beforeend', `<div id="book"></div>
-      <div id="topbar"><span class="chip" id="contbtn">☰ Contents</span><span class="chip" id="savechip">${st.student ? esc(st.student.name.split(' ')[0]) : 'not signed in'}</span><span class="chip" id="mute">${Book.muted ? '🔇' : '🔊'}</span></div>
+      <div id="topbar"><span class="chip" id="contbtn">☰ Contents</span><span class="chip quizchip" id="quizchip" style="display:none"></span><span class="chip" id="savechip">${st.student ? esc(st.student.name.split(' ')[0]) : 'not signed in'}</span><span class="chip" id="mute">${Book.muted ? '🔇' : '🔊'}</span></div>
       <div id="bottombar"><button class="navbtn back" id="prev">◂ Back</button><span id="pagenum"></span><button class="navbtn" id="next">Next ▸</button></div>
-      <div id="contents"></div><div id="toast"></div>`);
+      <div id="contents"></div><div id="quiz"></div><div id="toast"></div>`);
+    $('#quizchip').onclick = openQuiz;
     const cov = coverPage(); cov.gate = null; pages.unshift(cov);
     p_finish = finishPage(); pages.push(p_finish);
     // gate leaving the cover
-    $('#next').onclick = () => { if (cur === 0 && !checkCover()) return; if (cur === 0) $('#savechip').textContent = st.student.name.split(' ')[0]; Book.next(); };
+    $('#next').onclick = () => { if (cur === 0 && !checkCover()) return; if (cur === 0) { $('#savechip').textContent = st.student.name.split(' ')[0]; pullProgress(); updateQuizChip(); } Book.next(); };
     $('#prev').onclick = Book.prev;
     $('#contbtn').onclick = () => { if (!st.student) return Book.toast('Sign in on the cover first'); const c = $('#contents'); c.classList.toggle('on'); updateContents(); };
     $('#mute').onclick = () => { Book.muted = !Book.muted; Ink.muted = Book.muted; localStorage.setItem('book.muted', Book.muted ? '1' : '0'); $('#mute').textContent = Book.muted ? '🔇' : '🔊'; };
@@ -375,7 +457,7 @@
     try { const c = H.layer(256, 256), x = c.getContext('2d'), img = x.createImageData(256, 256), r = H.rng(907); for (let i = 0; i < img.data.length; i += 4) { img.data[i] = 120; img.data[i + 1] = 108; img.data[i + 2] = 88; img.data[i + 3] = (0.02 + (r() - 0.5) * 0.05) * 255; } x.putImageData(img, 0, 0); document.documentElement.style.setProperty('--tooth', `url(${c.toDataURL()})`); } catch (e) {}
     const resume = st.student ? Math.min(st.at || 0, pages.length - 1) : 0;
     show(resume, 0);
-    flush();
+    flush(); updateQuizChip(); pullProgress();
   };
   Book.pages = pages;
   Book.current = () => cur;

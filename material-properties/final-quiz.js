@@ -1,0 +1,25 @@
+// Final quiz: 20 questions, one go. a = correct answer, d = three wrong answers, mis = misconception tag (optional).
+Book.finalQuiz({
+  questions: [
+    { q: 'Which of these is a <b>physical</b> property of a material?', a: 'Density', d: ['Toughness', 'Ductility', 'Hardness'], mis: 'physical-vs-working' },
+    { q: 'Which of these is a <b>working</b> property of a material?', a: 'Malleability', d: ['Fusibility', 'Absorbency', 'Thermal conductivity'], mis: 'physical-vs-working' },
+    { q: 'What does <b>density</b> mean?', a: 'The mass of a material for its volume', d: ['How heavy an object is in total', 'How hard a material is to scratch', 'How strong a material is when pulled'], mis: 'density-vs-weight' },
+    { q: 'A block has a volume of <b>10 cm³</b> and a mass of <b>27 g</b>. What is its density?', a: '2.7 g/cm³', d: ['270 g/cm³', '0.37 g/cm³', '17 g/cm³'] },
+    { q: 'Water has a density of 1.00 g/cm³. Which material will <b>float</b>?', a: 'Polypropylene (0.90 g/cm³)', d: ['Acrylic (1.18 g/cm³)', 'Aluminium (2.70 g/cm³)', 'Ebony (1.12 g/cm³)'], mis: 'density-vs-weight' },
+    { q: 'Why is a garden shed painted or treated with preservative?', a: 'To reduce absorbency so the timber does not rot', d: ['To raise its density so it is stronger', 'To make the timber a better insulator', 'To increase its hardness against knocks'], mis: 'absorbency' },
+    { q: 'What does <b>fusibility</b> describe?', a: 'How a material turns to liquid when heated', d: ['How a material soaks up a liquid', 'How well a material carries a current', 'How well a material resists a flame'] },
+    { q: 'What happens when a <b>thermosetting</b> polymer is heated strongly?', a: 'It chars and burns without melting', d: ['It melts so it can be remoulded', 'It softens and then sets again', 'It turns into a liquid at 160 °C'], mis: 'fusibility-thermoset' },
+    { q: 'Why are saucepan <b>bodies</b> made from aluminium or stainless steel?', a: 'They have high thermal conductivity', d: ['They have high electrical conductivity', 'They have very low density', 'They are thermal insulators'], mis: 'heat-vs-electricity' },
+    { q: 'A metal door handle feels colder than a wooden door on the same day. Why?', a: 'Metal conducts heat away from your hand faster', d: ['Metal is always at a lower temperature', 'Wood produces a little heat of its own', 'Metal absorbs the cold from the air'], mis: 'metal-feels-cold' },
+    { q: 'Why is electrical cable covered in <b>PVC</b>?', a: 'PVC is an electrical insulator', d: ['PVC is an electrical conductor', 'PVC is a thermal conductor', 'PVC is harder than copper'], mis: 'conductor-insulator' },
+    { q: 'What does <b>hardness</b> mean?', a: 'Resisting scratching, wear and denting', d: ['Absorbing an impact without breaking', 'Withstanding a force without bending', 'Returning to shape after a force'], mis: 'hard-vs-tough' },
+    { q: 'What does <b>toughness</b> mean?', a: 'Absorbing an impact without breaking', d: ['Resisting scratching, wear and denting', 'Being drawn out into a thin wire', 'Being difficult to cut or to drill'], mis: 'hard-vs-tough' },
+    { q: 'Which word is the <b>opposite</b> of tough?', a: 'Brittle', d: ['Soft', 'Weak', 'Elastic'], mis: 'brittle-vs-weak' },
+    { q: 'Glass is very hard. Which statement about glass is also true?', a: 'It is brittle, so it shatters on impact', d: ['It is tough, so it resists impacts', 'It is malleable, so it can be pressed', 'It is ductile, so it stretches a lot'], mis: 'hard-vs-tough' },
+    { q: 'A <b>malleable</b> material can be…', a: 'hammered or pressed into shape without cracking', d: ['stretched out into a long thin wire', 'bent and will spring back to its shape', 'scratched easily by a much harder one'], mis: 'malleable-vs-ductile' },
+    { q: 'Copper can be drawn into thin wire without snapping. Which property is this?', a: 'Ductility', d: ['Malleability', 'Elasticity', 'Fusibility'], mis: 'malleable-vs-ductile' },
+    { q: 'What does <b>elasticity</b> mean?', a: 'Returning to its original shape when the force is removed', d: ['Stretching a very long way before it finally breaks', 'Staying in its new shape when the force is removed', 'Bending easily without needing a large force'], mis: 'elastic-vs-stretchy' },
+    { q: 'A steel cable holding up a lift is being pulled from both ends. Which force is this?', a: 'Tension', d: ['Compression', 'Torsion', 'Shear'] },
+    { q: 'Which property matters <b>most</b> for the cutting tip of a drill bit?', a: 'Hardness, so it stays sharp', d: ['Ductility, so it stretches', 'Elasticity, so it springs', 'Low density, so it floats'], mis: 'strong-vs-hard' },
+  ],
+});

@@ -8,6 +8,7 @@ import sys, http.server, threading, functools, argparse, pathlib, time
 from playwright.sync_api import sync_playwright
 ap = argparse.ArgumentParser(); ap.add_argument('out'); ap.add_argument('--pages', default='')
 ap.add_argument('--size', default='1180x820'); ap.add_argument('--full', action='store_true'); ap.add_argument('--script', default='')
+ap.add_argument('--book', default='material-properties', help='workbook folder')
 ap.add_argument('--wait', type=float, default=1.2)
 a = ap.parse_args(); out = pathlib.Path(a.out); out.mkdir(parents=True, exist_ok=True)
 root = pathlib.Path(__file__).resolve().parent.parent
@@ -22,7 +23,7 @@ with sync_playwright() as p:
     pg = ctx.new_page()
     pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errs.append(m.text))
     pg.on('pageerror', lambda e: errs.append('pageerror: ' + str(e)))
-    pg.goto(f'http://127.0.0.1:{srv.server_port}/index.html?mute=1'); pg.wait_for_timeout(1500)
+    pg.goto(f'http://127.0.0.1:{srv.server_port}/' + a.book + '/index.html?mute=1'); pg.wait_for_timeout(1500)
     pg.screenshot(path=str(out / 'p00-cover.png'))
     pg.fill('#cv-name', 'Test Student'); pg.fill('#cv-email', 'test.student@bspcloud.net'); pg.select_option('#cv-class', '10A')
     pg.click('#next'); pg.wait_for_timeout(1100)

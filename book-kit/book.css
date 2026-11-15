@@ -42,7 +42,7 @@ button { font-family: inherit; }
 #topbar { position: fixed; left: 14px; right: 14px; bottom: 20px; z-index: 31; display: flex; gap: 8px; align-items: center; pointer-events: none; }
 #topbar .chip { pointer-events: auto; }
 #topbar #savechip { margin-left: auto; max-width: 190px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 700px) { #topbar { bottom: 70px; } #book { bottom: 112px !important; } }
+@media (max-width: 1000px) { #topbar { bottom: 72px; } #book { bottom: 116px !important; } }
 .chip { font: 600 15px Fredoka, system-ui; color: var(--ink); background: rgba(255,255,255,.85); border: 2px solid rgba(30,46,150,.35); border-radius: 99px; padding: 4px 12px; cursor: pointer; }
 .chip.saving::after { content: ' · saving…'; opacity: .6; }
 .chip.saved::after { content: ' · saved ✓'; color: var(--green); }
@@ -135,3 +135,12 @@ textarea.lines:focus, input.blank:focus { outline: 2px solid rgba(30,46,150,.25)
 @media (max-width: 900px) { .navbtn { min-width: 112px; font-size: 19px; } #pagenum { min-width: 54px; } #topbar #savechip { max-width: 150px; } }
 
 .peek-lock { position: relative; filter: blur(7px); opacity: .55; pointer-events: none; user-select: none; transition: filter .4s, opacity .4s; }
+
+.quizchip { background: #fff7c9; border-color: #c9a300; }
+.quizchip.locked { background: rgba(255,255,255,.6); border-color: rgba(30,46,150,.25); color: #667; }
+#quiz { position: fixed; inset: 0; z-index: 45; display: none; background: rgba(40,25,12,.75); }
+#quiz.on { display: block; }
+#quiz .qsheet { position: absolute; inset: 12px; max-width: 980px; margin: 0 auto; border-radius: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; background-color: var(--paper);
+  background-image: repeating-linear-gradient(180deg, transparent 0, transparent calc(var(--R) - 2px), var(--rule) calc(var(--R) - 2px), var(--rule) calc(var(--R) - 0.8px), transparent calc(var(--R) - 0.8px), transparent var(--R)); background-attachment: local; }
+#quiz .content { padding-left: 40px; padding-right: 40px; }
+@media (max-width: 900px) { #topbar { flex-wrap: wrap-reverse; } }

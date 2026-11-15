@@ -29,6 +29,7 @@ const json = (o) => ContentService.createTextOutput(JSON.stringify(o)).setMimeTy
 function doPost(e) {
   let d;
   try { d = JSON.parse(e.postData.contents); } catch (err) { return json({ ok: false, error: 'bad json' }); }
+  if (d && d.a === 'email') return sendResultEmail(d);
   if (!d || !d.student || !d.student.email || !d.lesson) return json({ ok: false, error: 'missing student' });
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
@@ -50,6 +51,8 @@ function doPost(e) {
       const L = ss.getSheetByName('Latest'), lv = L.getRange(1, 1, Math.max(1, L.getLastRow()), 1).getValues(), index = {};
       for (let i = 1; i < lv.length; i++) index[lv[i][0]] = i + 1;
       const appends = [];
+      // the final quiz is one go only: ignore a second submission
+      if (d.event === 'quiz' && index[d.lesson + '|' + email + '|' + d.items[0].id]) return json({ ok: true, ignored: 'quiz already submitted' });
       d.items.forEach((it) => {
         const key = d.lesson + '|' + email + '|' + it.id;
         const row = [key, d.lesson, email, clip(st.name, 80), clip(st.cls, 20), d.page.n, d.page.id, clip(d.page.title, 80), clip(it.id, 60), clip(it.label, 160), clip(it.type, 20), clip(it.answer, 1500),
@@ -67,6 +70,15 @@ function doGet(e) {
   const p = e.parameter || {};
   try {
     if (p.a === 'ping') return json({ ok: true, now: Date.now() });
+    if (p.a === 'progress') { // what has this student already attempted? (lets the book unlock the quiz on another device)
+      const em = String(p.email || '').toLowerCase(), lessonP = p.lesson || '';
+      const v = book().getSheetByName('Latest').getDataRange().getValues(), done = []; let qs = 0, qn = 0;
+      for (let i = 1; i < v.length; i++) if (v[i][1] === lessonP && v[i][2] === em) {
+        if (String(v[i][8]).indexOf('fq.') === 0) { qn++; qs += Number(v[i][14]) || 0; }
+        else if (v[i][16] > 0 || v[i][11] !== '') done.push(v[i][8]);
+      }
+      return json({ ok: true, done: done, quiz: qn ? { submitted: true, score: qs, max: qn } : null });
+    }
     const pin = PROPS.getProperty('PIN') || '';
     if (!pin || String(p.pin || '') !== pin) return json({ ok: false, error: 'Wrong PIN' });
     const ss = book(), lesson = p.lesson || '';
@@ -77,3 +89,17 @@ function doGet(e) {
 
 // Run once from the editor to create the results Sheet and grant permissions.
 function setup() { Logger.log(book().getUrl()); }
+
+// Teacher dashboard → email one student their final-quiz breakdown (sent from the teacher's school account).
+function sendResultEmail(d) {
+  const pin = PROPS.getProperty('PIN') || '';
+  if (!pin || String(d.pin || '') !== pin) return json({ ok: false, error: 'Wrong PIN' });
+  const to = String(d.to || '').toLowerCase();
+  const sv = book().getSheetByName('Students').getDataRange().getValues();
+  const known = sv.some(function (r) { return r[1] === d.lesson && r[2] === to; });
+  if (!known) return json({ ok: false, error: 'Not a student in this workbook' });
+  MailApp.sendEmail({ to: to, subject: String(d.subject || 'Your quiz result').slice(0, 150), htmlBody: String(d.html || '').slice(0, 40000), name: 'D&T exercise books' });
+  return json({ ok: true, left: MailApp.getRemainingDailyQuota() });
+}
+// Run once from the editor after updating, to grant the "send email as you" permission.
+function authoriseEmail() { Logger.log('emails left today: ' + MailApp.getRemainingDailyQuota()); }

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Teacher dashboard · D&T exercise books</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Gloria+Hallelujah&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#1e2e96; --red:#b21c26; --green:#186e3c; --amber:#c98a00; --paper:#fbfaf5; --line:#d9deef; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Fredoka, system-ui, sans-serif; color: #1d2340; background: #eef0f6; }
+header { background: var(--ink); color: #fff; padding: 14px 22px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; position: sticky; top: 0; z-index: 10; }
+header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+header .sp { flex: 1; }
+header select, header button, header input { font: 600 15px Fredoka; border-radius: 10px; border: 0; padding: 7px 12px; }
+header button { background: #fff; color: var(--ink); cursor: pointer; }
+.tabs { display: flex; gap: 6px; padding: 12px 22px 0; flex-wrap: wrap; }
+.tab { font: 600 16px Fredoka; padding: 9px 16px; border-radius: 12px 12px 0 0; background: #dfe3f0; cursor: pointer; border: 0; color: #444; }
+.tab.on { background: #fff; color: var(--ink); }
+main { background: #fff; margin: 0 22px 30px; border-radius: 0 14px 14px 14px; padding: 18px; min-height: 60vh; overflow: auto; }
+.muted { color: #777; font-weight: 400; }
+.kpis { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.kpi { background: var(--paper); border: 2px solid var(--line); border-radius: 14px; padding: 10px 16px; min-width: 150px; }
+.kpi b { display: block; font-size: 28px; color: var(--ink); }
+table { border-collapse: collapse; font-size: 14px; }
+th, td { border-bottom: 1px solid #eceef5; padding: 6px 8px; text-align: left; vertical-align: top; }
+th { background: #f7f8fc; position: sticky; top: 0; font-weight: 600; z-index: 1; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; background: #bbb; }
+.dot.on { background: #2bb24c; box-shadow: 0 0 0 3px #2bb24c33; }
+.bar { height: 10px; background: #e6e9f3; border-radius: 9px; overflow: hidden; min-width: 120px; }
+.bar i { display: block; height: 100%; background: var(--ink); }
+/* heatmap */
+.hm td.c { width: 26px; min-width: 26px; height: 26px; padding: 0; border: 1px solid #fff; cursor: pointer; }
+.c.g { background: #3aa65a; } .c.a { background: #f2c14e; } .c.r { background: #e05a4f; } .c.b { background: #c9ccd8; } .c.n { background: #f4f5f9; } .c.i { background: #8fb3ff; }
+.hm th.it { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; font-size: 12px; max-height: 190px; padding: 4px 2px; }
+.hm th.pg { text-align: center; font-size: 12px; background: #e8ebf7; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; margin-right: 14px; font-size: 14px; }
+.legend i { width: 16px; height: 16px; border-radius: 4px; display: inline-block; }
+.q { border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; }
+.q h3 { margin: 0 0 6px; font-size: 17px; }
+.pill { display: inline-block; font-size: 13px; padding: 2px 9px; border-radius: 99px; background: #eef0f8; margin: 2px 4px 2px 0; }
+.pill.red { background: #fde4e2; color: var(--red); }
+.mis { display: grid; grid-template-columns: 260px 1fr 60px; gap: 8px; align-items: center; margin-bottom: 8px; }
+.mis .bar i { background: var(--red); }
+.ans { font-family: 'Gloria Hallelujah', cursive; color: var(--ink); font-size: 15px; white-space: pre-wrap; }
+#pop { position: fixed; z-index: 20; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px #0004; padding: 12px 14px; max-width: 380px; display: none; font-size: 14px; }
+#login { max-width: 420px; margin: 80px auto; background: #fff; border-radius: 18px; padding: 26px; box-shadow: 0 10px 30px #0002; }
+#login input { font: 600 18px Fredoka; width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--line); margin: 8px 0 14px; }
+#login button { font: 700 18px Fredoka; background: var(--ink); color: #fff; border: 0; border-radius: 12px; padding: 12px 20px; cursor: pointer; }
+.err { color: var(--red); }
+</style>
+</head>
+<body>
+<div id="login" style="display:none">
+  <h2 style="margin-top:0">Teacher dashboard</h2>
+  <label>Results link (Apps Script /exec)<input id="lg-api" placeholder="https://script.google.com/macros/s/…/exec"></label>
+  <label>PIN<input id="lg-pin" type="password" inputmode="numeric"></label>
+  <button id="lg-go">Open dashboard</button> <span class="err" id="lg-err"></span>
+</div>
+<div id="app" style="display:none">
+<header>
+  <h1>Results</h1>
+  <select id="bookSel" title="Workbook"></select>
+  <select id="cls"><option value="">All classes</option></select>
+  <label style="font-size:14px"><input type="checkbox" id="today" checked> today only</label>
+  <span class="sp"></span>
+  <span id="upd" class="muted" style="color:#cfd6ff"></span>
+  <button id="csv">⬇ CSV</button>
+  <a id="sheet" target="_blank" style="color:#fff;font-size:14px">open Google Sheet ↗</a>
+</header>
+<div class="tabs">
+  <button class="tab on" data-v="live">🟢 Live class</button>
+  <button class="tab" data-v="grid">🔲 Who did what</button>
+  <button class="tab" data-v="qs">❓ Questions</button>
+  <button class="tab" data-v="mis">🧠 Misconceptions</button>
+  <button class="tab" data-v="written">✍️ Written answers</button>
+  <button class="tab" data-v="quiz">★ Final quiz</button>
+</div>
+<main id="view"></main>
+</div>
+<div id="pop"></div>
+<script src="../workbooks.js?v=1"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const WB = window.WORKBOOKS || { books: [] };
+const qsBook = new URLSearchParams(location.search).get('book') || localStorage.getItem('dash.book');
+let BOOKI = Math.max(0, WB.books.findIndex((b) => b.folder === qsBook));
+let C = {}, MAN = null, FQ = null;
+window.Book = { finalQuiz: (d) => { FQ = d; }, page() {} };
+const loadScript = (src) => new Promise((res) => { const e = document.createElement('script'); e.src = src; e.onload = res; e.onerror = res; document.head.appendChild(e); });
+async function pickBook(i) {
+  BOOKI = i; const b = WB.books[i]; C = { lesson: b.lesson, backend: WB.backend, title: b.title, folder: b.folder };
+  localStorage.setItem('dash.book', b.folder); window.BOOK_MANIFEST = null; FQ = null; data = null;
+  await loadScript('../' + b.folder + '/manifest.js?t=' + Date.now()); await loadScript('../' + b.folder + '/final-quiz.js?t=' + Date.now());
+  MAN = window.BOOK_MANIFEST; document.title = b.title + ' · results';
+}
+let API = localStorage.getItem('dash.api') || WB.backend || '', PIN = localStorage.getItem('dash.pin') || '';
+let data = null, view = 'live';
+const MIS = { 'hard-vs-tough': 'Thinks hard = tough (glass)', 'strong-vs-hard': 'Mixes up strength and hardness', 'malleable-vs-ductile': 'Mixes up malleable and ductile', 'density-vs-weight': 'Thinks heavy = dense (ignores size)', 'elastic-vs-stretchy': 'Thinks elastic = stretchy', 'metal-feels-cold': 'Thinks metals are colder', 'brittle-vs-weak': 'Thinks brittle = weak', 'heat-vs-electricity': 'Mixes up heat and electrical conductivity', 'absorbency': 'Unsure about absorbency / finishes', 'fusibility-thermoset': 'Thinks thermosets melt', 'physical-vs-working': 'Mixes up physical and working properties', 'conductor-insulator': 'Mixes up conductors and insulators' };
+
+function login() {
+  $('#login').style.display = 'block'; $('#lg-api').value = API; $('#lg-pin').value = '';
+  if (WB.backend) $('#lg-api').closest('label').style.display = 'none';
+  $('#lg-go').onclick = async () => { API = $('#lg-api').value.trim(); PIN = $('#lg-pin').value.trim(); const ok = await load(); if (ok) { localStorage.setItem('dash.api', API); localStorage.setItem('dash.pin', PIN); $('#login').style.display = 'none'; start(); } };
+}
+async function load() {
+  try {
+    const r = await fetch(API + '?a=data&pin=' + encodeURIComponent(PIN) + '&lesson=' + encodeURIComponent(C.lesson || ''), { cache: 'no-store' });
+    const j = await r.json();
+    if (!j.ok) { $('#lg-err').textContent = j.error || 'Could not load'; return false; }
+    data = j; $('#upd').textContent = 'updated ' + new Date().toLocaleTimeString(); $('#sheet').href = j.sheet; return true;
+  } catch (e) { $('#lg-err').textContent = 'Could not reach the results link'; $('#upd').textContent = '⚠ offline, retrying'; return false; }
+}
+function filtered() {
+  const cls = $('#cls').value, today = $('#today').checked, t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const sOk = (s) => (!cls || s.class === cls) && (!today || s.lastSeen >= +t0);
+  const students = data.students.filter(sOk).sort((a, b) => a.name.localeCompare(b.name));
+  const emails = new Set(students.map((s) => s.email));
+  const latest = data.latest.filter((r) => emails.has(r.email));
+  // item catalogue in book order
+  const items = {};
+  if (MAN && MAN.pages) MAN.pages.forEach((pg) => pg.items.forEach((it) => (items[it.id] = { id: it.id, label: it.label, type: it.type, pageN: pg.n, pageTitle: pg.title, max: it.max })));
+  data.latest.forEach((r) => { if (!items[r.itemId] && String(r.itemId).indexOf('fq.') !== 0) items[r.itemId] = { id: r.itemId, label: r.label, type: r.type, pageN: +r.pageN, pageTitle: r.pageTitle, max: r.max }; });
+  const seq = MAN ? MAN.ids : [];
+  const order = Object.values(items).sort((a, b) => a.pageN - b.pageN || (seq.indexOf(a.id) - seq.indexOf(b.id)) || a.id.localeCompare(b.id));
+  const cell = {}; latest.forEach((r) => (cell[r.email + '|' + r.itemId] = r));
+  return { students, latest, order, cell };
+}
+const status = (r) => !r ? 'n' : (!r.attempts && !r.answer) ? 'b' : r.correct === '' || r.correct == null ? 'i' : r.first === true ? 'g' : r.correct === true ? 'a' : 'r';
+const pagesTotal = () => Math.max(1, ...data.students.map((s) => +s.pageN || 0));
+
+function render() {
+  if (!data) return;
+  const F = filtered(), v = $('#view');
+  const classes = [...new Set(data.students.map((s) => s.class))].sort(); const sel = $('#cls'), cur = sel.value;
+  sel.innerHTML = '<option value="">All classes</option>' + classes.map((c) => `<option ${c === cur ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  if (view === 'live') {
+    const now = data.now, active = F.students.filter((s) => now - s.lastSeen < 120000).length;
+    const marked = (s) => { let sc = 0, mx = 0; F.order.forEach((it) => { const r = F.cell[s.email + '|' + it.id]; if (+it.max) { mx += +it.max; sc += r ? +r.score || 0 : 0; } }); return [sc, mx]; };
+    const blanks = (s) => F.order.filter((it) => status(F.cell[s.email + '|' + it.id]) === 'b').length;
+    v.innerHTML = `<div class="kpis"><div class="kpi"><b>${F.students.length}</b>students</div><div class="kpi"><b>${active}</b>active in last 2 min</div><div class="kpi"><b>${F.students.filter((s) => s.finished).length}</b>finished</div></div>
+      <table><tr><th>Student</th><th>Class</th><th>Now on</th><th>Progress</th><th>Score</th><th>Left blank</th><th>Last seen</th></tr>
+      ${F.students.map((s) => { const [sc, mx] = marked(s), pv = Object.keys(JSON.parse(s.pagesVisited || '{}')).length, ago = Math.round((now - s.lastSeen) / 60000), bl = blanks(s);
+        return `<tr><td><span class="dot ${now - s.lastSeen < 120000 ? 'on' : ''}"></span>${esc(s.name)}</td><td>${esc(s.class)}</td><td>${s.finished ? '✅ finished' : esc(s.pageN + '. ' + s.pageTitle)}</td>
+        <td><div class="bar"><i style="width:${Math.min(100, pv / (MAN && MAN.pages ? MAN.pages.length : 11) * 100)}%"></i></div><span class="muted">${pv} pages</span></td><td>${sc}/${mx}</td><td>${bl ? `<span class="pill red">${bl} blank</span>` : '–'}</td><td class="muted">${ago < 1 ? 'now' : ago + ' min ago'}</td></tr>`; }).join('')}</table>`;
+  }
+  if (view === 'grid') {
+    const pages = []; F.order.forEach((it) => { const last = pages[pages.length - 1]; if (last && last.n === it.pageN) last.items.push(it); else pages.push({ n: it.pageN, t: it.pageTitle, items: [it] }); });
+    v.innerHTML = `<p class="legend"><span><i class="c g"></i>right first time</span><span><i class="c a"></i>right after retries</span><span><i class="c r"></i>wrong</span><span><i class="c i"></i>answered (no right/wrong)</span><span><i class="c b"></i>skipped / left blank</span><span><i class="c n"></i>not reached</span></p>
+    <div style="overflow:auto"><table class="hm"><tr><th></th>${pages.map((p) => `<th class="pg" colspan="${p.items.length}">${p.n}</th>`).join('')}</tr>
+    <tr><th>Student</th>${F.order.map((it) => `<th class="it" title="${esc(it.label)}">${esc(it.label.slice(0, 34))}</th>`).join('')}</tr>
+    ${F.students.map((s) => `<tr><td style="white-space:nowrap">${esc(s.name)}</td>${F.order.map((it) => { const r = F.cell[s.email + '|' + it.id]; return `<td class="c ${status(r)}" data-k="${esc(s.email + '|' + it.id)}"></td>`; }).join('')}</tr>`).join('')}
+    <tr><td><b>% right 1st time</b></td>${F.order.map((it) => { const rs = F.students.map((s) => F.cell[s.email + '|' + it.id]).filter((r) => r && r.correct !== '' && r.correct != null); const p = rs.length ? Math.round(rs.filter((r) => r.first === true).length / rs.length * 100) : ''; return `<td style="font-size:11px;text-align:center;color:${p !== '' && p < 50 ? 'var(--red)' : '#555'}">${p}</td>`; }).join('')}</tr></table></div>`;
+    v.querySelectorAll('td.c').forEach((td) => (td.onclick = (e) => { const r = F.cell[td.dataset.k], it = F.order[td.cellIndex - 1], s = F.students[td.parentElement.rowIndex - 2]; pop(e, `<b>${esc(s ? s.name : '')}</b><br>${esc(it.label)}<br><span class="ans">${r ? esc(r.answer || '(blank)') : 'not reached'}</span>${r && r.max ? `<br>score ${r.score || 0}/${r.max}, ${r.attempts} tries` : ''}${r && r.mis ? `<br><span class="pill red">${esc(MIS[r.mis.split(',')[0]] || r.mis)}</span>` : ''}`); }));
+  }
+  if (view === 'qs') {
+    const rows = F.order.filter((it) => it.type !== 'rate').map((it) => {
+      const rs = F.students.map((s) => F.cell[s.email + '|' + it.id]).filter(Boolean);
+      const tried = rs.filter((r) => r.attempts || r.answer), marked = tried.filter((r) => r.correct !== '' && r.correct != null);
+      const first = marked.length ? marked.filter((r) => r.first === true).length / marked.length : null;
+      const wrong = {}; tried.filter((r) => r.correct === false || (r.first === false)).forEach((r) => { if (it.type === 'mcq' || it.type === 'tf') wrong[r.answer] = (wrong[r.answer] || 0) + 1; });
+      return { it, n: rs.length, tried: tried.length, blank: rs.length - tried.length, first, wrong };
+    }).sort((a, b) => (a.first == null) - (b.first == null) || a.first - b.first);
+    v.innerHTML = `<p class="muted">Hardest first (lowest % right first time). Blank = student reached the page but left it empty.</p>` + rows.map((q) => `<div class="q"><h3>${esc(q.it.pageN + '. ' + q.it.label)}</h3>
+      ${q.first != null ? `<span class="pill ${q.first < 0.5 ? 'red' : ''}">${Math.round(q.first * 100)}% right first time</span>` : ''}<span class="pill">${q.tried}/${q.n} attempted</span>${q.blank ? `<span class="pill red">${q.blank} left blank</span>` : ''}
+      ${Object.keys(q.wrong).length ? '<div style="margin-top:6px">Common wrong answers: ' + Object.entries(q.wrong).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([a, n]) => `<span class="pill red">${esc(a)} ×${n}</span>`).join('') + '</div>' : ''}</div>`).join('');
+  }
+  if (view === 'mis') {
+    const count = {}, who = {}; F.latest.forEach((r) => String(r.mis || '').split(',').filter(Boolean).forEach((m) => { count[m] = (count[m] || 0) + 1; (who[m] = who[m] || new Set()).add(r.name); }));
+    const max = Math.max(1, ...Object.values(count));
+    v.innerHTML = `<p class="muted">Each wrong answer that comes from a known misconception is tagged. Bars = number of times it showed up; names = who.</p>` + (Object.keys(count).length ? Object.entries(count).sort((a, b) => b[1] - a[1]).map(([m, n]) => `<div class="mis"><b>${esc(MIS[m] || m)}</b><div class="bar"><i style="width:${n / max * 100}%"></i></div><span>${n}×</span></div><div class="muted" style="margin:-4px 0 12px 268px;font-size:13px">${[...who[m]].map(esc).join(', ')}</div>`).join('') : '<p>No misconceptions recorded yet.</p>');
+  }
+  if (view === 'quiz') renderQuiz(F, v);
+  if (view === 'written') {
+    const ws = F.order.filter((it) => it.type === 'write');
+    v.innerHTML = ws.map((it) => `<div class="q"><h3>${esc(it.pageN + '. ' + it.label)} <span class="muted">(${it.max} marks)</span></h3><table style="width:100%"><tr><th style="width:180px">Student</th><th>Answer</th><th style="width:90px">Self-mark</th></tr>
+      ${F.students.map((s) => { const r = F.cell[s.email + '|' + it.id]; return `<tr><td>${esc(s.name)}</td><td class="ans">${r && r.answer ? esc(r.answer) : '<span class="muted">(blank)</span>'}</td><td>${r && r.answer ? (r.score || 0) + '/' + it.max : ''}</td></tr>`; }).join('')}</table></div>`).join('') || '<p>No written answers yet.</p>';
+  }
+}
+function quizRows(F) {
+  const N = FQ ? FQ.questions.length : 20;
+  return F.students.map((s) => { const rs = []; let sc = 0, any = false, at = 0;
+    for (let i = 1; i <= N; i++) { const r = F.cell[s.email + '|fq.q' + String(i).padStart(2, '0')]; rs.push(r); if (r) { any = true; sc += +r.score || 0; at = Math.max(at, r.updated || 0); } }
+    return { s, rs, sc, any, at, N }; });
+}
+function emailHtml(row) {
+  const first = row.s.name.split(' ')[0];
+  const lines = FQ.questions.map((q, i) => { const r = row.rs[i], a = r && r.answer ? r.answer : '(no answer)', ok = r && r.correct === true;
+    return `<tr><td style="padding:6px 8px;vertical-align:top;color:${ok ? '#186e3c' : '#b21c26'};font-weight:bold">${ok ? '✓' : '✗'}</td><td style="padding:6px 8px"><b>${i + 1}. ${q.q.replace(/<[^>]+>/g, '')}</b><br>Your answer: ${esc(a)}${ok ? '' : `<br><span style="color:#186e3c">Correct answer: ${esc(q.a)}</span>`}</td></tr>`; }).join('');
+  return `<div style="font-family:Arial,sans-serif;font-size:14px;color:#222"><p>Hi ${esc(first)},</p><p>Your final quiz result for <b>${esc(C.title)}</b>: <b>${row.sc} / ${row.N}</b>.</p><table style="border-collapse:collapse">${lines}</table><p>Mr Porter<br>Design &amp; Technology</p></div>`;
+}
+async function sendEmail(row, btn) {
+  btn.disabled = true; btn.textContent = 'sending…';
+  try {
+    const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ a: 'email', pin: PIN, lesson: C.lesson, to: row.s.email, subject: C.title + ': your final quiz result (' + row.sc + '/' + row.N + ')', html: emailHtml(row) }) });
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || 'failed');
+    const sent = JSON.parse(localStorage.getItem('dash.sent') || '{}'); sent[C.lesson + '|' + row.s.email] = Date.now(); localStorage.setItem('dash.sent', JSON.stringify(sent));
+    btn.textContent = '✓ sent'; return true;
+  } catch (e) { btn.disabled = false; btn.textContent = '✉ retry'; btn.title = e.message; $('#qmsg').textContent = 'Could not send: ' + e.message; return false; }
+}
+function renderQuiz(F, v) {
+  if (!FQ) { v.innerHTML = '<p>This workbook has no final quiz.</p>'; return; }
+  const rows = quizRows(F), done = rows.filter((r) => r.any), sent = JSON.parse(localStorage.getItem('dash.sent') || '{}');
+  const avg = done.length ? (done.reduce((a, r) => a + r.sc, 0) / done.length).toFixed(1) : '–';
+  v.innerHTML = `<div class="kpis"><div class="kpi"><b>${done.length}/${rows.length}</b>submitted</div><div class="kpi"><b>${avg}</b>average / ${FQ.questions.length}</div></div>
+    <p><button id="qall" class="tab on" style="border-radius:10px;border:2px solid var(--ink)">✉ Email results to everyone who submitted</button> <span id="qmsg" class="err"></span><br><span class="muted">Each student gets their score, what they got right and wrong, and the correct answers, sent from your school Google account.</span></p>
+    <div style="overflow:auto"><table class="hm"><tr><th>Student</th><th>Score</th><th>Submitted</th><th></th>${FQ.questions.map((q, i) => `<th style="text-align:center" title="${esc(q.q.replace(/<[^>]+>/g, ''))}">${i + 1}</th>`).join('')}</tr>
+    ${rows.map((r, k) => `<tr><td style="white-space:nowrap">${esc(r.s.name)}</td><td>${r.any ? `<b>${r.sc}</b>/${r.N}` : '<span class="muted">not done</span>'}</td><td class="muted" style="white-space:nowrap">${r.any ? new Date(r.at).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</td>
+      <td>${r.any ? `<button class="em" data-k="${k}" style="font:600 13px Fredoka;border-radius:8px;border:1px solid var(--ink);background:#fff;color:var(--ink);padding:3px 8px;cursor:pointer">${sent[C.lesson + '|' + r.s.email] ? '✓ sent · again' : '✉ email'}</button>` : ''}</td>
+      ${r.rs.map((x, i) => `<td class="c ${!r.any ? 'n' : !x || !x.answer ? 'b' : x.correct === true ? 'g' : 'r'}" title="${x ? esc(x.answer) : ''}"></td>`).join('')}</tr>`).join('')}
+    <tr><td><b>% correct</b></td><td></td><td></td><td></td>${FQ.questions.map((q, i) => { const p = done.length ? Math.round(done.filter((r) => r.rs[i] && r.rs[i].correct === true).length / done.length * 100) : ''; return `<td style="font-size:11px;text-align:center;color:${p !== '' && p < 50 ? 'var(--red)' : '#555'}">${p}</td>`; }).join('')}</tr></table></div>
+    <p class="muted">Hover a number to see the question; hover a square to see the answer given.</p>`;
+  v.querySelectorAll('button.em').forEach((b) => (b.onclick = () => sendEmail(rows[+b.dataset.k], b)));
+  v.querySelector('#qall').onclick = async (e) => { if (!done.length) return; if (!confirm('Email results to ' + done.length + ' student(s)?')) return; e.target.disabled = true; let n = 0; for (const b of v.querySelectorAll('button.em')) { if (await sendEmail(rows[+b.dataset.k], b)) n++; } $('#qmsg').textContent = n + ' email(s) sent.'; $('#qmsg').style.color = 'var(--green)'; };
+}
+function pop(e, html) { const p = $('#pop'); p.innerHTML = html; p.style.display = 'block'; p.style.left = Math.min(innerWidth - 400, e.clientX + 12) + 'px'; p.style.top = Math.min(innerHeight - 160, e.clientY + 12) + 'px'; }
+document.addEventListener('click', (e) => { if (!e.target.closest('td.c,#pop')) $('#pop').style.display = 'none'; });
+function csv() {
+  const F = filtered(), head = ['name', 'class', 'email', ...F.order.map((it) => it.pageN + ' ' + it.label)];
+  const lines = [head, ...F.students.map((s) => [s.name, s.class, s.email, ...F.order.map((it) => { const r = F.cell[s.email + '|' + it.id]; return r ? (r.max ? `${r.score || 0}/${r.max}` : '') + (r.answer ? ' ' + r.answer : r.attempts ? '' : ' (blank)') : ''; })])];
+  const blob = new Blob([lines.map((l) => l.map((x) => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (C.folder || 'results') + '-results.csv'; a.click();
+}
+let started = false;
+function start() {
+  $('#app').style.display = 'block';
+  if (started) { render(); return; } started = true;
+  const bs = $('#bookSel'); bs.innerHTML = WB.books.map((b, i) => `<option value="${i}" ${i === BOOKI ? 'selected' : ''}>${esc(b.title)}</option>`).join('');
+  bs.onchange = async () => { await pickBook(+bs.value); $('#view').innerHTML = '<p class="muted">Loading…</p>'; if (await load()) render(); };
+  document.querySelectorAll('.tab[data-v]').forEach((t) => (t.onclick = () => { document.querySelectorAll('.tab[data-v]').forEach((x) => x.classList.remove('on')); t.classList.add('on'); view = t.dataset.v; if (view === 'quiz') $('#today').checked = false; render(); }));
+  $('#cls').onchange = render; $('#today').onchange = render; $('#csv').onclick = csv;
+  render(); setInterval(async () => { if (view === 'quiz' && document.querySelector('button.em:disabled')) return; if (await load()) render(); }, 20000);
+}
+(async () => { if (!WB.books.length) { document.body.innerHTML = '<p style="padding:30px">No workbooks registered.</p>'; return; } await pickBook(BOOKI); if (API && PIN && (await load())) start(); else login(); })();
+</script>
+</body>
+</html>

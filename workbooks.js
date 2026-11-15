@@ -4,5 +4,6 @@ window.WORKBOOKS = {
   books: [
     { folder: 'material-properties', lesson: 'material-properties-y10', title: 'Material properties', spec: 'AQA GCSE D&T 3.1.6 · material properties' },
     { folder: 'levers-linkages', lesson: 'levers-linkages-y10', title: 'Levers & linkages', spec: 'AQA GCSE D&T 3.1.5 · mechanical devices: motion, levers, linkages' },
+    { folder: 'systems-electronics', lesson: 'systems-electronics-y10', title: 'Systems & electronics', spec: 'AQA GCSE D&T 3.1.4 · systems approach: inputs, processes, outputs' },
   ],
 };

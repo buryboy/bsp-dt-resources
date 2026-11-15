@@ -25,6 +25,7 @@
   const LESSON = C.lesson || 'lesson';
   const LS = 'book.' + LESSON;
   const pages = [];
+  if (new URLSearchParams(location.search).has('reset')) { localStorage.removeItem(LS); localStorage.removeItem(LS + '.q'); history.replaceState(null, '', location.pathname); }
   let cur = -1, busy = false, enterAt = Date.now();
   const st = JSON.parse(localStorage.getItem(LS) || 'null') || { student: null, session: Math.random().toString(36).slice(2, 10), items: {}, pages: {}, at: 0 };
   const save = () => { try { localStorage.setItem(LS, JSON.stringify(st)); } catch (e) {} };

@@ -17,7 +17,7 @@ with sync_playwright() as p:
     if pg.locator('#cv-class option').count() > 1: pg.select_option('#cv-class', index=1)
     pg.click('#next'); pg.wait_for_timeout(1000)
     n = pg.evaluate('Book.pages.length')
-    for i in range(1, n): pg.evaluate(f'Book.go({i})'); pg.wait_for_timeout(950)
+    for i in range(1, n): pg.evaluate(f'Book.go({i})'); pg.wait_for_timeout(2200)
     pages = pg.evaluate("Book.pages.filter(p=>p.ids.length).map((p)=>({id:p.id,title:p.title,n:Book.pages.indexOf(p),items:p.ids.map(id=>({id,label:p.meta[id].label,type:p.meta[id].type,max:p.meta[id].max}))}))")
     b.close()
 ids = [it['id'] for pg_ in pages for it in pg_['items']]

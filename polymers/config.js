@@ -1,0 +1,25 @@
+// Lesson settings for the Polymers workbook.
+window.BOOK_CONFIG = {
+  lesson: "polymers-y10",
+  title: "Polymers",
+  subtitle: "Thermoforming and thermosetting polymers: from crude oil to the right plastic for the job.",
+  course: 'AQA GCSE Design & Technology · Year 10',
+  emailDomain: 'bspcloud.net',
+  classes: ['10A', '10B', '10C', '10D', '10E', 'Other'],
+  backend: 'https://script.google.com/macros/s/AKfycbzKVTwGqoDJIE2n-dStzYwc44Vwfl4pSijs0ZcpP3AUZ90KYadLb_OHc0A8Ge_Oe7LQJQ/exec',
+  mis: {
+    "thermo-swap": "Mixes up thermoforming and thermosetting",
+    "crosslink": "Thinks thermoforming polymers have cross-links / thermosets do not",
+    "thermoset-recycle": "Thinks thermosets can be melted and recycled",
+    "polymer-source": "Thinks polymers are mined/grown, or mixes up distillation, cracking an",
+    "monomer-polymer": "Mixes up monomer and polymer",
+    "oil-renewable": "Thinks crude oil is renewable / plastics biodegrade quickly",
+    "thermoform-mixup": "Mixes up acrylic, HIPS, HDPE, PP, PVC, PET properties/uses",
+    "thermoset-mixup": "Mixes up ER, MF, PF, PR, UF properties/uses",
+    "acrylic-tough": "Thinks acrylic is tough/impact-resistant",
+    "pp-hinge": "Doesn't know polypropylene is the hinge polymer",
+    "code-mixup": "Wrong recycling code",
+    "additive-mixup": "Mixes up pigment, plasticiser, stabiliser",
+    "property-word": "Uses the wrong property word",
+  },
+};

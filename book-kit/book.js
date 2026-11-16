@@ -45,15 +45,27 @@
   // ---------------- saving ----------------
   const queue = JSON.parse(localStorage.getItem(LS + '.q') || '[]');
   let sending = false;
+  // squash a long backlog: each page save carries the whole page, so only the newest one per page matters; old pings are pointless
+  function compact() {
+    if (queue.length < 6) return;
+    const keep = [], seen = new Set();
+    for (let i = queue.length - 1; i >= 0; i--) {
+      const q = queue[i], ev = q.event, pid = q.page && q.page.id;
+      if (ev === 'ping') { if (!seen.has('ping')) { seen.add('ping'); keep.push(q); } continue; }
+      if ((ev === 'save' || ev === 'enter' || ev === 'leave') && pid && q.items) { const k = (q.lesson || '') + '|' + pid; if (seen.has(k)) continue; seen.add(k); }
+      keep.push(q);
+    }
+    keep.reverse(); queue.length = 0; keep.forEach((q) => queue.push(q)); localStorage.setItem(LS + '.q', JSON.stringify(queue));
+  }
   const saveInfo = { fails: 0, ok: 0, err: '' }; let batchOK = true;
   // tap the name chip to see what saving is doing (handy when a device seems stuck)
-  Book.saveStatus = () => `${queue.length ? queue.length + ' waiting to send' : 'nothing waiting'}${saveInfo.ok ? ' · last saved ' + new Date(saveInfo.ok).toLocaleTimeString() : ''}${saveInfo.err ? ' · last problem: ' + saveInfo.err : ''}`;
+  Book.saveStatus = () => `v12 · ${queue.length ? queue.length + ' waiting to send' : 'nothing waiting'}${saveInfo.ok ? ' · last saved ' + new Date(saveInfo.ok).toLocaleTimeString() : ''}${saveInfo.err ? ' · last problem: ' + saveInfo.err : ''}`;
   const chipSave = () => $('#savechip');
   function setChip(cls) { const c = chipSave(); if (!c) return; c.classList.remove('saving', 'saved', 'offline'); if (cls) c.classList.add(cls); }
   async function flush() {
     if (sending || !queue.length) return;
     if (!C.backend) { setChip('saved'); queue.length = 0; localStorage.setItem(LS + '.q', '[]'); return; }
-    sending = true; setChip('saving');
+    sending = true; setChip('saving'); compact();
     try {
       while (queue.length) {
         // send up to 15 waiting saves in one go (much faster when a device is catching up); older servers take one at a time

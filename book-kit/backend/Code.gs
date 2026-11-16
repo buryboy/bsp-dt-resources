@@ -30,6 +30,8 @@ function doPost(e) {
   let d;
   try { d = JSON.parse(e.postData.contents); } catch (err) { return json({ ok: false, error: 'bad json' }); }
   if (d && d.a === 'email') return sendResultEmail(d);
+  if (d && d.a === 'img') return saveImage(d);
+  if (d && d.a === 'imgdel') return deleteImage(d);
   if (!d || !d.student || !d.student.email || !d.lesson) return json({ ok: false, error: 'missing student' });
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
@@ -84,6 +86,7 @@ function doGet(e) {
       }
       return json({ ok: true, done: done, quiz: qn ? { submitted: true, score: qs, max: qn } : null });
     }
+    if (p.a === 'img') return getImage(p);
     const pin = PROPS.getProperty('PIN') || '';
     if (!pin || String(p.pin || '') !== pin) return json({ ok: false, error: 'Wrong PIN' });
     const ss = book(), lesson = p.lesson || '';
@@ -108,3 +111,45 @@ function sendResultEmail(d) {
 }
 // Run once from the editor after updating, to grant the "send email as you" permission.
 function authoriseEmail() { Logger.log('emails left today: ' + MailApp.getRemainingDailyQuota()); }
+
+// ---------------- photos (students' sketchbook / model / making photos) ----------------
+// Saved privately in the owner's Drive: "Exercise book images" / <lesson> / <student email>. Never shared publicly.
+// A student can read back only their own photos (file id + their email); the teacher reads any with the PIN.
+function imgFolder(lesson, email) {
+  const sub = (parent, name) => { const it = parent.getFoldersByName(name); return it.hasNext() ? it.next() : parent.createFolder(name); };
+  let root = null, id = PROPS.getProperty('IMG_FOLDER');
+  if (id) try { root = DriveApp.getFolderById(id); } catch (e) { root = null; }
+  if (!root) { root = DriveApp.createFolder('Exercise book images'); PROPS.setProperty('IMG_FOLDER', root.getId()); }
+  return sub(sub(root, String(lesson).slice(0, 80)), String(email).slice(0, 120));
+}
+function saveImage(d) {
+  if (!d.student || !d.student.email || !d.lesson || !d.data) return json({ ok: false, error: 'missing data' });
+  const email = String(d.student.email).toLowerCase();
+  if (String(d.data).length > 8e6) return json({ ok: false, error: 'image too large' });
+  const m = String(d.data).match(/^data:(image\/(jpeg|png|webp));base64,(.*)$/);
+  if (!m) return json({ ok: false, error: 'not an image' });
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HHmm');
+  const blob = Utilities.newBlob(Utilities.base64Decode(m[3]), m[1], [String(d.student.name || email).slice(0, 60), String(d.box || '').slice(0, 20), stamp].join(' · ') + '.' + (m[2] === 'jpeg' ? 'jpg' : m[2]));
+  const f = imgFolder(d.lesson, email).createFile(blob);
+  f.setDescription(JSON.stringify({ email: email, lesson: d.lesson, box: d.box || '', cap: String(d.cap || '').slice(0, 300), at: d.at || Date.now() }));
+  return json({ ok: true, id: f.getId() });
+}
+function ownImage(id, email) {
+  const f = DriveApp.getFileById(String(id));
+  let meta = {}; try { meta = JSON.parse(f.getDescription() || '{}'); } catch (e) {}
+  return { f: f, mine: !!email && meta.email === String(email).toLowerCase() };
+}
+function getImage(p) {
+  const pin = PROPS.getProperty('PIN') || '', teacher = !!pin && String(p.pin || '') === pin;
+  const o = ownImage(p.id, p.email);
+  if (!teacher && !o.mine) return json({ ok: false, error: 'not allowed' });
+  const b = p.size === 'thumb' ? (o.f.getThumbnail() || o.f.getBlob()) : o.f.getBlob();
+  return json({ ok: true, data: 'data:' + (b.getContentType() || 'image/jpeg') + ';base64,' + Utilities.base64Encode(b.getBytes()) });
+}
+function deleteImage(d) {
+  const o = ownImage(d.id, d.student && d.student.email);
+  if (!o.mine) return json({ ok: false, error: 'not allowed' });
+  o.f.setTrashed(true); return json({ ok: true });
+}
+// Run once from the editor after updating, to grant the Google Drive permission for photos.
+function authoriseDrive() { Logger.log(DriveApp.getRootFolder().getName()); }

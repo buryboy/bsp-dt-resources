@@ -24,6 +24,6 @@ window.BOOK_CONFIG = {
 
   mis: {
     blank: 'Left blank', thin: 'Much shorter than expected', 'no-why': 'Decisions not justified', 'no-numbers': 'No measurements or data',
-    'short-list': 'Fewer points / ideas than expected', gaps: 'Misses half or more of the criteria',
+    'short-list': 'Fewer points / ideas than expected', gaps: 'Misses half or more of the criteria', 'no-caption': 'Photo without a caption',
   },
 };

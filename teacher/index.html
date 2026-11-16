@@ -45,6 +45,7 @@ th { background: #f7f8fc; position: sticky; top: 0; font-weight: 600; z-index: 1
 .mis { display: grid; grid-template-columns: 260px 1fr 60px; gap: 8px; align-items: center; margin-bottom: 8px; }
 .mis .bar i { background: var(--red); }
 .ans { font-family: 'Gloria Hallelujah', cursive; color: var(--ink); font-size: 15px; white-space: pre-wrap; }
+.nph { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 8px 0; } .nph figure { margin: 0; font-size: 12px; } .nph img { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #eee; border-radius: 6px; cursor: zoom-in; }
 #pop { position: fixed; z-index: 20; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px #0004; padding: 12px 14px; max-width: 380px; display: none; font-size: 14px; }
 #login { max-width: 420px; margin: 80px auto; background: #fff; border-radius: 18px; padding: 26px; box-shadow: 0 10px 30px #0002; }
 #login input { font: 600 18px Fredoka; width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--line); margin: 8px 0 14px; }
@@ -256,26 +257,32 @@ function renderNEA(F, v) {
   const N = window.NEA; if (!N) { v.innerHTML = '<p>This workbook has no NEA rubric.</p>'; return; }
   const fk = (sec, f) => 'nea.' + f.id;
   const fieldRes = (s, f) => { const r = F.cell[s.email + '|' + fk(null, f)]; const txt = r ? r.answer || '' : ''; return { r, res: N.score(f, txt) }; };
+  const photosOf = (s, sec) => { const r = F.cell[s.email + '|nea.' + sec.key.toLowerCase() + '.photos']; try { return JSON.parse((r && r.answer) || '[]'); } catch (e) { return []; } };
   const rows = F.students.map((s) => {
-    let tot = 0, words = 0, last = 0, filled = 0, nf = 0;
+    let tot = 0, words = 0, last = 0, filled = 0, nf = 0, nph = 0;
     const secs = N.sections.map((sec) => { let sc = 0, w = 0, fl = 0;
       sec.fields.forEach((f) => { const { r, res } = fieldRes(s, f); sc += res.score; w += res.words; nf++; if (res.words) { fl++; filled++; } const t = r ? +r.lastChanged || +r.answeredAt || +r.updated || 0 : 0; if (t > last) last = t; });
-      tot += sc; words += w; return { sc: Math.round(sc * 2) / 2, w, fl, n: sec.fields.length }; });
-    return { s, secs, tot: Math.round(tot * 2) / 2, words, last, filled, nf };
+      const ph = photosOf(s, sec); nph += ph.length; ph.forEach((q) => { if (q.at > last) last = q.at; });
+      tot += sc; words += w; return { sc: Math.round(sc * 2) / 2, w, fl, n: sec.fields.length, ph: ph.length }; });
+    return { s, secs, tot: Math.round(tot * 2) / 2, words, last, filled, nf, nph };
   });
   const col = (sc, mx) => { const p = sc / mx; return p >= 0.7 ? '#d8f0de' : p >= 0.4 ? '#fff1c7' : p > 0 ? '#fde0dc' : '#f4f5f9'; };
   v.innerHTML = `<p class="muted"><b>Indicative only.</b> Each box is scored from its length, whether it covers what the AQA criteria look for, and whether it is structured (lists, numbers, justification). Use it to spot gaps quickly, not as a moderated mark. Students never see these numbers. Click a section for the box-by-box breakdown.</p>
-  <table><tr><th>Student</th>${N.sections.map((x) => `<th title="${esc(x.title)}">${x.key} /${x.marks}</th>`).join('')}<th>Total /${N.total}</th><th>Boxes</th><th>Words</th><th>Last edit</th></tr>
-  ${rows.map((x, k) => `<tr><td style="white-space:nowrap">${esc(x.s.name)}</td>${x.secs.map((c, j) => `<td class="ns" data-k="${k}" data-j="${j}" style="cursor:pointer;background:${col(c.sc, N.sections[j].marks)}">${c.sc}<br><span class="muted">${c.fl}/${c.n} · ${c.w}w</span></td>`).join('')}
-    <td><b>${x.tot}</b></td><td>${x.filled}/${x.nf}</td><td>${x.words}</td><td class="muted">${x.last ? new Date(x.last).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–'}</td></tr>`).join('')}</table>`;
+  <table><tr><th>Student</th>${N.sections.map((x) => `<th title="${esc(x.title)}">${x.key} /${x.marks}</th>`).join('')}<th>Total /${N.total}</th><th>Boxes</th><th>Words</th><th>Photos</th><th>Last edit</th></tr>
+  ${rows.map((x, k) => `<tr><td style="white-space:nowrap">${esc(x.s.name)}</td>${x.secs.map((c, j) => `<td class="ns" data-k="${k}" data-j="${j}" style="cursor:pointer;background:${col(c.sc, N.sections[j].marks)}">${c.sc}<br><span class="muted">${c.fl}/${c.n} · ${c.w}w${c.ph ? ' · 📷' + c.ph : ''}</span></td>`).join('')}
+    <td><b>${x.tot}</b></td><td>${x.filled}/${x.nf}</td><td>${x.words}</td><td>${x.nph || '–'}</td><td class="muted">${x.last ? new Date(x.last).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–'}</td></tr>`).join('')}</table>`;
   v.querySelectorAll('td.ns').forEach((td) => (td.onclick = (e) => {
     const x = rows[+td.dataset.k], sec = N.sections[+td.dataset.j];
-    pop(e, `<b>${esc(x.s.name)}</b> · Section ${sec.key}: ${esc(sec.title)}<br>` + sec.fields.map((f) => { const { r, res } = fieldRes(x.s, f);
+    const ph = photosOf(x.s, sec), boxName = (id) => (sec.fields.find((f) => f.id === id) || { label: 'General' }).label;
+    const gal = ph.length ? `<div class="nph">${ph.map((q) => `<figure><img data-id="${esc(q.id)}" alt="${q.id ? 'loading…' : 'not uploaded yet'}"><figcaption><b>${esc(boxName(q.box))}</b> · ${hm(q.at)} ${new Date(q.at).toLocaleDateString([], { day: 'numeric', month: 'short' })}<br>${q.cap ? esc(q.cap) : '<span class="pill red">no caption</span>'}</figcaption></figure>`).join('')}</div>` : '<p class="muted">No photos for this section.</p>';
+    pop(e, `<b>${esc(x.s.name)}</b> · Section ${sec.key}: ${esc(sec.title)}<br>` + gal + sec.fields.map((f) => { const { r, res } = fieldRes(x.s, f);
       return `<div style="margin-top:8px;border-top:1px solid #eee;padding-top:6px"><b>${esc(f.label)}</b> · ${res.score}/${f.max} · ${res.words} words${res.words ? '' : ' <span class="pill red">blank</span>'}
       ${res.hits.length ? `<br><span style="color:#186e3c">✓ ${res.hits.map(esc).join(', ')}</span>` : ''}${res.words && res.misses.length ? `<br><span style="color:#b21c26">✗ ${res.misses.map(esc).join(', ')}</span>` : ''}
       ${res.flags.filter((g) => g !== 'blank').length ? `<br><span class="muted">${res.flags.filter((g) => g !== 'blank').map((g) => esc(N.flags[g] || g)).join(' · ')}</span>` : ''}
       ${r && r.answer ? `<br><span class="ans">${esc(r.answer.length > 400 ? r.answer.slice(0, 400) + '…' : r.answer)}</span>${timesHtml(r)}` : ''}</div>`; }).join(''));
-    const p = $('#pop'); p.style.maxHeight = '70vh'; p.style.overflow = 'auto'; p.style.maxWidth = '520px'; p.style.top = Math.max(10, Math.min(innerHeight - p.offsetHeight - 10, e.clientY + 12)) + 'px';
+    const p = $('#pop'); p.style.maxHeight = '70vh'; p.style.overflow = 'auto'; p.style.maxWidth = '620px';
+    p.querySelectorAll('.nph img[data-id]').forEach(async (im) => { if (!im.dataset.id) return; try { const j = await (await fetch(API + '?a=img&size=thumb&id=' + encodeURIComponent(im.dataset.id) + '&pin=' + encodeURIComponent(PIN))).json(); if (j.ok) im.src = j.data; } catch (e) {}
+      im.onclick = async () => { const w = window.open('', '_blank'); const j = await (await fetch(API + '?a=img&id=' + encodeURIComponent(im.dataset.id) + '&pin=' + encodeURIComponent(PIN))).json(); if (j.ok && w) w.document.write('<title>photo</title><body style="margin:0;background:#111;display:grid;place-items:center;min-height:100vh"><img src="' + j.data + '" style="max-width:100%;max-height:100vh">'); }; }); p.style.top = Math.max(10, Math.min(innerHeight - p.offsetHeight - 10, e.clientY + 12)) + 'px';
   }));
 }
 function pop(e, html) { const p = $('#pop'); p.innerHTML = html; p.style.display = 'block'; p.style.left = Math.min(innerWidth - 400, e.clientX + 12) + 'px'; p.style.top = Math.min(innerHeight - 160, e.clientY + 12) + 'px'; }

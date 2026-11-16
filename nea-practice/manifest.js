@@ -4,30 +4,36 @@ window.BOOK_MANIFEST = {
   "p01.hardest",
   "nea.p0-plan",
   "nea.p0-client",
+  "nea.a.photos",
   "nea.a1",
   "nea.a2",
   "nea.a3",
   "nea.a4",
   "nea.a5",
   "nea.a6",
+  "nea.b.photos",
   "nea.b1",
   "nea.b2",
   "nea.b3",
+  "nea.c.photos",
   "nea.c1",
   "nea.c2",
   "nea.c3",
   "nea.c4",
   "nea.c5",
+  "nea.d.photos",
   "nea.d1",
   "nea.d2",
   "nea.d3",
   "nea.d4",
   "nea.d5",
+  "nea.e.photos",
   "nea.e1",
   "nea.e2",
   "nea.e3",
   "nea.e4",
   "nea.e5",
+  "nea.f.photos",
   "nea.f1",
   "nea.f2",
   "nea.f3",
@@ -80,6 +86,12 @@ window.BOOK_MANIFEST = {
    "n": 3,
    "items": [
     {
+     "id": "nea.a.photos",
+     "label": "A Photos of sketches, models & making",
+     "type": "photos",
+     "max": 0
+    },
+    {
      "id": "nea.a1",
      "label": "A1 Exploring the context",
      "type": "nea",
@@ -123,6 +135,12 @@ window.BOOK_MANIFEST = {
    "n": 4,
    "items": [
     {
+     "id": "nea.b.photos",
+     "label": "B Photos of sketches, models & making",
+     "type": "photos",
+     "max": 0
+    },
+    {
      "id": "nea.b1",
      "label": "B1 Design brief",
      "type": "nea",
@@ -147,6 +165,12 @@ window.BOOK_MANIFEST = {
    "title": "Section C: Generating design ideas",
    "n": 5,
    "items": [
+    {
+     "id": "nea.c.photos",
+     "label": "C Photos of sketches, models & making",
+     "type": "photos",
+     "max": 0
+    },
     {
      "id": "nea.c1",
      "label": "C1 Design strategies",
@@ -185,6 +209,12 @@ window.BOOK_MANIFEST = {
    "n": 6,
    "items": [
     {
+     "id": "nea.d.photos",
+     "label": "D Photos of sketches, models & making",
+     "type": "photos",
+     "max": 0
+    },
+    {
      "id": "nea.d1",
      "label": "D1 Modelling log",
      "type": "nea",
@@ -222,6 +252,12 @@ window.BOOK_MANIFEST = {
    "n": 7,
    "items": [
     {
+     "id": "nea.e.photos",
+     "label": "E Photos of sketches, models & making",
+     "type": "photos",
+     "max": 0
+    },
+    {
      "id": "nea.e1",
      "label": "E1 Choosing materials & processes",
      "type": "nea",
@@ -258,6 +294,12 @@ window.BOOK_MANIFEST = {
    "title": "Section F: Analysing & evaluating",
    "n": 8,
    "items": [
+    {
+     "id": "nea.f.photos",
+     "label": "F Photos of sketches, models & making",
+     "type": "photos",
+     "max": 0
+    },
     {
      "id": "nea.f1",
      "label": "F1 Testing the prototype",

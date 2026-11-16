@@ -16,10 +16,14 @@
   // one practice box: prompt, hint, free writing, live word count. Score is worked out silently for the teacher.
   window.neaField = (ui, f) => {
     const r = ui.record('nea.' + f.id, { label: f.label, type: 'nea', max: f.max });
-    const d = ui.el('div', 'act nea-field');
+    const d = ui.el('div', 'act nea-field'); d.dataset.box = f.id;
     d.innerHTML = `<p class="q"><b>${esc(f.label.split(' ')[0])}</b>${esc(f.label.split(' ').slice(1).join(' '))}</p><p>${esc(f.q)}</p><p class="hint">${esc(f.hint || '')}</p>`;
     const ta = document.createElement('textarea'); ta.className = 'sk'; ta.rows = Math.max(4, Math.min(12, Math.round(f.words / 22))); ta.placeholder = 'Write here…'; d.appendChild(ta);
     const wc = document.createElement('div'); wc.className = 'wc'; d.appendChild(wc);
+    if (ui.root._gal) { // photo for this box, straight into the section's gallery
+      const ph = document.createElement('label'); ph.className = 'phbtn'; ph.innerHTML = '📷 add a photo for this box<input type="file" accept="image/*" multiple hidden>';
+      ph.querySelector('input').onchange = (e) => { ui.root._gal.add([...e.target.files], f.id); e.target.value = ''; }; d.appendChild(ph);
+    }
     requestAnimationFrame(() => Ink.frame(d, { shadow: false }));
     const prev = r.get(); if (prev && prev.answer) ta.value = prev.answer;
     const paint = (saved) => {
@@ -54,6 +58,7 @@
       sec.tips.forEach((x) => ui.el('span', 'note', esc(x)));
       ui.el('h2', '', 'Your practice entries');
       ui.p('<span class="small">Write in full sentences, as you would in your folder. Your work saves as you go, and you can come back and improve it any time.</span>');
+      ui.root._gal = neaGallery(ui, sec);
       sec.fields.forEach((f) => neaField(ui, f));
     },
   });

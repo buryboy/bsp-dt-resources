@@ -32,10 +32,19 @@ function doPost(e) {
   if (d && d.a === 'email') return sendResultEmail(d);
   if (d && d.a === 'img') return saveImage(d);
   if (d && d.a === 'imgdel') return deleteImage(d);
+  // several saves in one request (a device catching up after being offline or slow)
+  if (d && d.a === 'batch' && Array.isArray(d.list)) {
+    const lock = LockService.getScriptLock(); if (!lock.tryLock(25000)) return json({ ok: false, error: 'busy' });
+    try { const ss = book(); let n = 0; d.list.forEach((x) => { if (x && x.student && x.student.email && x.lesson) { saveOne(ss, x); n++; } }); return json({ ok: true, saved: n }); }
+    finally { lock.releaseLock(); }
+  }
   if (!d || !d.student || !d.student.email || !d.lesson) return json({ ok: false, error: 'missing student' });
-  const lock = LockService.getScriptLock(); lock.waitLock(20000);
-  try {
-    const ss = book(), now = new Date(), st = d.student, email = String(st.email).toLowerCase().slice(0, 120);
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(25000)) return json({ ok: false, error: 'busy' });
+  try { return json(saveOne(book(), d)); } finally { lock.releaseLock(); }
+}
+function saveOne(ss, d) {
+  {
+    const now = new Date(), st = d.student, email = String(st.email).toLowerCase().slice(0, 120);
     const clip = (s, n) => String(s == null ? '' : s).slice(0, n);
     // students sheet (upsert)
     const S = ss.getSheetByName('Students'), skey = d.lesson + '|' + email;
@@ -58,7 +67,7 @@ function doPost(e) {
       for (let i = 1; i < lv.length; i++) index[lv[i][0]] = i + 1;
       const appends = [];
       // the final quiz is one go only: ignore a second submission
-      if (d.event === 'quiz' && index[d.lesson + '|' + email + '|' + d.items[0].id]) return json({ ok: true, ignored: 'quiz already submitted' });
+      if (d.event === 'quiz' && index[d.lesson + '|' + email + '|' + d.items[0].id]) return { ok: true, ignored: 'quiz already submitted' };
       d.items.forEach((it) => {
         const key = d.lesson + '|' + email + '|' + it.id;
         const row = [key, d.lesson, email, clip(st.name, 80), clip(st.cls, 20), d.page.n, d.page.id, clip(d.page.title, 80), clip(it.id, 60), clip(it.label, 160), clip(it.type, 20), clip(it.answer, 6000),
@@ -69,8 +78,8 @@ function doPost(e) {
       if (appends.length) L.getRange(L.getLastRow() + 1, 1, appends.length, appends[0].length).setValues(appends);
     }
     if (d.event !== 'ping') ss.getSheetByName('Log').appendRow([now, d.lesson, email, clip(st.name, 80), clip(st.cls, 20), d.event, d.page ? d.page.id : '', clip(JSON.stringify({ unanswered: d.unanswered, seconds: d.seconds, visits: d.visits }), 2000)]);
-    return json({ ok: true });
-  } finally { lock.releaseLock(); }
+    return { ok: true };
+  }
 }
 
 function doGet(e) {

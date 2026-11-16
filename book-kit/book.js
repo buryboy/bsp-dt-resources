@@ -45,7 +45,7 @@
   // ---------------- saving ----------------
   const queue = JSON.parse(localStorage.getItem(LS + '.q') || '[]');
   let sending = false;
-  const saveInfo = { fails: 0, ok: 0, err: '' };
+  const saveInfo = { fails: 0, ok: 0, err: '' }; let batchOK = true;
   // tap the name chip to see what saving is doing (handy when a device seems stuck)
   Book.saveStatus = () => `${queue.length ? queue.length + ' waiting to send' : 'nothing waiting'}${saveInfo.ok ? ' · last saved ' + new Date(saveInfo.ok).toLocaleTimeString() : ''}${saveInfo.err ? ' · last problem: ' + saveInfo.err : ''}`;
   const chipSave = () => $('#savechip');
@@ -56,16 +56,19 @@
     sending = true; setChip('saving');
     try {
       while (queue.length) {
-        const body = JSON.stringify(queue[0]);
+        // send up to 15 waiting saves in one go (much faster when a device is catching up); older servers take one at a time
+        const n = batchOK && queue.length > 1 ? Math.min(15, queue.length) : 1;
+        const body = JSON.stringify(n > 1 ? { a: 'batch', list: queue.slice(0, n) } : queue[0]);
         // never wait for ever: a hung request used to leave the chip on "saving…" and block everything behind it
-        const ac = window.AbortController ? new AbortController() : null, to = setTimeout(() => ac && ac.abort(), 30000);
+        const ac = window.AbortController ? new AbortController() : null, to = setTimeout(() => ac && ac.abort(), 60000);
         let r;
         try { r = await fetch(C.backend, { method: 'POST', body, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, signal: ac ? ac.signal : undefined }); }
         finally { clearTimeout(to); }
         if (!r.ok) throw new Error('HTTP ' + r.status);
-        let j = null; try { j = await r.json(); } catch (e) {}
+        let j = null; try { j = await r.json(); } catch (e) { throw new Error('server error'); }
+        if (n > 1 && j && j.ok === false && j.error === 'missing student') { batchOK = false; continue; } // server not updated yet
         if (j && j.ok === false) throw new Error(j.error || 'server said no');
-        queue.shift(); localStorage.setItem(LS + '.q', JSON.stringify(queue)); saveInfo.fails = 0; saveInfo.ok = Date.now();
+        queue.splice(0, n); localStorage.setItem(LS + '.q', JSON.stringify(queue)); saveInfo.fails = 0; saveInfo.ok = Date.now();
       }
       setChip('saved');
     } catch (e) {

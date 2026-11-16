@@ -67,7 +67,7 @@
     const p = pg || pages[cur]; if (!p) return;
     const items = p.ids.map((id) => {
       const it = st.items[id] || {};
-      return { id, label: (p.meta[id] || {}).label || id, type: (p.meta[id] || {}).type || '', answer: it.answer ?? '', correct: it.correct ?? null, first: it.first ?? null, score: it.score ?? null, max: it.max ?? (p.meta[id] || {}).max ?? null, attempts: it.attempts || 0, mis: it.mis || '' };
+      return { id, label: (p.meta[id] || {}).label || id, type: (p.meta[id] || {}).type || '', answer: it.answer ?? '', correct: it.correct ?? null, first: it.first ?? null, score: it.score ?? null, max: it.max ?? (p.meta[id] || {}).max ?? null, attempts: it.attempts || 0, mis: it.mis || '', at: it.at || null, last: it.ts || null };
     });
     const unanswered = items.filter((i) => !i.attempts && i.answer === '').map((i) => i.id);
     const pst = st.pages[p.id] || {};
@@ -89,7 +89,7 @@
       get: () => st.items[id],
       set(v) {
         const it = st.items[id] || (st.items[id] = { attempts: 0 });
-        it.attempts++; it.ts = Date.now();
+        it.attempts++; it.ts = Date.now(); if (!it.at) it.at = it.ts; // at = first answered, ts = last changed
         Object.assign(it, v);
         if (it.first == null && v.correct != null) it.first = !!v.correct;
         if (v.max != null) it.max = v.max;
@@ -412,7 +412,7 @@
       requestAnimationFrame(() => Ink.frame(d, { shadow: false, w: 2.2 }));
       const opts = shuffle([qu.a, ...qu.d], seed + i * 101 + 3), box = d.querySelector('.opts');
       opts.forEach((t) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt' + (q.answers[id] === t ? ' sel' : ''); b.textContent = t; box.appendChild(b);
-        b.onclick = () => { box.querySelectorAll('.opt').forEach((x) => x.classList.remove('sel')); b.classList.add('sel'); q.answers[id] = t; save(); Book.scribble(0.1); count(); }; });
+        b.onclick = () => { box.querySelectorAll('.opt').forEach((x) => x.classList.remove('sel')); b.classList.add('sel'); q.answers[id] = t; q.times = q.times || {}; q.times[id] = q.times[id] || [Date.now(), 0]; q.times[id][1] = Date.now(); save(); Book.scribble(0.1); count(); }; });
     });
     c.insertAdjacentHTML('beforeend', `<p id="qcount" style="font-family:Fredoka;font-weight:600"></p><button class="btn" id="qsubmit">Submit my answers</button> <button class="btn ghost" id="qclose">◂ Back to the book (answers kept)</button><p class="small" style="margin-top:10px">&nbsp;</p>`);
     const count = () => { const n = Object.keys(q.answers).length; c.querySelector('#qcount').textContent = `Answered ${n} of ${N}.` + (n < N ? ' Unanswered questions score 0.' : ''); };
@@ -424,7 +424,7 @@
       if (Date.now() - armed > 6000) { armed = Date.now(); sb.textContent = 'Sure? Tap again to submit. You only get one go.'; setTimeout(() => { if (!q.submitted) sb.textContent = 'Submit my answers'; }, 6000); return; }
       let score = 0;
       const items = FQ.questions.map((qu, i) => { const id = 'fq.q' + String(i + 1).padStart(2, '0'), a = q.answers[id] || '', ok = a === qu.a; if (ok) score++;
-        return { id, label: 'Final quiz Q' + (i + 1), type: 'quiz', answer: a, correct: ok, first: ok, score: ok ? 1 : 0, max: 1, attempts: a ? 1 : 0, mis: ok ? '' : qu.mis || '' }; });
+        return { id, label: 'Final quiz Q' + (i + 1), type: 'quiz', answer: a, correct: ok, first: ok, score: ok ? 1 : 0, max: 1, attempts: a ? 1 : 0, mis: ok ? '' : qu.mis || '', at: a && q.times && q.times[id] ? q.times[id][0] : null, last: a && q.times && q.times[id] ? q.times[id][1] : null }; });
       q.submitted = true; q.score = score; q.max = N; q.at = Date.now(); save();
       queue.push({ v: 1, lesson: LESSON, event: 'quiz', session: st.session, student: st.student, page: { id: 'fq', title: 'Final quiz', n: 99 }, seconds: 0, visits: 1, items, unanswered: items.filter((x) => !x.answer).map((x) => x.id), ts: Date.now() });
       localStorage.setItem(LS + '.q', JSON.stringify(queue)); flush();

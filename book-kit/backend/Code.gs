@@ -9,7 +9,7 @@
  * After editing: Deploy → Manage deployments → edit → Version: New version → Deploy (keeps the same link).
  */
 const PROPS = PropertiesService.getScriptProperties();
-const LATEST_COLS = ['key', 'lesson', 'email', 'name', 'class', 'pageN', 'pageId', 'pageTitle', 'itemId', 'label', 'type', 'answer', 'correct', 'first', 'score', 'max', 'attempts', 'mis', 'updated'];
+const LATEST_COLS = ['key', 'lesson', 'email', 'name', 'class', 'pageN', 'pageId', 'pageTitle', 'itemId', 'label', 'type', 'answer', 'correct', 'first', 'score', 'max', 'attempts', 'mis', 'updated', 'answeredAt', 'lastChanged'];
 const STUDENT_COLS = ['key', 'lesson', 'email', 'name', 'class', 'session', 'pageN', 'pageTitle', 'lastSeen', 'lastEvent', 'pagesVisited', 'secondsByPage', 'finished'];
 
 function book() {
@@ -48,7 +48,11 @@ function doPost(e) {
     if (srow > 0) S.getRange(srow, 1, 1, srowVals.length).setValues([srowVals]); else S.appendRow(srowVals);
     // latest answers (upsert per item)
     if (d.items && d.items.length) {
-      const L = ss.getSheetByName('Latest'), lv = L.getRange(1, 1, Math.max(1, L.getLastRow()), 1).getValues(), index = {};
+      const L = ss.getSheetByName('Latest');
+      // older sheets: add the answeredAt / lastChanged headers once
+      if (L.getLastColumn() < LATEST_COLS.length) L.getRange(1, 1, 1, LATEST_COLS.length).setValues([LATEST_COLS]);
+      const lv = L.getRange(1, 1, Math.max(1, L.getLastRow()), 1).getValues(), index = {};
+      const atCol = LATEST_COLS.indexOf('answeredAt') + 1, prevAt = L.getRange(1, atCol, Math.max(1, L.getLastRow()), 1).getValues();
       for (let i = 1; i < lv.length; i++) index[lv[i][0]] = i + 1;
       const appends = [];
       // the final quiz is one go only: ignore a second submission
@@ -56,7 +60,8 @@ function doPost(e) {
       d.items.forEach((it) => {
         const key = d.lesson + '|' + email + '|' + it.id;
         const row = [key, d.lesson, email, clip(st.name, 80), clip(st.cls, 20), d.page.n, d.page.id, clip(d.page.title, 80), clip(it.id, 60), clip(it.label, 160), clip(it.type, 20), clip(it.answer, 1500),
-          it.correct == null ? '' : !!it.correct, it.first == null ? '' : !!it.first, it.score == null ? '' : it.score, it.max == null ? '' : it.max, it.attempts || 0, clip(it.mis, 120), now];
+          it.correct == null ? '' : !!it.correct, it.first == null ? '' : !!it.first, it.score == null ? '' : it.score, it.max == null ? '' : it.max, it.attempts || 0, clip(it.mis, 120), now,
+          (index[key] && prevAt[index[key] - 1][0]) || (it.at ? new Date(it.at) : ''), it.last ? new Date(it.last) : ''];
         if (index[key]) L.getRange(index[key], 1, 1, row.length).setValues([row]); else appends.push(row);
       });
       if (appends.length) L.getRange(L.getLastRow() + 1, 1, appends.length, appends[0].length).setValues(appends);

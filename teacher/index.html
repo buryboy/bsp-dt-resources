@@ -30,6 +30,9 @@ th { background: #f7f8fc; position: sticky; top: 0; font-weight: 600; z-index: 1
 .bar i { display: block; height: 100%; background: var(--ink); }
 /* heatmap */
 .hm td.c { width: 26px; min-width: 26px; height: 26px; padding: 0; border: 1px solid #fff; cursor: pointer; }
+.tl { position: relative; height: 26px; min-width: 420px; background: repeating-linear-gradient(90deg, #f4f5f9 0 59px, #e6e8f0 59px 60px); border-radius: 8px; }
+.tl i { position: absolute; top: 5px; width: 12px; height: 16px; margin-left: -6px; border-radius: 4px; cursor: pointer; border: 1px solid #fff; }
+.tl .gap { position: absolute; top: 0; height: 26px; background: #fde4e2; border-radius: 4px; }
 .c.g { background: #3aa65a; } .c.a { background: #f2c14e; } .c.r { background: #e05a4f; } .c.b { background: #c9ccd8; } .c.n { background: #f4f5f9; } .c.i { background: #8fb3ff; }
 .hm th.it { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; font-size: 12px; max-height: 190px; padding: 4px 2px; }
 .hm th.pg { text-align: center; font-size: 12px; background: #e8ebf7; }
@@ -70,6 +73,7 @@ th { background: #f7f8fc; position: sticky; top: 0; font-weight: 600; z-index: 1
 <div class="tabs">
   <button class="tab on" data-v="live">🟢 Live class</button>
   <button class="tab" data-v="grid">🔲 Who did what</button>
+  <button class="tab" data-v="time">🕒 Timeline</button>
   <button class="tab" data-v="qs">❓ Questions</button>
   <button class="tab" data-v="mis">🧠 Misconceptions</button>
   <button class="tab" data-v="written">✍️ Written answers</button>
@@ -128,6 +132,11 @@ function filtered() {
   return { students, latest, order, cell };
 }
 const status = (r) => !r ? 'n' : (!r.attempts && !r.answer) ? 'b' : r.correct === '' || r.correct == null ? 'i' : r.first === true ? 'g' : r.correct === true ? 'a' : 'r';
+// when a question was answered: device time of the first answer (new workbooks), else when the page was turned (older data)
+const when = (r) => (!r || (!r.attempts && !r.answer) ? null : +r.answeredAt || +r.updated || null);
+const approx = (r) => r && !+r.answeredAt;
+const hm = (ms, sec) => (ms ? new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: sec ? '2-digit' : undefined }) : '');
+const timesHtml = (r) => { const a = when(r); if (!a) return ''; return `<br><span class="muted">${approx(r) ? 'saved by' : 'answered'} ${hm(a, true)}${+r.lastChanged && +r.lastChanged - a > 5000 ? ', last changed ' + hm(+r.lastChanged, true) : ''}${new Date(a).toDateString() !== new Date().toDateString() ? ' on ' + new Date(a).toLocaleDateString() : ''}</span>`; };
 const pagesTotal = () => Math.max(1, ...data.students.map((s) => +s.pageN || 0));
 
 function render() {
@@ -152,8 +161,9 @@ function render() {
     <tr><th>Student</th>${F.order.map((it) => `<th class="it" title="${esc(it.label)}">${esc(it.label.slice(0, 34))}</th>`).join('')}</tr>
     ${F.students.map((s) => `<tr><td style="white-space:nowrap">${esc(s.name)}</td>${F.order.map((it) => { const r = F.cell[s.email + '|' + it.id]; return `<td class="c ${status(r)}" data-k="${esc(s.email + '|' + it.id)}"></td>`; }).join('')}</tr>`).join('')}
     <tr><td><b>% right 1st time</b></td>${F.order.map((it) => { const rs = F.students.map((s) => F.cell[s.email + '|' + it.id]).filter((r) => r && r.correct !== '' && r.correct != null); const p = rs.length ? Math.round(rs.filter((r) => r.first === true).length / rs.length * 100) : ''; return `<td style="font-size:11px;text-align:center;color:${p !== '' && p < 50 ? 'var(--red)' : '#555'}">${p}</td>`; }).join('')}</tr></table></div>`;
-    v.querySelectorAll('td.c').forEach((td) => (td.onclick = (e) => { const r = F.cell[td.dataset.k], it = F.order[td.cellIndex - 1], s = F.students[td.parentElement.rowIndex - 2]; pop(e, `<b>${esc(s ? s.name : '')}</b><br>${esc(it.label)}<br><span class="ans">${r ? esc(r.answer || '(blank)') : 'not reached'}</span>${r && r.max ? `<br>score ${r.score || 0}/${r.max}, ${r.attempts} tries` : ''}${r && r.mis ? `<br><span class="pill red">${esc(MIS[r.mis.split(',')[0]] || r.mis)}</span>` : ''}`); }));
+    v.querySelectorAll('td.c').forEach((td) => (td.onclick = (e) => { const r = F.cell[td.dataset.k], it = F.order[td.cellIndex - 1], s = F.students[td.parentElement.rowIndex - 2]; pop(e, `<b>${esc(s ? s.name : '')}</b><br>${esc(it.label)}<br><span class="ans">${r ? esc(r.answer || '(blank)') : 'not reached'}</span>${r && r.max ? `<br>score ${r.score || 0}/${r.max}, ${r.attempts} tries` : ''}${r && r.mis ? `<br><span class="pill red">${esc(MIS[r.mis.split(',')[0]] || r.mis)}</span>` : ''}${timesHtml(r)}`); }));
   }
+  if (view === 'time') renderTimeline(F, v);
   if (view === 'qs') {
     const rows = F.order.filter((it) => it.type !== 'rate').map((it) => {
       const rs = F.students.map((s) => F.cell[s.email + '|' + it.id]).filter(Boolean);
@@ -174,8 +184,8 @@ function render() {
   if (view === 'quiz') renderQuiz(F, v);
   if (view === 'written') {
     const ws = F.order.filter((it) => it.type === 'write');
-    v.innerHTML = ws.map((it) => `<div class="q"><h3>${esc(it.pageN + '. ' + it.label)} <span class="muted">(${it.max} marks)</span></h3><table style="width:100%"><tr><th style="width:180px">Student</th><th>Answer</th><th style="width:90px">Self-mark</th></tr>
-      ${F.students.map((s) => { const r = F.cell[s.email + '|' + it.id]; return `<tr><td>${esc(s.name)}</td><td class="ans">${r && r.answer ? esc(r.answer) : '<span class="muted">(blank)</span>'}</td><td>${r && r.answer ? (r.score || 0) + '/' + it.max : ''}</td></tr>`; }).join('')}</table></div>`).join('') || '<p>No written answers yet.</p>';
+    v.innerHTML = ws.map((it) => `<div class="q"><h3>${esc(it.pageN + '. ' + it.label)} <span class="muted">(${it.max} marks)</span></h3><table style="width:100%"><tr><th style="width:180px">Student</th><th>Answer</th><th style="width:90px">Self-mark</th><th style="width:90px">Answered</th></tr>
+      ${F.students.map((s) => { const r = F.cell[s.email + '|' + it.id]; return `<tr><td>${esc(s.name)}</td><td class="ans">${r && r.answer ? esc(r.answer) : '<span class="muted">(blank)</span>'}</td><td>${r && r.answer ? (r.score || 0) + '/' + it.max : ''}</td><td class="muted">${hm(when(r))}${approx(r) && when(r) ? '*' : ''}</td></tr>`; }).join('')}</table></div>`).join('') || '<p>No written answers yet.</p>';
   }
 }
 function quizRows(F) {
@@ -214,11 +224,34 @@ function renderQuiz(F, v) {
   v.querySelectorAll('button.em').forEach((b) => (b.onclick = () => sendEmail(rows[+b.dataset.k], b)));
   v.querySelector('#qall').onclick = async (e) => { if (!done.length) return; if (!confirm('Email results to ' + done.length + ' student(s)?')) return; e.target.disabled = true; let n = 0; for (const b of v.querySelectorAll('button.em')) { if (await sendEmail(rows[+b.dataset.k], b)) n++; } $('#qmsg').textContent = n + ' email(s) sent.'; $('#qmsg').style.color = 'var(--green)'; };
 }
+function renderTimeline(F, v) {
+  const rows = F.students.map((s) => {
+    const ans = F.order.map((it) => ({ it, r: F.cell[s.email + '|' + it.id] })).filter((x) => when(x.r)).sort((a, b) => when(a.r) - when(b.r));
+    let gap = 0, gapAt = 0; for (let i = 1; i < ans.length; i++) { const g = when(ans[i].r) - when(ans[i - 1].r); if (g > gap) { gap = g; gapAt = i; } }
+    return { s, ans, first: ans.length ? when(ans[0].r) : 0, last: ans.length ? when(ans[ans.length - 1].r) : 0, gap, gapAt };
+  });
+  const live = rows.filter((x) => x.ans.length);
+  if (!live.length) { v.innerHTML = '<p>No answers yet for this selection.</p>'; return; }
+  const t0 = Math.min(...live.map((x) => x.first)), t1 = Math.max(...live.map((x) => x.last), Math.min(data.now, Math.max(...live.map((x) => x.last)) + 5 * 60000));
+  const span = Math.max(60000, t1 - t0), pct = (t) => ((t - t0) / span) * 100, mins = (ms) => Math.round(ms / 60000);
+  const anyApprox = live.some((x) => x.ans.some((a) => approx(a.r)));
+  v.innerHTML = `<p class="muted">Each mark is one question, placed at the time it was answered (colours as in "Who did what"). Pink = the longest gap with no answers. Click a mark for the question. Window: ${hm(t0)} to ${hm(t1)}, ${Math.round(span / 60000)} min.${anyApprox ? ' <b>*</b> Answers saved before this update only have the time the page was turned.' : ''}</p>
+  <table><tr><th>Student</th><th>First answer</th><th>Latest answer</th><th>Answers</th><th>Since last answer</th><th>Longest gap</th><th style="min-width:440px">${hm(t0)} → ${hm(t1)}</th></tr>
+  ${rows.map((x, k) => { const idle = x.last ? mins(data.now - x.last) : null;
+    return `<tr><td style="white-space:nowrap">${esc(x.s.name)}</td><td>${hm(x.first)}</td><td>${hm(x.last)}</td><td>${x.ans.length}</td>
+    <td>${idle == null ? '–' : idle > 600 ? '–' : `<span class="pill ${idle >= 5 ? 'red' : ''}">${idle < 1 ? 'just now' : idle + ' min'}</span>`}</td>
+    <td>${x.gap >= 60000 ? `<span class="pill ${x.gap >= 5 * 60000 ? 'red' : ''}">${mins(x.gap)} min</span> <span class="muted">after ${hm(when(x.ans[x.gapAt - 1].r))}</span>` : '–'}</td>
+    <td><div class="tl" data-k="${k}">
+      ${x.gap >= 5 * 60000 ? `<span class="gap" style="left:${pct(when(x.ans[x.gapAt - 1].r))}%;width:${pct(when(x.ans[x.gapAt].r)) - pct(when(x.ans[x.gapAt - 1].r))}%"></span>` : ''}
+      ${x.ans.map((a, j) => `<i class="c ${status(a.r)}" data-j="${j}" style="left:${pct(when(a.r))}%"></i>`).join('')}</div></td></tr>`; }).join('')}</table>`;
+  v.querySelectorAll('.tl i').forEach((m) => (m.onclick = (e) => { const x = rows[+m.parentElement.dataset.k], a = x.ans[+m.dataset.j];
+    pop(e, `<b>${esc(x.s.name)}</b><br>${esc(a.it.pageN + '. ' + a.it.label)}<br><span class="ans">${esc(a.r.answer || '(blank)')}</span>${timesHtml(a.r)}`); }));
+}
 function pop(e, html) { const p = $('#pop'); p.innerHTML = html; p.style.display = 'block'; p.style.left = Math.min(innerWidth - 400, e.clientX + 12) + 'px'; p.style.top = Math.min(innerHeight - 160, e.clientY + 12) + 'px'; }
-document.addEventListener('click', (e) => { if (!e.target.closest('td.c,#pop')) $('#pop').style.display = 'none'; });
+document.addEventListener('click', (e) => { if (!e.target.closest('td.c,.tl i,#pop')) $('#pop').style.display = 'none'; });
 function csv() {
   const F = filtered(), head = ['name', 'class', 'email', ...F.order.map((it) => it.pageN + ' ' + it.label)];
-  const lines = [head, ...F.students.map((s) => [s.name, s.class, s.email, ...F.order.map((it) => { const r = F.cell[s.email + '|' + it.id]; return r ? (r.max ? `${r.score || 0}/${r.max}` : '') + (r.answer ? ' ' + r.answer : r.attempts ? '' : ' (blank)') : ''; })])];
+  const lines = [head, ...F.students.map((s) => [s.name, s.class, s.email, ...F.order.map((it) => { const r = F.cell[s.email + '|' + it.id]; return r ? (r.max ? `${r.score || 0}/${r.max}` : '') + (r.answer ? ' ' + r.answer : r.attempts ? '' : ' (blank)') + (when(r) ? ' @' + hm(when(r), true) : '') : ''; })])];
   const blob = new Blob([lines.map((l) => l.map((x) => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n')], { type: 'text/csv' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (C.folder || 'results') + '-results.csv'; a.click();
 }

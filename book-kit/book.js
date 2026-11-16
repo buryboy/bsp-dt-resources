@@ -45,6 +45,9 @@
   // ---------------- saving ----------------
   const queue = JSON.parse(localStorage.getItem(LS + '.q') || '[]');
   let sending = false;
+  const saveInfo = { fails: 0, ok: 0, err: '' };
+  // tap the name chip to see what saving is doing (handy when a device seems stuck)
+  Book.saveStatus = () => `${queue.length ? queue.length + ' waiting to send' : 'nothing waiting'}${saveInfo.ok ? ' · last saved ' + new Date(saveInfo.ok).toLocaleTimeString() : ''}${saveInfo.err ? ' · last problem: ' + saveInfo.err : ''}`;
   const chipSave = () => $('#savechip');
   function setChip(cls) { const c = chipSave(); if (!c) return; c.classList.remove('saving', 'saved', 'offline'); if (cls) c.classList.add(cls); }
   async function flush() {
@@ -54,12 +57,23 @@
     try {
       while (queue.length) {
         const body = JSON.stringify(queue[0]);
-        const r = await fetch(C.backend, { method: 'POST', body, headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+        // never wait for ever: a hung request used to leave the chip on "saving…" and block everything behind it
+        const ac = window.AbortController ? new AbortController() : null, to = setTimeout(() => ac && ac.abort(), 30000);
+        let r;
+        try { r = await fetch(C.backend, { method: 'POST', body, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, signal: ac ? ac.signal : undefined }); }
+        finally { clearTimeout(to); }
         if (!r.ok) throw new Error('HTTP ' + r.status);
-        queue.shift(); localStorage.setItem(LS + '.q', JSON.stringify(queue));
+        let j = null; try { j = await r.json(); } catch (e) {}
+        if (j && j.ok === false) throw new Error(j.error || 'server said no');
+        queue.shift(); localStorage.setItem(LS + '.q', JSON.stringify(queue)); saveInfo.fails = 0; saveInfo.ok = Date.now();
       }
       setChip('saved');
-    } catch (e) { setChip('offline'); setTimeout(() => { sending = false; flush(); }, 8000); return; }
+    } catch (e) {
+      saveInfo.err = (e && e.name === 'AbortError' ? 'timed out' : String(e && e.message || e)) + ' at ' + new Date().toLocaleTimeString();
+      // the same item failing again and again goes to the back so it cannot block the rest
+      if (++saveInfo.fails >= 3 && queue.length > 1) { queue.push(queue.shift()); saveInfo.fails = 0; localStorage.setItem(LS + '.q', JSON.stringify(queue)); }
+      setChip('offline'); setTimeout(() => { sending = false; flush(); }, 8000); return;
+    }
     sending = false;
   }
   function send(event, pg, extra) {
@@ -472,6 +486,7 @@
     // gate leaving the cover
     $('#next').onclick = () => { if (cur === 0 && !checkCover()) return; if (cur === 0) { $('#savechip').textContent = st.student.name.split(' ')[0]; pullProgress(); updateQuizChip(); } Book.next(); };
     $('#prev').onclick = Book.prev;
+    $('#savechip').style.cursor = 'pointer'; $('#savechip').onclick = () => { flush(); const tt = $('#toast'); Book.toast(Book.saveStatus()); clearTimeout(tt._h); tt._h = setTimeout(() => tt.classList.remove('on'), 8000); };
     $('#contbtn').onclick = () => { if (!st.student) return Book.toast('Sign in on the cover first'); const c = $('#contents'); c.classList.toggle('on'); updateContents(); };
     $('#mute').onclick = () => { Book.muted = !Book.muted; Ink.muted = Book.muted; localStorage.setItem('book.muted', Book.muted ? '1' : '0'); $('#mute').textContent = Book.muted ? '🔇' : '🔊'; };
     // swipe to turn (only when the swipe starts on empty paper, not on an activity)

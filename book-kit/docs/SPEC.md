@@ -46,3 +46,9 @@ python3 book-kit/tools/shot.py /tmp/x --book <folder> --pages 3 --script "docume
 
 ## Report back
 1–2 lines per page on what it does and roughly how many minutes; every fact shown (compact list) for checking against CONTENT.md; the activity ids + labels + max marks; best screenshot paths; known issues.
+
+## Kit hooks added for themed / long-writing books
+- `Ink.FONTS = { bubble, hand, bubbleWeight }`: canvas fonts. A theme can replace them (and recolour `Ink.BLUE/RED/GREEN` in place).
+- `Book.saveNow()`: send the current page to the backend now (event `save`), for pages where students write for a long time.
+- `BOOK_CONFIG.hideScores`: the finish page shows boxes filled instead of a score.
+- `window.__NOGATE = 1`: set by the test tools to skip a workbook's own password lock.

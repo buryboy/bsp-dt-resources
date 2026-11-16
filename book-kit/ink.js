@@ -20,6 +20,8 @@
 (function () {
   'use strict';
   const Ink = (window.Ink = {});
+  // canvas fonts; a workbook theme can swap them (the sketchbook theme uses Caveat)
+  Ink.FONTS = Ink.FONTS || { bubble: '"Fredoka", "Arial Rounded MT Bold", system-ui', hand: '"Gloria Hallelujah", "Comic Sans MS", cursive', bubbleWeight: 700 };
   const BLUE = (Ink.BLUE = [30, 46, 150]), RED = (Ink.RED = [178, 28, 38]), GREEN = (Ink.GREEN = [24, 110, 60]);
   const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
   Ink.rgba = rgba;
@@ -145,7 +147,7 @@
   // ---------- bubble lettering ----------
   // drawBubble(ctx, s, x, y, size, rgb, p, rot, align) — p reveals letters left to right
   Ink.drawBubble = (ctx, s, x, y, size, rgb = BLUE, p = 1, rot = 0, align = 'left') => {
-    const font = `700 ${size}px "Fredoka", "Arial Rounded MT Bold", system-ui`;
+    const font = `${Ink.FONTS.bubbleWeight} ${size}px ${Ink.FONTS.bubble}`;
     ctx.save(); ctx.font = font;
     const pos = []; let px = 0;
     for (let i = 0; i < s.length; i++) { pos.push(px); px += ctx.measureText(s[i]).width + size * 0.06; }
@@ -175,7 +177,7 @@
     const c = document.createElement('canvas');
     c.className = 'ink-bubble'; c.setAttribute('role', 'heading'); c.setAttribute('aria-label', s);
     const draw = () => {
-      const m = c.getContext('2d'); m.setTransform(1, 0, 0, 1, 0, 0); m.font = `700 ${size}px "Fredoka", "Arial Rounded MT Bold", system-ui`;
+      const m = c.getContext('2d'); m.setTransform(1, 0, 0, 1, 0, 0); m.font = `${Ink.FONTS.bubbleWeight} ${size}px ${Ink.FONTS.bubble}`;
       let w = 0; for (const ch of s) w += m.measureText(ch).width + size * 0.06; w += size * 0.3 + 24; const h = size * 1.45;
       c.width = Math.ceil(w * dpr); c.height = Math.ceil(h * dpr); c.style.width = Math.ceil(w) + 'px';
       const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h); Ink.drawBubble(x, s, 8, size * 1.05, size, rgb, 1, opts.rot || -0.012);
@@ -268,7 +270,7 @@
           const p = win(tt, a, b); if (p <= 0) return;
           const rgb = o.color || BLUE, size = o.size || 28;
           if (o.font === 'bubble') { const r = Ink.drawBubble(ctx, s, x, y, size, rgb, p, o.rot || 0, o.align || 'left'); if (p < 1) { tip = r.tip; tipColor = rgb; } return; }
-          ctx.save(); ctx.font = `400 ${size}px "Gloria Hallelujah", "Comic Sans MS", cursive`; ctx.fillStyle = rgba(rgb, 0.92);
+          ctx.save(); ctx.font = `400 ${size}px ${Ink.FONTS.hand}`; ctx.fillStyle = rgba(rgb, 0.92);
           const full = ctx.measureText(s).width, part = s.slice(0, Math.ceil(s.length * p));
           const x0 = o.align === 'center' ? x - full / 2 : o.align === 'right' ? x - full : x;
           ctx.translate(x0, y); ctx.rotate(o.rot || 0); ctx.fillText(part, 0, 0);

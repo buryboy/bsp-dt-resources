@@ -10,6 +10,7 @@ srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(Q, dir
 threading.Thread(target=srv.serve_forever, daemon=True).start()
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path='/usr/bin/google-chrome'); pg = b.new_page(viewport={'width': 1180, 'height': 820})
+    pg.add_init_script('window.__NOGATE = 1')  # skip a workbook password lock while testing
     pg.goto(f'http://127.0.0.1:{srv.server_port}/{book}/index.html'); pg.wait_for_timeout(1200)
     pg.evaluate("BOOK_CONFIG.backend=''")
     pg.fill('#cv-name', 'M M'); pg.fill('#cv-email', 'm@' + pg.evaluate("BOOK_CONFIG.emailDomain")); 

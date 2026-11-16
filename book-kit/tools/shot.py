@@ -23,6 +23,7 @@ with sync_playwright() as p:
     pg = ctx.new_page()
     pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errs.append(m.text))
     pg.on('pageerror', lambda e: errs.append('pageerror: ' + str(e)))
+    pg.add_init_script('window.__NOGATE = 1')  # skip a workbook password lock while testing
     pg.goto(f'http://127.0.0.1:{srv.server_port}/' + a.book + '/index.html?mute=1'); pg.wait_for_timeout(1500)
     pg.screenshot(path=str(out / 'p00-cover.png'))
     pg.fill('#cv-name', 'Test Student'); pg.fill('#cv-email', 'test.student@bspcloud.net'); pg.select_option('#cv-class', '10A')

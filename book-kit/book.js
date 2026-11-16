@@ -77,6 +77,8 @@
     flush();
   }
   Book.flush = flush;
+  // save the current page now (for long-writing pages where students stay put for a long time)
+  Book.saveNow = () => { if (pages[cur] && pages[cur].id !== 'cover') { tally(); send('save'); } };
   // live "where are they" ping every 45 s
   setInterval(() => { if (st.student && pages[cur] && document.visibilityState === 'visible') queue.push({ v: 1, lesson: LESSON, event: 'ping', session: st.session, student: st.student, page: { id: pages[cur].id, title: pages[cur].title, n: cur }, ts: Date.now() }) && flush(); }, 45000);
   addEventListener('online', flush);
@@ -343,7 +345,8 @@
       const sum = ui.el('div', 'box'); requestAnimationFrame(() => Ink.frame(sum));
       const paint = () => {
         let sc = 0, mx = 0, blank = []; pages.forEach((p) => p.ids.forEach((id) => { const it = st.items[id], m = p.meta[id]; if (m.max) { mx += m.max; sc += (it && it.score) || 0; } if (!it || (!it.attempts && !it.answer)) blank.push(`${pages.indexOf(p)}. ${esc(p.title)}`); }));
-        sum.innerHTML = `<p style="margin:0">You scored <b class="key">${sc} / ${mx}</b> on the marked activities.</p>` + (blank.length ? `<p style="margin:10px 0 0" class="red">Still blank: ${[...new Set(blank)].join(', ')}. Tap Contents to go back and finish them.</p>` : '<p style="margin:10px 0 0" class="green">You had a go at everything. Brilliant!</p>');
+        const filled = pages.reduce((a, p) => a + p.ids.filter((id) => st.items[id] && (st.items[id].attempts || st.items[id].answer)).length, 0), all = pages.reduce((a, p) => a + p.ids.length, 0);
+        sum.innerHTML = (C.hideScores ? `<p style="margin:0">You have filled in <b class="key">${filled} of ${all}</b> sections.</p>` : `<p style="margin:0">You scored <b class="key">${sc} / ${mx}</b> on the marked activities.</p>`) + (blank.length ? `<p style="margin:10px 0 0" class="red">Still blank: ${[...new Set(blank)].join(', ')}. Tap Contents to go back and finish them.</p>` : '<p style="margin:10px 0 0" class="green">You had a go at everything. Brilliant!</p>');
       };
       p_finish.onShow = () => { paint(); send('finish', p_finish); };
       paint();

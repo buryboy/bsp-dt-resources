@@ -78,6 +78,7 @@ th { background: #f7f8fc; position: sticky; top: 0; font-weight: 600; z-index: 1
   <button class="tab" data-v="mis">🧠 Misconceptions</button>
   <button class="tab" data-v="written">✍️ Written answers</button>
   <button class="tab" data-v="quiz">★ Final quiz</button>
+  <button class="tab" data-v="nea" id="neaTab" style="display:none">📐 NEA marks</button>
 </div>
 <main id="view"></main>
 </div>
@@ -97,6 +98,8 @@ async function pickBook(i) {
   localStorage.setItem('dash.book', b.folder); window.BOOK_MANIFEST = null; FQ = null; data = null;
   window.BOOK_CONFIG = null; await loadScript('../' + b.folder + '/config.js?t=' + Date.now()); MIS = (window.BOOK_CONFIG && window.BOOK_CONFIG.mis) || {};
   await loadScript('../' + b.folder + '/manifest.js?t=' + Date.now()); await loadScript('../' + b.folder + '/final-quiz.js?t=' + Date.now());
+  window.NEA = null; if (window.BOOK_CONFIG && window.BOOK_CONFIG.nea) await loadScript('../' + b.folder + '/rubric.js?t=' + Date.now());
+  const nt = document.getElementById('neaTab'); if (nt) { nt.style.display = window.NEA ? '' : 'none'; if (!window.NEA && view === 'nea') view = 'live'; }
   MAN = window.BOOK_MANIFEST; document.title = b.title + ' · results';
 }
 let API = localStorage.getItem('dash.api') || WB.backend || '', PIN = localStorage.getItem('dash.pin') || '';
@@ -164,6 +167,7 @@ function render() {
     v.querySelectorAll('td.c').forEach((td) => (td.onclick = (e) => { const r = F.cell[td.dataset.k], it = F.order[td.cellIndex - 1], s = F.students[td.parentElement.rowIndex - 2]; pop(e, `<b>${esc(s ? s.name : '')}</b><br>${esc(it.label)}<br><span class="ans">${r ? esc(r.answer || '(blank)') : 'not reached'}</span>${r && r.max ? `<br>score ${r.score || 0}/${r.max}, ${r.attempts} tries` : ''}${r && r.mis ? `<br><span class="pill red">${esc(MIS[r.mis.split(',')[0]] || r.mis)}</span>` : ''}${timesHtml(r)}`); }));
   }
   if (view === 'time') renderTimeline(F, v);
+  if (view === 'nea') renderNEA(F, v);
   if (view === 'qs') {
     const rows = F.order.filter((it) => it.type !== 'rate').map((it) => {
       const rs = F.students.map((s) => F.cell[s.email + '|' + it.id]).filter(Boolean);
@@ -247,8 +251,35 @@ function renderTimeline(F, v) {
   v.querySelectorAll('.tl i').forEach((m) => (m.onclick = (e) => { const x = rows[+m.parentElement.dataset.k], a = x.ans[+m.dataset.j];
     pop(e, `<b>${esc(x.s.name)}</b><br>${esc(a.it.pageN + '. ' + a.it.label)}<br><span class="ans">${esc(a.r.answer || '(blank)')}</span>${timesHtml(a.r)}`); }));
 }
+// NEA practice book: indicative marks per section from rubric.js (length + criteria covered). Teacher only.
+function renderNEA(F, v) {
+  const N = window.NEA; if (!N) { v.innerHTML = '<p>This workbook has no NEA rubric.</p>'; return; }
+  const fk = (sec, f) => 'nea.' + f.id;
+  const fieldRes = (s, f) => { const r = F.cell[s.email + '|' + fk(null, f)]; const txt = r ? r.answer || '' : ''; return { r, res: N.score(f, txt) }; };
+  const rows = F.students.map((s) => {
+    let tot = 0, words = 0, last = 0, filled = 0, nf = 0;
+    const secs = N.sections.map((sec) => { let sc = 0, w = 0, fl = 0;
+      sec.fields.forEach((f) => { const { r, res } = fieldRes(s, f); sc += res.score; w += res.words; nf++; if (res.words) { fl++; filled++; } const t = r ? +r.lastChanged || +r.answeredAt || +r.updated || 0 : 0; if (t > last) last = t; });
+      tot += sc; words += w; return { sc: Math.round(sc * 2) / 2, w, fl, n: sec.fields.length }; });
+    return { s, secs, tot: Math.round(tot * 2) / 2, words, last, filled, nf };
+  });
+  const col = (sc, mx) => { const p = sc / mx; return p >= 0.7 ? '#d8f0de' : p >= 0.4 ? '#fff1c7' : p > 0 ? '#fde0dc' : '#f4f5f9'; };
+  v.innerHTML = `<p class="muted"><b>Indicative only.</b> Each box is scored from its length, whether it covers what the AQA criteria look for, and whether it is structured (lists, numbers, justification). Use it to spot gaps quickly, not as a moderated mark. Students never see these numbers. Click a section for the box-by-box breakdown.</p>
+  <table><tr><th>Student</th>${N.sections.map((x) => `<th title="${esc(x.title)}">${x.key} /${x.marks}</th>`).join('')}<th>Total /${N.total}</th><th>Boxes</th><th>Words</th><th>Last edit</th></tr>
+  ${rows.map((x, k) => `<tr><td style="white-space:nowrap">${esc(x.s.name)}</td>${x.secs.map((c, j) => `<td class="ns" data-k="${k}" data-j="${j}" style="cursor:pointer;background:${col(c.sc, N.sections[j].marks)}">${c.sc}<br><span class="muted">${c.fl}/${c.n} · ${c.w}w</span></td>`).join('')}
+    <td><b>${x.tot}</b></td><td>${x.filled}/${x.nf}</td><td>${x.words}</td><td class="muted">${x.last ? new Date(x.last).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–'}</td></tr>`).join('')}</table>`;
+  v.querySelectorAll('td.ns').forEach((td) => (td.onclick = (e) => {
+    const x = rows[+td.dataset.k], sec = N.sections[+td.dataset.j];
+    pop(e, `<b>${esc(x.s.name)}</b> · Section ${sec.key}: ${esc(sec.title)}<br>` + sec.fields.map((f) => { const { r, res } = fieldRes(x.s, f);
+      return `<div style="margin-top:8px;border-top:1px solid #eee;padding-top:6px"><b>${esc(f.label)}</b> · ${res.score}/${f.max} · ${res.words} words${res.words ? '' : ' <span class="pill red">blank</span>'}
+      ${res.hits.length ? `<br><span style="color:#186e3c">✓ ${res.hits.map(esc).join(', ')}</span>` : ''}${res.words && res.misses.length ? `<br><span style="color:#b21c26">✗ ${res.misses.map(esc).join(', ')}</span>` : ''}
+      ${res.flags.filter((g) => g !== 'blank').length ? `<br><span class="muted">${res.flags.filter((g) => g !== 'blank').map((g) => esc(N.flags[g] || g)).join(' · ')}</span>` : ''}
+      ${r && r.answer ? `<br><span class="ans">${esc(r.answer.length > 400 ? r.answer.slice(0, 400) + '…' : r.answer)}</span>${timesHtml(r)}` : ''}</div>`; }).join(''));
+    const p = $('#pop'); p.style.maxHeight = '70vh'; p.style.overflow = 'auto'; p.style.maxWidth = '520px'; p.style.top = Math.max(10, Math.min(innerHeight - p.offsetHeight - 10, e.clientY + 12)) + 'px';
+  }));
+}
 function pop(e, html) { const p = $('#pop'); p.innerHTML = html; p.style.display = 'block'; p.style.left = Math.min(innerWidth - 400, e.clientX + 12) + 'px'; p.style.top = Math.min(innerHeight - 160, e.clientY + 12) + 'px'; }
-document.addEventListener('click', (e) => { if (!e.target.closest('td.c,.tl i,#pop')) $('#pop').style.display = 'none'; });
+document.addEventListener('click', (e) => { if (!e.target.closest('td.c,td.ns,.tl i,#pop')) $('#pop').style.display = 'none'; });
 function csv() {
   const F = filtered(), head = ['name', 'class', 'email', ...F.order.map((it) => it.pageN + ' ' + it.label)];
   const lines = [head, ...F.students.map((s) => [s.name, s.class, s.email, ...F.order.map((it) => { const r = F.cell[s.email + '|' + it.id]; return r ? (r.max ? `${r.score || 0}/${r.max}` : '') + (r.answer ? ' ' + r.answer : r.attempts ? '' : ' (blank)') + (when(r) ? ' @' + hm(when(r), true) : '') : ''; })])];

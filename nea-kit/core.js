@@ -41,10 +41,15 @@
       sh.items.forEach((it) => {
         if (it.t !== 'photo' && it.t !== 'sketch') return;
         const r = get((it.t === 'photo' ? 'ph.' : 'sk.') + it.id), v = parse(r && r.answer, null);
-        if (v && (v.id || v.k)) out.push({ kind: it.t, id: v.id || '', cap: v.cap || '', at: v.at || 0, where: sh.title + ' · ' + it.label });
+        if (v && v.list) v.list.forEach((q) => out.push({ kind: 'photo', id: q.id || '', cap: q.cap || '', at: q.at || 0, where: sh.title + ' · ' + it.label }));
+        else if (v && (v.id || v.k)) out.push({ kind: it.t, id: v.id || '', cap: v.cap || '', at: v.at || 0, where: sh.title + ' · ' + it.label });
       });
       const s = parse((get('sheet.' + sh.id) || {}).answer, {});
-      (s.extra || []).forEach((x) => { if (x.kind !== 'text' && (x.id || x.k)) out.push({ kind: x.kind, id: x.id || '', cap: x.cap || '', at: x.at || 0, where: sh.title + ' · added' }); });
+      (s.extra || []).forEach((x) => {
+        const v = x.v || {};
+        if (x.kind === 'photo') (v.list || (v.k ? [v] : [])).forEach((q) => out.push({ kind: 'photo', id: q.id || '', cap: q.cap || '', at: q.at || x.at || 0, where: sh.title + ' · added' }));
+        else if (x.kind === 'sketch' && (v.id || v.k)) out.push({ kind: 'sketch', id: v.id || '', cap: '', at: v.at || x.at || 0, where: sh.title + ' · added' });
+      });
     });
     return out;
   }

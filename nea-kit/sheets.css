@@ -127,3 +127,15 @@
 #gate input { font: 400 24px 'Caveat', cursive; width: 100%; border: 0; border-bottom: 1.5px solid #2c2c30; background: transparent; padding: 4px 2px; outline: none; }
 #gate .err { font: 400 13px var(--mono); color: #b0402a; min-height: 20px; margin-top: 8px; }
 .theme-studio #gate form { background: #f6f6f2; } .theme-studio #gate input { font: 400 20px 'IBM Plex Sans', sans-serif; }
+
+/* photo mosaic: several photos in one frame */
+.it-photo .pf.mosaic { display: grid; grid-template-columns: repeat(var(--cols, 1), 1fr); grid-auto-rows: 1fr; gap: 8px; align-items: stretch; justify-content: stretch; background: transparent; padding: 0; }
+.it-photo .tile { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.it-photo .tile .ti { position: relative; flex: 1; min-height: 40px; background: rgba(0,0,0,.05); border-radius: 4px; overflow: hidden; }
+.it-photo .tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+.it-photo .tile .st { position: absolute; right: 4px; bottom: 4px; font: 400 11px var(--mono); background: rgba(255,255,255,.85); padding: 1px 5px; border-radius: 3px; }
+.it-photo .tile .st.wait { color: #b0402a; } .it-photo .tile .st.ok { color: #2f6a43; }
+.it-photo .tdel { position: absolute; right: 4px; top: 4px; font: 600 11px var(--mono); border: 0; border-radius: 4px; background: rgba(255,255,255,.85); color: #444; padding: 2px 6px; cursor: pointer; }
+.it-photo .tdel.sure { background: #b0402a; color: #fff; }
+.it-photo .tile .cap { margin-top: 3px; font-size: 16px; }
+.theme-studio .it-photo .tile .cap { font-size: 13px; }

@@ -75,46 +75,80 @@
     return d;
   }
 
-  // photo frame. io = { get() -> value|null, set(value) } ; value = { k, id, cap, at }
+  // photo frame: one or more photos (shown as a mosaic), each with its own caption.
+  // value = { list: [{ k, id, cap, at }], gone: [k…] }  (older single-photo values { k, id, cap, at } still read fine)
+  const plist = (v) => { if (!v) return { list: [], gone: [] }; if (v.list) return { list: v.list.slice(), gone: (v.gone || []).slice() }; return v.k ? { list: [v], gone: [] } : { list: [], gone: [] }; };
+  S.plist = plist;
   function photoFrame(label, io) {
     const d = mk('div', 'it it-photo');
     d.innerHTML = `<div class="ih"><span>${esc(label)}</span><i class="tools"></i></div><div class="pf"></div>`;
-    const cap = mk('input', 'cap', null, d); cap.placeholder = 'Caption: what does this show? what did you learn?';
-    const pf = d.querySelector('.pf'), tools = d.querySelector('.tools');
-    let status = '';
-    const paint = async () => {
-      const v = io.get(); cap.value = (v && v.cap) || ''; cap.style.display = v ? '' : 'none';
-      tools.innerHTML = v ? `<button data-a="rep" title="Replace">↻</button><button data-a="del" title="Remove">✕</button>` : '';
-      if (!v) { pf.innerHTML = `<button class="addph">📷 Add photo</button><span class="ph-or">or paste / drop a picture here</span>`; return; }
-      pf.innerHTML = `<img alt=""><span class="st ${status || (v.id ? 'ok' : 'wait')}">${{ ok: 'saved ✓', up: 'uploading…', wait: 'not uploaded yet', '': '' }[status || (v.id ? 'ok' : 'wait')]}</span>`;
-      const img = pf.querySelector('img'); let src = await get('img:' + v.k); if (!src) src = await remote(v.id, 'thumb'); if (src) img.src = src;
-      img.onclick = async () => { const big = (await get('img:' + v.k)) || (await remote(v.id)) || src; if (big) lightbox(big, v.cap); };
+    const pf = d.querySelector('.pf'), tools = d.querySelector('.tools'), status = {};
+    const val = () => plist(io.get());
+    const store = (v) => io.set(v.list.length || v.gone.length ? { list: v.list, gone: v.gone.slice(-60) } : null);
+    const paint = () => {
+      const v = val(), n = v.list.length;
+      tools.innerHTML = n ? '<button data-a="add" title="Add another photo">＋</button>' : '';
+      if (!n) { pf.className = 'pf'; pf.innerHTML = `<button class="addph">📷 Add photo</button><span class="ph-or">or paste / drop a picture here</span>`; return; }
+      const cols = n === 1 ? 1 : n <= 4 ? 2 : 3;
+      pf.className = 'pf mosaic'; pf.style.setProperty('--cols', cols);
+      pf.innerHTML = '';
+      v.list.forEach((q) => {
+        const st = status[q.k] || (q.id ? 'ok' : 'wait');
+        const t = mk('div', 'tile', `<div class="ti"><img alt=""><span class="st ${st}">${{ ok: '✓', up: 'uploading…', wait: 'not uploaded yet' }[st]}</span><button class="tdel" title="Remove this photo">✕</button></div><input class="cap" placeholder="Caption: what does this show?">`, pf);
+        const cap = t.querySelector('.cap'); cap.value = q.cap || '';
+        cap.addEventListener('change', () => { const v2 = val(), x = v2.list.find((y) => y.k === q.k); if (x) { x.cap = cap.value.trim(); store(v2); } });
+        const img = t.querySelector('img');
+        (async () => { let src = await get('img:' + q.k); if (!src) src = await remote(q.id, 'thumb'); if (src) img.src = src; })();
+        img.onclick = async () => { const big = (await get('img:' + q.k)) || (await remote(q.id)) || img.src; if (big) lightbox(big, q.cap); };
+        const x = t.querySelector('.tdel');
+        x.onclick = () => {
+          if (!x.classList.contains('sure')) { x.classList.add('sure'); x.textContent = 'Delete?'; setTimeout(() => { x.classList.remove('sure'); x.textContent = '✕'; }, 3000); return; }
+          const v2 = val(); v2.list = v2.list.filter((y) => y.k !== q.k); v2.gone.push(q.k); store(v2); del('img:' + q.k); drop(q.id); paint();
+        };
+      });
     };
-    const send = async (v) => {
-      const data = await get('img:' + v.k); if (!data) return;
-      status = 'up'; paint();
-      try { v.id = await upload(data, label, v.cap); status = 'ok'; io.set(Object.assign({}, v)); } catch (e) { status = 'wait'; }
+    const send = async (k) => {
+      const data = await get('img:' + k); if (!data) return;
+      status[k] = 'up'; paint();
+      try { const id = await upload(data, label, ''); const v = val(), x = v.list.find((y) => y.k === k); if (x) { x.id = id; store(v); } status[k] = 'ok'; }
+      catch (e) { status[k] = 'wait'; }
       paint();
     };
-    const add = async (file) => {
+    const add = async (files) => {
       if (!student()) return Book.toast('Sign in on the cover first');
-      let data; try { data = await shrink(file); } catch (e) { return Book.toast('Could not read that picture'); }
-      const old = io.get(); if (old) { del('img:' + old.k); drop(old.id); }
-      const v = { k: uid(), id: '', cap: old ? old.cap : '', at: Date.now() };
-      await put('img:' + v.k, data); io.set(v); status = ''; paint(); send(v);
+      for (const file of files) {
+        if (!/^image\//.test(file.type)) continue;
+        let data; try { data = await shrink(file); } catch (e) { Book.toast('Could not read that picture'); continue; }
+        const q = { k: uid(), id: '', cap: '', at: Date.now() };
+        await put('img:' + q.k, data); const v = val(); v.list.push(q); store(v); paint(); send(q.k);
+      }
     };
     d.addEventListener('click', async (e) => {
       const a = e.target.closest('button'); if (!a) return;
-      if (a.classList.contains('addph') || a.dataset.a === 'rep') { const fs = await pickFiles(false); if (fs[0]) add(fs[0]); }
-      if (a.dataset.a === 'del') { if (!a.classList.contains('sure')) { a.classList.add('sure'); a.textContent = 'Delete?'; setTimeout(() => { a.classList.remove('sure'); a.textContent = '✕'; }, 3000); return; } const v = io.get(); if (v) { del('img:' + v.k); drop(v.id); } io.set(null); paint(); }
+      if (a.classList.contains('addph') || a.dataset.a === 'add') { const fs = await pickFiles(true); if (fs.length) add(fs); }
     });
-    cap.addEventListener('change', () => { const v = io.get(); if (v) { v.cap = cap.value.trim(); io.set(Object.assign({}, v)); } });
-    d._accept = (files) => { const f = files.find((x) => /^image\//.test(x.type)); if (f) add(f); return !!f; };
+    d._accept = (files) => { const fs = files.filter((x) => /^image\//.test(x.type)); if (fs.length) add(fs); return !!fs.length; };
+    d._repaint = paint;
     paint();
-    const v0 = io.get(); if (v0 && !v0.id) send(v0); // retry an upload that did not finish
-    addEventListener('online', () => { const v = io.get(); if (v && !v.id) send(v); });
+    const retry = () => val().list.filter((q) => !q.id).forEach((q) => send(q.k)); // uploads that did not finish
+    retry(); addEventListener('online', retry);
     return d;
   }
+  // merging copies of one answer saved on two devices: photo frames and sheet extras keep everything from both
+  const parse = (s) => { try { return JSON.parse(s || 'null'); } catch (e) { return null; } };
+  const unionBy = (a, b, gone) => { const m = new Map(); a.concat(b).forEach((x) => { if (!x || gone.has(x.k)) return; const o = m.get(x.k); m.set(x.k, o ? Object.assign({}, o, x, { id: o.id || x.id, cap: x.cap || o.cap }) : x); }); return [...m.values()].sort((p, q) => (p.at || 0) - (q.at || 0)); };
+  Book.mergeItem = (id, la, ra) => {
+    if (/^ph\./.test(id)) {
+      const L = plist(parse(la)), R = plist(parse(ra)), gone = new Set(L.gone.concat(R.gone));
+      const out = { list: unionBy(L.list, R.list, gone), gone: [...gone] };
+      return out.list.length || out.gone.length ? JSON.stringify(out) : '';
+    }
+    if (/^sheet\./.test(id)) {
+      const L = parse(la) || {}, R = parse(ra) || {}, gone = new Set((L.gone || []).concat(R.gone || []));
+      return JSON.stringify({ lay: Object.assign({}, R.lay || {}, L.lay || {}), extra: unionBy(L.extra || [], R.extra || [], gone), gone: [...gone].slice(-60) });
+    }
+    return null;
+  };
 
   // sketch frame (Apple Pencil, mouse, or finger once the frame is tapped). value = { k, id, at, n }
   const INKS = { graphite: '#2c2c30', red: '#b0402a', blue: '#24539c', green: '#2f6a43' };
@@ -267,7 +301,7 @@
     const recIO = (id, label, type) => { const r = ui.record(id, { label, type, max: 0 }); return { get: () => NEA.parse((r.get() || {}).answer, null), set: (v) => { r.set({ answer: v ? JSON.stringify(v) : '', correct: null, mis: type === 'photo' && v && !v.cap ? 'no-caption' : '' }); pushSoon(); } }; };
     const addItem = (key, el, rect, extra) => {
       el.dataset.key = key; el.setAttribute('data-noswipe', ''); mk('div', 'grab', '<span>⤧ drag</span>', el); mk('div', 'rs', '', el);
-      if (extra) { const x = mk('button', 'xdel', '✕', el); x.title = 'Remove'; x.onclick = () => { if (!x.classList.contains('sure')) { x.classList.add('sure'); x.textContent = 'Remove?'; return; } const i = sd.extra.findIndex((q) => q.k === key); if (i >= 0) { const q = sd.extra[i]; if (q.v) { del('img:' + q.v.k); del('sk:' + q.v.k); drop(q.v.id); } sd.extra.splice(i, 1); } el.remove(); saveSheet(); }; }
+      if (extra) { const x = mk('button', 'xdel', '✕', el); x.title = 'Remove'; x.onclick = () => { if (!x.classList.contains('sure')) { x.classList.add('sure'); x.textContent = 'Remove?'; return; } const i = sd.extra.findIndex((q) => q.k === key); if (i >= 0) { const q = sd.extra[i]; if (q.v) { plist(q.v).list.forEach((y) => { del('img:' + y.k); drop(y.id); }); if (q.v.k) del('sk:' + q.v.k); if (q.kind === 'sketch') drop(q.v.id); } sd.extra.splice(i, 1); sd.gone = (sd.gone || []).concat(key).slice(-60); } el.remove(); saveSheet(); }; }
       board.appendChild(el); place(el, sd.lay[key] || rect); if (el._resize) el._resize();
     };
     sheet.items.forEach((it) => {
@@ -333,18 +367,23 @@
       (loc ? loc.strokes : []).forEach((s) => { x.globalCompositeOperation = s.e ? 'destination-out' : 'source-over'; x.strokeStyle = s.c; x.lineCap = x.lineJoin = 'round'; for (let i = 1; i < s.p.length; i++) { const a = s.p[i - 1], q = s.p[i]; x.lineWidth = (s.e ? 18 : s.w) * (0.35 + (q[2] || 0.5)) * 2; x.beginPath(); x.moveTo(a[0] * c.width, a[1] * c.height); x.lineTo(q[0] * c.width, q[1] * c.height); x.stroke(); } });
       return c.toDataURL('image/png');
     };
+    const mosaic = async (v) => {
+      const L = plist(v).list; if (!L.length) return '<div class="pf"><span class="empty">(no photo yet)</span></div>';
+      const tiles = []; for (const q of L) { const src = await imgFor(q); tiles.push(`<div class="tile"><div class="ti">${src ? `<img src="${src}">` : ''}</div>${q.cap ? `<div class="cap pt">${esc(q.cap)}</div>` : ''}</div>`); }
+      return `<div class="pf mosaic" style="--cols:${L.length === 1 ? 1 : L.length <= 4 ? 2 : 3}">${tiles.join('')}</div>`;
+    };
     const box = (cls, key, rect, html) => { const d = mk('div', 'it ' + cls, html, b); place(d, lay[key] || rect); return d; };
     for (const it of sheet.items) {
       const rect = gridBox(it.at);
       if (it.t === 'text') { const f = typeof it.f === 'string' ? NEA.field(it.f) : it.f, a = (g('nea.' + f.id) || {}).answer || ''; box('it-text', 'f:' + f.id, rect, `<div class="ih"><b>${esc(f.label.split(' ')[0])}</b><span>${esc(f.label.split(' ').slice(1).join(' '))}</span></div><div class="iq">${esc(f.q)}</div><div class="ta pt">${esc(a) || '<span class="empty">(not filled in yet)</span>'}</div>`); }
-      else if (it.t === 'photo') { const v = NEA.parse((g('ph.' + it.id) || {}).answer, null), src = await imgFor(v); box('it-photo', 'p:' + it.id, rect, `<div class="ih"><span>${esc(it.label)}</span></div><div class="pf">${src ? `<img src="${src}">` : '<span class="empty">(no photo yet)</span>'}</div>${v && v.cap ? `<div class="cap pt">${esc(v.cap)}</div>` : ''}`); }
+      else if (it.t === 'photo') box('it-photo', 'p:' + it.id, rect, `<div class="ih"><span>${esc(it.label)}</span></div>${await mosaic(NEA.parse((g('ph.' + it.id) || {}).answer, null))}`);
       else if (it.t === 'sketch') { const v = NEA.parse((g('sk.' + it.id) || {}).answer, null), r = lay['s:' + it.id] || rect, src = await sketchImg(v, r[2], r[3] - 38); box('it-sketch', 's:' + it.id, rect, `<div class="ih"><span>${esc(it.label)}</span></div>${src ? `<img class="skc" src="${src}">` : ''}`); }
       else if (it.t === 'scale') { const a = (g(it.id) || {}).answer || '–'; box('it-scale', 'r:' + it.id, rect, `<div class="iq">${it.q}</div><div class="opts"><span class="opt sel">${esc(a)}</span></div>`); }
       else if (it.t === 'html') box('it-html', 'h:' + (it.id || ''), rect, it.html);
     }
     for (const x of sd.extra || []) {
       if (x.kind === 'text') box('it-free', x.k, x.r, `<div class="ih"><span>Note</span></div><div class="ta pt">${esc(x.text || '')}</div>`);
-      else if (x.kind === 'photo') { const src = await imgFor(x.v); box('it-photo', x.k, x.r, `<div class="ih"><span>Photo</span></div><div class="pf">${src ? `<img src="${src}">` : ''}</div>${x.v && x.v.cap ? `<div class="cap pt">${esc(x.v.cap)}</div>` : ''}`); }
+      else if (x.kind === 'photo') box('it-photo', x.k, x.r, `<div class="ih"><span>Photo</span></div>${await mosaic(x.v)}`);
       else { const src = await sketchImg(x.v, x.r[2], x.r[3] - 38); box('it-sketch', x.k, x.r, `<div class="ih"><span>Sketch</span></div>${src ? `<img class="skc" src="${src}">` : ''}`); }
     }
     return b;

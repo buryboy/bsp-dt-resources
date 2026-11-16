@@ -59,7 +59,7 @@
   }
   const saveInfo = { fails: 0, ok: 0, err: '' }; let batchOK = true;
   // tap the name chip to see what saving is doing (handy when a device seems stuck)
-  Book.saveStatus = () => `v12 · ${queue.length ? queue.length + ' waiting to send' : 'nothing waiting'}${saveInfo.ok ? ' · last saved ' + new Date(saveInfo.ok).toLocaleTimeString() : ''}${saveInfo.err ? ' · last problem: ' + saveInfo.err : ''}`;
+  Book.saveStatus = () => `v13 · ${queue.length ? queue.length + ' waiting to send' : 'nothing waiting'}${saveInfo.ok ? ' · last saved ' + new Date(saveInfo.ok).toLocaleTimeString() : ''}${saveInfo.err ? ' · last problem: ' + saveInfo.err : ''}${typeof syncInfo !== 'undefined' && syncInfo ? ' · synced ' + new Date(syncInfo.at).toLocaleTimeString() + (syncInfo.err ? ': ' + syncInfo.err : ` (${syncInfo.n} on server, ${syncInfo.changed} updated here)`) : ''}`;
   const chipSave = () => $('#savechip');
   function setChip(cls) { const c = chipSave(); if (!c) return; c.classList.remove('saving', 'saved', 'offline'); if (cls) c.classList.add(cls); }
   async function flush() {
@@ -94,7 +94,7 @@
   function send(event, pg, extra) {
     if (!st.student) return;
     const p = pg || pages[cur]; if (!p) return;
-    const items = p.ids.map((id) => {
+    const items = (extra && extra.only ? extra.only : p.ids).map((id) => {
       const it = st.items[id] || {};
       return { id, label: (p.meta[id] || {}).label || id, type: (p.meta[id] || {}).type || '', answer: it.answer ?? '', correct: it.correct ?? null, first: it.first ?? null, score: it.score ?? null, max: it.max ?? (p.meta[id] || {}).max ?? null, attempts: it.attempts || 0, mis: it.mis || '', at: it.at || null, last: it.ts || null };
     });
@@ -111,7 +111,7 @@
   // live "where are they" ping every 45 s
   setInterval(() => { if (st.student && pages[cur] && document.visibilityState === 'visible') queue.push({ v: 1, lesson: LESSON, event: 'ping', session: st.session, student: st.student, page: { id: pages[cur].id, title: pages[cur].title, n: cur }, ts: Date.now() }) && flush(); }, 45000);
   addEventListener('online', flush);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && pages[cur]) { tally(); send('leave'); } else if (document.visibilityState === 'visible' && C.sync && st.student) pullProgress(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && pages[cur]) { tally(); send('leave'); } else if (document.visibilityState === 'visible' && SYNC && st.student) pullProgress(); });
 
   // ---------------- recording answers ----------------
   function rec(pageObj, id, meta) {
@@ -326,7 +326,7 @@
     $('#prev').disabled = i === 0; $('#next').disabled = i === pages.length - 1;
     $('#next').textContent = i === 0 ? 'Start ▸' : i === pages.length - 2 ? 'Finish ▸' : 'Next ▸';
     if (nu.id !== 'cover') send('enter', nu);
-    if (C.sync && st.student && Date.now() - lastPull > 60000) pullProgress();
+    if (SYNC && st.student && Date.now() - lastPull > 60000) pullProgress();
     nu.onShow && nu.onShow();
     updateContents();
   }
@@ -396,15 +396,28 @@
   }
   Book.progress = progress;
   // BOOK_CONFIG.sync: answers saved from another device replace older ones here, and affected pages are redrawn
-  let lastPull = 0;
+  let lastPull = 0, syncInfo = null;
+  const SYNC = !!(C.sync || C.nea);
   function mergeRemote(items) {
     const changed = new Set();
+    let n = 0; const pushBack = [];
     Object.keys(items).forEach((id) => {
-      const r = items[id], l = st.items[id];
+      const r = items[id], l = st.items[id]; n++;
+      // a book can merge some answers instead of picking the newest (e.g. photo frames: keep both devices' photos)
+      if (Book.mergeItem && l && r.answer !== l.answer) {
+        const m = Book.mergeItem(id, l.answer, r.answer);
+        if (m != null) {
+          if (m !== l.answer) { st.items[id] = Object.assign({}, l, { answer: m, ts: Math.max(Date.now(), (r.last || 0) + 1), attempts: Math.max(l.attempts || 0, r.attempts || 0) }); changed.add(id); }
+          if (m !== r.answer) pushBack.push(id); // the server should get the combined version too
+          return;
+        }
+      }
       if (!r.last || (l && (l.ts || 0) >= r.last)) return;
       st.items[id] = Object.assign({}, l || {}, { answer: r.answer, correct: r.correct, score: r.score === '' ? null : r.score, max: r.max === '' ? null : r.max, attempts: Math.max(r.attempts || 0, (l && l.attempts) || 0), mis: r.mis, at: (l && l.at) || r.at || r.last, ts: r.last });
       changed.add(id);
     });
+    syncInfo = { at: Date.now(), n, changed: changed.size };
+    if (pushBack.length) { const pg = pages.find((p) => pushBack.some((id) => p.ids.includes(id))) || pages[cur]; if (pg) send('sync', pg, { only: pushBack }); }
     if (!changed.size) return;
     save();
     pages.forEach((p, i) => {
@@ -420,10 +433,10 @@
     if (!C.backend || !st.student) return;
     try {
       lastPull = Date.now();
-      const r = await fetch(C.backend + '?a=progress&lesson=' + encodeURIComponent(LESSON) + '&email=' + encodeURIComponent(st.student.email) + (C.sync ? '&full=1' : ''), { cache: 'no-store' });
+      const r = await fetch(C.backend + '?a=progress&lesson=' + encodeURIComponent(LESSON) + '&email=' + encodeURIComponent(st.student.email) + (SYNC ? '&full=1' : ''), { cache: 'no-store' });
       const j = await r.json(); if (!j.ok) return;
       st.remoteDone = j.done || [];
-      if (j.items) mergeRemote(j.items);
+      if (j.items) mergeRemote(j.items); else if (SYNC) syncInfo = { at: Date.now(), err: 'server sent no answers (old Code.gs?)' };
       if (j.quiz && j.quiz.submitted) st.quiz = Object.assign({}, st.quiz, { submitted: true, score: j.quiz.score, max: j.quiz.max });
       save(); updateQuizChip();
     } catch (e) {}

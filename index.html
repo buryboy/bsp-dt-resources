@@ -22,16 +22,30 @@ h1{font:700 46px Fredoka,sans-serif;color:var(--forest);margin:10px 0 6px;line-h
 .meta{font:700 13px Fredoka,sans-serif;color:#6b7c72;letter-spacing:.06em;margin-bottom:8px}
 .body p{margin:0;font-size:15.5px;line-height:1.45}
 .soon{opacity:.55;pointer-events:none}
-.section{font:700 34px Fredoka,sans-serif;color:var(--forest);margin:44px 0 6px}
-.grid.tools .top{height:100px;font-size:56px}
+.wrap{max-width:1240px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:28px;align-items:start}
+.col{background:#ffffff55;border:3px solid #ffffff88;border-radius:28px;padding:18px 18px 22px}
+.col h2.section{font:700 30px Fredoka,sans-serif;color:var(--forest);margin:0 0 4px}
+.col .sub{font-size:15.5px;margin:0 0 16px}
+.col .grid{grid-template-columns:1fr;gap:14px}
+.col .set{display:flex;align-items:stretch;border-radius:20px;box-shadow:0 6px 0 #d9c7a3,0 10px 18px #0002}
+.col .top{flex:0 0 96px;height:auto;min-height:96px;font-size:46px}
+.col .body{padding:12px 16px 14px}
+.col .body h2{font-size:21px}
+.col .body p{font-size:14.5px}
+.col .meta{font-size:12px;margin-bottom:4px}
 footer{margin-top:30px;font-size:14px;color:#55695d}
 </style>
 </head>
 <body>
 <div class="wrap">
   <span class="tag">THE BRITISH SCHOOL OF PARIS · DESIGN &amp; TECHNOLOGY</span>
-  <h1>Interactive resources</h1>
-  <p class="sub">Choose a workbook. Each one is a set of levels with games, 3D models and mini quizzes. Works on iPads and computers.</p>
+  <h1>Design &amp; Technology</h1>
+  <p class="sub">Pick a section. Everything works on iPads and computers.</p>
+  <div class="cols">
+  <section class="col">
+  <h2 class="section">Interactive resources</h2>
+  <p class="sub">Workbooks with games, 3D models and mini quizzes.</p>
   <div class="grid">
     <a class="set" href="woods-and-timbers/"><div class="top" style="background:linear-gradient(135deg,#9fd3f0,#cfe8b0)">🌳</div>
       <div class="body"><div class="meta">GCSE · AQA D&amp;T · 8 LEVELS</div><h2>Woods &amp; Timbers</h2><p>Grow a tree, run a seasoning kiln, saw a 3D log, sort timbers and build plywood, then battle the Rot King.</p></div></a>
@@ -48,11 +62,17 @@ footer{margin-top:30px;font-size:14px;color:#55695d}
     <div class="set soon"><div class="top" style="background:linear-gradient(135deg,#d9d2e9,#eee)">🧪</div>
       <div class="body"><div class="meta">COMING SOON</div><h2>More topics</h2><p>New workbooks will appear here.</p></div></div>
   </div>
+  </section>
+  <section class="col">
   <h2 class="section">Tools</h2>
   <p class="sub">Classroom tools for the board or the teacher's laptop.</p>
-  <div class="grid tools">
+  <div class="grid">
     <a class="set" href="tools/noise-meter.html"><div class="top" style="background:linear-gradient(135deg,#ffd6c9,#ffe9a8)">🔊</div>
       <div class="body"><div class="meta">CLASSROOM · RUNS ON THE TEACHER'S LAPTOP</div><h2>Noise meter</h2><p>A live volume meter for the board, in five styles, with a max-volume line, a too-loud counter and a quiet timer.</p></div></a>
+    <div class="set soon"><div class="top" style="background:linear-gradient(135deg,#d9d2e9,#eee)">🧰</div>
+      <div class="body"><div class="meta">COMING SOON</div><h2>More tools</h2><p>New classroom tools will appear here.</p></div></div>
+  </div>
+  </section>
   </div>
   <footer>Mr Porter · BSP Design &amp; Technology</footer>
 </div>

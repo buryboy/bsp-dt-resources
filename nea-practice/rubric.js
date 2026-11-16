@@ -1,5 +1,5 @@
 // NEA practice workbook: the six AQA 8552 NEA sections, every fill-in box, and the teacher-only indicative scoring.
-// Loaded by the workbook (to build the pages and score each box) and by the teacher dashboard (to show the breakdown).
+// Needs ../nea-kit/core.js first. Loaded by the workbook (sheets + scoring) and by the teacher dashboard (breakdown).
 // Scores are a rough guide from length + what the writing covers. They are NOT a moderated mark and students never see them.
 //
 // A field:  { id, label, q, hint, words (aim), max (marks inside its section), kw: [[name, regex], ...],
@@ -121,31 +121,63 @@
     },
   ];
 
-  const JUST = /because|so that|therefore|this means|as a result|which means|since|so i /i;
-  function words(t) { return (String(t || '').match(/[A-Za-z0-9À-ÿ'’£€$%±.-]+/g) || []).filter((w) => /[A-Za-z0-9]/.test(w)).length; }
-  function lines(t) { return String(t || '').split(/\n+/).filter((l) => words(l) >= 3).length; }
-  // indicative score for one box: length 35%, coverage of what the spec looks for 50%, structure (list / numbers / reasons) 15%
-  function score(f, text) {
-    const t = String(text || ''), w = words(t), max = f.max;
-    if (!w) return { score: 0, max, words: 0, hits: [], misses: f.kw.map((k) => k[0]), flags: ['blank'], lines: 0 };
-    const hits = [], misses = [];
-    f.kw.forEach(([name, re]) => (new RegExp(re, 'im').test(t) ? hits : misses).push(name));
-    const len = Math.min(1, w / f.words), cov = hits.length / f.kw.length, n = lines(t);
-    const parts = [len];
-    if (f.list) parts.push(Math.min(1, n / f.list));
-    if (f.nums) parts.push(/\d/.test(t) ? 1 : 0);
-    if (f.why) parts.push(JUST.test(t) ? 1 : 0);
-    const struct = parts.reduce((a, b) => a + b, 0) / parts.length;
-    let raw = 0.35 * len + 0.5 * cov + 0.15 * struct;
-    if (w < 12) raw *= 0.5; // a few words is not evidence
-    const flags = [];
-    if (w < f.words * 0.4) flags.push('thin');
-    if (f.why && !JUST.test(t)) flags.push('no-why');
-    if (f.nums && !/\d/.test(t)) flags.push('no-numbers');
-    if (f.list && n < f.list) flags.push('short-list');
-    if (cov < 0.5) flags.push('gaps');
-    return { score: Math.round(raw * max * 2) / 2, max, words: w, hits, misses, flags, lines: n };
-  }
-  window.NEA = { sections: S, score, words, lines, total: S.reduce((a, s) => a + s.marks, 0),
-    flags: { blank: 'Left blank', thin: 'Much shorter than expected', 'no-why': 'Decisions not justified (no “because…”)', 'no-numbers': 'No measurements or data', 'short-list': 'Fewer points / ideas than expected', gaps: 'Misses half or more of what the spec looks for' } };
+
+  // ---------- the A3 landscape sheets: what goes where (grid: [col, row, cols, rows] of 12 × 9) ----------
+  const T = (f, at) => ({ t: 'text', f, at }), P = (id, label, at) => ({ t: 'photo', id, label, at }), K = (id, label, at) => ({ t: 'sketch', id, label, at });
+  const SHEETS = {
+    A: [
+      { id: 'a-context', title: 'Exploring the context', guide: { what: 'Open up the context: who could have a problem in it, where, and why it matters.', look: ['A real client or user in mind', 'Problems, not products, at this stage'], tips: ['Start with a mind map in your sketchbook, then photograph it.'] },
+        items: [T('a1', [0, 0, 5, 9]), K('a-ctx-map', 'Mind map of the context', [5, 0, 7, 6]), P('a-ctx-photo', 'Photo of the place or the problem', [5, 6, 7, 3])] },
+      { id: 'a-client', title: 'Your client and primary research', guide: { what: 'Who you are designing for, and what you found out by asking and observing them.', look: ['Needs, wants and values investigated, not guessed', 'Research that ends with “so this means…”'], tips: ['Ask permission before photographing people.'] },
+        items: [T('a2', [0, 0, 6, 4]), P('a-client-photo', 'Your client, or the space they use', [6, 0, 6, 4]), T('a3', [0, 4, 7, 5]), P('a-research-photo', 'Interview notes or questionnaire results', [7, 4, 5, 5])] },
+      { id: 'a-products', title: 'Existing products and the work of others', guide: { what: 'Analyse products that already solve a similar problem, and a designer whose approach could influence you.', look: ['Analysis, not just pictures', 'What you will take from each one'], tips: ['ACCESS FM keeps product analysis focused.'] },
+        items: [T('a4', [0, 0, 6, 6]), P('a-product-photo', 'The existing product', [6, 0, 6, 4]), T('a5', [6, 4, 6, 5]), P('a-designer-photo', 'The designer’s work', [0, 6, 6, 3])] },
+      { id: 'a-possibilities', title: 'Design possibilities', guide: { what: 'Pull the research together and decide which design possibility to follow.', look: ['Possibilities that grow out of the research', 'A clear decision with a reason'] },
+        items: [T('a6', [0, 0, 5, 5]), K('a-thumbs', 'Quick thumbnails of each possibility', [5, 0, 7, 9]), P('a-mood', 'Mood board or inspiration', [0, 5, 5, 4])] },
+    ],
+    B: [
+      { id: 'b-brief', title: 'Design brief', guide: { what: 'A short statement of the problem, the client and what you will design and make.', look: ['Names the client and the problem', 'Short and specific'], tips: ['Read it to your client. If they nod, it works.'] },
+        items: [T('b1', [0, 0, 6, 6]), P('b-space', 'Where the product will be used (with measurements)', [6, 0, 6, 6]), { t: 'html', id: 'b-brief-help', html: '<h3>A good brief answers…</h3>Who is it for? · What is the problem? · Where will it be used? · What will you design and make?', at: [0, 6, 12, 3] }] },
+      { id: 'b-spec', title: 'Specification and sign-off', guide: { what: 'The yardstick for the whole project: measurable, justified points, agreed with your client.', look: ['Measurable or testable points', 'Each point justified', 'Client involved'], tips: ['If you cannot test it, rewrite it.'] },
+        items: [T('b2', [0, 0, 8, 9]), K('b-dims', 'Key dimensions (sketch)', [8, 0, 4, 5]), T('b3', [8, 5, 4, 4])] },
+    ],
+    C: [
+      { id: 'c-strategies', title: 'Design strategies', guide: { what: 'Show how you generated ideas, using named strategies.', look: ['Strategies named and used', 'Avoiding design fixation'] },
+        items: [T('c1', [0, 0, 5, 5]), K('c-strategy', 'Strategy work (e.g. SCAMPER, mind map, collaboration)', [5, 0, 7, 9]), P('c-strategy-photo', 'Photo of group work or inspiration', [0, 5, 5, 4])] },
+      { id: 'c-range', title: 'A wide range of ideas', guide: { what: 'Many genuinely different ideas, not small variations of one.', look: ['A wide, imaginative range', 'Clear sketching, modelling and annotation'], tips: ['Six different ideas beat twelve versions of one.'] },
+        items: [T('c2', [0, 0, 4, 9]), K('c-ideas', 'Initial ideas', [4, 0, 8, 5]), P('c-ideas-photo', 'Photo of your sketchbook ideas page', [4, 5, 8, 4])] },
+      { id: 'c-annotate', title: 'Annotation and feedback', guide: { what: 'Technical annotation on your best idea, and what other people said about your ideas.', look: ['Annotation that explains, not labels', 'Feedback used'] },
+        items: [P('c-best', 'Your best idea (photo of the sketch)', [0, 0, 6, 5]), T('c3', [6, 0, 6, 5]), T('c4', [0, 5, 12, 4])] },
+      { id: 'c-choose', title: 'Choosing a direction', guide: { what: 'Which idea you will develop, justified against the specification and feedback.', look: ['Choice checked against specification points', 'Client opinion used'] },
+        items: [T('c5', [0, 0, 6, 6]), K('c-chosen', 'Your chosen idea', [6, 0, 6, 9]), P('c-feedback', 'Feedback evidence', [0, 6, 6, 3])] },
+    ],
+    D: [
+      { id: 'd-models', title: 'Modelling', guide: { what: 'Test the idea with models in different materials and CAD. Record what each one taught you.', look: ['Models tested, not just made', 'Different materials and CAD'], tips: ['Photograph the failures too.'] },
+        items: [T('d1', [0, 0, 5, 9]), P('d-model1', 'Model 1', [5, 0, 7, 4]), P('d-model2', 'Model 2', [5, 4, 4, 5]), P('d-cad', 'CAD screenshot', [9, 4, 3, 5])] },
+      { id: 'd-iterate', title: 'Iteration and client feedback', guide: { what: 'How the design changed each time, and why.', look: ['Clear iterations', 'Reasons for every change', 'Client involved'] },
+        items: [T('d2', [0, 0, 6, 5]), T('d3', [0, 5, 6, 4]), K('d-dev', 'Development sketches', [6, 0, 6, 9])] },
+      { id: 'd-final', title: 'Final design', guide: { what: 'The design fully resolved: sizes, parts, materials, components, finishes.', look: ['Everything decided, nothing vague'] },
+        items: [T('d4', [0, 0, 5, 9]), P('d-render', 'Final design drawing or CAD render', [5, 0, 7, 5]), K('d-views', 'Exploded or orthographic view', [5, 5, 7, 4])] },
+      { id: 'd-manufacture', title: 'Manufacturing specification', guide: { what: 'A plan good enough for someone else to make your product.', look: ['Steps in order', 'Tools, timings and quality checks'], tips: ['Test it: could a classmate follow it?'] },
+        items: [T('d5', [0, 0, 7, 9]), P('d-cutlist', 'Cutting list or working drawing', [7, 0, 5, 9])] },
+    ],
+    E: [
+      { id: 'e-materials', title: 'Materials, processes and safety', guide: { what: 'Why you chose your materials and processes, and how you worked safely.', look: ['Choices justified', 'Risks identified and controlled'] },
+        items: [T('e1', [0, 0, 6, 5]), T('e4', [0, 5, 6, 4]), P('e-setup', 'Materials or machine set-up', [6, 0, 6, 9])] },
+      { id: 'e-diary', title: 'Making diary', guide: { what: 'A record of every making lesson: what you did, what went wrong, what is next.', look: ['Evidence of skill and accuracy', 'Problems solved'], tips: ['One photo every lesson.'] },
+        items: [T('e2', [0, 0, 5, 9]), P('e-make1', 'Making photo 1', [5, 0, 4, 5]), P('e-make2', 'Making photo 2', [9, 0, 3, 5]), P('e-make3', 'Making photo 3', [5, 5, 7, 4])] },
+      { id: 'e-quality', title: 'Quality and problem solving', guide: { what: 'How you kept parts accurate, and how you dealt with problems.', look: ['Quality checks with tolerances', 'A complete, well-finished prototype'] },
+        items: [T('e3', [0, 0, 6, 5]), T('e5', [0, 5, 6, 4]), P('e-check', 'A quality check (measuring, jig, template)', [6, 0, 6, 5]), P('e-final', 'Finished prototype', [6, 5, 6, 4])] },
+    ],
+    F: [
+      { id: 'f-testing', title: 'Testing the prototype', guide: { what: 'Test the prototype in use and record the results.', look: ['Tests with measurable results', 'Linked to the specification'] },
+        items: [T('f1', [0, 0, 6, 9]), P('f-test', 'Testing in use', [6, 0, 6, 5]), P('f-client', 'Your client using it', [6, 5, 6, 4])] },
+      { id: 'f-evaluate', title: 'Evaluation against the specification', guide: { what: 'Every specification point checked, with evidence, plus what your client and others said.', look: ['Point-by-point evaluation', 'Client and third-party views'], tips: ['Honest, evidenced criticism scores higher than “it went well”.'] },
+        items: [T('f2', [0, 0, 8, 9]), T('f3', [8, 0, 4, 9])] },
+      { id: 'f-improve', title: 'Improvements and reflection', guide: { what: 'Justified improvements, and what you will do differently in the real NEA.', look: ['Realistic, justified modifications', 'Ideally sketched'] },
+        items: [T('f4', [0, 0, 6, 5]), K('f-sketch', 'Sketch your improvements', [6, 0, 6, 9]), T('f5', [0, 5, 6, 4])] },
+    ],
+  };
+  S.forEach((s) => { s.col = 'Section ' + s.key; s.sheets = SHEETS[s.key]; const g = s.sheets[0].guide; g.why = g.why || s.why; });
+  window.NEA.define({ sections: S, board: 'AQA' });
 })();

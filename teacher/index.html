@@ -99,7 +99,7 @@ async function pickBook(i) {
   localStorage.setItem('dash.book', b.folder); window.BOOK_MANIFEST = null; FQ = null; data = null;
   window.BOOK_CONFIG = null; await loadScript('../' + b.folder + '/config.js?t=' + Date.now()); MIS = (window.BOOK_CONFIG && window.BOOK_CONFIG.mis) || {};
   await loadScript('../' + b.folder + '/manifest.js?t=' + Date.now()); await loadScript('../' + b.folder + '/final-quiz.js?t=' + Date.now());
-  window.NEA = null; if (window.BOOK_CONFIG && window.BOOK_CONFIG.nea) await loadScript('../' + b.folder + '/rubric.js?t=' + Date.now());
+  window.NEA = null; if (window.BOOK_CONFIG && window.BOOK_CONFIG.nea) { await loadScript('../nea-kit/core.js?t=' + Date.now()); await loadScript('../' + b.folder + '/rubric.js?t=' + Date.now()); }
   const nt = document.getElementById('neaTab'); if (nt) { nt.style.display = window.NEA ? '' : 'none'; if (!window.NEA && view === 'nea') view = 'live'; }
   MAN = window.BOOK_MANIFEST; document.title = b.title + ' · results';
 }
@@ -257,7 +257,7 @@ function renderNEA(F, v) {
   const N = window.NEA; if (!N) { v.innerHTML = '<p>This workbook has no NEA rubric.</p>'; return; }
   const fk = (sec, f) => 'nea.' + f.id;
   const fieldRes = (s, f) => { const r = F.cell[s.email + '|' + fk(null, f)]; const txt = r ? r.answer || '' : ''; return { r, res: N.score(f, txt) }; };
-  const photosOf = (s, sec) => { const r = F.cell[s.email + '|nea.' + sec.key.toLowerCase() + '.photos']; try { return JSON.parse((r && r.answer) || '[]'); } catch (e) { return []; } };
+  const photosOf = (s, sec) => (N.media ? N.media(sec, (id) => F.cell[s.email + '|' + id] || null) : []);
   const rows = F.students.map((s) => {
     let tot = 0, words = 0, last = 0, filled = 0, nf = 0, nph = 0;
     const secs = N.sections.map((sec) => { let sc = 0, w = 0, fl = 0;
@@ -267,14 +267,14 @@ function renderNEA(F, v) {
     return { s, secs, tot: Math.round(tot * 2) / 2, words, last, filled, nf, nph };
   });
   const col = (sc, mx) => { const p = sc / mx; return p >= 0.7 ? '#d8f0de' : p >= 0.4 ? '#fff1c7' : p > 0 ? '#fde0dc' : '#f4f5f9'; };
-  v.innerHTML = `<p class="muted"><b>Indicative only.</b> Each box is scored from its length, whether it covers what the AQA criteria look for, and whether it is structured (lists, numbers, justification). Use it to spot gaps quickly, not as a moderated mark. Students never see these numbers. Click a section for the box-by-box breakdown.</p>
-  <table><tr><th>Student</th>${N.sections.map((x) => `<th title="${esc(x.title)}">${x.key} /${x.marks}</th>`).join('')}<th>Total /${N.total}</th><th>Boxes</th><th>Words</th><th>Photos</th><th>Last edit</th></tr>
+  v.innerHTML = `<p class="muted"><b>Indicative only.</b> Each box is scored from its length, whether it covers what the ${esc(N.board || 'exam board')} criteria look for, and whether it is structured (lists, numbers, justification). Use it to spot gaps quickly, not as a moderated mark. Students never see these numbers. Click a section for the box-by-box breakdown.</p>
+  <table><tr><th>Student</th>${N.sections.map((x) => `<th title="${esc(x.title)}">${x.key} /${x.marks}</th>`).join('')}<th>Total /${N.total}</th><th>Boxes</th><th>Words</th><th>Photos / sketches</th><th>Last edit</th></tr>
   ${rows.map((x, k) => `<tr><td style="white-space:nowrap">${esc(x.s.name)}</td>${x.secs.map((c, j) => `<td class="ns" data-k="${k}" data-j="${j}" style="cursor:pointer;background:${col(c.sc, N.sections[j].marks)}">${c.sc}<br><span class="muted">${c.fl}/${c.n} · ${c.w}w${c.ph ? ' · 📷' + c.ph : ''}</span></td>`).join('')}
     <td><b>${x.tot}</b></td><td>${x.filled}/${x.nf}</td><td>${x.words}</td><td>${x.nph || '–'}</td><td class="muted">${x.last ? new Date(x.last).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–'}</td></tr>`).join('')}</table>`;
   v.querySelectorAll('td.ns').forEach((td) => (td.onclick = (e) => {
     const x = rows[+td.dataset.k], sec = N.sections[+td.dataset.j];
-    const ph = photosOf(x.s, sec), boxName = (id) => (sec.fields.find((f) => f.id === id) || { label: 'General' }).label;
-    const gal = ph.length ? `<div class="nph">${ph.map((q) => `<figure><img data-id="${esc(q.id)}" alt="${q.id ? 'loading…' : 'not uploaded yet'}"><figcaption><b>${esc(boxName(q.box))}</b> · ${hm(q.at)} ${new Date(q.at).toLocaleDateString([], { day: 'numeric', month: 'short' })}<br>${q.cap ? esc(q.cap) : '<span class="pill red">no caption</span>'}</figcaption></figure>`).join('')}</div>` : '<p class="muted">No photos for this section.</p>';
+    const ph = photosOf(x.s, sec);
+    const gal = ph.length ? `<div class="nph">${ph.map((q) => `<figure><img data-id="${esc(q.id)}" alt="${q.id ? 'loading…' : 'not uploaded yet'}"><figcaption>${q.kind === 'sketch' ? '✏️ ' : ''}<b>${esc(q.where)}</b> · ${hm(q.at)} ${new Date(q.at).toLocaleDateString([], { day: 'numeric', month: 'short' })}<br>${q.cap ? esc(q.cap) : q.kind === 'photo' ? '<span class="pill red">no caption</span>' : ''}</figcaption></figure>`).join('')}</div>` : '<p class="muted">No photos or sketches for this section.</p>';
     pop(e, `<b>${esc(x.s.name)}</b> · Section ${sec.key}: ${esc(sec.title)}<br>` + gal + sec.fields.map((f) => { const { r, res } = fieldRes(x.s, f);
       return `<div style="margin-top:8px;border-top:1px solid #eee;padding-top:6px"><b>${esc(f.label)}</b> · ${res.score}/${f.max} · ${res.words} words${res.words ? '' : ' <span class="pill red">blank</span>'}
       ${res.hits.length ? `<br><span style="color:#186e3c">✓ ${res.hits.map(esc).join(', ')}</span>` : ''}${res.words && res.misses.length ? `<br><span style="color:#b21c26">✗ ${res.misses.map(esc).join(', ')}</span>` : ''}

@@ -455,7 +455,7 @@
     $('#book').addEventListener('touchstart', (e) => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st0 = Date.now(); }, { passive: true });
     $('#book').addEventListener('touchend', (e) => {
       const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
-      if (Date.now() - st0 < 600 && Math.abs(dx) > 90 && Math.abs(dy) < 50 && !e.target.closest('.act,canvas,input,textarea,select,.card,.bucket')) (dx < 0 ? $('#next').onclick() : Book.prev());
+      if (Date.now() - st0 < 600 && Math.abs(dx) > 90 && Math.abs(dy) < 50 && !e.target.closest('.act,canvas,input,textarea,select,.card,.bucket,[data-noswipe]')) (dx < 0 ? $('#next').onclick() : Book.prev());
     }, { passive: true });
     // tooth texture for the paper
     try { const c = H.layer(256, 256), x = c.getContext('2d'), img = x.createImageData(256, 256), r = H.rng(907); for (let i = 0; i < img.data.length; i += 4) { img.data[i] = 120; img.data[i + 1] = 108; img.data[i + 2] = 88; img.data[i + 3] = (0.02 + (r() - 0.5) * 0.05) * 255; } x.putImageData(img, 0, 0); document.documentElement.style.setProperty('--tooth', `url(${c.toDataURL()})`); } catch (e) {}

@@ -26,7 +26,7 @@ with sync_playwright() as p:
     pg.add_init_script('window.__NOGATE = 1')  # skip a workbook password lock while testing
     pg.goto(f'http://127.0.0.1:{srv.server_port}/' + a.book + '/index.html?mute=1'); pg.wait_for_timeout(1500)
     pg.screenshot(path=str(out / 'p00-cover.png'))
-    pg.fill('#cv-name', 'Test Student'); pg.fill('#cv-email', 'test.student@bspcloud.net'); pg.select_option('#cv-class', '10A')
+    pg.fill('#cv-name', 'Test Student'); pg.fill('#cv-email', 'test.student@bspcloud.net'); pg.select_option('#cv-class', index=1)
     pg.click('#next'); pg.wait_for_timeout(1100)
     n = pg.evaluate('Book.pages.length')
     want = [int(x) for x in a.pages.split(',')] if a.pages else list(range(1, n))

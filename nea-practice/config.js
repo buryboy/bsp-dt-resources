@@ -2,6 +2,7 @@
 window.BOOK_CONFIG = {
   lesson: 'nea-practice-y10',
   title: 'NEA practice run',
+  short: 'GCSE NEA practice',
   subtitle: 'Your design folder, one section at a time: what each part is for, then your own practice entries.',
   course: 'AQA GCSE Design & Technology · NEA practice',
   emailDomain: 'bspcloud.net',

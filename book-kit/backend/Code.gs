@@ -64,12 +64,16 @@ function saveOne(ss, d) {
       if (L.getLastColumn() < LATEST_COLS.length) L.getRange(1, 1, 1, LATEST_COLS.length).setValues([LATEST_COLS]);
       const lv = L.getRange(1, 1, Math.max(1, L.getLastRow()), 1).getValues(), index = {};
       const atCol = LATEST_COLS.indexOf('answeredAt') + 1, prevAt = L.getRange(1, atCol, Math.max(1, L.getLastRow()), 1).getValues();
+      const lcCol = LATEST_COLS.indexOf('lastChanged') + 1, prevLast = L.getRange(1, lcCol, Math.max(1, L.getLastRow()), 1).getValues();
+      const msOf = (x) => (x instanceof Date ? x.getTime() : Number(x) || 0);
       for (let i = 1; i < lv.length; i++) index[lv[i][0]] = i + 1;
       const appends = [];
       // the final quiz is one go only: ignore a second submission
       if (d.event === 'quiz' && index[d.lesson + '|' + email + '|' + d.items[0].id]) return { ok: true, ignored: 'quiz already submitted' };
       d.items.forEach((it) => {
         const key = d.lesson + '|' + email + '|' + it.id;
+        // several devices: never let an older (or blank) copy of an answer overwrite a newer one saved from elsewhere
+        if (index[key]) { const was = msOf(prevLast[index[key] - 1][0]); if (was && (!it.last || it.last < was)) return; }
         const row = [key, d.lesson, email, clip(st.name, 80), clip(st.cls, 20), d.page.n, d.page.id, clip(d.page.title, 80), clip(it.id, 60), clip(it.label, 160), clip(it.type, 20), clip(it.answer, 6000),
           it.correct == null ? '' : !!it.correct, it.first == null ? '' : !!it.first, it.score == null ? '' : it.score, it.max == null ? '' : it.max, it.attempts || 0, clip(it.mis, 120), now,
           (index[key] && prevAt[index[key] - 1][0]) || (it.at ? new Date(it.at) : ''), it.last ? new Date(it.last) : ''];

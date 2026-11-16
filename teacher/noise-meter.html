@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Noise meter · D&T</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Gloria+Hallelujah&family=Press+Start+2P&family=Monoton&family=Space+Mono:wght@400;700&family=Josefin+Sans:wght@700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #111; overflow: hidden; font-family: Fredoka, system-ui, sans-serif; }
+canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+#bar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center;
+  background: rgba(20, 24, 40, 0.86); color: #fff; padding: 10px 16px; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.35); font-size: 15px; transition: opacity .4s; max-width: 96vw; }
+#bar.hide { opacity: 0; pointer-events: none; }
+#bar label { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+#bar select, #bar button { font: 600 15px Fredoka; border-radius: 10px; border: 0; padding: 7px 12px; cursor: pointer; }
+#bar button { background: #fff; color: #1e2e96; }
+#bar button.go { background: #2bb24c; color: #fff; }
+#max { width: 180px; accent-color: #ff8a3d; }
+#maxv { display: inline-block; min-width: 28px; text-align: right; font-weight: 700; }
+#msg { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #b21c26; color: #fff; padding: 10px 16px; border-radius: 12px; display: none; font-size: 16px; max-width: 90vw; text-align: center; }
+#start { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; color: #fff; text-align: center; background: rgba(10,12,24,.55); }
+#start button { font: 700 26px Fredoka; padding: 16px 30px; border-radius: 16px; border: 0; background: #2bb24c; color: #fff; cursor: pointer; box-shadow: 0 6px 0 #186e3c; }
+#start p { margin: 0; font-size: 16px; opacity: .85; max-width: 560px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="start"><button id="go">🎤 Start the noise meter</button><p>Uses this laptop's microphone. Nothing is recorded or sent anywhere: the sound level is worked out on this computer only.</p></div>
+<div id="msg"></div>
+<div id="bar">
+  <label>Style <select id="style">
+    <option value="neon">Neon Sign</option>
+    <option value="pixel">16-Bit Pixel</option>
+    <option value="blueprint">Engineering Blueprint</option>
+    <option value="ballpoint">Ballpoint Notebook</option>
+    <option value="bauhaus">Bauhaus Poster</option>
+  </select></label>
+  <label title="Above this level the meter says it's too loud">Max volume <input id="max" type="range" min="10" max="95" value="60"><span id="maxv">60</span></label>
+  <label title="How fast the meter reacts">Sensitivity <select id="sens"><option value="0.8">Low</option><option value="1" selected>Normal</option><option value="1.25">High</option></select></label>
+  <label><input type="checkbox" id="beep"> Alert sound</label>
+  <select id="mic" title="Microphone" style="max-width:190px"></select>
+  <button id="reset" title="Reset the too-loud counter and quiet timer">↺ Reset</button>
+  <button id="fs">⛶ Full screen</button>
+</div>
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const cv = $('#c'), ctx = cv.getContext('2d');
+const store = { get(k, d) { try { const v = localStorage.getItem('nm.' + k); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('nm.' + k, v); } catch (e) {} } };
+$('#style').value = store.get('style', 'neon'); $('#max').value = store.get('max', 60); $('#maxv').textContent = $('#max').value;
+$('#sens').value = store.get('sens', '1'); $('#beep').checked = store.get('beep', '0') === '1';
+$('#style').onchange = (e) => store.set('style', e.target.value);
+$('#max').oninput = (e) => { $('#maxv').textContent = e.target.value; store.set('max', e.target.value); };
+$('#sens').onchange = (e) => store.set('sens', e.target.value);
+$('#beep').onchange = (e) => store.set('beep', e.target.checked ? '1' : '0');
+
+// ---------- audio ----------
+let actx = null, an = null, buf = null, stream = null, live = false;
+let level = 0, peak = 0, peakT = 0;          // 0-100, smoothed
+let loud = false, loudSince = 0, overSince = 0, underSince = 0, strikes = 0, quietStart = performance.now(), lastBeep = 0;
+async function startMic(id) {
+  try {
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    await actx.resume();
+    const src = actx.createMediaStreamSource(stream);
+    an = actx.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = 0; buf = new Float32Array(an.fftSize);
+    src.connect(an); live = true; $('#start').style.display = 'none'; $('#msg').style.display = 'none';
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
+    const cur = stream.getAudioTracks()[0].getSettings().deviceId;
+    $('#mic').innerHTML = devs.map((d, i) => `<option value="${d.deviceId}" ${d.deviceId === cur ? 'selected' : ''}>${d.label || 'Microphone ' + (i + 1)}</option>`).join('');
+  } catch (e) {
+    $('#msg').textContent = 'The microphone could not start (' + (e.name || e) + '). Allow microphone access for this page in the browser, then try again.';
+    $('#msg').style.display = 'block';
+  }
+}
+$('#go').onclick = () => startMic(store.get('mic', ''));
+$('#mic').onchange = (e) => { store.set('mic', e.target.value); startMic(e.target.value); };
+$('#reset').onclick = () => { strikes = 0; quietStart = performance.now(); };
+$('#fs').onclick = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} };
+function beep() {
+  if (!actx) return; const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'triangle'; o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(660, t + 0.18);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+  o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.5);
+}
+function sample(now, dt) {
+  if (!live) { level += (8 + 6 * Math.sin(now / 900) - level) * 0.05; return; } // gentle idle wobble behind the start screen
+  an.getFloatTimeDomainData(buf);
+  let s = 0; for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+  const rms = Math.sqrt(s / buf.length), db = 20 * Math.log10(rms + 1e-9);      // dBFS
+  const raw = Math.max(0, Math.min(100, ((db + 62) / 52) * 100 * +$('#sens').value)); // -62 dBFS (silent room) .. -10 dBFS (shouting) -> 0..100
+  const k = raw > level ? 1 - Math.exp(-dt / 0.08) : 1 - Math.exp(-dt / 0.6);    // fast attack, slow release
+  level += (raw - level) * k;
+  if (level > peak || now - peakT > 1500) { peak = level; peakT = now; }
+  const max = +$('#max').value;
+  // too loud only after 0.6 s over the line; back to fine after 1.5 s under it (no flicker)
+  if (level > max) { underSince = 0; overSince = overSince || now; if (!loud && now - overSince > 600) { loud = true; loudSince = now; strikes++; } }
+  else { overSince = 0; underSince = underSince || now; if (loud && now - underSince > 1500) { loud = false; quietStart = now; } }
+  if (loud && $('#beep').checked && now - lastBeep > 2500) { beep(); lastBeep = now; }
+}
+
+// ---------- shared helpers ----------
+let W = 0, Hh = 0, DPR = 1;
+function resize() { DPR = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; Hh = innerHeight; cv.width = W * DPR; cv.height = Hh * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+addEventListener('resize', resize); resize();
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const mix = (a, b, u) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(',')})`; };
+const fmtT = (ms) => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function status() { const max = +$('#max').value; return { max, u: level / 100, mu: max / 100, near: level > max * 0.8 && !loud, loud, quiet: fmtT(performance.now() - quietStart), strikes }; }
+const MSG = (st) => (st.loud ? 'TOO LOUD' : st.near ? 'GETTING LOUD' : 'NICE AND CALM');
+
+// ---------- style 1: Neon Sign at Night ----------
+let brick = null;
+function brickWall() {
+  const c = document.createElement('canvas'); c.width = W; c.height = Hh; const g = c.getContext('2d'), r = rng(7);
+  g.fillStyle = '#1a1012'; g.fillRect(0, 0, W, Hh);
+  const bw = 96, bh = 40;
+  for (let y = 0; y < Hh + bh; y += bh) for (let x = -bw; x < W + bw; x += bw) {
+    const ox = (Math.floor(y / bh) % 2) * bw / 2, v = 30 + r() * 22;
+    g.fillStyle = `rgb(${v + 22},${v * 0.55},${v * 0.5})`; g.fillRect(x + ox + 3, y + 3, bw - 6, bh - 6);
+  }
+  const wet = g.createLinearGradient(0, Hh * 0.75, 0, Hh); wet.addColorStop(0, 'rgba(0,0,0,0)'); wet.addColorStop(1, 'rgba(10,20,40,0.7)'); g.fillStyle = wet; g.fillRect(0, 0, W, Hh);
+  return c;
+}
+function neonText(t, x, y, size, col, on, font = 'Monoton') {
+  ctx.save(); ctx.font = `${size}px ${font}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (!on) { ctx.fillStyle = 'rgba(120,110,110,0.35)'; ctx.fillText(t, x, y); ctx.restore(); return; }
+  ctx.shadowColor = col; for (const b of [40, 20, 8]) { ctx.shadowBlur = b; ctx.fillStyle = col; ctx.fillText(t, x, y); }
+  ctx.shadowBlur = 0; ctx.fillStyle = '#fff8f0'; ctx.globalAlpha = 0.85; ctx.fillText(t, x, y); ctx.restore();
+}
+function drawNeon(now) {
+  if (!brick || brick.width !== W || brick.height !== Hh) brick = brickWall();
+  ctx.drawImage(brick, 0, 0);
+  const st = status(), cx = W / 2, top = Hh * 0.2, L = Math.min(W * 0.78, 1100), x0 = cx - L / 2, y = Hh * 0.5;
+  const flick = st.loud ? Math.sin(now / 60) > -0.2 : true;
+  neonText(MSG(st), cx, top, Math.min(96, W / 11), st.loud ? '#ff3355' : st.near ? '#ffb020' : '#36f5d4', flick);
+  // segmented tube bar
+  const n = 24, seg = L / n;
+  for (let i = 0; i < n; i++) {
+    const u = (i + 0.5) / n, on = u <= st.u, col = u > st.mu ? '#ff3355' : u > st.mu * 0.8 ? '#ffb020' : '#36f5d4';
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineWidth = 16;
+    ctx.strokeStyle = on ? col : 'rgba(140,120,120,0.28)'; if (on) { ctx.shadowColor = col; ctx.shadowBlur = 26; }
+    ctx.beginPath(); ctx.moveTo(x0 + i * seg + 8, y); ctx.lineTo(x0 + (i + 1) * seg - 8, y); ctx.stroke();
+    if (on) { ctx.shadowBlur = 0; ctx.lineWidth = 5; ctx.strokeStyle = '#fffaf2'; ctx.stroke(); }
+    ctx.restore();
+  }
+  // max marker: a white tube with a label
+  const mx = x0 + st.mu * L; ctx.save(); ctx.strokeStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 14; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(mx, y - 46); ctx.lineTo(mx, y + 46); ctx.stroke(); ctx.restore();
+  neonText('MAX', mx, y - 68, 26, '#ffffff', true, '"Space Mono"');
+  neonText('quiet for ' + st.quiet, cx - L / 4, Hh * 0.72, Math.min(40, W / 28), '#b18cff', true, 'Fredoka');
+  neonText('too loud × ' + st.strikes, cx + L / 4, Hh * 0.72, Math.min(40, W / 28), '#ff6fae', true, 'Fredoka');
+}
+
+// ---------- style 2: 16-Bit Pixel ----------
+const pxc = document.createElement('canvas'); pxc.width = 320; pxc.height = 180; const px = pxc.getContext('2d');
+const MON = ['..XXXXXX..', '.XXXXXXXX.', 'XXOXXXXOXX', 'XXXXXXXXXX', 'XXXMMMMXXX', 'XXXXXXXXXX', '.XXXXXXXX.', '.X.X..X.X.'];
+function drawPixel(now) {
+  const st = status(), P = px; P.imageSmoothingEnabled = false;
+  const sky = ['#2b2d6e', '#3b3f8f', '#5a5fb5', '#8a83d6', '#c8a6e8'];
+  sky.forEach((c, i) => { P.fillStyle = c; P.fillRect(0, i * 22, 320, 22); });
+  for (let x = 0; x < 320; x += 2) { P.fillStyle = sky[4]; P.fillRect(x + ((x / 2) % 2), 110, 1, 1); }
+  // hills + ground
+  P.fillStyle = '#2f8f5a'; for (let x = 0; x < 320; x++) { const h = 112 + Math.round(6 * Math.sin(x / 23) + 4 * Math.sin(x / 9)); P.fillRect(x, h, 1, 180 - h); }
+  P.fillStyle = '#7a4a2a'; P.fillRect(0, 150, 320, 30); P.fillStyle = '#5a3a20'; for (let x = 0; x < 320; x += 8) P.fillRect(x + ((Math.floor(now / 200)) % 8 === 0 ? 1 : 0), 158, 4, 2);
+  // HP-style meter box
+  P.fillStyle = '#10142e'; P.fillRect(20, 14, 280, 40); P.fillStyle = '#ffffff'; P.fillRect(22, 16, 276, 2); P.fillRect(22, 50, 276, 2); P.fillRect(22, 16, 2, 36); P.fillRect(296, 16, 2, 36);
+  const n = 40, x0 = 30, w = 260;
+  for (let i = 0; i < n; i++) { const u = (i + 0.5) / n, on = u <= st.u; P.fillStyle = on ? (u > st.mu ? '#ff4d4d' : u > st.mu * 0.8 ? '#ffd23f' : '#5cff8a') : '#2a2f5a'; P.fillRect(x0 + i * (w / n), 30, w / n - 1, 14); }
+  const mxp = Math.round(x0 + st.mu * w); P.fillStyle = '#ffffff'; P.fillRect(mxp, 26, 2, 22);
+  // the monster: asleep when calm, awake and shaking when loud
+  const shake = st.loud ? Math.round(Math.sin(now / 40) * 2) : 0, by = 112 + (st.loud ? Math.round(Math.abs(Math.sin(now / 90)) * -6) : Math.round(Math.sin(now / 600)));
+  MON.forEach((row, j) => [...row].forEach((ch, i) => {
+    if (ch === '.') return;
+    let c = st.loud ? '#ff4d4d' : st.near ? '#ffb74d' : '#7ec8ff';
+    if (ch === 'O') c = st.loud ? '#ffffff' : '#10142e';
+    if (ch === 'M') c = st.loud ? '#10142e' : (st.near ? '#10142e' : c);
+    P.fillStyle = c; P.fillRect(140 + i * 4 + shake, by + j * 4, 4, 4);
+  }));
+  if (!st.loud && !st.near) { P.fillStyle = '#ffffff'; const z = Math.floor(now / 500) % 3; for (let k = 0; k <= z; k++) P.fillRect(186 + k * 6, 104 - k * 6, 3, 3); }
+  ctx.imageSmoothingEnabled = false;
+  const sc = Math.min(W / 320, Hh / 180), ox = (W - 320 * sc) / 2, oy = (Hh - 180 * sc) / 2;
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, Hh); ctx.drawImage(pxc, ox, oy, 320 * sc, 180 * sc);
+  // dialog box text (crisp at screen res)
+  const fs = Math.max(14, Math.round(sc * 7));
+  ctx.font = `${fs}px "Press Start 2P"`; ctx.textAlign = 'center'; ctx.fillStyle = st.loud ? '#ff4d4d' : '#ffffff';
+  ctx.fillText(st.loud ? 'TOO LOUD! THE MONSTER WOKE UP!' : st.near ? 'SHHH... IT IS STIRRING...' : 'THE MONSTER IS ASLEEP', W / 2, oy + 70 * sc);
+  ctx.font = `${Math.round(fs * 0.8)}px "Press Start 2P"`; ctx.fillStyle = '#ffffff';
+  ctx.fillText('QUIET ' + st.quiet + '   WAKE-UPS ' + st.strikes, W / 2, oy + 172 * sc);
+}
+
+// ---------- style 3: Engineering Blueprint (dial gauge) ----------
+let bpBg = null;
+function bpPaper() {
+  const c = document.createElement('canvas'); c.width = W; c.height = Hh; const g = c.getContext('2d'), r = rng(3);
+  const gr = g.createRadialGradient(W / 2, Hh / 2, 50, W / 2, Hh / 2, Math.max(W, Hh) * 0.7); gr.addColorStop(0, '#1d4f8f'); gr.addColorStop(1, '#123a6c'); g.fillStyle = gr; g.fillRect(0, 0, W, Hh);
+  for (let i = 0; i < 1800; i++) { g.fillStyle = `rgba(255,255,255,${r() * 0.04})`; g.fillRect(r() * W, r() * Hh, 2, 2); }
+  g.strokeStyle = 'rgba(255,255,255,0.08)'; g.lineWidth = 1; for (let x = 0; x < W; x += 24) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, Hh); g.stroke(); } for (let y = 0; y < Hh; y += 24) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+  return c;
+}
+function drawBlueprint(now) {
+  if (!bpBg || bpBg.width !== W || bpBg.height !== Hh) bpBg = bpPaper();
+  ctx.drawImage(bpBg, 0, 0);
+  const st = status(), cx = W / 2, cy = Hh * 0.6, R = Math.min(W * 0.32, Hh * 0.42), a0 = Math.PI * 0.8, a1 = Math.PI * 2.2, ang = (u) => a0 + (a1 - a0) * u;
+  ctx.strokeStyle = '#eaf3ff'; ctx.fillStyle = '#eaf3ff'; ctx.lineCap = 'round';
+  ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, R, a0, a1); ctx.stroke();
+  ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, R * 0.86, a0, a1); ctx.stroke();
+  // red zone hatched above max
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, ang(st.mu), a1); ctx.arc(cx, cy, R * 0.86, a1, ang(st.mu), true); ctx.closePath(); ctx.clip();
+  ctx.strokeStyle = st.loud && Math.sin(now / 120) > 0 ? '#ff8a8a' : 'rgba(255,140,140,0.75)'; ctx.lineWidth = 2; for (let k = -R * 2; k < R * 2; k += 9) { ctx.beginPath(); ctx.moveTo(cx + k, cy - R); ctx.lineTo(cx + k + R, cy + R); ctx.stroke(); } ctx.restore();
+  for (let i = 0; i <= 50; i++) { const a = ang(i / 50), r2 = i % 5 === 0 ? R * 0.78 : R * 0.82; ctx.lineWidth = i % 5 === 0 ? 2.5 : 1.2; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * R * 0.86, cy + Math.sin(a) * R * 0.86); ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2); ctx.stroke(); if (i % 10 === 0) { ctx.font = `${Math.round(R * 0.08)}px "Space Mono"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(i * 2, cx + Math.cos(a) * R * 0.66, cy + Math.sin(a) * R * 0.66); } }
+  // max pointer (dimension-style)
+  const am = ang(st.mu); ctx.lineWidth = 2; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(cx + Math.cos(am) * R * 0.5, cy + Math.sin(am) * R * 0.5); ctx.lineTo(cx + Math.cos(am) * R * 1.12, cy + Math.sin(am) * R * 1.12); ctx.stroke(); ctx.setLineDash([]);
+  ctx.font = `700 ${Math.round(R * 0.07)}px "Space Mono"`; ctx.fillText('MAX ' + st.max, cx + Math.cos(am) * R * 1.2, cy + Math.sin(am) * R * 1.2);
+  // needle
+  const an_ = ang(st.u); ctx.lineWidth = 4; ctx.strokeStyle = st.loud ? '#ff9a9a' : '#ffffff'; ctx.beginPath(); ctx.moveTo(cx - Math.cos(an_) * R * 0.12, cy - Math.sin(an_) * R * 0.12); ctx.lineTo(cx + Math.cos(an_) * R * 0.8, cy + Math.sin(an_) * R * 0.8); ctx.stroke();
+  ctx.fillStyle = '#123a6c'; ctx.strokeStyle = '#eaf3ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, R * 0.07, 0, 7); ctx.fill(); ctx.stroke();
+  // title block
+  ctx.fillStyle = st.loud ? '#ffb3b3' : '#eaf3ff'; ctx.textAlign = 'center'; ctx.font = `700 ${Math.round(Math.min(64, W / 16))}px "Space Mono"`;
+  ctx.fillText(MSG(st), cx, Hh * 0.12);
+  const bx = W - 330, by = Hh - 150; ctx.strokeStyle = '#eaf3ff'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, 300, 96); ctx.beginPath(); ctx.moveTo(bx, by + 32); ctx.lineTo(bx + 300, by + 32); ctx.moveTo(bx, by + 64); ctx.lineTo(bx + 300, by + 64); ctx.stroke();
+  ctx.fillStyle = '#eaf3ff'; ctx.textAlign = 'left'; ctx.font = '700 15px "Space Mono"';
+  ctx.fillText('DWG: CLASSROOM NOISE  REV A', bx + 10, by + 20); ctx.fillText('QUIET FOR   ' + st.quiet, bx + 10, by + 52); ctx.fillText('TOO LOUD    x' + st.strikes, bx + 10, by + 84);
+}
+
+// ---------- style 4: Ballpoint Notebook (doodled thermometer) ----------
+function wob(seed) { const r = rng(seed); return () => (r() - 0.5) * 2.2; }
+function inkLine(pts, w = 2.2, col = '#1e2e96', seed = 1) { const j = wob(seed); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x + j(), y + j()) : ctx.moveTo(x + j(), y + j()))); ctx.stroke(); }
+function drawBallpoint(now) {
+  ctx.fillStyle = '#fbfaf5'; ctx.fillRect(0, 0, W, Hh);
+  ctx.strokeStyle = '#c9d6ef'; ctx.lineWidth = 1.2; for (let y = 90; y < Hh; y += 34) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.strokeStyle = '#e8a0a0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(90, 0); ctx.lineTo(90, Hh); ctx.stroke();
+  const st = status(), seed = Math.floor(now / 250); // re-drawn "boil" every 1/4 s like a doodle
+  const tx = W * 0.32, top = Hh * 0.14, bot = Hh * 0.72, tw = Math.min(70, W * 0.05), bulbR = tw * 1.15;
+  // tube outline
+  inkLine([[tx - tw / 2, bot - bulbR * 0.6], [tx - tw / 2, top + tw / 2]], 3, '#1e2e96', seed);
+  inkLine([[tx + tw / 2, bot - bulbR * 0.6], [tx + tw / 2, top + tw / 2]], 3, '#1e2e96', seed + 1);
+  ctx.beginPath(); ctx.arc(tx, top + tw / 2, tw / 2, Math.PI, 0); ctx.stroke();
+  ctx.beginPath(); ctx.arc(tx, bot, bulbR, -Math.PI * 0.32, Math.PI * 1.32); ctx.stroke();
+  // ink fill, hatched
+  const fillTop = bot - (bot - top - tw) * st.u, col = st.loud ? '#b21c26' : '#1e2e96';
+  ctx.save(); ctx.beginPath(); ctx.arc(tx, bot, bulbR - 7, 0, 7); ctx.rect(tx - tw / 2 + 7, fillTop, tw - 14, bot - fillTop); ctx.clip();
+  ctx.strokeStyle = col; ctx.lineWidth = 2; for (let k = -400; k < 400; k += 7) { ctx.beginPath(); ctx.moveTo(tx + k, fillTop - 10); ctx.lineTo(tx + k + 300, fillTop + 290); ctx.stroke(); } ctx.restore();
+  // scale ticks + max line
+  ctx.fillStyle = '#1e2e96'; ctx.font = '20px "Gloria Hallelujah"'; ctx.textAlign = 'left';
+  for (let i = 0; i <= 10; i++) { const y = bot - (bot - top - tw) * (i / 10); inkLine([[tx + tw / 2, y], [tx + tw / 2 + (i % 5 ? 12 : 22), y]], 2, '#1e2e96', i + seed); }
+  const my = bot - (bot - top - tw) * st.mu; inkLine([[tx - tw, my], [tx + tw * 2.2, my]], 3, '#b21c26', seed + 9);
+  ctx.fillStyle = '#b21c26'; ctx.fillText('max!', tx + tw * 2.3, my + 7);
+  // big doodled message, bubble lettering-ish
+  const mx = W * 0.66; ctx.textAlign = 'center';
+  ctx.font = `${Math.round(Math.min(78, W / 14))}px "Gloria Hallelujah"`;
+  ctx.fillStyle = st.loud ? '#b21c26' : '#1e2e96'; ctx.save(); ctx.translate(mx, Hh * 0.34); ctx.rotate(-0.04 + (st.loud ? Math.sin(now / 70) * 0.03 : 0)); ctx.fillText(st.loud ? 'Too loud!' : st.near ? 'Getting loud...' : 'Nice & calm', 0, 0); ctx.restore();
+  inkLine([[mx - 180, Hh * 0.38], [mx + 180, Hh * 0.385]], 3, st.loud ? '#b21c26' : '#1e2e96', seed + 4);
+  ctx.font = '30px "Gloria Hallelujah"'; ctx.fillStyle = '#1e2e96';
+  ctx.fillText('quiet for ' + st.quiet, mx, Hh * 0.52); ctx.fillText('too loud: ' + '|'.repeat(Math.min(st.strikes, 20)) + (st.strikes > 20 ? ' +' + (st.strikes - 20) : '') + (st.strikes ? '' : '0'), mx, Hh * 0.6);
+}
+
+// ---------- style 5: Bauhaus Poster ----------
+function drawBauhaus(now) {
+  const st = status(), B = { red: '#d4352b', blue: '#1d4f9a', yellow: '#f2c230', ink: '#151515', paper: '#efe6d2' };
+  ctx.fillStyle = B.paper; ctx.fillRect(0, 0, W, Hh);
+  const S = Math.min(W, Hh);
+  // fixed composition: yellow quarter disc, black bar, blue square
+  ctx.fillStyle = B.yellow; ctx.beginPath(); ctx.moveTo(0, Hh); ctx.arc(0, Hh, S * 0.55, -Math.PI / 2, 0); ctx.fill();
+  ctx.fillStyle = B.ink; ctx.fillRect(W * 0.08, Hh * 0.08, 18, Hh * 0.84);
+  ctx.fillStyle = B.blue; ctx.fillRect(W - S * 0.22, 0, S * 0.22, S * 0.22);
+  // the circle grows with the level; a ring marks the max
+  const cx = W * 0.58, cy = Hh * 0.52, Rm = S * 0.36, r = Rm * (0.18 + 0.82 * Math.sqrt(st.u)), rmax = Rm * (0.18 + 0.82 * Math.sqrt(st.mu));
+  ctx.fillStyle = st.loud ? (Math.sin(now / 110) > 0 ? B.red : B.ink) : st.near ? B.yellow : B.blue;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+  ctx.strokeStyle = B.ink; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(cx, cy, rmax, 0, 7); ctx.stroke();
+  ctx.fillStyle = B.ink; ctx.font = `700 ${Math.round(S * 0.035)}px "Josefin Sans"`; ctx.textAlign = 'center'; ctx.fillText('MAX ' + st.max, cx, cy - rmax - 18);
+  // type, set on a diagonal-free grid like the posters
+  ctx.textAlign = 'left'; ctx.fillStyle = st.loud ? B.red : B.ink;
+  ctx.font = `700 ${Math.round(Math.min(110, W / 9))}px "Josefin Sans"`;
+  const words = st.loud ? ['TOO', 'LOUD'] : st.near ? ['GETTING', 'LOUD'] : ['QUIET', 'PLEASE'];
+  ctx.fillText(words[0], W * 0.12, Hh * 0.22); ctx.fillText(words[1], W * 0.12, Hh * 0.22 + Math.min(110, W / 9));
+  ctx.fillStyle = B.ink; ctx.font = `700 ${Math.round(S * 0.04)}px "Josefin Sans"`;
+  ctx.fillText('QUIET  ' + st.quiet, W * 0.12, Hh * 0.82); ctx.fillText('TOO LOUD  ' + st.strikes, W * 0.12, Hh * 0.82 + S * 0.055);
+}
+
+// ---------- loop ----------
+const STYLES = { neon: drawNeon, pixel: drawPixel, blueprint: drawBlueprint, ballpoint: drawBallpoint, bauhaus: drawBauhaus };
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  sample(now, dt);
+  ctx.save(); (STYLES[$('#style').value] || drawNeon)(now); ctx.restore();
+  requestAnimationFrame(frame);
+}
+document.fonts && document.fonts.ready.then(() => { brick = null; bpBg = null; });
+requestAnimationFrame(frame);
+// tuck the control bar away after 4 s without the mouse moving
+let hideT = 0; const wake = () => { $('#bar').classList.remove('hide'); clearTimeout(hideT); hideT = setTimeout(() => live && $('#bar').classList.add('hide'), 4000); };
+addEventListener('mousemove', wake); addEventListener('touchstart', wake); addEventListener('keydown', wake); wake();
+</script>
+</body>
+</html>

@@ -54,7 +54,7 @@ th { background: #f7f8fc; position: sticky; top: 0; font-weight: 600; z-index: 1
   <h2 style="margin-top:0">Teacher dashboard</h2>
   <label>Results link (Apps Script /exec)<input id="lg-api" placeholder="https://script.google.com/macros/s/…/exec"></label>
   <label>PIN<input id="lg-pin" type="password" inputmode="numeric"></label>
-  <button id="lg-go">Open dashboard</button> <span class="err" id="lg-err"></span>
+  <button id="lg-go">Open dashboard</button> <a href="noise-meter.html" target="_blank" style="margin-left:10px;font-size:15px">🔊 Noise meter (no login needed)</a> <span class="err" id="lg-err"></span>
 </div>
 <div id="app" style="display:none">
 <header>
@@ -64,6 +64,7 @@ th { background: #f7f8fc; position: sticky; top: 0; font-weight: 600; z-index: 1
   <label style="font-size:14px"><input type="checkbox" id="today" checked> today only</label>
   <span class="sp"></span>
   <span id="upd" class="muted" style="color:#cfd6ff"></span>
+  <a href="noise-meter.html" target="_blank" style="font:600 15px Fredoka;background:#fff;color:var(--ink);border-radius:10px;padding:7px 12px;text-decoration:none">🔊 Noise meter</a>
   <button id="csv">⬇ CSV</button>
   <a id="sheet" target="_blank" style="color:#fff;font-size:14px">open Google Sheet ↗</a>
 </header>

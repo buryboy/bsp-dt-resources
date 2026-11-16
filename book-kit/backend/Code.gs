@@ -79,12 +79,15 @@ function doGet(e) {
     if (p.a === 'ping') return json({ ok: true, now: Date.now() });
     if (p.a === 'progress') { // what has this student already attempted? (lets the book unlock the quiz on another device)
       const em = String(p.email || '').toLowerCase(), lessonP = p.lesson || '';
-      const v = book().getSheetByName('Latest').getDataRange().getValues(), done = []; let qs = 0, qn = 0;
+      const v = book().getSheetByName('Latest').getDataRange().getValues(), done = [], items = {}; let qs = 0, qn = 0;
+      const ms = (x) => (x instanceof Date ? x.getTime() : Number(x) || 0);
       for (let i = 1; i < v.length; i++) if (v[i][1] === lessonP && v[i][2] === em) {
         if (String(v[i][8]).indexOf('fq.') === 0) { qn++; qs += Number(v[i][14]) || 0; }
         else if (v[i][16] > 0 || v[i][11] !== '') done.push(v[i][8]);
+        // full=1: send the saved answers back so the book can pick up where the student left off on another device
+        if (p.full) items[v[i][8]] = { answer: v[i][11], correct: v[i][12] === '' ? null : v[i][12], score: v[i][14], max: v[i][15], attempts: Number(v[i][16]) || 0, mis: v[i][17], at: ms(v[i][19]), last: ms(v[i][20]) || ms(v[i][18]) };
       }
-      return json({ ok: true, done: done, quiz: qn ? { submitted: true, score: qs, max: qn } : null });
+      return json({ ok: true, done: done, quiz: qn ? { submitted: true, score: qs, max: qn } : null, items: p.full ? items : undefined });
     }
     if (p.a === 'img') return getImage(p);
     const pin = PROPS.getProperty('PIN') || '';

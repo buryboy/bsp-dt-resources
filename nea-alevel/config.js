@@ -9,6 +9,7 @@ window.BOOK_CONFIG = {
   classes: ['12A', '12B', '13A', '13B', 'Other'],
   backend: 'https://script.google.com/macros/s/AKfycbzKVTwGqoDJIE2n-dStzYwc44Vwfl4pSijs0ZcpP3AUZ90KYadLb_OHc0A8Ge_Oe7LQJQ/exec',
   hideScores: true,
+  sync: true,       // pick up work saved on another device
   nea: true,
   // Light password lock (SHA-256 of the password). Set to '' to remove it.
   gateHash: '7b7136c52d85dc4847c64feeebc039f13645763395c808f6c601a7ab0bea274a',

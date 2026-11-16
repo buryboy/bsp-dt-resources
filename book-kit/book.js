@@ -82,7 +82,7 @@
   // live "where are they" ping every 45 s
   setInterval(() => { if (st.student && pages[cur] && document.visibilityState === 'visible') queue.push({ v: 1, lesson: LESSON, event: 'ping', session: st.session, student: st.student, page: { id: pages[cur].id, title: pages[cur].title, n: cur }, ts: Date.now() }) && flush(); }, 45000);
   addEventListener('online', flush);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && pages[cur]) { tally(); send('leave'); } });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && pages[cur]) { tally(); send('leave'); } else if (document.visibilityState === 'visible' && C.sync && st.student) pullProgress(); });
 
   // ---------------- recording answers ----------------
   function rec(pageObj, id, meta) {
@@ -297,6 +297,7 @@
     $('#prev').disabled = i === 0; $('#next').disabled = i === pages.length - 1;
     $('#next').textContent = i === 0 ? 'Start ▸' : i === pages.length - 2 ? 'Finish ▸' : 'Next ▸';
     if (nu.id !== 'cover') send('enter', nu);
+    if (C.sync && st.student && Date.now() - lastPull > 60000) pullProgress();
     nu.onShow && nu.onShow();
     updateContents();
   }
@@ -365,12 +366,35 @@
     return done / ids.length;
   }
   Book.progress = progress;
+  // BOOK_CONFIG.sync: answers saved from another device replace older ones here, and affected pages are redrawn
+  let lastPull = 0;
+  function mergeRemote(items) {
+    const changed = new Set();
+    Object.keys(items).forEach((id) => {
+      const r = items[id], l = st.items[id];
+      if (!r.last || (l && (l.ts || 0) >= r.last)) return;
+      st.items[id] = Object.assign({}, l || {}, { answer: r.answer, correct: r.correct, score: r.score === '' ? null : r.score, max: r.max === '' ? null : r.max, attempts: Math.max(r.attempts || 0, (l && l.attempts) || 0), mis: r.mis, at: (l && l.at) || r.at || r.last, ts: r.last });
+      changed.add(id);
+    });
+    if (!changed.size) return;
+    save();
+    pages.forEach((p, i) => {
+      if (!p.built || !p.ids.some((id) => changed.has(id))) return;
+      if (i === cur && p.el.contains(document.activeElement) && /TEXTAREA|INPUT/.test(document.activeElement.tagName)) return; // never yank text from under someone typing
+      p.built = false; p.ids = []; p.el.querySelector('.content').innerHTML = ''; p.el.querySelector('.content').className = 'content';
+      if (i === cur) build(p);
+    });
+    Book.toast('Updated with work saved on another device');
+  }
+  Book.pull = () => pullProgress();
   async function pullProgress() {
     if (!C.backend || !st.student) return;
     try {
-      const r = await fetch(C.backend + '?a=progress&lesson=' + encodeURIComponent(LESSON) + '&email=' + encodeURIComponent(st.student.email), { cache: 'no-store' });
+      lastPull = Date.now();
+      const r = await fetch(C.backend + '?a=progress&lesson=' + encodeURIComponent(LESSON) + '&email=' + encodeURIComponent(st.student.email) + (C.sync ? '&full=1' : ''), { cache: 'no-store' });
       const j = await r.json(); if (!j.ok) return;
       st.remoteDone = j.done || [];
+      if (j.items) mergeRemote(j.items);
       if (j.quiz && j.quiz.submitted) st.quiz = Object.assign({}, st.quiz, { submitted: true, score: j.quiz.score, max: j.quiz.max });
       save(); updateQuizChip();
     } catch (e) {}

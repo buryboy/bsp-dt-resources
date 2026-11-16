@@ -9,6 +9,7 @@ window.BOOK_CONFIG = {
   classes: ['10A', '10B', '10C', '10D', '10E', '11A', '11B', 'Other'],
   backend: 'https://script.google.com/macros/s/AKfycbzKVTwGqoDJIE2n-dStzYwc44Vwfl4pSijs0ZcpP3AUZ90KYadLb_OHc0A8Ge_Oe7LQJQ/exec',
   hideScores: true, // students never see the indicative marks
+  sync: true,       // pick up work saved on another device
   nea: true,        // the teacher dashboard shows the NEA tab for this book
 
   // Light password lock (SHA-256 of the password). Change it: ask Claude, or run

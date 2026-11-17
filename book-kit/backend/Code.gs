@@ -34,6 +34,7 @@ function doPost(e) {
   if (d && d.a === 'imgdel') return deleteImage(d);
   if (d && d.a && String(d.a).indexOf('ds') === 0) return designStarterPost(d);
   if (d && d.a && String(d.a).indexOf('cv') === 0) return coverPost(d);
+  if (d && d.a && String(d.a).indexOf('gs') === 0) return greenSlipPost(d);
   // several saves in one request (a device catching up after being offline or slow)
   if (d && d.a === 'batch' && Array.isArray(d.list)) {
     const lock = LockService.getScriptLock(); if (!lock.tryLock(25000)) return json({ ok: false, error: 'busy' });
@@ -393,4 +394,68 @@ function cvStart(d) { // cover teacher types the lesson code
     sh.getRange(r._row, CV_COLS.indexOf('status') + 1).setValue('collecting');
     return json({ ok: true, session: session, slot: { code: r.code, date: r.date, time: r.time, room: r.room, cls: r.cls, subject: r.subject, expected: Number(r.expected) || 0, teacher: r.teacher, coveredBy: r.coveredBy, work: r.work } });
   } finally { lock.releaseLock(); }
+}
+
+// ---------------- Green slips (staff praise slips) ----------------
+// A teacher fills in a slip (staff code required) -> one formatted email to the recipient (script property GS_TO,
+// default the owner's address while testing) + a backup row in a separate Google Sheet "Green slips" + the photo kept in Drive.
+// Settings (dashboard PIN): gssetcode {pin, newCode} sets STAFF_CODE; gssetto {pin, to} sets the recipient (@britishschool.fr).
+function gsStaffOK(d) { const c = PROPS.getProperty('STAFF_CODE') || ''; return !!c && String(d.staff || '').trim().toLowerCase() === c.toLowerCase(); }
+function gsBook() {
+  let id = PROPS.getProperty('GS_SHEET_ID'), ss = null;
+  if (id) try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; }
+  if (!ss) {
+    ss = SpreadsheetApp.create('Green slips');
+    PROPS.setProperty('GS_SHEET_ID', ss.getId());
+    const sh = ss.getSheets()[0]; sh.setName('Slips');
+    sh.appendRow(['sent', 'date', 'teacher', 'student', 'class', 'subject', 'ticks', 'reason', 'other', 'photos', 'emailedTo', 'id']);
+    sh.setFrozenRows(1); sh.getRange('A:L').setNumberFormat('@');
+  }
+  return ss;
+}
+function gsFolder() {
+  let root = null, id = PROPS.getProperty('GS_FOLDER');
+  if (id) try { root = DriveApp.getFolderById(id); } catch (e) { root = null; }
+  if (!root) { root = DriveApp.createFolder('Green slip photos'); PROPS.setProperty('GS_FOLDER', root.getId()); }
+  return root;
+}
+function gsEsc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>'); }
+function greenSlipPost(d) {
+  const pinOK = () => { const pin = PROPS.getProperty('PIN') || ''; return !!pin && String(d.pin || '') === pin; };
+  if (d.a === 'gssetcode') { if (!pinOK()) return json({ ok: false, error: 'Wrong PIN' }); const c = String(d.newCode || '').trim(); if (c.length < 4) return json({ ok: false, error: 'Code too short' }); PROPS.setProperty('STAFF_CODE', c); return json({ ok: true }); }
+  if (d.a === 'gssetto') { if (!pinOK()) return json({ ok: false, error: 'Wrong PIN' }); const to = String(d.to || '').trim().toLowerCase(); if (!/^[a-z0-9._%+-]+@britishschool\.fr$/.test(to)) return json({ ok: false, error: 'Email must end @britishschool.fr' }); PROPS.setProperty('GS_TO', to); return json({ ok: true, to: to }); }
+  if (d.a === 'gscheck') return json({ ok: gsStaffOK(d) });
+  if (d.a !== 'gssend') return json({ ok: false, error: 'unknown' });
+  if (!gsStaffOK(d)) return json({ ok: false, error: 'Wrong staff code' });
+  const t = (x, n) => String(x == null ? '' : x).trim().slice(0, n);
+  const s = { teacher: t(d.teacher, 80), student: t(d.student, 300), cls: t(d.cls, 40), subject: t(d.subject, 60), date: t(d.date, 30), reason: t(d.reason, 5000),
+    ticks: (Array.isArray(d.ticks) ? d.ticks : []).map((x) => t(x, 120)).filter(String).slice(0, 20),
+    other: (Array.isArray(d.other) ? d.other : []).slice(0, 20).map((kv) => [t(kv && kv[0], 60), t(kv && kv[1], 500)]).filter((kv) => kv[0] && kv[1]) };
+  if (!s.teacher || !s.student || !s.reason) return json({ ok: false, error: 'Teacher, student and reason are needed' });
+  const id = Utilities.getUuid().slice(0, 8), when = Utilities.formatDate(new Date(), 'Europe/Paris', 'EEE d MMM yyyy HH:mm');
+  // photos: attach + keep a copy
+  const blobs = [], links = [];
+  (Array.isArray(d.photos) ? d.photos : []).slice(0, 4).forEach((p, i) => {
+    const m = String(p || '').match(/^data:(image\/(jpeg|png));base64,(.*)$/); if (!m || String(p).length > 6e6) return;
+    const b = Utilities.newBlob(Utilities.base64Decode(m[3]), m[1], [s.student, s.cls, Utilities.formatDate(new Date(), 'Europe/Paris', 'yyyy-MM-dd'), id, (i + 1)].join(' ') + '.' + (m[2] === 'jpeg' ? 'jpg' : 'png'));
+    const f = gsFolder().createFile(b); links.push(f.getUrl()); blobs.push(b);
+  });
+  const to = PROPS.getProperty('GS_TO') || Session.getEffectiveUser().getEmail();
+  const row = (k, v) => '<tr><td style="padding:4px 12px 4px 0;color:#555;vertical-align:top"><b>' + gsEsc(k) + '</b></td><td style="padding:4px 0">' + gsEsc(v) + '</td></tr>';
+  const html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#111">' +
+    '<h2 style="color:#1f6b3a;margin:0 0 8px">Pupil Character Strength Referral (green slip)</h2><table style="border-collapse:collapse">' +
+    row('Pupil(s)', s.student) + row('Class', s.cls) + row('Subject', s.subject) + row('Date', s.date || when) + row('Teacher', s.teacher) +
+    s.other.map((kv) => row(kv[0], kv[1])).join('') + (s.ticks.length ? row('Character strengths', gsGroup(s.ticks)) : '') + '</table>' +
+    '<h3 style="margin:14px 0 4px">Why the referral has been given</h3><p style="margin:0">' + gsEsc(s.reason) + '</p>' +
+    (blobs.length ? '<p style="color:#555">' + blobs.length + ' photo' + (blobs.length > 1 ? 's' : '') + ' attached.</p>' : '') + '</div>';
+  const text = 'PUPIL CHARACTER STRENGTH REFERRAL (GREEN SLIP)\n\nPupil(s): ' + s.student + '\nClass: ' + s.cls + '\nSubject: ' + s.subject + '\nDate: ' + (s.date || when) + '\nTeacher: ' + s.teacher + '\n' +
+    s.other.map((kv) => kv[0] + ': ' + kv[1] + '\n').join('') + (s.ticks.length ? 'Character strengths: ' + gsGroup(s.ticks) + '\n' : '') + '\nWhy the referral has been given:\n' + s.reason + '\n';
+  MailApp.sendEmail({ to: to, name: 'Green slips', subject: 'Green slip: ' + s.student + (s.cls ? ' (' + s.cls + ')' : '') + ' from ' + s.teacher, body: text, htmlBody: html, attachments: blobs });
+  gsBook().getSheets()[0].appendRow([new Date().toISOString(), s.date || when, s.teacher, s.student, s.cls, s.subject, s.ticks.join(', '), s.reason, s.other.map((kv) => kv[0] + ': ' + kv[1]).join(' | '), links.join(' '), to, id]);
+  return json({ ok: true, id: id, to: to });
+}
+function gsGroup(ticks) { // ["Courage: Determination", "Courage: Honesty", "Humanity: Kindness"] -> "Courage: Determination, Honesty; Humanity: Kindness"
+  const g = {}, order = [];
+  ticks.forEach((x) => { const i = x.indexOf(':'); const k = i > 0 ? x.slice(0, i).trim() : ''; const v = i > 0 ? x.slice(i + 1).trim() : x; if (!(k in g)) { g[k] = []; order.push(k); } g[k].push(v); });
+  return order.map((k) => (k ? k + ': ' : '') + g[k].join(', ')).join('; ');
 }

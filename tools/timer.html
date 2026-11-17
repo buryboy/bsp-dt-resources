@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Big timer · BSP D&amp;T tools</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E⏱%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; transition: background-color .7s, color .7s; }
+body.amber, body.dark.amber { --bg: #f4ab1c; --ink: #2a1800; --ink2: #2a1800; --muted: #5d3d00; --card: #ffd685; --line: #c88a0a; }
+body.red, body.dark.red, body.done, body.dark.done { --bg: #c62f22; --ink: #ffffff; --ink2: #ffffff; --muted: #ffd9d4; --card: #a3241a; --line: #7f1b13; }
+body.done { animation: flash 1s steps(1) infinite; }
+body.done.steady { animation: none; }
+@keyframes flash { 0% { background-color: #c62f22; } 50% { background-color: #260806; } }
+@media (prefers-reduced-motion: reduce) { body.done { animation: none; } }
+.tk-top { flex: none; }
+#stage { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#box { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; user-select: none; -webkit-user-select: none; }
+#dig { font-weight: 700; line-height: .82; white-space: nowrap; font-size: 200px; font-variant-numeric: tabular-nums; }
+#dig .d { display: inline-block; width: .64em; text-align: center; }
+#dig .c { display: inline-block; width: .3em; text-align: center; }
+#dig .t { display: inline-block; font-size: .42em; width: 1em; text-align: left; opacity: .75; }
+#dig .w { letter-spacing: .01em; }
+body.paused #dig { animation: breathe 1.6s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .35; } }
+#bar { flex: none; height: clamp(14px, 3.2vh, 34px); margin: 0 3vw; border-radius: 99px; background: color-mix(in srgb, var(--ink) 15%, transparent); overflow: hidden; }
+#fill { height: 100%; width: 100%; background: var(--ink); border-radius: 99px; transition: width .25s linear; }
+body.sw #bar { visibility: hidden; }
+#label { flex: none; text-align: center; font-size: clamp(18px, 2.6vh, 28px); font-weight: 600; padding: 8px 12px 2px; min-height: 1.9em; color: var(--muted); }
+#controls { flex: none; padding: 8px 14px 12px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+.seg { display: inline-flex; gap: 0; }
+.seg .btn { border-radius: 0; }
+.seg .btn:first-child { border-radius: 12px 0 0 12px; }
+.seg .btn:last-child { border-radius: 0 12px 12px 0; }
+.btn.on { background: var(--ink); color: var(--bg); box-shadow: none; }
+.btn.big { font-size: 22px; padding: 10px 28px; min-width: 170px; }
+.btn.preset { min-width: 54px; padding: 10px 12px; }
+.btn.preset small { font-weight: 500; opacity: .7; }
+#custom { width: 128px; min-height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); padding: 6px 10px; font-weight: 600; text-align: center; }
+label.tog { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+label.tog input { width: 20px; height: 20px; accent-color: var(--ink2); }
+.help { font-size: 14px; color: var(--muted); text-align: center; }
+.help kbd { font: inherit; font-weight: 600; border: 1.5px solid var(--line); border-radius: 6px; padding: 0 5px; background: var(--card); }
+body.sw .cd-only { display: none; }
+.tk-hide-idle { transition: opacity .3s; }
+@media (max-height: 640px) { .help { display: none; } }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="box" title="Click to start / pause"><div id="dig" aria-live="off"></div></div>
+  <div id="bar"><div id="fill"></div></div>
+  <div id="label" role="status"></div>
+</main>
+<div id="controls">
+  <div class="row">
+    <span class="seg"><button class="btn" id="mDown">Countdown</button><button class="btn" id="mUp">Stopwatch</button></span>
+    <span class="row cd-only" id="presets"></span>
+    <span class="row cd-only"><input id="custom" inputmode="decimal" placeholder="min or m:ss" aria-label="Custom time: minutes, or minutes:seconds" title="Type minutes (7), minutes:seconds (7:30) or seconds (90s), then Enter"><button class="btn" id="setBtn">Set</button></span>
+  </div>
+  <div class="row">
+    <button class="btn cd-only" id="minus" title="Take a minute off (↓)">−1 min</button>
+    <button class="btn go big" id="startBtn">▶ Start</button>
+    <button class="btn cd-only" id="plus" title="Add a minute (↑)">+1 min</button>
+    <button class="btn" id="resetBtn" title="Reset (R)">↺ Reset</button>
+    <label class="btn tog cd-only"><input type="checkbox" id="snd"> End sound</label>
+    <label class="btn tog cd-only"><input type="checkbox" id="tick"> Tick in last 10 s</label>
+  </div>
+  <div class="help"><kbd>Space</kbd> start / pause · <kbd>R</kbd> reset · <kbd>1</kbd>–<kbd>7</kbd> presets · <kbd>↑</kbd> <kbd>↓</kbd> ±1 min · <kbd>F</kbd> full screen</div>
+</div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+TK.top('Big timer');
+const $ = (s) => document.querySelector(s);
+const PRESETS = [1, 2, 3, 5, 10, 15, 20];
+const MAX = 10 * 3600;
+const S = Object.assign({ mode: 'down', dur: 300, state: 'idle', endAt: 0, left: 300000, doneAt: 0, startAt: 0, elapsed: 0, sound: true, ticks: false }, TK.store('timer', {}));
+const save = () => TK.save('timer', S);
+const dig = $('#dig'), box = $('#box');
+let lastKey = '', lastSig = '', lastSec = -1, alarmT = [];
+
+// a timer that was running when the page was closed carries on; one that ended over an hour ago is forgotten
+if (S.mode === 'down' && S.state === 'run' && S.endAt <= Date.now()) { S.state = 'done'; S.doneAt = S.endAt; }
+if (S.state === 'done' && Date.now() - S.doneAt > 3600e3) { S.state = 'idle'; S.left = S.dur * 1000; }
+if (S.mode === 'up' && S.state === 'run' && Date.now() - S.startAt > 24 * 3600e3) { S.state = 'idle'; S.elapsed = 0; }
+
+const pad = (n) => String(n).padStart(2, '0');
+function fmt(sec) { sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60; return h ? h + ':' + pad(m) + ':' + pad(s) : m + ':' + pad(s); }
+function fit() {
+  const w = box.clientWidth * 0.96, h = box.clientHeight * 0.94; if (!w || !h) return;
+  dig.style.fontSize = '100px';
+  const r = dig.getBoundingClientRect(); if (!r.width) return;
+  dig.style.fontSize = Math.max(40, Math.floor(Math.min(w / r.width, h / r.height) * 100)) + 'px';
+}
+function setDigits(str, tenth) {
+  const key = str + '|' + tenth; if (key === lastKey) return; lastKey = key;
+  dig.innerHTML = [...str].map((ch) => `<span class="${/\d/.test(ch) ? 'd' : 'c'}">${ch}</span>`).join('') + (tenth != null ? `<span class="t">.${tenth}</span>` : '');
+  const sig = str.replace(/\d/g, '0') + (tenth != null ? 't' : ''); if (sig !== lastSig) { lastSig = sig; fit(); }
+}
+function setWord(w) { const key = 'w|' + w; if (key === lastKey) return; lastKey = key; lastSig = key; dig.innerHTML = `<span class="w">${w}</span>`; fit(); }
+
+function stopAlarm() { alarmT.forEach(clearTimeout); alarmT = []; }
+function finish() {
+  S.state = 'done'; S.doneAt = S.endAt; save();
+  if (S.sound) { stopAlarm(); [0, 1400, 2800].forEach((d) => alarmT.push(setTimeout(() => TK.beep('alarm'), d))); }
+}
+function setDur(sec) { // load a time, ready to start
+  sec = Math.max(1, Math.min(MAX, Math.round(sec))); stopAlarm();
+  S.mode = 'down'; S.dur = sec; S.left = sec * 1000; S.state = 'idle'; lastSec = -1; save(); update();
+}
+function start() {
+  const now = Date.now(); stopAlarm();
+  if (S.mode === 'down') { if (S.state === 'done' || S.left <= 0) S.left = S.dur * 1000; S.endAt = now + S.left; }
+  else S.startAt = now - S.elapsed;
+  S.state = 'run'; lastSec = -1; save(); update();
+}
+function pause() {
+  if (S.state !== 'run') return;
+  if (S.mode === 'down') S.left = Math.max(0, S.endAt - Date.now()); else S.elapsed = Date.now() - S.startAt;
+  S.state = 'pause'; save(); update();
+}
+function reset() { stopAlarm(); S.state = 'idle'; S.left = S.dur * 1000; S.elapsed = 0; lastSec = -1; save(); update(); }
+function toggle() { if (S.state === 'run') pause(); else if (S.state === 'done') reset(); else start(); }
+function adjust(d) { // d seconds, countdown only
+  if (S.mode !== 'down') return;
+  const now = Date.now();
+  if (S.state === 'run') { S.endAt += d * 1000; const left = S.endAt - now; if (left > MAX * 1000) S.endAt = now + MAX * 1000; S.dur = Math.max(S.dur, Math.ceil((S.endAt - now) / 1000)); }
+  else if (S.state === 'done') { if (d <= 0) return; stopAlarm(); S.dur = d; S.left = d * 1000; S.endAt = now + S.left; S.state = 'run'; lastSec = -1; }
+  else if (S.state === 'pause') { S.left = Math.min(MAX * 1000, Math.max(1000, S.left + d * 1000)); S.dur = Math.max(S.dur, Math.ceil(S.left / 1000)); }
+  else { const n = S.dur + d; if (n < 1) return; S.dur = Math.min(MAX, n); S.left = S.dur * 1000; }
+  save(); update();
+}
+function setMode(m) { if (S.mode === m) return; stopAlarm(); S.mode = m; S.state = 'idle'; S.left = S.dur * 1000; S.elapsed = 0; save(); update(); fit(); }
+function parseCustom(v) {
+  v = String(v).trim().toLowerCase().replace(',', '.'); if (!v) return null;
+  let sec;
+  if (v.includes(':')) { const p = v.split(':').map(Number); if (p.some((x) => !isFinite(x) || x < 0) || p.length > 3) return null; sec = p.reduce((a, x) => a * 60 + x, 0); }
+  else if (/^[\d.]+\s*s(ec(s|onds?)?)?$/.test(v)) sec = parseFloat(v);
+  else if (/^[\d.]+\s*(m(in(s|utes?)?)?)?$/.test(v)) sec = parseFloat(v) * 60;
+  else return null;
+  return isFinite(sec) && sec >= 1 ? Math.min(MAX, sec) : null;
+}
+function applyCustom() {
+  const el = $('#custom'), sec = parseCustom(el.value);
+  if (sec == null) { el.style.borderColor = 'var(--red)'; el.focus(); return; }
+  el.style.borderColor = ''; el.value = ''; el.blur(); setDur(sec);
+}
+
+function update() {
+  const now = Date.now(), b = document.body; let cls = 'calm', label = '', frac = 1;
+  if (S.mode === 'down') {
+    let left = S.state === 'run' ? S.endAt - now : S.state === 'done' ? 0 : S.left;
+    if (S.state === 'run' && left <= 0) { left = 0; finish(); }
+    if (S.state === 'done') {
+      setWord('TIME’S UP!'); cls = 'done'; frac = 0;
+      label = '+' + fmt((now - S.doneAt) / 1000) + ' over · press space or tap to reset';
+      document.title = 'Time’s up! · Big timer';
+    } else {
+      const sec = Math.ceil(left / 1000); setDigits(fmt(sec));
+      frac = Math.max(0, Math.min(1, left / (S.dur * 1000)));
+      if (S.state !== 'idle') { if (sec <= 10) cls = 'red'; else if (sec <= Math.min(60, S.dur / 2)) cls = 'amber'; }
+      if (S.state === 'run' && sec !== lastSec) { if (S.ticks && lastSec !== -1 && sec <= 10 && sec > 0) TK.beep('tick'); lastSec = sec; }
+      if (S.state === 'run') { const e = new Date(S.endAt); label = 'Ends at ' + e.getHours() + ':' + pad(e.getMinutes()); }
+      else label = S.state === 'pause' ? 'Paused' : 'Ready · press Start or space';
+      document.title = (S.state === 'idle' ? '' : fmt(sec) + ' · ') + 'Big timer';
+    }
+  } else {
+    const el = S.state === 'run' ? now - S.startAt : S.elapsed;
+    setDigits(fmt(el / 1000), Math.floor(el / 100) % 10);
+    label = S.state === 'run' ? 'Stopwatch' : S.state === 'pause' ? 'Paused' : 'Stopwatch · press Start or space';
+    document.title = (S.state === 'idle' ? '' : fmt(el / 1000) + ' · ') + 'Big timer';
+  }
+  ['calm', 'amber', 'red', 'done'].forEach((c) => b.classList.toggle(c, c === cls));
+  b.classList.toggle('steady', S.state === 'done' && now - S.doneAt > 12000);
+  b.classList.toggle('paused', S.state === 'pause');
+  b.classList.toggle('sw', S.mode === 'up');
+  $('#fill').style.width = (frac * 100).toFixed(2) + '%';
+  if ($('#label').textContent !== label) $('#label').textContent = label;
+  const sb = $('#startBtn'), txt = S.state === 'run' ? '⏸ Pause' : S.state === 'pause' ? '▶ Resume' : S.state === 'done' ? '↺ Again' : '▶ Start';
+  if (sb.textContent !== txt) { sb.textContent = txt; sb.classList.toggle('go', S.state !== 'run'); sb.classList.toggle('blue', S.state === 'run'); }
+  $('#mDown').classList.toggle('on', S.mode === 'down'); $('#mUp').classList.toggle('on', S.mode === 'up');
+  document.querySelectorAll('.preset').forEach((p) => p.classList.toggle('on', S.mode === 'down' && +p.dataset.min * 60 === S.dur));
+  const hide = S.state === 'run';
+  [$('#controls'), document.querySelector('.tk-top')].forEach((e) => e.classList.toggle('tk-hide-idle', hide));
+}
+
+// ---------- wiring ----------
+$('#presets').innerHTML = PRESETS.map((m) => `<button class="btn preset" data-min="${m}" title="${m} minute${m > 1 ? 's' : ''}">${m} <small>min</small></button>`).join('');
+$('#presets').onclick = (e) => { const p = e.target.closest('.preset'); if (p) setDur(+p.dataset.min * 60); };
+$('#mDown').onclick = () => setMode('down'); $('#mUp').onclick = () => setMode('up');
+$('#startBtn').onclick = () => (S.state === 'done' ? start() : toggle());
+$('#resetBtn').onclick = reset;
+$('#minus').onclick = () => adjust(-60); $('#plus').onclick = () => adjust(60);
+$('#setBtn').onclick = applyCustom;
+$('#custom').addEventListener('keydown', (e) => { if (e.key === 'Enter') applyCustom(); else if (e.key === 'Escape') e.target.blur(); e.target.style.borderColor = ''; });
+$('#snd').checked = S.sound; $('#tick').checked = S.ticks;
+$('#snd').onchange = (e) => { S.sound = e.target.checked; if (!S.sound) stopAlarm(); else TK.beep('ding'); save(); };
+$('#tick').onchange = (e) => { S.ticks = e.target.checked; if (S.ticks) TK.beep('tick'); save(); };
+box.onclick = toggle;
+// after a mouse / touch click, give focus back to the page so space always means start / pause
+document.addEventListener('click', (e) => { const t = e.target.closest('button, label.tog'); if (t && e.detail > 0) { t.blur(); const i = t.querySelector && t.querySelector('input'); i && i.blur(); } });
+function fullscreen() { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} }
+addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const a = document.activeElement, tag = a && a.tagName;
+  if (tag === 'INPUT' && a.type !== 'checkbox' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const k = e.key;
+  if (k === ' ' || k === 'Spacebar') { if (tag === 'BUTTON' || tag === 'INPUT') return; e.preventDefault(); toggle(); }
+  else if (k === 'r' || k === 'R') reset();
+  else if (k === 'f' || k === 'F') fullscreen();
+  else if (k === 'ArrowUp' || k === '+' || k === '=') { e.preventDefault(); adjust(60); }
+  else if (k === 'ArrowDown' || k === '-' || k === '_') { e.preventDefault(); adjust(-60); }
+  else if (/^[1-7]$/.test(k) && S.mode === 'down' && S.state !== 'run') setDur(PRESETS[+k - 1] * 60); // ignored while running so a stray key cannot wipe a live timer
+});
+addEventListener('resize', fit);
+document.addEventListener('fullscreenchange', () => setTimeout(fit, 60));
+document.fonts && document.fonts.ready.then(fit);
+new ResizeObserver(fit).observe(box);
+TK.idle([$('#controls'), document.querySelector('.tk-top')], 3500);
+update(); setInterval(update, 100);
+</script>
+</body>
+</html>

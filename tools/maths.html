@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Units &amp; maths · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+:root { --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#6250d6; --s8:#e34948; --grid:#e1e0d9; --hi:#fff3c4; --ok:#d9f5df; --bad:#fde0dc; }
+body.dark { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767; --grid:#2e3766; --hi:#3b3a17; --ok:#143a22; --bad:#4a1d19; }
+body { display: flex; flex-direction: column; min-height: 100vh; }
+.tabs { display: flex; gap: 8px; padding: 0 16px 10px; flex-wrap: wrap; }
+.tab { border: 0; border-radius: 12px; padding: 8px 14px; min-height: 44px; font-weight: 600; font-size: 17px; background: var(--card); color: var(--ink); box-shadow: 0 0 0 2px var(--line) inset; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--ink2); color: #fff; box-shadow: 0 3px 0 #18237a; }
+body.dark .tab[aria-selected="true"] { color: #111527; box-shadow: none; }
+.tab kbd { opacity: .55; font: inherit; font-size: 13px; margin-left: 4px; }
+.wrap { flex: 1; display: grid; grid-template-columns: minmax(300px, 360px) 1fr; gap: 16px; padding: 0 16px 10px; align-items: start; }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } .f { grid-template-columns: 1fr 1fr !important; } .f.wide { grid-template-columns: 1fr !important; } .work { font-size: calc(clamp(21px, 3.5vw, 40px) * var(--fs)) !important; min-height: 0 !important; } }
+[hidden] { display: none !important; }
+.form h2 { margin: 0 0 10px; font-size: 22px; }
+.f { display: grid; grid-template-columns: 1fr 170px; gap: 8px; align-items: center; margin-bottom: 8px; font-weight: 500; font-size: 17px; }
+.f.wide { grid-template-columns: 1fr; }
+.f input, .f select, .f textarea { min-height: 44px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); padding: 6px 10px; font-size: 19px; font-weight: 600; width: 100%; }
+.f textarea { min-height: 190px; font-size: 17px; font-weight: 500; resize: vertical; }
+.f input:focus, .f select:focus, .f textarea:focus { outline: 3px solid var(--ink2); outline-offset: 1px; }
+.f input.err { border-color: var(--red); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.presets button { min-height: 44px; min-width: 56px; padding: 6px 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); font-weight: 600; cursor: pointer; }
+.hint { font-size: 14.5px; color: var(--muted); margin: 6px 0 0; line-height: 1.35; }
+.work { --fs: 1; font-size: calc(clamp(19px, 2.25vw, 40px) * var(--fs)); min-height: 60vh; padding: .7em .9em; }
+.work h2 { margin: 0 0 .35em; font-size: .8em; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+.step { display: grid; grid-template-columns: 6.2em 1fr; gap: .5em; align-items: baseline; padding: .2em .35em; border-radius: .35em; line-height: 1.25; transition: opacity .25s; }
+.step .l { font-size: .52em; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+.step .h { font-weight: 500; overflow-wrap: anywhere; }
+.step.ans { background: var(--hi); margin: .12em 0; }
+.step.ans .h { font-weight: 700; font-size: 1.22em; }
+.step.ok { background: var(--ok); } .step.bad { background: var(--bad); }
+.step.ok .h, .step.bad .h { font-weight: 700; }
+.step.hid { opacity: 0; pointer-events: none; }
+.note { font-size: .5em; color: var(--muted); margin: .7em 0 0; line-height: 1.4; }
+.note b { color: var(--ink); }
+.empty { color: var(--muted); font-size: .8em; padding: 1em .3em; }
+.ctl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 0 16px 12px; font-size: 15px; }
+.ctl label { display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; }
+.ctl input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--ink2); }
+.ctl .help { margin-left: auto; color: var(--muted); }
+.chartbox { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: .8em; align-items: start; }
+@media (max-width: 1100px) { .chartbox { grid-template-columns: 1fr; } }
+.chartbox svg { width: 100%; height: auto; display: block; }
+.chartbox svg text { fill: var(--ink); font-family: Fredoka, system-ui, sans-serif; }
+.chartbox svg .mk { transition: opacity .15s; } .chartbox svg .mk:hover { opacity: .78; }
+table.dt { border-collapse: collapse; width: 100%; font-size: .5em; }
+table.dt th, table.dt td { padding: .3em .5em; border-bottom: 2px solid var(--line); text-align: right; }
+table.dt th:first-child, table.dt td:first-child { text-align: left; }
+table.dt th { color: var(--muted); font-weight: 600; }
+table.dt tfoot td { font-weight: 700; border-bottom: 0; }
+table.dt .sw { display: inline-block; width: .8em; height: .8em; border-radius: 3px; margin-right: .4em; vertical-align: -1px; }
+</style>
+</head>
+<body>
+<div class="tabs" id="tabs" role="tablist"></div>
+<div class="wrap">
+  <div class="card form" id="form"></div>
+  <div class="card work" id="work" aria-live="polite"></div>
+</div>
+<div class="ctl">
+  <label><input type="checkbox" id="stepmode"> Reveal one step at a time</label>
+  <button class="btn blue" id="next">Next step ▶</button>
+  <button class="btn" id="all">Show all</button>
+  <button class="btn" id="smaller" title="Smaller working">A−</button>
+  <button class="btn" id="bigger" title="Bigger working">A+</button>
+  <span class="help">Keys: 1–8 change tab · S step mode · Space or → next step · Enter in a box = next step. Nothing leaves this computer.</span>
+</div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+TK.top('Units &amp; maths');
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const st = Object.assign({ tab: 'units', vals: {}, step: false, fs: 1 }, TK.store('maths', {}));
+const persist = () => TK.save('maths', st);
+
+// ---------- numbers ----------
+let rounded = false, moneyRounded = false;
+const clean = (x) => +x.toPrecision(12);
+const show = (r) => r.toLocaleString('en-GB', { maximumFractionDigits: 10, useGrouping: false }).replace('-', '−');
+// f(x): 2 decimal places (3 significant figures for values below 1); f(x, dp) for a fixed number of places. Notes when rounding really happened.
+function f(x, dp) {
+  if (!isFinite(x)) return '?';
+  x = clean(x);
+  const r = dp != null ? +x.toFixed(dp) : (x !== 0 && Math.abs(x) < 1 ? +x.toPrecision(3) : Math.round(x * 100) / 100);
+  if (Math.abs(r - x) > 1e-9 * Math.max(1, Math.abs(x))) rounded = true;
+  return show(r);
+}
+let CUR = '£';
+function m(x) { x = clean(x); const r = Math.round(x * 100) / 100; if (Math.abs(r - x) > 1e-9) moneyRounded = true; return (r < 0 ? '−' : '') + CUR + Math.abs(r).toFixed(2); }
+const r2 = (x) => { x = clean(x); const r = Math.round(x * 100) / 100; if (Math.abs(r - x) > 1e-9) moneyRounded = true; return r; };
+const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+const isInt = (x) => Math.abs(x - Math.round(x)) < 1e-9;
+
+// ---------- field values ----------
+const N = (id) => { const e = document.getElementById(id); if (!e) return NaN; const t = e.value.trim().replace(/\s/g, '').replace(',', '.'); return t === '' ? NaN : Number(t); };
+const S = (id) => { const e = document.getElementById(id); return e ? e.value : ''; };
+const need = (...ids) => ids.every((id) => isFinite(N(id)));
+
+// ---------- tabs ----------
+const LEN = [['um', 'microns (µm)'], ['mm', 'mm'], ['cm', 'cm'], ['m', 'm']];
+const UNITS = { um: ['µm', 0.001], mm: ['mm', 1], cm: ['cm', 10], m: ['m', 1000], g: ['g', 1], kg: ['kg', 1000], ml: ['ml', 1], l: ['l', 1000] };
+const ASIZE = { A0: [841, 1189], A1: [594, 841], A2: [420, 594], A3: [297, 420], A4: [210, 297], A5: [148, 210], A6: [105, 148] };
+const LU = [['mm', 'mm'], ['cm', 'cm'], ['m', 'm']];
+const step = (l, h, cls) => ({ l, h, cls });
+
+function convert(val, from, to) {
+  const [fn, fk] = UNITS[from], [tn, tk] = UNITS[to];
+  if (from === to) return { steps: [step('Answer', `${f(val)} ${fn} = ${f(val)} ${tn} (same unit)`, 'ans')] };
+  const down = fk > tk, k = clean(down ? fk / tk : tk / fk), big = down ? fn : tn, small = down ? tn : fn, res = down ? val * k : val / k;
+  return { steps: [
+    step('Fact', `1 ${big} = ${f(k)} ${small}`),
+    step('Rule', down ? `bigger unit → smaller unit, so <b>multiply</b> by ${f(k)}` : `smaller unit → bigger unit, so <b>divide</b> by ${f(k)}`),
+    step('Working', `${f(val)} ${down ? '×' : '÷'} ${f(k)} = ${f(res, 6)}`),
+    step('Answer', `${f(val)} ${fn} = ${f(res, 6)} ${tn}`, 'ans'),
+  ], notes: from === 'um' || to === 'um' ? ['A micron (µm) is one thousandth of a millimetre. Paper and board thickness is measured in microns.'] : [] };
+}
+
+const TABS = [
+  { id: 'units', name: 'Units', icon: '📏', title: 'Unit converter', fields: [
+    ['s', 'u_kind', 'Convert', [['length', 'Length'], ['mass', 'Mass'], ['cap', 'Capacity'], ['gsm', 'gsm → mass']], 'length'],
+    ['n', 'u_val', 'Value', 25, 'u_kind:length|mass|cap'],
+    ['s', 'len_from', 'From', LEN, 'cm', 'u_kind:length'], ['s', 'len_to', 'To', LEN, 'mm', 'u_kind:length'],
+    ['s', 'mass_from', 'From', [['g', 'g'], ['kg', 'kg']], 'g', 'u_kind:mass'], ['s', 'mass_to', 'To', [['g', 'g'], ['kg', 'kg']], 'kg', 'u_kind:mass'],
+    ['s', 'cap_from', 'From', [['ml', 'ml'], ['l', 'litres (l)']], 'ml', 'u_kind:cap'], ['s', 'cap_to', 'To', [['ml', 'ml'], ['l', 'litres (l)']], 'l', 'u_kind:cap'],
+    ['n', 'g_gsm', 'Paper weight (gsm)', 80, 'u_kind:gsm'],
+    ['s', 'g_size', 'Sheet size', Object.keys(ASIZE).map((k) => [k, `${k} (${ASIZE[k][0]} × ${ASIZE[k][1]} mm)`]), 'A4', 'u_kind:gsm'],
+    ['n', 'g_n', 'Number of sheets', 500, 'u_kind:gsm'],
+    ['h', '<p class="hint">gsm = grams per square metre: the mass of one square metre of the paper or board.</p>', 'u_kind:gsm'],
+  ], calc() {
+    const k = S('u_kind');
+    if (k === 'gsm') {
+      if (!need('g_gsm', 'g_n')) return null;
+      const gsm = N('g_gsm'), n = N('g_n'), sz = S('g_size'), [w, h] = ASIZE[sz], area = (w / 1000) * (h / 1000), mass = gsm * area * n;
+      const idx = +sz[1], quick = gsm / Math.pow(2, idx) * n;
+      return { steps: [
+        step('Formula', 'mass = gsm × area of one sheet (m²) × number of sheets'),
+        step('Sheet', `${sz} = ${w} mm × ${h} mm = ${f(w / 1000, 3)} m × ${f(h / 1000, 3)} m`),
+        step('Area', `${f(w / 1000, 3)} × ${f(h / 1000, 3)} = ${f(area, 5)} m²`),
+        step('Substitute', `${f(gsm)} × ${f(area, 5)} × ${f(n)}`),
+        step('Answer', `${f(mass)} g${mass >= 1000 ? ` = ${f(mass / 1000)} kg` : ''}`, 'ans'),
+        step('Quick check', `A0 ≈ 1 m² and each size is half the one before, so ${sz} ≈ 1/${Math.pow(2, idx)} m²: ${f(gsm)} ÷ ${Math.pow(2, idx)} × ${f(n)} ≈ ${f(quick)} g`),
+      ], notes: ['The quick check is slightly different because A0 is very nearly, not exactly, 1 m².'] };
+    }
+    if (!need('u_val')) return null;
+    const p = k === 'length' ? 'len' : k;
+    return convert(N('u_val'), S(p + '_from'), S(p + '_to'));
+  } },
+
+  { id: 'area', name: 'Area & volume', icon: '📐', title: 'Area and volume', fields: [
+    ['s', 'a_shape', 'Shape', [['rect', 'Rectangle'], ['circle', 'Circle'], ['tri', 'Triangle'], ['cuboid', 'Cuboid'], ['cyl', 'Cylinder']], 'rect'],
+    ['s', 'a_unit', 'Measured in', LU, 'mm'],
+    ['n', 'a_l', 'Length', 120, 'a_shape:rect|cuboid'], ['n', 'a_w', 'Width', 80, 'a_shape:rect|cuboid'], ['n', 'a_h', 'Height', 40, 'a_shape:cuboid'],
+    ['n', 'a_b', 'Base', 120, 'a_shape:tri'], ['n', 'a_th', 'Perpendicular height', 80, 'a_shape:tri'],
+    ['s', 'a_by', 'I know the', [['r', 'radius'], ['d', 'diameter']], 'r', 'a_shape:circle|cyl'],
+    ['n', 'a_r', 'Radius / diameter', 30, 'a_shape:circle|cyl'], ['n', 'a_ch', 'Height (length)', 100, 'a_shape:cyl'],
+    ['s', 'a_pi', 'Value of π', [['calc', 'π button'], ['3.142', '3.142'], ['3.14', '3.14']], 'calc', 'a_shape:circle|cyl'],
+    ['s', 'a_waste', 'Material & waste', [['no', 'no'], ['yes', 'yes']], 'no'],
+    ['n', 'a_qty', 'How many parts', 4, 'a_waste:yes'],
+    ['n', 'st_l', 'Stock length', 600, 'a_waste:yes'], ['n', 'st_w', 'Stock width', 400, 'a_waste:yes'], ['n', 'st_h', 'Stock thickness', 50, 'a_waste:yes&a_shape:cuboid|cyl'],
+  ], calc() {
+    const sh = S('a_shape'), u = S('a_unit'), is3 = sh === 'cuboid' || sh === 'cyl', U = u + (is3 ? '³' : '²'), what = is3 ? 'volume' : 'area';
+    const piS = S('a_pi'), PI = piS === 'calc' ? Math.PI : +piS, piT = piS === 'calc' ? 'π' : piS;
+    const steps = [], notes = []; let val;
+    const radius = () => { let r = N('a_r'); if (S('a_by') === 'd') { steps.push(step('Radius', `r = diameter ÷ 2 = ${f(r)} ÷ 2 = ${f(r / 2)} ${u}`)); r /= 2; } return r; };
+    if (sh === 'rect') { if (!need('a_l', 'a_w')) return null; const l = N('a_l'), w = N('a_w'); val = l * w; steps.push(step('Formula', 'area = length × width'), step('Substitute', `${f(l)} × ${f(w)}`)); }
+    else if (sh === 'tri') { if (!need('a_b', 'a_th')) return null; const b = N('a_b'), h = N('a_th'); val = 0.5 * b * h; steps.push(step('Formula', 'area = ½ × base × height'), step('Substitute', `½ × ${f(b)} × ${f(h)}`)); notes.push('Use the perpendicular height (at 90° to the base), not the sloping side.'); }
+    else if (sh === 'cuboid') { if (!need('a_l', 'a_w', 'a_h')) return null; const l = N('a_l'), w = N('a_w'), h = N('a_h'); val = l * w * h; steps.push(step('Formula', 'volume = length × width × height'), step('Substitute', `${f(l)} × ${f(w)} × ${f(h)}`)); }
+    else if (sh === 'circle') { if (!need('a_r')) return null; steps.push(step('Formula', 'area = π × r²')); const r = radius(); val = PI * r * r; steps.push(step('Substitute', `${piT} × ${f(r)}²`)); }
+    else { if (!need('a_r', 'a_ch')) return null; steps.push(step('Formula', 'volume = π × r² × h')); const r = radius(), h = N('a_ch'); val = PI * r * r * h; steps.push(step('Substitute', `${piT} × ${f(r)}² × ${f(h)}`)); }
+    steps.push(step('Answer', `${what} = ${f(val)} ${U}`, 'ans'));
+    if (sh === 'circle' || sh === 'cyl') notes.push(piS === 'calc' ? 'π: the calculator π button was used.' : `π was taken as ${piS}.`);
+    if (S('a_waste') === 'yes' && need('a_qty', 'st_l', 'st_w') && (!is3 || need('st_h'))) {
+      const q = N('a_qty'), sl = N('st_l'), sw = N('st_w'), sth = N('st_h'), stock = is3 ? sl * sw * sth : sl * sw, used = val * q, waste = stock - used;
+      steps.push(step('Material used', `${what} of one part × number of parts = ${f(val)} × ${f(q)} = ${f(used)} ${U}`));
+      steps.push(step('Stock', is3 ? `${f(sl)} × ${f(sw)} × ${f(sth)} = ${f(stock)} ${U}` : `${f(sl)} × ${f(sw)} = ${f(stock)} ${U}`));
+      if (waste < -1e-9) steps.push(step('Check', `Not enough material: ${f(used)} ${U} is needed but the stock is only ${f(stock)} ${U}`, 'bad'));
+      else {
+        steps.push(step('Waste', `stock − used = ${f(stock)} − ${f(used)} = ${f(waste)} ${U}`));
+        steps.push(step('Waste %', `waste ÷ stock × 100 = ${f(waste)} ÷ ${f(stock)} × 100 = ${f(waste / stock * 100, 1)} %`, 'ans'));
+        notes.push(`This compares ${what}s only. It does not check that the parts really fit on the stock: draw a nesting layout to be sure.`);
+      }
+    }
+    return { steps, notes };
+  } },
+
+  { id: 'cost', name: 'Costs', icon: '💷', title: 'Cost calculator', fields: [
+    ['s', 'c_cur', 'Currency', [['£', '£ pounds'], ['€', '€ euros']], '£'],
+    ['n', 'c_sheet', 'Price of one sheet', 12, ''], ['n', 'c_nest', 'Parts cut from one sheet', 8, ''],
+    ['n', 'c_other', 'Other costs per unit', 0, ''], ['n', 'c_mark', 'Mark-up (%)', 40, ''], ['n', 'c_batch', 'Batch size', 50, ''],
+    ['h', '<p class="hint">"Parts cut from one sheet" is the nesting count: how many parts fit on a sheet when they are laid out to waste as little as possible. Leave mark-up or batch empty to skip them.</p>'],
+  ], calc() {
+    CUR = S('c_cur');
+    if (!need('c_sheet', 'c_nest') || N('c_nest') <= 0) return null;
+    const p = N('c_sheet'), n = N('c_nest'), other = isFinite(N('c_other')) ? N('c_other') : 0, mat = r2(p / n), cost = r2(mat + other), steps = [], notes = [];
+    steps.push(step('Formula', 'material cost per unit = sheet price ÷ parts per sheet'));
+    steps.push(step('Substitute', `${m(p)} ÷ ${f(n)}`));
+    steps.push(step(other ? 'Material' : 'Answer', `${m(mat)} per unit`, other ? '' : 'ans'));
+    if (other) steps.push(step('Cost per unit', `material + other costs = ${m(mat)} + ${m(other)} = ${m(cost)}`, 'ans'));
+    let sell = NaN;
+    if (need('c_mark')) {
+      const mk = N('c_mark'); sell = r2(cost * (1 + mk / 100));
+      steps.push(step('Selling price', `cost × (1 + mark-up ÷ 100) = ${m(cost)} × ${f(1 + mk / 100, 4)} = ${m(sell)}`, 'ans'));
+      steps.push(step('Profit', `selling price − cost = ${m(sell)} − ${m(cost)} = ${m(sell - cost)} per unit`));
+      notes.push('Mark-up is a percentage of the cost (not of the selling price).');
+    }
+    if (need('c_batch') && N('c_batch') > 0) {
+      const b = N('c_batch'), sheets = Math.ceil(b / n - 1e-9);
+      steps.push(step('Batch cost', `cost per unit × batch size = ${m(cost)} × ${f(b)} = ${m(cost * b)}`, 'ans'));
+      steps.push(step('Sheets to buy', `${f(b)} ÷ ${f(n)} = ${f(b / n)}${isInt(b / n) ? '' : `, round <b>up</b> to ${sheets}`} sheet${sheets === 1 ? '' : 's'} = ${sheets} × ${m(p)} = ${m(sheets * p)}`));
+      if (isFinite(sell)) steps.push(step('Batch profit', `profit per unit × batch size = ${m(sell - cost)} × ${f(b)} = ${m((sell - cost) * b)}`));
+      notes.push('You cannot buy part of a sheet, so the number of sheets is always rounded up. The batch cost only counts the material in the parts, so buying whole sheets can cost more.');
+    }
+    return { steps, notes };
+  } },
+
+  { id: 'scale', name: 'Ratio & scale', icon: '🔍', title: 'Ratios and scale drawings', fields: [
+    ['h', '<div class="presets" id="sc_presets">' + ['1:1', '1:2', '1:5', '1:10', '1:20', '1:50', '1:100', '2:1', '5:1', '10:1'].map((s) => `<button type="button" data-sc="${s}">${s}</button>`).join('') + '</div>'],
+    ['n', 'sc_a', 'Scale: drawing', 1, ''], ['n', 'sc_b', 'Scale: real', 5, ''],
+    ['s', 'sc_dir', 'Work out the', [['real', 'real size'], ['draw', 'drawing size']], 'real'],
+    ['n', 'sc_val', 'Size I know', 42, ''], ['s', 'sc_unit', 'Measured in', LU, 'mm'],
+    ['h', '<p class="hint">A scale is written drawing : real. 1:5 is a reduction (drawn 5 times smaller). 2:1 is an enlargement (drawn twice as big).</p>'],
+  ], calc() {
+    if (!need('sc_a', 'sc_b', 'sc_val') || N('sc_a') <= 0 || N('sc_b') <= 0) return null;
+    const a = N('sc_a'), b = N('sc_b'), v = N('sc_val'), u = S('sc_unit'), toReal = S('sc_dir') === 'real', k = b / a;
+    const kind = a === b ? 'full size' : b > a ? `a reduction: the drawing is ${f(k)} times smaller than the real thing` : `an enlargement: the drawing is ${f(a / b)} times bigger than the real thing`;
+    const res = toReal ? v * b / a : v * a / b;
+    return { steps: [
+      step('Scale', `${f(a)} : ${f(b)} means ${f(a)} ${u} on the drawing = ${f(b)} ${u} in real life`),
+      step('So it is', kind),
+      step('Formula', toReal ? 'real size = drawing size × real part ÷ drawing part' : 'drawing size = real size × drawing part ÷ real part'),
+      step('Substitute', toReal ? `${f(v)} × ${f(b)} ÷ ${f(a)}` : `${f(v)} × ${f(a)} ÷ ${f(b)}`),
+      step('Answer', `${toReal ? 'real size' : 'drawing size'} = ${f(res)} ${u}`, 'ans'),
+    ] };
+  } },
+
+  { id: 'gears', name: 'Gears & pulleys', icon: '⚙️', title: 'Gear ratio, velocity ratio and output speed', fields: [
+    ['s', 'g_mode', 'System', [['gear', 'Gear train'], ['pulley', 'Pulleys & belt']], 'gear'],
+    ['n', 'g_driver', 'Driver gear teeth', 20, 'g_mode:gear'], ['n', 'g_driven', 'Driven gear teeth', 60, 'g_mode:gear'],
+    ['n', 'p_driver', 'Driver pulley diameter', 40, 'g_mode:pulley'], ['n', 'p_driven', 'Driven pulley diameter', 120, 'g_mode:pulley'],
+    ['n', 'g_in', 'Input speed (rpm)', 300, ''],
+    ['h', '<p class="hint">The driver is turned by the motor or handle (input). The driven gear or pulley is the output. Leave the speed empty for the ratio only.</p>'],
+  ], calc() {
+    const gear = S('g_mode') === 'gear', A = gear ? 'g_driver' : 'p_driver', B = gear ? 'g_driven' : 'p_driven';
+    if (!need(A, B) || N(A) <= 0 || N(B) <= 0) return null;
+    const dr = N(A), dn = N(B), r = dn / dr, name = gear ? 'gear ratio' : 'velocity ratio', steps = [], notes = [];
+    steps.push(step('Formula', gear ? 'gear ratio = teeth on driven gear ÷ teeth on driver gear' : 'velocity ratio = diameter of driven pulley ÷ diameter of driver pulley'));
+    steps.push(step('Substitute', `${f(dn)} ÷ ${f(dr)}`));
+    let simp = '';
+    if (isInt(dn) && isInt(dr)) { const g = gcd(Math.round(dn), Math.round(dr)); if (dr / g !== 1) simp = ` (${Math.round(dn / g)} : ${Math.round(dr / g)})`; }
+    const was = rounded, rT = f(r), exact = was || !rounded;
+    steps.push(step('Answer', `${name} = ${rT} : 1${simp}`, 'ans'));
+    if (need('g_in')) {
+      const i = N('g_in'), o = i / r;
+      steps.push(step('Formula', `output speed = input speed ÷ ${name}`));
+      steps.push(step('Substitute', exact ? `${f(i)} ÷ ${rT}` : `${f(i)} ÷ (${f(dn)} ÷ ${f(dr)})`));
+      steps.push(step('Answer', `output speed = ${f(o)} rpm`, 'ans'));
+    }
+    steps.push(step('Meaning', r > 1 ? 'the output turns slower than the input, with more turning force (torque)' : r < 1 ? 'the output turns faster than the input, with less turning force (torque)' : 'the output turns at the same speed as the input'));
+    notes.push(gear ? 'Two meshed gears turn in opposite directions. An idler gear between them makes them turn the same way and does not change the ratio.' : 'Both pulleys turn the same way, unless the belt is crossed.');
+    if (!exact) notes.push('The ratio is not rounded before it is used: the full value is carried through to the output speed.');
+    return { steps, notes };
+  } },
+
+  { id: 'levers', name: 'Levers & moments', icon: '⚖️', title: 'Mechanical advantage and moments', fields: [
+    ['s', 'l_mode', 'Work out', [['ma', 'Mech. advantage'], ['moment', 'Moment (F × d)'], ['bal', 'Balance a lever']], 'ma'],
+    ['n', 'l_load', 'Load (N)', 600, 'l_mode:ma|bal'], ['n', 'l_effort', 'Effort (N)', 150, 'l_mode:ma'],
+    ['n', 'l_f', 'Force (N)', 50, 'l_mode:moment'], ['n', 'l_d', 'Distance from pivot', 0.4, 'l_mode:moment'],
+    ['n', 'l_d1', 'Load distance from pivot', 0.5, 'l_mode:bal'], ['n', 'l_d2', 'Effort distance from pivot', 2, 'l_mode:bal'],
+    ['s', 'l_unit', 'Distances in', [['m', 'm'], ['cm', 'cm'], ['mm', 'mm']], 'm', 'l_mode:moment|bal'],
+    ['h', '<p class="hint">Distances are measured at 90° from the pivot (fulcrum) to the line of the force.</p>', 'l_mode:moment|bal'],
+  ], calc() {
+    const md = S('l_mode'), u = S('l_unit'), toM = { m: 1, cm: 100, mm: 1000 }[u];
+    if (md === 'ma') {
+      if (!need('l_load', 'l_effort') || N('l_effort') <= 0) return null;
+      const L = N('l_load'), E = N('l_effort'), ma = L / E;
+      return { steps: [
+        step('Formula', 'mechanical advantage = load ÷ effort'), step('Substitute', `${f(L)} N ÷ ${f(E)} N`), step('Answer', `MA = ${f(ma)}`, 'ans'),
+        step('Meaning', ma > 1 ? `the mechanism multiplies the effort ${f(ma)} times, so the load is easier to move` : ma < 1 ? 'the effort is bigger than the load: the mechanism gives more movement or speed, not more force' : 'the effort is the same as the load'),
+      ], notes: ['Mechanical advantage has no unit because it is one force divided by another.'] };
+    }
+    if (md === 'moment') {
+      if (!need('l_f', 'l_d')) return null;
+      const F = N('l_f'), d = N('l_d'), mo = F * d, steps = [step('Formula', 'moment = force × distance from the pivot'), step('Substitute', `${f(F)} N × ${f(d)} ${u}`), step('Answer', `moment = ${f(mo)} N${u}`, 'ans')];
+      if (u !== 'm') steps.push(step('In N m', `${f(d)} ${u} ÷ ${toM} = ${f(d / toM, 6)} m, so ${f(F)} × ${f(d / toM, 6)} = ${f(mo / toM)} Nm`));
+      return { steps, notes: ['A moment is the turning effect of a force. The unit is the newton metre (Nm).'] };
+    }
+    if (!need('l_load', 'l_d1', 'l_d2') || N('l_d2') <= 0) return null;
+    const L = N('l_load'), d1 = N('l_d1'), d2 = N('l_d2'), E = L * d1 / d2;
+    return { steps: [
+      step('Rule', 'balanced when clockwise moment = anticlockwise moment'),
+      step('Formula', 'effort × effort distance = load × load distance'),
+      step('Substitute', `effort × ${f(d2)} = ${f(L)} × ${f(d1)} = ${f(L * d1)} N${u}`),
+      step('Rearrange', `effort = ${f(L * d1)} ÷ ${f(d2)}`),
+      step('Answer', `effort = ${f(E)} N`, 'ans'),
+      step('MA', `load ÷ effort = ${f(L)} ÷ ${f(E)} = ${f(L / E)}`),
+    ], notes: ['Any effort bigger than this will lift the load. The weight of the lever itself is ignored.'] };
+  } },
+
+  { id: 'pct', name: '% & tolerance', icon: '🎯', title: 'Percentages and tolerances', fields: [
+    ['s', 'p_mode', 'Work out', [['tol', 'Tolerance range'], ['of', '% of an amount'], ['as', 'A as a % of B'], ['chg', '% change']], 'tol'],
+    ['n', 't_nom', 'Nominal size', 50, 'p_mode:tol'], ['n', 't_tol', 'Tolerance ±', 0.5, 'p_mode:tol'],
+    ['s', 't_kind', 'Tolerance is in', [['abs', 'the same unit'], ['pct', 'per cent (%)']], 'abs', 'p_mode:tol'],
+    ['s', 't_unit', 'Unit', [['mm', 'mm'], ['cm', 'cm'], ['m', 'm'], ['g', 'g'], ['kg', 'kg'], ['Ω', 'Ω'], ['', 'none']], 'mm', 'p_mode:tol'],
+    ['n', 't_meas', 'Measured value', 50.3, 'p_mode:tol'],
+    ['n', 'p_p', 'Percentage (%)', 15, 'p_mode:of'], ['n', 'p_y', 'Amount', 240, 'p_mode:of'],
+    ['n', 'p_x', 'This number', 36, 'p_mode:as'], ['n', 'p_tot', 'as a % of', 120, 'p_mode:as'],
+    ['n', 'p_old', 'Original value', 80, 'p_mode:chg'], ['n', 'p_new', 'New value', 92, 'p_mode:chg'],
+    ['h', '<p class="hint">Tolerance is the amount a size is allowed to be bigger or smaller than the size on the drawing. Leave the measured value empty for the range only.</p>', 'p_mode:tol'],
+  ], calc() {
+    const md = S('p_mode');
+    if (md === 'of') { if (!need('p_p', 'p_y')) return null; const p = N('p_p'), y = N('p_y'); return { steps: [step('Formula', 'percentage ÷ 100 × amount'), step('Substitute', `${f(p)} ÷ 100 × ${f(y)}`), step('Answer', `${f(p)}% of ${f(y)} = ${f(p / 100 * y)}`, 'ans')] }; }
+    if (md === 'as') { if (!need('p_x', 'p_tot') || N('p_tot') === 0) return null; const x = N('p_x'), y = N('p_tot'); return { steps: [step('Formula', 'part ÷ whole × 100'), step('Substitute', `${f(x)} ÷ ${f(y)} × 100`), step('Answer', `${f(x / y * 100, 1)} %`, 'ans')] }; }
+    if (md === 'chg') {
+      if (!need('p_old', 'p_new') || N('p_old') === 0) return null; const o = N('p_old'), n = N('p_new'), c = (n - o) / o * 100;
+      return { steps: [step('Formula', 'percentage change = (new − original) ÷ original × 100'), step('Substitute', `(${f(n)} − ${f(o)}) ÷ ${f(o)} × 100`), step('Working', `${f(n - o)} ÷ ${f(o)} × 100`), step('Answer', `${f(Math.abs(c), 1)} % ${c > 0 ? 'increase' : c < 0 ? 'decrease' : '(no change)'}`, 'ans')] };
+    }
+    if (!need('t_nom', 't_tol') || N('t_tol') < 0) return null;
+    const nom = N('t_nom'), u = S('t_unit'), U = u ? ' ' + u : '', pct = S('t_kind') === 'pct', steps = []; let tol = N('t_tol');
+    if (pct) { steps.push(step('Tolerance', `${f(tol)}% of ${f(nom)} = ${f(tol)} ÷ 100 × ${f(nom)} = ${f(tol / 100 * nom, 4)}${U}`)); tol = tol / 100 * nom; }
+    const lo = clean(nom - tol), hi = clean(nom + tol);
+    steps.push(step('Size', `${f(nom)} ± ${f(tol, 4)}${U}`));
+    steps.push(step('Biggest', `${f(nom)} + ${f(tol, 4)} = ${f(hi, 4)}${U}`));
+    steps.push(step('Smallest', `${f(nom)} − ${f(tol, 4)} = ${f(lo, 4)}${U}`));
+    steps.push(step('Answer', `acceptable range: ${f(lo, 4)}${U} to ${f(hi, 4)}${U}`, 'ans'));
+    if (need('t_meas')) {
+      const v = clean(N('t_meas')), e = 1e-9 * Math.max(1, Math.abs(nom));
+      if (v > hi + e) steps.push(step('Check', `✘ ${f(v, 4)}${U} is too big by ${f(v - hi, 4)}${U}: outside tolerance, reject`, 'bad'));
+      else if (v < lo - e) steps.push(step('Check', `✘ ${f(v, 4)}${U} is too small by ${f(lo - v, 4)}${U}: outside tolerance, reject`, 'bad'));
+      else steps.push(step('Check', `✔ ${f(v, 4)}${U} is between ${f(lo, 4)} and ${f(hi, 4)}: within tolerance, accept`, 'ok'));
+    }
+    return { steps, notes: ['A value exactly on the limit counts as within tolerance.'] };
+  } },
+
+  { id: 'chart', name: 'Charts', icon: '📊', title: 'Chart maker', fields: [
+    ['t', 'ch_title', 'Title', 'Which material would you choose?'],
+    ['s', 'ch_type', 'Chart', [['pie', 'Pie chart'], ['bar', 'Bar chart']], 'pie'],
+    ['a', 'ch_data', 'Results: one per line, as  name, number', 'Wood, 12\nMetal, 7\nPolymer, 9\nCard, 4'],
+    ['h', '<p class="hint">Type or paste survey results. A pie chart shows up to 8 slices: any extra lines are added together as "Other".</p>'],
+  ], calc() { return chart(); } },
+];
+
+// ---------- chart ----------
+function parseData() {
+  const rows = []; let skipped = 0;
+  S('ch_data').split('\n').forEach((line) => {
+    line = line.trim(); if (!line) return;
+    const mm = line.match(/^(.+?)\s*[,;:\t=]\s*(\d+(?:\.\d+)?)\s*$/) || line.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*$/);
+    if (mm) rows.push({ name: mm[1].trim(), v: +mm[2] }); else skipped++;
+  });
+  return { rows, skipped };
+}
+const short = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+function niceMax(mx) { const raw = mx / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), s = [1, 2, 5, 10].map((k) => k * p).find((k) => k >= raw - 1e-12); return { stepv: s, top: Math.ceil(mx / s - 1e-9) * s }; }
+function chart() {
+  let { rows, skipped } = parseData();
+  const type = S('ch_type'), title = S('ch_title').trim(), notes = [];
+  if (skipped) notes.push(`<b>${skipped} line${skipped === 1 ? ' was' : 's were'} ignored</b>: each line needs a name, then a comma, then a number that is not negative.`);
+  if (!rows.length) return { html: '<p class="empty">Type some results on the left, one per line, like:  Wood, 12</p>', notes };
+  if (type === 'pie' && rows.length > 8) { const rest = rows.slice(7); rows = rows.slice(0, 7).concat({ name: 'Other', v: rest.reduce((a, r) => a + r.v, 0) }); notes.push(`${rest.length} smaller lines were added together as "Other" so the pie has 8 slices.`); }
+  const total = rows.reduce((a, r) => a + r.v, 0);
+  if (total <= 0) return { html: '<p class="empty">All the numbers are zero, so there is nothing to draw yet.</p>', notes };
+  let svg = '';
+  if (type === 'pie') {
+    const cx = 215, cy = 215, R = 195; let a0 = -Math.PI / 2; const leg = [];
+    const pt = (a, r) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    rows.forEach((r, i) => {
+      const frac = r.v / total, a1 = a0 + frac * 2 * Math.PI, col = `var(--s${i + 1})`, tip = `<title>${esc(r.name)}: ${f(r.v)} (${f(frac * 100, 1)}%)</title>`;
+      if (frac > 0) {
+        if (frac >= 1 - 1e-9) svg += `<circle class="mk" cx="${cx}" cy="${cy}" r="${R}" fill="${col}">${tip}</circle>`;
+        else { const [x0, y0] = pt(a0, R), [x1, y1] = pt(a1, R); svg += `<path class="mk" d="M${cx} ${cy}L${x0.toFixed(2)} ${y0.toFixed(2)}A${R} ${R} 0 ${frac > 0.5 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}Z" fill="${col}" stroke="var(--card)" stroke-width="2.5" stroke-linejoin="round">${tip}</path>`; }
+        if (frac >= 0.06) { const [lx, ly] = pt((a0 + a1) / 2, frac >= 1 - 1e-9 ? 0 : R * 0.64); svg += `<text x="${lx.toFixed(1)}" y="${(ly + 8).toFixed(1)}" text-anchor="middle" font-size="24" font-weight="700" style="fill:${i === 3 ? '#0b0b0b' : '#fff'};pointer-events:none">${f(frac * 100, 0)}%</text>`; }
+      }
+      leg.push(`<rect x="450" y="${22 + i * 48}" width="26" height="26" rx="5" fill="${col}"/><text x="488" y="${43 + i * 48}" font-size="23" font-weight="600">${esc(short(r.name, 17))} <tspan font-weight="400">· ${f(r.v)}</tspan></text>`);
+      a0 = a1;
+    });
+    svg = `<svg viewBox="0 0 760 430" role="img" aria-label="Pie chart${title ? ': ' + esc(title) : ''}">${svg}${leg.join('')}</svg>`;
+  } else {
+    const W = 760, H = 430, L = 64, Rm = 16, T = 30, B = 62, pw = W - L - Rm, ph = H - T - B, mx = Math.max(...rows.map((r) => r.v)), { stepv, top } = niceMax(mx), band = pw / rows.length, bw = Math.min(110, band * 0.66), fs = rows.length > 8 ? 17 : 20, chars = Math.max(3, Math.floor(band / (fs * 0.56)));
+    for (let t = 0; t <= top + 1e-9; t += stepv) { const y = T + ph - (t / top) * ph; svg += `<line x1="${L}" x2="${W - Rm}" y1="${y}" y2="${y}" stroke="${t === 0 ? 'var(--muted)' : 'var(--grid)'}" stroke-width="${t === 0 ? 2 : 1}"/><text x="${L - 10}" y="${y + 6}" text-anchor="end" font-size="18" style="fill:var(--muted)">${f(t)}</text>`; }
+    rows.forEach((r, i) => {
+      const h = (r.v / top) * ph, x = L + band * i + (band - bw) / 2, y = T + ph - h, rr = Math.min(5, h);
+      svg += `<path class="mk" d="M${x} ${T + ph}V${y + rr}Q${x} ${y} ${x + rr} ${y}H${x + bw - rr}Q${x + bw} ${y} ${x + bw} ${y + rr}V${T + ph}Z" fill="var(--s1)"><title>${esc(r.name)}: ${f(r.v)} (${f(r.v / total * 100, 1)}%)</title></path>`;
+      svg += `<text x="${x + bw / 2}" y="${y - 8}" text-anchor="middle" font-size="${fs + 2}" font-weight="700">${f(r.v)}</text><text x="${x + bw / 2}" y="${T + ph + 28}" text-anchor="middle" font-size="${fs}" font-weight="600">${esc(short(r.name, chars))}<title>${esc(r.name)}</title></text>`;
+    });
+    svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bar chart${title ? ': ' + esc(title) : ''}">${svg}</svg>`;
+  }
+  const pie = type === 'pie';
+  const table = `<table class="dt"><thead><tr><th>Answer</th><th>Number</th><th>%</th>${pie ? '<th>Angle</th>' : ''}</tr></thead><tbody>` +
+    rows.map((r, i) => `<tr><td><span class="sw" style="background:var(--s${pie ? i + 1 : 1})"></span>${esc(r.name)}</td><td>${f(r.v)}</td><td>${f(r.v / total * 100, 1)}%</td>${pie ? `<td>${f(r.v / total * 360, 0)}°</td>` : ''}</tr>`).join('') +
+    `</tbody><tfoot><tr><td>Total</td><td>${f(total)}</td><td>100%</td>${pie ? '<td>360°</td>' : ''}</tr></tfoot></table>`;
+  const r0 = rows[0], steps = pie
+    ? [step('Formula', 'angle of a slice = number ÷ total × 360°'), step('Example', `${esc(r0.name)}: ${f(r0.v)} ÷ ${f(total)} × 360 = ${f(r0.v / total * 360, 0)}°`, 'ans')]
+    : [step('Formula', 'percentage = number ÷ total × 100'), step('Example', `${esc(r0.name)}: ${f(r0.v)} ÷ ${f(total)} × 100 = ${f(r0.v / total * 100, 1)}%`, 'ans')];
+  if (rounded) notes.push(pie ? 'Percentages are rounded to 1 decimal place and angles to the nearest degree, so they may not add up to exactly 100% or 360°.' : 'Percentages are rounded to 1 decimal place, so they may not add up to exactly 100%.');
+  rounded = false;
+  return { title: title || 'Chart maker', html: `<div class="chartbox"><div>${svg}</div><div>${table}</div></div>`, steps, notes };
+}
+
+// ---------- build UI ----------
+const tabsEl = $('#tabs'), formEl = $('#form'), workEl = $('#work');
+let cur = TABS.find((t) => t.id === st.tab) || TABS[0], revealed = 1, lastSteps = 0;
+tabsEl.innerHTML = TABS.map((t, i) => `<button class="tab" role="tab" data-id="${t.id}">${t.icon} ${t.name}<kbd>${i + 1}</kbd></button>`).join('');
+tabsEl.onclick = (e) => { const b = e.target.closest('.tab'); if (b) openTab(b.dataset.id); };
+
+function fieldHTML(fd) {
+  const [type, id] = fd;
+  if (type === 'h') return `<div data-if="${fd[2] || ''}">${fd[1]}</div>`;
+  const saved = st.vals[id];
+  if (type === 's') { const val = saved != null && fd[3].some((o) => o[0] === saved) ? saved : fd[4]; return `<label class="f" data-if="${fd[5] || ''}"><span>${fd[2]}</span><select id="${id}">${fd[3].map((o) => `<option value="${o[0]}" ${o[0] === val ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></label>`; }
+  if (type === 'a') return `<label class="f wide"><span>${fd[2]}</span><textarea id="${id}" spellcheck="false">${esc(saved != null ? saved : fd[3])}</textarea></label>`;
+  if (type === 't') return `<label class="f wide"><span>${fd[2]}</span><input id="${id}" type="text" value="${esc(saved != null ? saved : fd[3])}"></label>`;
+  return `<label class="f" data-if="${fd[4] || ''}"><span>${fd[2]}</span><input id="${id}" type="text" inputmode="decimal" autocomplete="off" value="${esc(saved != null ? saved : fd[3])}"></label>`;
+}
+function openTab(id) {
+  cur = TABS.find((t) => t.id === id) || TABS[0]; st.tab = cur.id; persist();
+  tabsEl.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', b.dataset.id === cur.id));
+  formEl.innerHTML = `<h2>${cur.icon} ${cur.title}</h2>` + cur.fields.map(fieldHTML).join('');
+  revealed = 1; update();
+}
+function conds() {
+  formEl.querySelectorAll('[data-if]').forEach((el) => {
+    const c = el.dataset.if; if (!c) return;
+    el.hidden = !c.split('&').every((part) => { const [id, vals] = part.split(':'); return vals.split('|').includes(S(id)); });
+  });
+}
+function update() {
+  conds();
+  formEl.querySelectorAll('input[inputmode=decimal]').forEach((i) => { const t = i.value.trim(); i.classList.toggle('err', t !== '' && !isFinite(N(i.id))); });
+  rounded = false; moneyRounded = false;
+  let out = null; try { out = cur.calc(); } catch (e) { console.error(e); }
+  let h = `<h2>${esc((out && out.title) || cur.title)}</h2>`;
+  if (!out) { h += '<p class="empty">Type the numbers on the left to see the working.</p>'; lastSteps = 0; }
+  else {
+    const steps = out.steps || []; lastSteps = steps.length;
+    if (!st.step) revealed = steps.length;
+    h += (out.html || '') + steps.map((s, i) => `<div class="step ${s.cls || ''} ${i >= revealed ? 'hid' : ''}"><span class="l">${s.l}</span><span class="h">${s.h}</span></div>`).join('');
+    const notes = (out.notes || []).slice();
+    if (rounded && cur.id === 'cost') notes.unshift('Other numbers are shown to 2 decimal places.');
+    else if (rounded) notes.unshift('<b>Rounding:</b> answers are rounded to 2 decimal places (3 significant figures if below 1, percentages to 1 decimal place). Rounding is only done at the end: full values are used in the working.');
+    if (moneyRounded) notes.unshift('<b>Rounding:</b> money is rounded to the nearest ' + (CUR === '£' ? 'penny' : 'cent') + ' at each step, as real prices are, and the rounded amount is used in the next step.');
+    if (notes.length) h += `<p class="note ${st.step && revealed < steps.length ? 'step hid' : ''}">${notes.join('<br>')}</p>`;
+  }
+  workEl.innerHTML = h;
+  $('#next').disabled = !st.step || revealed >= lastSteps; $('#next').style.opacity = $('#next').disabled ? .4 : 1;
+  $('#all').style.display = st.step ? '' : 'none'; $('#next').style.display = st.step ? '' : 'none';
+}
+formEl.addEventListener('input', (e) => { if (e.target.id) { st.vals[e.target.id] = e.target.value; persist(); } revealed = 1; update(); });
+formEl.addEventListener('click', (e) => { const b = e.target.closest('[data-sc]'); if (!b) return; const [a, c] = b.dataset.sc.split(':'); $('#sc_a').value = a; $('#sc_b').value = c; st.vals.sc_a = a; st.vals.sc_b = c; persist(); revealed = 1; update(); });
+const nextStep = () => { if (st.step && revealed < lastSteps) { revealed++; update(); } };
+$('#next').onclick = nextStep;
+$('#all').onclick = () => { revealed = lastSteps; update(); };
+$('#stepmode').checked = st.step;
+$('#stepmode').onchange = (e) => { st.step = e.target.checked; persist(); revealed = st.step ? 1 : lastSteps; update(); };
+const setFs = (v) => { st.fs = Math.min(1.6, Math.max(0.6, +v.toFixed(2))); workEl.style.setProperty('--fs', st.fs); persist(); };
+$('#smaller').onclick = () => setFs(st.fs - 0.1); $('#bigger').onclick = () => setFs(st.fs + 0.1); setFs(+st.fs || 1);
+addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = e.target.tagName, typing = tag === 'INPUT' && e.target.type !== 'checkbox' || tag === 'TEXTAREA' || tag === 'SELECT';
+  if (typing) { if (e.key === 'Enter' && tag === 'INPUT') { e.preventDefault(); nextStep(); } return; }
+  if (e.key >= '1' && e.key <= String(TABS.length)) openTab(TABS[+e.key - 1].id);
+  else if (e.key === ' ' || e.key === 'ArrowRight') { if (tag !== 'BUTTON' || e.key !== ' ') { e.preventDefault(); nextStep(); } }
+  else if (e.key.toLowerCase() === 's') { $('#stepmode').checked = !st.step; $('#stepmode').onchange({ target: $('#stepmode') }); }
+});
+openTab(cur.id);
+</script>
+</body>
+</html>

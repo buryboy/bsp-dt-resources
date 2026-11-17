@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR code maker · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; }
+#main { flex: 1; min-height: 0; display: flex; gap: 18px; padding: 0 16px 14px; }
+#panel { flex: none; width: min(400px, 34vw); display: flex; flex-direction: column; gap: 12px; overflow: auto; align-self: stretch; }
+#panel > * { flex: none; }
+#panel label { display: grid; gap: 4px; font-weight: 600; font-size: 14px; color: var(--muted); }
+#panel textarea, #panel input[type=text] { border-radius: 10px; border: 2px solid var(--line); background: var(--card); padding: 8px 10px; font-size: 18px; font-weight: 500; color: var(--ink); width: 100%; min-height: 44px; }
+#panel textarea { resize: vertical; min-height: 76px; line-height: 1.25; word-break: break-all; }
+#panel h3 { margin: 4px 0 0; font-size: 16px; }
+.seg { display: flex; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 2px var(--line) inset; background: var(--card); }
+.seg button { flex: 1; border: 0; background: transparent; padding: 0 10px; min-height: 44px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.seg button.on { background: var(--ink2); color: #fff; }
+#quick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#quick .btn { padding: 6px 10px; font-size: 15px; text-align: left; line-height: 1.15; }
+#quick .btn.on { background: var(--ink2); color: #fff; box-shadow: 0 3px 0 #18237a; }
+.acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.acts .btn { flex: 1; white-space: nowrap; }
+#note { font-size: 13px; }
+#show { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4vh; text-align: center; position: relative; }
+#qtitle { font-size: clamp(26px, 4.6vw, 76px); font-weight: 700; line-height: 1.05; overflow-wrap: anywhere; max-width: 100%; }
+#qwrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
+#qr { background: #fff; border-radius: 3%; box-shadow: 0 6px 30px rgba(0,0,0,.18); image-rendering: pixelated; display: block; }
+#qlink { font-size: clamp(18px, 2.7vw, 46px); font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; word-break: break-word; max-width: 100%; max-height: 3.5em; overflow: hidden; font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: -.02em; }
+#qlink .dim { color: var(--muted); }
+#hint { margin: auto; font-size: 26px; max-width: 520px; }
+#err { color: var(--red); font-weight: 600; display: none; }
+#back { position: absolute; right: 0; bottom: 0; display: none; }
+body.present #panel { display: none; } body.present #back { display: block; }
+kbd { background: var(--card); border-radius: 6px; padding: 1px 6px; box-shadow: 0 0 0 1.5px var(--line) inset; font-family: inherit; font-weight: 600; }
+@media (max-width: 860px), (orientation: portrait) {
+  body { height: auto; min-height: 100%; }
+  #main { flex-direction: column-reverse; }
+  #panel { width: 100%; overflow: visible; }
+  #show { min-height: 62vh; } #qwrap { min-height: 44vh; }
+}
+</style>
+</head>
+<body>
+<div id="main">
+  <div id="panel" class="card">
+    <label>Link or text <textarea id="text" placeholder="Paste a link (or any text) here" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></label>
+    <label>Title above the code (optional) <input type="text" id="title" maxlength="60" placeholder="e.g. Scan to open today's workbook"></label>
+    <h3>D&amp;T workbooks</h3>
+    <div class="seg" id="site" title="Which address the workbook buttons use"><button data-s="main">Main site (github.io)</button><button data-s="backup">Backup (buryboy2000)</button></div>
+    <div id="quick"></div>
+    <div class="acts">
+      <button class="btn blue" id="present" title="Hide this panel so only the code shows (P)">▶ Board view</button>
+      <button class="btn" id="dl">⬇ Download PNG</button>
+      <button class="btn" id="clr">✕ Clear</button>
+    </div>
+    <div id="err"></div>
+    <div id="note" class="muted">The code is made on this computer. Nothing you type is sent anywhere. <kbd>P</kbd> board view · <kbd>Esc</kbd> back.</div>
+  </div>
+  <div id="show">
+    <div id="qtitle"></div>
+    <div id="qwrap"><canvas id="qr" width="10" height="10" style="display:none" role="img" aria-label="QR code"></canvas><div id="hint" class="muted">Paste a link on the left, or tap a workbook, and a big QR code appears here for iPads to scan.</div></div>
+    <div id="qlink"></div>
+    <button class="btn tk-hide-idle" id="back">✎ Change</button>
+  </div>
+</div>
+<script src="kit/tools.js"></script>
+<script src="vendor/qrcode-generator.js"></script>
+<script src="../workbooks.js"></script>
+<script>
+'use strict';
+TK.top('QR code maker');
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const SITES = { main: 'https://buryboy.github.io/bsp-dt-resources/', backup: 'https://dt.buryboy2000.com/' };
+let S = Object.assign({ text: '', title: '', site: 'main', book: '' }, TK.store('qr', {}));
+if (!SITES[S.site]) S.site = 'main';
+const save = () => TK.save('qr', S);
+if (window.qrcode) qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];   // so accents and emoji survive
+
+const books = [{ folder: '', title: 'All workbooks (hub)' }].concat(((window.WORKBOOKS && WORKBOOKS.books) || []).filter((b) => !b.hidden));
+const urlFor = (folder) => SITES[S.site] + (folder ? folder + '/' : '');
+function renderQuick() {
+  $('#quick').innerHTML = books.length > 1 ? books.map((b) => `<button class="btn${S.book === 'b:' + b.folder && S.text === urlFor(b.folder) ? ' on' : ''}" data-f="${esc(b.folder)}">${esc(b.title)}</button>`).join('') : '<span class="muted">The workbook list could not be loaded.</span>';
+  $$('#site button').forEach((b) => b.classList.toggle('on', b.dataset.s === S.site));
+}
+$('#quick').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; const bk = books.find((x) => x.folder === b.dataset.f); S.book = 'b:' + bk.folder; S.text = urlFor(bk.folder); S.title = bk.title; sync(); };
+$('#site').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; const old = S.site; S.site = b.dataset.s;
+  // if a workbook link is showing, swap it to the other address
+  if (S.text.startsWith(SITES[old])) S.text = SITES[S.site] + S.text.slice(SITES[old].length);
+  sync(); };
+
+let matrix = null;   // { n, dark(r,c) }
+function make(text) {
+  for (const ec of ['M', 'L']) { try { const q = qrcode(0, ec); q.addData(text, 'Byte'); q.make(); return { n: q.getModuleCount(), dark: (r, c) => q.isDark(r, c) }; } catch (e) {} }
+  return null;
+}
+function paint(cv, size) {
+  const n = matrix.n, quiet = 4, cell = Math.max(1, Math.floor(size / (n + quiet * 2))), px = cell * (n + quiet * 2);
+  cv.width = px; cv.height = px; const g = cv.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, px, px); g.fillStyle = '#000';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (matrix.dark(r, c)) g.fillRect((c + quiet) * cell, (r + quiet) * cell, cell, cell);
+  return px;
+}
+function draw() {
+  const cv = $('#qr'), text = S.text.trim();
+  $('#qtitle').textContent = S.title.trim(); $('#qtitle').style.display = S.title.trim() ? '' : 'none';
+  $('#err').style.display = 'none';
+  matrix = text && window.qrcode ? make(text) : null;
+  if (!matrix) {
+    cv.style.display = 'none'; $('#hint').style.display = ''; $('#qlink').textContent = '';
+    if (text) { $('#err').textContent = window.qrcode ? 'That is too long for one QR code (about 2,900 characters is the limit). Try a shorter link.' : 'The QR library did not load.'; $('#err').style.display = 'block'; }
+    return;
+  }
+  $('#hint').style.display = 'none'; cv.style.display = 'block';
+  // the link in big type, with the https:// greyed so the part pupils need stands out
+  const m = /^(https?:\/\/)(.*)$/i.exec(text), shown = text.length > 140 ? text.slice(0, 137) + '…' : text;
+  $('#qlink').innerHTML = m && text.length <= 140 ? `<span class="dim">${esc(m[1])}</span>${esc(m[2])}` : esc(shown);
+  // size: as big as the space allows, in whole pixels per module so it stays sharp
+  cv.style.width = cv.style.height = '0px';
+  const w = $('#qwrap'), side = Math.floor(Math.min(w.clientWidth, w.clientHeight));
+  const dpr = window.devicePixelRatio || 1, n = matrix.n + 8, cssCell = Math.max(1, Math.floor((side * dpr) / n)) / dpr;
+  paint(cv, Math.round(cssCell * n * dpr));
+  cv.style.width = cv.style.height = cssCell * n + 'px';
+}
+function sync() { $('#text').value = S.text; $('#title').value = S.title; save(); renderQuick(); draw(); }
+$('#text').oninput = (e) => { S.text = e.target.value; S.book = ''; save(); renderQuick(); draw(); };
+$('#title').oninput = (e) => { S.title = e.target.value; save(); draw(); };
+$('#clr').onclick = () => { S.text = ''; S.title = ''; S.book = ''; sync(); $('#text').focus(); };
+$('#dl').onclick = () => {
+  if (!matrix) return;
+  // a clean 1200-ish px image with the title above and the link below, for slides or printing
+  const q = document.createElement('canvas'); const px = paint(q, 1200);
+  const title = S.title.trim(), link = S.text.trim(), pad = 40, out = document.createElement('canvas'), g = out.getContext('2d');
+  const font = (sz, mono) => `${mono ? 600 : 700} ${sz}px ${mono ? 'ui-monospace, Menlo, Consolas, monospace' : 'Fredoka, system-ui, sans-serif'}`;
+  const wrap = (txt, sz, mono) => { g.font = font(sz, mono); const lines = []; let cur = ''; for (const ch of txt) { if (g.measureText(cur + ch).width > px - 20 && cur) { lines.push(cur); cur = ''; } cur += ch; } if (cur) lines.push(cur); return lines.slice(0, 4); };
+  const tl = title ? wrap(title, 64, false) : [], ll = link.length <= 200 ? wrap(link, 34, true) : [];
+  out.width = px + pad * 2; out.height = px + pad * 2 + tl.length * 76 + ll.length * 44 + (tl.length ? 10 : 0) + (ll.length ? 10 : 0);
+  g.fillStyle = '#fff'; g.fillRect(0, 0, out.width, out.height); g.fillStyle = '#1e2e96'; g.textAlign = 'center'; g.textBaseline = 'top';
+  let y = pad; g.font = font(64, false); tl.forEach((l) => { g.fillText(l, out.width / 2, y); y += 76; }); if (tl.length) y += 10;
+  g.drawImage(q, pad, y); y += px + 10; g.fillStyle = '#000'; g.font = font(34, true); ll.forEach((l) => { g.fillText(l, out.width / 2, y); y += 44; });
+  const a = document.createElement('a'); a.download = 'qr-' + ((title || link).toLowerCase().replace(/^https?:\/\//, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'code') + '.png';
+  a.href = out.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove();
+};
+const present = (on) => { document.body.classList.toggle('present', on); draw(); };
+$('#present').onclick = () => present(true); $('#back').onclick = () => present(false);
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('present') && !document.fullscreenElement) return present(false);
+  if (e.target.matches('input, select, textarea') || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key.toLowerCase() === 'p') present(!document.body.classList.contains('present'));
+});
+let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(draw, 60); });
+document.addEventListener('fullscreenchange', () => setTimeout(draw, 120));
+TK.idle([$('#back')], 3000);
+// a link can be handed over in the address: qr.html?text=…&title=…
+try { const q = new URLSearchParams(location.search); if (q.get('text')) { S.text = q.get('text'); S.title = q.get('title') || ''; S.book = ''; } } catch (e) {}
+sync();
+document.fonts && document.fonts.ready.then(draw);
+</script>
+</body>
+</html>

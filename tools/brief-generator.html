@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design brief generator · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+:root { --c-product:#2a78d6; --c-user:#eb6834; --c-context:#1baf7a; --c-constraint:#6250d6; --c-material:#eda100; --c-movement:#e87ba4; --c-designer:#e34948; }
+body.dark { --c-product:#3987e5; --c-user:#d95926; --c-context:#199e70; --c-constraint:#9085e9; --c-material:#c98500; --c-movement:#d55181; --c-designer:#e66767; }
+body { display: flex; flex-direction: column; min-height: 100vh; }
+main { flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 0 16px 12px; }
+.reels { display: grid; gap: 12px; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); --ih: 124px; }
+.reels.many { --ih: 132px; }
+@media (max-width: 900px) { .reels.many { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .reels, .reels.many { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.reel { background: var(--card); border-radius: var(--radius); box-shadow: 0 0 0 2px var(--line) inset; overflow: hidden; display: flex; flex-direction: column; border-top: 8px solid var(--c); }
+.reel.locked { box-shadow: 0 0 0 3px var(--c) inset; }
+.reel .cap { font-size: 14px; letter-spacing: .09em; text-transform: uppercase; font-weight: 700; color: var(--muted); padding: 8px 10px 0; text-align: center; }
+.win { height: var(--ih); overflow: hidden; position: relative; cursor: pointer; }
+.win::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(var(--card), transparent 18%, transparent 82%, var(--card)); }
+.strip { will-change: transform; }
+.item { height: var(--ih); display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px 12px; font-weight: 600; font-size: clamp(17px, 1.75vw, 30px); line-height: 1.15; overflow: hidden; }
+.many .item { font-size: clamp(15px, 1.3vw, 24px); padding: 6px 8px; }
+.lock { border: 0; border-top: 2px solid var(--line); background: transparent; min-height: 44px; font-weight: 600; cursor: pointer; font-size: 15px; color: var(--muted); }
+.reel.locked .lock { background: var(--c); color: #fff; }
+.reel.locked[data-k="material"] .lock { color: #0b0b0b; }
+.brief { flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; padding: 18px 26px; min-height: 180px; }
+.brief p { margin: 0; font-weight: 600; font-size: clamp(24px, 3vw, 56px); line-height: 1.22; text-wrap: balance; }
+.brief p.extra { font-weight: 500; font-size: clamp(19px, 2.1vw, 40px); margin-top: .5em; }
+.brief .part { border-bottom: .14em solid var(--c); padding-bottom: .02em; }
+.brief .part.wait { color: var(--muted); border-bottom-style: dotted; }
+.brief .part.pop { animation: pop .45s; }
+@keyframes pop { 0% { background: var(--c); color: #fff; } 100% { background: transparent; } }
+.bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; padding: 0 16px 8px; }
+.bar a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+#spin { font-size: 24px; padding: 12px 34px; min-height: 58px; }
+.opts { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; padding: 0 16px 6px; font-size: 16px; }
+.opts label { display: flex; align-items: center; gap: 7px; min-height: 44px; font-weight: 600; }
+.opts input { width: 22px; height: 22px; accent-color: var(--ink2); }
+.help { text-align: center; color: var(--muted); font-size: 14px; padding: 0 16px 12px; margin: 0; }
+@media (max-width: 900px) { .brief p { font-size: clamp(24px, 4.6vw, 44px); } .brief p.extra { font-size: clamp(19px, 3.3vw, 32px); } .item, .many .item { font-size: clamp(15px, 2.3vw, 22px); } }
+/* board mode */
+body.board .tk-top, body.board .opts, body.board .help, body.board .lock, body.board .only-edit { display: none; }
+body.board main { padding-top: 16px; }
+body.board .reels { --ih: 15vh; }
+body.board .item { font-size: clamp(18px, 2vw, 40px); }
+body.board .many .item { font-size: clamp(15px, 1.45vw, 30px); }
+body.board .brief p { font-size: clamp(30px, 4.3vw, 92px); }
+body.board .brief p.extra { font-size: clamp(22px, 2.8vw, 58px); }
+body:not(.board) .only-board { display: none; }
+dialog { border: 0; border-radius: var(--radius); background: var(--card); color: var(--ink); padding: 20px; width: min(680px, 94vw); box-shadow: 0 20px 60px #0006; }
+dialog::backdrop { background: #0a0c1899; }
+dialog h2 { margin: 0 0 10px; font-size: 24px; }
+dialog select, dialog textarea { width: 100%; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); padding: 8px 10px; font-size: 17px; }
+dialog select { min-height: 44px; font-weight: 600; }
+dialog textarea { height: 44vh; margin-top: 10px; line-height: 1.4; resize: vertical; }
+dialog .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+dialog .tip { font-size: 15px; color: var(--muted); margin: 8px 0 0; line-height: 1.4; }
+#toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 12px; font-weight: 600; opacity: 0; transition: opacity .3s; pointer-events: none; }
+#toast.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .brief .part.pop { animation: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="reels" id="reels"></div>
+  <div class="card brief" id="brief" aria-live="polite"></div>
+</main>
+<div class="opts">
+  <span class="muted">Extra reels:</span>
+  <label><input type="checkbox" data-on="material"> Material</label>
+  <label><input type="checkbox" data-on="movement"> Design movement</label>
+  <label><input type="checkbox" data-on="designer"> Designer</label>
+</div>
+<div class="bar tk-hide-idle" id="bar">
+  <button class="btn go" id="spin">🎰 Spin</button>
+  <button class="btn only-edit" id="unlock">🔓 Unlock all</button>
+  <a class="btn" id="timer" href="timer.html" target="_blank" rel="noopener" title="Opens the big timer in a new tab">⏱ Timer</a>
+  <button class="btn blue" id="board">🖥 Show on board</button>
+  <button class="btn only-edit" id="copy">📋 Copy brief</button>
+  <button class="btn only-edit" id="edit">✎ Edit lists</button>
+  <button class="btn" id="mute" title="Sound on / off"></button>
+</div>
+<p class="help">Keys: Space spin · 1–7 lock a reel (or click it) · B board mode · M mute · E edit lists · Esc leave board mode. Your lists are saved on this computer only.</p>
+<dialog id="dlg">
+  <h2>✎ Edit lists</h2>
+  <select id="dcat"></select>
+  <p class="tip" id="dtip"></p>
+  <textarea id="dtext" spellcheck="true"></textarea>
+  <div class="row">
+    <button class="btn go" id="dsave">Save</button>
+    <button class="btn" id="dreset">↺ Put this list back to the original</button>
+    <button class="btn" id="dclose" style="margin-left:auto">Close</button>
+  </div>
+  <p class="tip">One idea per line. Lists are saved on this computer only.</p>
+</dialog>
+<div id="toast"></div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+TK.top('Design brief generator');
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+const DEFAULTS = {
+  product: ['a phone stand', 'a desk tidy', 'a bird feeder', 'a lamp', 'a clock', 'a coat hook', 'a storage box', 'a board game', 'a toy vehicle', 'a jewellery holder', 'a key rack', 'a pair of bookends', 'a plant pot holder', 'a lunch box', 'a tablet stand', 'a pencil case', 'a headphone stand', 'a night light', 'a seat', 'a small shelf', 'a money box', 'a hand-held game', 'a bike light mount', 'a door stop', 'a cable tidy', 'a point-of-sale display', 'a gift box', 'a torch', 'a water bottle carrier', 'a serving tray'],
+  user: ['an elderly person', 'a toddler', 'a teenager', 'a wheelchair user', 'a person with arthritis', 'a student revising for exams', 'a busy parent', 'a keen cyclist', 'a gardener', 'a commuter', 'a person with a visual impairment', 'a left-handed person', 'a primary school teacher', 'a chef', 'a dog owner', 'a camper', 'a musician', 'a nurse on a night shift', 'a family of five', 'a gamer', 'a person who works from home', 'the parents of a new baby', 'a hiker', 'a market stall holder'],
+  context: ['in a care home', 'in a small bedroom', 'on a camping trip', 'in a busy kitchen', 'on public transport', 'in a classroom', 'in a garden', 'at a desk', 'in a hospital ward', 'in a shared flat', 'at a festival', 'in a car', 'in a workshop', 'on a balcony', 'at the beach', 'in a café', 'in a bathroom', 'on the way to school', 'at a market', 'in a tiny house', 'in the dark', 'outdoors in the rain'],
+  constraint: ['uses only one sheet of 3 mm acrylic', 'packs flat for posting', 'uses no glue or screws', 'costs less than £5 to make', 'is made from recycled or reclaimed materials', 'can be made in a batch of 50', 'has no more than three parts', 'can be assembled without tools', 'can be used with one hand', 'fits inside a shoebox', 'can be fully recycled at the end of its life', 'uses a single A3 sheet of card', 'can be laser cut in under ten minutes', 'includes a moving part', 'uses only standard components', 'is safe for children under three', 'can be cleaned easily', 'folds away when not in use', 'uses a lever or linkage', 'works without batteries', 'can be repaired by the user', 'is made from one piece of material', 'weighs less than 200 g', 'can be used in two different ways'],
+  material: ['pine', 'birch plywood', 'MDF', 'oak', 'bamboo', 'acrylic', 'HIPS', 'recycled HDPE', 'aluminium', 'mild steel', 'copper', 'brass', 'corrugated cardboard', 'foam board', 'cotton canvas', 'felt', 'cork', 'a smart material', 'a biopolymer (PLA)', 'wood and metal together'],
+  movement: ['Arts and Crafts', 'Art Nouveau', 'Art Deco', 'Bauhaus', 'De Stijl', 'Modernism', 'Streamlining', 'Pop Art', 'Memphis', 'Postmodernism', 'Minimalism', 'Scandinavian design'],
+  designer: ['Dieter Rams', 'Philippe Starck', 'Marianne Brandt', 'Alessi', 'Gerrit Rietveld', 'Charles Rennie Mackintosh', 'William Morris', 'Marcel Breuer', 'Ettore Sottsass', 'Harry Beck', 'Sir Alec Issigonis', 'Norman Foster', 'Mary Quant', 'Coco Chanel', 'Vivienne Westwood', 'Alexander McQueen', 'Louis Comfort Tiffany', 'Raymond Templier', 'Aldo Rossi', 'Charles and Ray Eames', 'Zaha Hadid', 'James Dyson', 'Jonathan Ive'],
+};
+const REELS = [
+  { k: 'product', name: 'Product', tip: 'Write each product with "a" or "an" in front, so it fits "Design … for". Example: a phone stand' },
+  { k: 'user', name: 'User', tip: 'Write each user with "a" or "an" in front, so it fits "for …". Example: an elderly person' },
+  { k: 'context', name: 'Context', tip: 'Start each place or situation with in, on or at. Example: in a care home' },
+  { k: 'constraint', name: 'Constraint', tip: 'Write each one so it fits after "that …". Example: uses only one sheet of 3 mm acrylic' },
+  { k: 'material', name: 'Material', extra: true, tip: 'Fits "Make it mainly from …". Example: birch plywood' },
+  { k: 'movement', name: 'Design movement', extra: true, tip: 'Fits "Take inspiration from …". Example: Bauhaus' },
+  { k: 'designer', name: 'Designer', extra: true, tip: 'Fits "Work in the style of …". Example: Dieter Rams' },
+];
+const st = Object.assign({ lists: {}, on: { material: false, movement: false, designer: false }, locks: {}, cur: {}, mute: false }, TK.store('brief', {}));
+const persist = () => TK.save('brief', st);
+const list = (k) => (Array.isArray(st.lists[k]) && st.lists[k].length ? st.lists[k] : DEFAULTS[k]);
+const active = () => REELS.filter((r) => !r.extra || st.on[r.k]);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let spinning = false, pending = {};
+
+REELS.forEach((r) => { if (!st.cur[r.k] || !list(r.k).includes(st.cur[r.k])) st.cur[r.k] = TK.pick(list(r.k)); });
+
+function buildReels() {
+  const rs = active(), el = $('#reels');
+  el.style.setProperty('--n', rs.length); el.classList.toggle('many', rs.length > 4);
+  el.innerHTML = rs.map((r, i) => `<div class="reel ${st.locks[r.k] ? 'locked' : ''}" data-k="${r.k}" style="--c:var(--c-${r.k})"><div class="cap">${r.name}</div><div class="win" title="Click to lock or unlock"><div class="strip"><div class="item">${esc(st.cur[r.k])}</div></div></div><button class="lock" aria-pressed="${!!st.locks[r.k]}">${st.locks[r.k] ? '🔒 Locked' : '🔓 Lock'} <span class="muted" style="color:inherit;opacity:.7">(${i + 1})</span></button></div>`).join('');
+}
+function part(k) { const wait = k in pending; return `<span class="part ${wait ? 'wait' : ''}" data-p="${k}" style="--c:var(--c-${k})">${wait ? '…' : esc(st.cur[k])}</span>`; }
+function renderBrief(popKey) {
+  let h = `<p>Design ${part('product')} for ${part('user')} ${part('context')} that ${part('constraint')}.</p>`;
+  const ex = [];
+  if (st.on.material) ex.push(`Make it mainly from ${part('material')}.`);
+  if (st.on.movement) ex.push(`Take inspiration from ${part('movement')}.`);
+  if (st.on.designer) ex.push(`Work in the style of ${part('designer')}.`);
+  if (ex.length) h += `<p class="extra">${ex.join(' ')}</p>`;
+  $('#brief').innerHTML = h;
+  if (popKey) { const p = $(`#brief [data-p="${popKey}"]`); if (p) p.classList.add('pop'); }
+}
+function briefText() {
+  let t = `Design ${st.cur.product} for ${st.cur.user} ${st.cur.context} that ${st.cur.constraint}.`;
+  if (st.on.material) t += ` Make it mainly from ${st.cur.material}.`;
+  if (st.on.movement) t += ` Take inspiration from ${st.cur.movement}.`;
+  if (st.on.designer) t += ` Work in the style of ${st.cur.designer}.`;
+  return t;
+}
+const sound = (k) => { if (!st.mute) TK.beep(k); };
+function toast(t) { const e = $('#toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 1800); }
+
+function spin() {
+  if (spinning) return;
+  const rs = active().filter((r) => !st.locks[r.k]);
+  if (!rs.length) { toast('Every reel is locked: unlock one to spin'); sound('buzz'); return; }
+  spinning = true; $('#spin').disabled = true; $('#spin').style.opacity = .5; pending = {};
+  const ticker = reduce ? 0 : setInterval(() => sound('tick'), 110);
+  let left = rs.length;
+  rs.forEach((r, i) => {
+    const items = list(r.k), old = st.cur[r.k], others = items.filter((x) => x !== old), target = others.length ? TK.pick(others) : old;
+    pending[r.k] = target;
+    const reel = $(`.reel[data-k="${r.k}"]`), strip = reel.querySelector('.strip'), n = 14 + i * 6, seq = [old];
+    for (let j = 1; j < n; j++) seq.push(TK.pick(items));
+    seq.push(target);
+    strip.innerHTML = seq.map((x) => `<div class="item">${esc(x)}</div>`).join('');
+    const ih = reel.querySelector('.win').clientHeight, done = () => {
+      st.cur[r.k] = target; delete pending[r.k];
+      strip.innerHTML = `<div class="item">${esc(target)}</div>`; strip.style.transform = '';
+      renderBrief(r.k);
+      if (--left === 0) { clearInterval(ticker); spinning = false; $('#spin').disabled = false; $('#spin').style.opacity = 1; persist(); sound('tada'); } else sound('ding');
+    };
+    if (reduce || !strip.animate) { done(); return; }
+    const a = strip.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-(seq.length - 1) * ih}px)` }], { duration: 1100 + i * 550, easing: 'cubic-bezier(.12,.75,.2,1.03)', fill: 'forwards' });
+    a.onfinish = () => { a.cancel(); done(); };
+  });
+  renderBrief();
+}
+function toggleLock(k) {
+  if (spinning) return;
+  st.locks[k] = !st.locks[k]; persist(); buildReels(); sound('tick');
+}
+$('#reels').addEventListener('click', (e) => { const r = e.target.closest('.reel'); if (r && (e.target.closest('.lock') || e.target.closest('.win'))) toggleLock(r.dataset.k); });
+$('#spin').onclick = spin;
+$('#unlock').onclick = () => { if (spinning) return; st.locks = {}; persist(); buildReels(); };
+document.querySelectorAll('[data-on]').forEach((c) => {
+  c.checked = !!st.on[c.dataset.on];
+  c.onchange = () => { if (spinning) { c.checked = !!st.on[c.dataset.on]; return; } st.on[c.dataset.on] = c.checked; persist(); buildReels(); renderBrief(); };
+});
+const setMute = () => { $('#mute').textContent = st.mute ? '🔇 Sound off' : '🔊 Sound on'; };
+$('#mute').onclick = () => { st.mute = !st.mute; persist(); setMute(); };
+setMute();
+function setBoard(on) {
+  document.body.classList.toggle('board', on);
+  $('#board').textContent = on ? '✕ Leave board mode' : '🖥 Show on board';
+  if (on && document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+  if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (!on) $('#bar').classList.remove('idle');
+}
+$('#board').onclick = () => setBoard(!document.body.classList.contains('board'));
+let idleT; const wake = () => { $('#bar').classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => { if (document.body.classList.contains('board') && !$('#dlg').open) $('#bar').classList.add('idle'); }, 3500); };
+['mousemove', 'touchstart', 'keydown'].forEach((ev) => addEventListener(ev, wake));
+$('#copy').onclick = () => { const t = briefText(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('Brief copied'), () => toast('Could not copy: select the text instead')); };
+
+// ---------- edit lists ----------
+const dlg = $('#dlg'), dcat = $('#dcat'), dtext = $('#dtext');
+dcat.innerHTML = REELS.map((r) => `<option value="${r.k}">${r.name}</option>`).join('');
+const loadCat = () => { const r = REELS.find((x) => x.k === dcat.value); dtext.value = list(r.k).join('\n'); $('#dtip').textContent = r.tip; };
+let dirty = false;
+dtext.oninput = () => { dirty = true; };
+function saveCat() {
+  const k = dcat.dataset.cur || dcat.value, lines = [...new Set(dtext.value.split('\n').map((x) => x.trim()).filter(Boolean))];
+  if (!lines.length) { toast('A list needs at least one line'); return false; }
+  if (lines.join('\n') === DEFAULTS[k].join('\n')) delete st.lists[k]; else st.lists[k] = lines;
+  persist(); dirty = false; return true;
+}
+dcat.onchange = () => { if (dirty) saveCat(); dcat.dataset.cur = dcat.value; loadCat(); };
+$('#edit').onclick = () => { if (spinning) return; dcat.dataset.cur = dcat.value; loadCat(); dirty = false; dlg.showModal(); };
+$('#dsave').onclick = () => { if (saveCat()) toast('List saved'); };
+$('#dreset').onclick = () => { const k = dcat.value; delete st.lists[k]; persist(); dirty = false; loadCat(); toast('Original list restored'); };
+$('#dclose').onclick = () => { if (dirty && !saveCat()) return; dlg.close(); };
+dlg.addEventListener('close', () => { if (dirty) saveCat(); });
+
+addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey || dlg.open) return;
+  const tag = e.target.tagName; if (tag === 'INPUT' && e.target.type !== 'checkbox' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const k = e.key.toLowerCase();
+  if (e.key === ' ') { e.preventDefault(); spin(); }
+  else if (e.key >= '1' && e.key <= '7') { const r = active()[+e.key - 1]; if (r) toggleLock(r.k); }
+  else if (k === 'b') setBoard(!document.body.classList.contains('board'));
+  else if (k === 'm') $('#mute').click();
+  else if (k === 'e') { e.preventDefault(); $('#edit').click(); }
+  else if (e.key === 'Escape') setBoard(false);
+});
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('board')) setBoard(false); });
+buildReels(); renderBrief(); persist();
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Random generator · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+.tabs { display: flex; gap: 8px; padding: 0 14px 8px; flex-wrap: wrap; justify-content: center; }
+.tabs button { border: 0; border-radius: 14px; min-height: 48px; padding: 6px 20px; font-weight: 600; font-size: 18px; background: var(--card); box-shadow: 0 0 0 2px var(--line) inset; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--ink2); color: #fff; box-shadow: none; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.panel { flex: 1; min-height: 0; display: none; flex-direction: column; align-items: center; padding: 0 14px 6px; gap: 10px; }
+.panel.on { display: flex; }
+.stage { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2vh; text-align: center; }
+.opts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
+.go-big { font-size: 24px; padding: 12px 36px; min-height: 56px; }
+.seg { display: inline-flex; border-radius: 12px; box-shadow: 0 0 0 2px var(--line) inset; overflow: hidden; background: var(--card); }
+.seg button { border: 0; background: transparent; min-width: 44px; min-height: 44px; padding: 0 12px; font-weight: 600; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink2); color: #fff; }
+.chk { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; cursor: pointer; font-weight: 500; }
+.chk input { width: 22px; height: 22px; accent-color: var(--ink2); }
+.lab { font-weight: 600; display: inline-flex; gap: 8px; align-items: center; }
+input.num { width: 110px; min-height: 48px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); padding: 4px 10px; font-size: 22px; font-weight: 600; text-align: center; }
+.big { font-weight: 700; line-height: 1; font-size: min(46vh, 30vw); font-variant-numeric: tabular-nums; }
+.big.done { animation: land .45s cubic-bezier(.2, 1.7, .4, 1); color: var(--ink2); }
+@keyframes land { from { transform: scale(.7); } to { transform: scale(1); } }
+.hist { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-height: 12vh; overflow-y: auto; font-size: 18px; min-height: 30px; }
+.hist span { background: var(--card); box-shadow: 0 0 0 2px var(--line) inset; border-radius: 999px; padding: 2px 12px; font-weight: 600; }
+.note { font-size: clamp(16px, 1.8vw, 24px); min-height: 1.3em; }
+.help { font-size: 13px; margin: 0; padding: 0 14px 8px; text-align: center; }
+/* dice */
+#dice { display: flex; gap: 3vw; flex-wrap: wrap; justify-content: center; align-items: center; }
+.die { --s: min(26vh, 13vw, 220px); width: var(--s); height: var(--s); position: relative; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 calc(var(--s) * .05) 0 rgba(0, 0, 0, .22)); }
+.die.roll { animation: shake .32s linear infinite; }
+@keyframes shake { 0% { transform: rotate(-14deg) translateY(-8%); } 25% { transform: rotate(10deg) translateY(4%); } 50% { transform: rotate(-6deg) translateY(-10%); } 75% { transform: rotate(16deg) translateY(2%); } 100% { transform: rotate(-14deg) translateY(-8%); } }
+.die.land { animation: land .4s cubic-bezier(.2, 1.7, .4, 1); }
+.die .face { position: absolute; inset: 0; background: #fff; }
+.die .v { position: relative; font-weight: 700; font-size: calc(var(--s) * .42); color: #fff; }
+.d6 .face { border-radius: 18%; box-shadow: 0 0 0 calc(var(--s) * .035) #1e2e96 inset; }
+.d6 .pips { position: absolute; inset: 14%; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); }
+.d6 .pips i { border-radius: 50%; margin: 12%; } .d6 .pips i.on { background: #1e2e96; }
+.d4 .face { background: #d33a2c; clip-path: polygon(50% 4%, 98% 92%, 2% 92%); } .d4 .v { top: 14%; font-size: calc(var(--s) * .36); }
+.d8 .face { background: #1f9d45; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.d10 .face { background: #7c4bd6; clip-path: polygon(50% 0, 96% 38%, 50% 100%, 4% 38%); } .d10 .v { top: -6%; font-size: calc(var(--s) * .36); }
+.d12 .face { background: #b85f00; clip-path: polygon(50% 2%, 98% 37%, 80% 95%, 20% 95%, 2% 37%); } .d12 .v { top: 4%; }
+.d20 .face { background: #2b3fd1; clip-path: polygon(50% 0, 94% 25%, 94% 75%, 50% 100%, 6% 75%, 6% 25%); }
+#total { font-size: clamp(30px, 6vw, 90px); font-weight: 700; min-height: 1.1em; }
+/* coin */
+.coinwrap { perspective: 1000px; height: min(46vh, 34vw); display: flex; align-items: center; }
+#coin { --s: min(38vh, 28vw, 380px); width: var(--s); height: var(--s); position: relative; transform-style: preserve-3d; }
+#coin .side { position: absolute; inset: 0; border-radius: 50%; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; color: #5b3d00; background: radial-gradient(circle at 35% 30%, #ffe08a, #f2a51a 70%); box-shadow: 0 0 0 calc(var(--s) * .03) #c98510 inset, 0 0 0 calc(var(--s) * .055) #f7c653 inset, 0 0 0 calc(var(--s) * .065) #c98510 inset; }
+#coin .side b { font-size: calc(var(--s) * .38); line-height: 1; } #coin .side small { font-size: calc(var(--s) * .1); letter-spacing: .14em; }
+#coin .tails { transform: rotateX(180deg); background: radial-gradient(circle at 35% 30%, #eef1f6, #aab3c5 70%); color: #2a3350; box-shadow: 0 0 0 calc(var(--s) * .03) #7f8aa3 inset, 0 0 0 calc(var(--s) * .055) #d5dbe7 inset, 0 0 0 calc(var(--s) * .065) #7f8aa3 inset; }
+#coinTxt { font-size: clamp(34px, 7vw, 100px); font-weight: 700; min-height: 1.1em; line-height: 1.1; }
+/* list */
+#listBig { font-weight: 700; line-height: 1.12; max-width: 94%; overflow-wrap: anywhere; }
+#listBig.done { animation: land .45s cubic-bezier(.2, 1.7, .4, 1); color: var(--ink2); }
+#listEdit { width: min(900px, 100%); display: none; flex-direction: column; gap: 8px; }
+#listEdit.open { display: flex; flex: 1; min-height: 0; }
+#listEdit textarea { flex: 1; min-height: 120px; width: 100%; border: 2px solid var(--line); border-radius: 14px; background: var(--card); padding: 12px; font-size: 18px; line-height: 1.4; resize: none; }
+#p-list.editing .stage, #p-list.editing .hist { display: none; }
+@media (prefers-reduced-motion: reduce) { .die.roll, .die.land, .big.done, #listBig.done { animation: none; } }
+body.dark .seg button[aria-pressed="true"], body.dark .btn.blue, body.dark .clist button[aria-current="true"], body.dark .tabs button[aria-selected="true"] { color: #111527; }
+</style>
+</head>
+<body>
+<div class="tabs" role="tablist" id="tabs">
+  <button role="tab" data-t="dice">🎲 Dice</button><button role="tab" data-t="coin">🪙 Coin</button><button role="tab" data-t="number">🔢 Number</button><button role="tab" data-t="letter">🔤 Letter</button><button role="tab" data-t="list">📋 My list</button>
+</div>
+
+<section class="panel" id="p-dice" role="tabpanel">
+  <div class="stage"><div id="dice"></div><div id="total" aria-live="polite"></div></div>
+  <div class="opts">
+    <span class="lab">Dice <span class="seg" id="dn" role="group" aria-label="Number of dice"></span></span>
+    <span class="seg" id="dt" role="group" aria-label="Type of dice"></span>
+    <button class="btn go go-big" id="roll">Roll</button>
+  </div>
+</section>
+
+<section class="panel" id="p-coin" role="tabpanel">
+  <div class="stage"><div class="coinwrap"><div id="coin"><div class="side heads"><b>H</b><small>HEADS</small></div><div class="side tails"><b>T</b><small>TAILS</small></div></div></div><div id="coinTxt" aria-live="polite"></div></div>
+  <div class="opts"><span class="note muted" id="tally"></span><button class="btn go go-big" id="flipBtn">Flip</button><button class="btn" id="tallyReset">↺ Reset count</button></div>
+</section>
+
+<section class="panel" id="p-number" role="tabpanel">
+  <div class="stage"><div class="big" id="numBig">?</div><div class="note muted" id="numNote"></div></div>
+  <div class="hist" id="numHist"></div>
+  <div class="opts">
+    <label class="lab">From <input class="num" id="numA" type="number" inputmode="numeric" value="1"></label>
+    <label class="lab">to <input class="num" id="numB" type="number" inputmode="numeric" value="30"></label>
+    <button class="btn go go-big" id="numGo">Pick a number</button>
+    <label class="chk"><input type="checkbox" id="numNR"> No repeats</label>
+    <button class="btn" id="numReset">↺ Reset</button>
+  </div>
+</section>
+
+<section class="panel" id="p-letter" role="tabpanel">
+  <div class="stage"><div class="big" id="letBig">?</div><div class="note muted" id="letNote"></div></div>
+  <div class="hist" id="letHist"></div>
+  <div class="opts">
+    <button class="btn go go-big" id="letGo">Pick a letter</button>
+    <label class="chk" title="Leaves out the letters that are hard to start a word with"><input type="checkbox" id="letSkip"> Skip Q, X, Z</label>
+    <label class="chk"><input type="checkbox" id="letNR"> No repeats</label>
+    <button class="btn" id="letReset">↺ Reset</button>
+  </div>
+</section>
+
+<section class="panel" id="p-list" role="tabpanel">
+  <div class="stage"><div id="listBig"></div><div class="note muted" id="listNote"></div></div>
+  <div class="hist" id="listHist"></div>
+  <div id="listEdit"><label class="lab" for="listTxt">Your list: one item per line (questions, topics, tasks, prizes…). Saved on this computer only.</label><textarea id="listTxt" placeholder="Name three hardwoods&#10;What does CAD stand for?&#10;Explain what a thermoplastic is"></textarea></div>
+  <div class="opts">
+    <button class="btn" id="listToggle">✎ Edit list</button>
+    <button class="btn go go-big" id="listGo">Draw one</button>
+    <label class="chk"><input type="checkbox" id="listNR"> No repeats</label>
+    <button class="btn" id="listReset">↺ Reset</button>
+  </div>
+</section>
+<p class="help muted">Space = go · 1–5 = switch tab · M = mute</p>
+
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const slot = TK.top('Random generator');
+slot.innerHTML = '<button class="btn" id="mute" title="Sound on / off (M)"></button>';
+const S = Object.assign({ tab: 'dice', mute: false, dn: 2, dt: 6, a: 1, b: 30, numNR: false, numUsed: [], letSkip: false, letNR: false, letUsed: [], list: '', listNR: true, listUsed: [], heads: 0, tails: 0 }, TK.store('random', {}));
+const save = () => TK.save('random', S);
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches, SP = REDUCED ? 0.15 : 1;
+const beep = (k) => { if (!S.mute) TK.beep(k); };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const rnd = (n) => Math.floor(Math.random() * n);
+let busy = false;
+const paintMute = () => { $('#mute').textContent = S.mute ? '🔇 Muted' : '🔊 Sound'; $('#mute').setAttribute('aria-pressed', S.mute); };
+$('#mute').onclick = () => { S.mute = !S.mute; save(); paintMute(); }; paintMute();
+
+// ---------- tabs ----------
+const TABS = ['dice', 'coin', 'number', 'letter', 'list'];
+function tab(t) { if (busy) return; S.tab = TABS.includes(t) ? t : 'dice'; save(); document.querySelectorAll('#tabs button').forEach((b) => b.setAttribute('aria-selected', b.dataset.t === S.tab)); TABS.forEach((n) => $('#p-' + n).classList.toggle('on', n === S.tab)); if (S.tab === 'list') fitList(); }
+$('#tabs').onclick = (e) => { const b = e.target.closest('button'); if (b) tab(b.dataset.t); };
+const GO = { dice: '#roll', coin: '#flipBtn', number: '#numGo', letter: '#letGo', list: '#listGo' };
+addEventListener('keydown', (e) => {
+  if (e.target.matches('textarea, input[type=number], select') || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); $(GO[S.tab]).click(); } else if (k === 'm') $('#mute').click(); else if ('12345'.includes(k)) tab(TABS[+k - 1]);
+});
+// cycle through values, slowing down, then land on the final one
+async function cycle(el, gen, final, dur = 1100) {
+  el.classList.remove('done'); const t0 = performance.now(); dur *= SP; let gap = 50;
+  while (performance.now() - t0 < dur) { el.textContent = gen(); beep('tick'); await sleep(gap); gap *= 1.13; }
+  el.textContent = final; void el.offsetWidth; el.classList.add('done'); beep('ding');
+}
+const chips = (el, arr) => { el.innerHTML = arr.map((v) => `<span>${esc(v)}</span>`).join(''); };
+
+// ---------- dice ----------
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+$('#dn').innerHTML = [1, 2, 3, 4, 5, 6].map((n) => `<button data-v="${n}">${n}</button>`).join('');
+$('#dt').innerHTML = [4, 6, 8, 10, 12, 20].map((n) => `<button data-v="${n}">d${n}</button>`).join('');
+const dieHtml = (v) => (S.dt === 6 ? `<div class="face"></div><div class="pips">${Array.from({ length: 9 }, (_, i) => `<i class="${PIPS[v].includes(i) ? 'on' : ''}"></i>`).join('')}</div>` : `<div class="face"></div><span class="v">${v}</span>`);
+function buildDice(vals) {
+  const size = S.dn <= 2 ? 'min(34vh, 26vw, 300px)' : S.dn <= 4 ? 'min(28vh, 17vw, 240px)' : 'min(24vh, 12.5vw, 200px)';
+  $('#dice').innerHTML = Array.from({ length: S.dn }, (_, i) => `<div class="die d${S.dt}" style="--s:${size}">${dieHtml(vals ? vals[i] : S.dt === 6 ? 6 : S.dt)}</div>`).join('');
+}
+function paintDice() { document.querySelectorAll('#dn button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.v === S.dn)); document.querySelectorAll('#dt button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.v === S.dt)); }
+$('#dn').onclick = (e) => { const b = e.target.closest('button'); if (!b || busy) return; S.dn = +b.dataset.v; save(); paintDice(); buildDice(); $('#total').textContent = ''; };
+$('#dt').onclick = (e) => { const b = e.target.closest('button'); if (!b || busy) return; S.dt = +b.dataset.v; save(); paintDice(); buildDice(); $('#total').textContent = ''; };
+$('#roll').onclick = async () => {
+  if (busy) return; busy = true; $('#total').textContent = '';
+  const vals = Array.from({ length: S.dn }, () => 1 + rnd(S.dt)), dice = [...$('#dice').children];
+  dice.forEach((d) => { d.classList.remove('land'); d.classList.add('roll'); });
+  const t0 = performance.now(), stopAt = dice.map((_, i) => (700 + i * 220) * SP), done = dice.map(() => false);
+  while (done.includes(false)) {
+    const el = performance.now() - t0;
+    dice.forEach((d, i) => { if (done[i]) return; if (el >= stopAt[i]) { done[i] = true; d.innerHTML = dieHtml(vals[i]); d.classList.remove('roll'); d.classList.add('land'); beep('ding'); } else d.innerHTML = dieHtml(1 + rnd(S.dt)); });
+    beep('tick'); await sleep(70);
+  }
+  $('#total').textContent = S.dn > 1 ? 'Total ' + vals.reduce((a, b) => a + b, 0) : '';
+  busy = false;
+};
+
+// ---------- coin ----------
+let coinRot = 0;
+const paintTally = () => { $('#tally').textContent = S.heads + S.tails ? `Heads ${S.heads} · Tails ${S.tails}` : ''; };
+$('#flipBtn').onclick = async () => {
+  if (busy) return; busy = true; $('#coinTxt').textContent = '';
+  const heads = Math.random() < 0.5, coin = $('#coin'), dur = 1500 * SP;
+  let target = coinRot + 360 * (REDUCED ? 1 : 5); while (((target / 180) % 2 === 0) !== heads) target += 180;
+  const anim = coin.animate([{ transform: `rotateX(${coinRot}deg) translateY(0) scale(1)` }, { transform: `rotateX(${(coinRot + target) / 2}deg) translateY(-12%) scale(1.25)`, offset: 0.5 }, { transform: `rotateX(${target}deg) translateY(0) scale(1)` }], { duration: dur, easing: 'cubic-bezier(.3,.1,.3,1)', fill: 'forwards' });
+  const tk = setInterval(() => beep('tick'), 110);
+  await anim.finished.catch(() => {}); clearInterval(tk);
+  coin.style.transform = `rotateX(${target % 360}deg)`; anim.cancel(); coinRot = target % 360;
+  if (heads) S.heads++; else S.tails++; save(); paintTally();
+  $('#coinTxt').textContent = heads ? 'Heads!' : 'Tails!'; beep('ding'); busy = false;
+};
+$('#tallyReset').onclick = () => { S.heads = S.tails = 0; save(); paintTally(); $('#coinTxt').textContent = ''; };
+
+// ---------- number ----------
+function range() { let a = Math.round(+$('#numA').value || 0), b = Math.round(+$('#numB').value || 0); if (a > b) [a, b] = [b, a]; if (b - a > 99999) b = a + 99999; return [a, b]; }
+function numReset() { S.numUsed = []; save(); chips($('#numHist'), []); $('#numNote').textContent = ''; }
+$('#numA').value = S.a; $('#numB').value = S.b; $('#numNR').checked = S.numNR;
+$('#numA').onchange = $('#numB').onchange = () => { S.a = +$('#numA').value || 0; S.b = +$('#numB').value || 0; numReset(); };
+$('#numNR').onchange = (e) => { S.numNR = e.target.checked; numReset(); };
+$('#numReset').onclick = () => { numReset(); $('#numBig').textContent = '?'; $('#numBig').classList.remove('done'); };
+$('#numGo').onclick = async () => {
+  if (busy) return; const [a, b] = range(), n = b - a + 1; let v;
+  if (S.numNR) { if (S.numUsed.length >= n) { $('#numNote').textContent = 'Every number has come up. Press Reset to start again.'; return beep('buzz'); } do { v = a + rnd(n); } while (S.numUsed.includes(v)); } else v = a + rnd(n);
+  busy = true; $('#numNote').textContent = ''; const big = $('#numBig'); big.style.fontSize = String(Math.max(Math.abs(a), Math.abs(b))).length > 3 ? 'min(34vh, ' + 100 / String(b).length + 'vw)' : '';
+  await cycle(big, () => a + rnd(n), v);
+  S.numUsed.push(v); if (!S.numNR && S.numUsed.length > 40) S.numUsed.shift(); save(); chips($('#numHist'), S.numUsed);
+  if (S.numNR) $('#numNote').textContent = `${n - S.numUsed.length} left`;
+  busy = false;
+};
+
+// ---------- letter ----------
+const letters = () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter((c) => !S.letSkip || !'QXZ'.includes(c));
+function letReset() { S.letUsed = []; save(); chips($('#letHist'), []); $('#letNote').textContent = ''; }
+$('#letSkip').checked = S.letSkip; $('#letNR').checked = S.letNR;
+$('#letSkip').onchange = (e) => { S.letSkip = e.target.checked; letReset(); };
+$('#letNR').onchange = (e) => { S.letNR = e.target.checked; letReset(); };
+$('#letReset').onclick = () => { letReset(); $('#letBig').textContent = '?'; $('#letBig').classList.remove('done'); };
+$('#letGo').onclick = async () => {
+  if (busy) return; const all = letters(), pool = S.letNR ? all.filter((c) => !S.letUsed.includes(c)) : all;
+  if (!pool.length) { $('#letNote').textContent = 'Every letter has come up. Press Reset to start again.'; return beep('buzz'); }
+  busy = true; $('#letNote').textContent = ''; const v = TK.pick(pool);
+  await cycle($('#letBig'), () => TK.pick(all), v);
+  S.letUsed.push(v); if (!S.letNR && S.letUsed.length > 40) S.letUsed.shift(); save(); chips($('#letHist'), S.letUsed);
+  if (S.letNR) $('#letNote').textContent = `${pool.length - 1} left`;
+  busy = false;
+};
+
+// ---------- my list ----------
+const items = () => [...new Set(S.list.split(/\r?\n/).map((s) => s.replace(/^\s*(\d+[.)]|[-•*])\s+/, '').trim()).filter(Boolean))];
+function fitList() { const el = $('#listBig'), len = el.textContent.length || 1; el.style.fontSize = `clamp(26px, min(${Math.max(5, Math.min(22, 150 / Math.sqrt(len * 2.2))).toFixed(1)}vh, ${Math.max(3, Math.min(14, 120 / Math.sqrt(len * 3))).toFixed(1)}vw), 240px)`; }
+function listNote() { const all = items(), left = all.filter((s) => !S.listUsed.includes(s)).length; $('#listNote').textContent = !all.length ? '' : S.listNR ? `${left} of ${all.length} left` : `${all.length} items`; }
+function listIdle() { const all = items(), el = $('#listBig'); el.classList.remove('done'); el.textContent = all.length ? '?' : 'Add your list to begin'; fitList(); listNote(); chips($('#listHist'), S.listNR ? S.listUsed.filter((s) => all.includes(s)) : []); }
+function editing(on) { $('#p-list').classList.toggle('editing', on); $('#listEdit').classList.toggle('open', on); $('#listToggle').textContent = on ? '✓ Done' : '✎ Edit list'; $('#listGo').disabled = on; if (on) $('#listTxt').focus(); else listIdle(); }
+$('#listTxt').value = S.list; $('#listNR').checked = S.listNR;
+$('#listTxt').oninput = (e) => { S.list = e.target.value; S.listUsed = []; save(); };
+$('#listToggle').onclick = () => editing(!$('#listEdit').classList.contains('open'));
+$('#listNR').onchange = (e) => { S.listNR = e.target.checked; S.listUsed = []; save(); listIdle(); };
+$('#listReset').onclick = () => { S.listUsed = []; save(); listIdle(); };
+$('#listGo').onclick = async () => {
+  if (busy) return; const all = items(); if (!all.length) return editing(true);
+  const pool = S.listNR ? all.filter((s) => !S.listUsed.includes(s)) : all;
+  if (!pool.length) { $('#listNote').textContent = 'Everything has been drawn. Press Reset to start again.'; return beep('buzz'); }
+  busy = true; const v = TK.pick(pool), el = $('#listBig');
+  await cycle(el, () => { const t = TK.pick(all); el.textContent = t; fitList(); return t; }, v, all.length > 1 ? 1000 : 200); fitList();
+  if (S.listNR) { S.listUsed.push(v); save(); chips($('#listHist'), S.listUsed); }
+  listNote(); busy = false;
+};
+
+// ---------- start ----------
+paintDice(); buildDice(); paintTally(); chips($('#numHist'), S.numUsed); chips($('#letHist'), S.letUsed); listIdle(); if (!items().length) editing(true);
+tab(S.tab);
+</script>
+</body>
+</html>

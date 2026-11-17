@@ -38,8 +38,9 @@ canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block;
   <label title="Above this level the meter says it's too loud">Max volume <input id="max" type="range" min="10" max="95" value="60"><span id="maxv">60</span></label>
   <label title="How fast the meter reacts">Sensitivity <select id="sens"><option value="0.8">Low</option><option value="1" selected>Normal</option><option value="1.25">High</option></select></label>
   <label><input type="checkbox" id="beep"> Alert sound</label>
+  <label title="Staying under the max line this long earns a star. Going too loud restarts the streak.">Quiet streak <select id="goal"><option value="0">Off</option><option value="1">1 min</option><option value="2">2 min</option><option value="5">5 min</option><option value="10">10 min</option><option value="15">15 min</option></select></label>
   <select id="mic" title="Microphone" style="max-width:190px"></select>
-  <button id="reset" title="Reset the too-loud counter and quiet timer">↺ Reset</button>
+  <button id="reset" title="Reset the too-loud counter, quiet timer, streak and stars">↺ Reset</button>
   <button id="fs">⛶ Full screen</button>
 </div>
 <script>
@@ -53,11 +54,16 @@ $('#style').onchange = (e) => store.set('style', e.target.value);
 $('#max').oninput = (e) => { $('#maxv').textContent = e.target.value; store.set('max', e.target.value); };
 $('#sens').onchange = (e) => store.set('sens', e.target.value);
 $('#beep').onchange = (e) => store.set('beep', e.target.checked ? '1' : '0');
+$('#goal').value = store.get('goal', '5'); if ($('#goal').selectedIndex < 0) $('#goal').value = '5';
+$('#goal').onchange = (e) => { store.set('goal', e.target.value); streakStart = performance.now(); };
 
 // ---------- audio ----------
 let actx = null, an = null, buf = null, stream = null, live = false;
 let level = 0, peak = 0, peakT = 0;          // 0-100, smoothed
 let loud = false, loudSince = 0, overSince = 0, underSince = 0, strikes = 0, quietStart = performance.now(), lastBeep = 0;
+// quiet streak: time under the max line since the last "too loud" (or the last star); stars last for this lesson (this tab)
+const sess = { get() { try { return +sessionStorage.getItem('nm.stars') || 0; } catch (e) { return 0; } }, set(v) { try { sessionStorage.setItem('nm.stars', v); } catch (e) {} } };
+let streakStart = performance.now(), stars = sess.get(), partyT = -1e9, confetti = [];
 async function startMic(id) {
   try {
     if (stream) stream.getTracks().forEach((t) => t.stop());
@@ -66,7 +72,7 @@ async function startMic(id) {
     await actx.resume();
     const src = actx.createMediaStreamSource(stream);
     an = actx.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = 0; buf = new Float32Array(an.fftSize);
-    src.connect(an); live = true; $('#start').style.display = 'none'; $('#msg').style.display = 'none';
+    src.connect(an); live = true; streakStart = performance.now(); $('#start').style.display = 'none'; $('#msg').style.display = 'none';
     const devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
     const cur = stream.getAudioTracks()[0].getSettings().deviceId;
     $('#mic').innerHTML = devs.map((d, i) => `<option value="${d.deviceId}" ${d.deviceId === cur ? 'selected' : ''}>${d.label || 'Microphone ' + (i + 1)}</option>`).join('');
@@ -77,13 +83,19 @@ async function startMic(id) {
 }
 $('#go').onclick = () => startMic(store.get('mic', ''));
 $('#mic').onchange = (e) => { store.set('mic', e.target.value); startMic(e.target.value); };
-$('#reset').onclick = () => { strikes = 0; quietStart = performance.now(); };
+$('#reset').onclick = () => { strikes = 0; quietStart = streakStart = performance.now(); stars = 0; sess.set(0); };
 $('#fs').onclick = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} };
 function beep() {
   if (!actx) return; const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
   o.type = 'triangle'; o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(660, t + 0.18);
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
   o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.5);
+}
+function chime() {
+  if (!actx) return; const t = actx.currentTime;
+  [523, 659, 784, 1047].forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'triangle'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t + i * 0.1); g.gain.exponentialRampToValueAtTime(0.22, t + i * 0.1 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.1 + 0.5);
+    o.connect(g).connect(actx.destination); o.start(t + i * 0.1); o.stop(t + i * 0.1 + 0.55); });
 }
 function sample(now, dt) {
   if (!live) { level += (8 + 6 * Math.sin(now / 900) - level) * 0.05; return; } // gentle idle wobble behind the start screen
@@ -99,6 +111,9 @@ function sample(now, dt) {
   if (level > max) { underSince = 0; overSince = overSince || now; if (!loud && now - overSince > 600) { loud = true; loudSince = now; strikes++; } }
   else { overSince = 0; underSince = underSince || now; if (loud && now - underSince > 1500) { loud = false; quietStart = now; } }
   if (loud && $('#beep').checked && now - lastBeep > 2500) { beep(); lastBeep = now; }
+  const goal = +$('#goal').value * 60000;
+  if (loud || !goal) streakStart = now;                                           // too loud: the streak starts again
+  else if (now - streakStart >= goal) { stars++; sess.set(stars); streakStart = now; party(now); }
 }
 
 // ---------- shared helpers ----------
@@ -109,7 +124,33 @@ const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const mix = (a, b, u) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(',')})`; };
 const fmtT = (ms) => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function status() { const max = +$('#max').value; return { max, u: level / 100, mu: max / 100, near: level > max * 0.8 && !loud, loud, quiet: fmtT(performance.now() - quietStart), strikes }; }
+function status() { const max = +$('#max').value; return { max, u: level / 100, mu: max / 100, near: level > max * 0.8 && !loud, loud, quiet: fmtT(performance.now() - quietStart), strikes, sk: streak(performance.now()) }; }
+// quiet streak: p = 0..1 towards the next star, fill(i) = how full star i of the row of five is (all five flash when a star is won)
+function streak(now) {
+  const g = +$('#goal').value * 60000, ms = live && !loud && g ? Math.min(g, now - streakStart) : 0, won = now - partyT < 3000;
+  return { on: g > 0, p: g ? ms / g : 0, t: fmtT(ms), goal: fmtT(g), stars, won, fill: (i) => (won ? (Math.sin(now / 90 + i) > -0.3 ? 1 : 0) : clamp((g ? ms / g : 0) * 5 - i)) };
+}
+function starPath(x, y, r) { ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, q = i % 2 ? r * 0.46 : r; ctx.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } ctx.closePath(); }
+function party(now) {
+  partyT = now; if ($('#beep').checked) chime();
+  for (let i = 0; i < 140; i++) confetti.push({ x: W * (0.15 + Math.random() * 0.7), y: Hh * 0.42, vx: (Math.random() - 0.5) * 900, vy: -300 - Math.random() * 700, r: 6 + Math.random() * 7, a: Math.random() * 7, va: (Math.random() - 0.5) * 12, c: ['#ffd23f', '#ff6fae', '#36f5d4', '#ffffff', '#7ec8ff', '#ff8a3d'][i % 6] });
+}
+const PFONT = { neon: 'Monoton', pixel: '"Press Start 2P"', blueprint: '700 1px "Space Mono"', ballpoint: '"Gloria Hallelujah"', bauhaus: '700 1px "Josefin Sans"' };
+function drawParty(now, dt) {               // drawn over whichever style is showing
+  const age = now - partyT;
+  if (age < 3000) {
+    const f = PFONT[$('#style').value] || 'Fredoka', k = Math.min(1, age / 250) * clamp((3000 - age) / 300), size = Math.min(70, W / 16) * ($('#style').value === 'pixel' ? 0.6 : 1);
+    ctx.save(); ctx.globalAlpha = k; ctx.translate(W / 2, Hh * 0.42); ctx.scale(0.8 + 0.2 * k, 0.8 + 0.2 * k);
+    ctx.font = f.includes('1px') ? f.replace('1px', size + 'px') : `${size}px ${f}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText('STAR EARNED!').width + size * 3.2, th = size * 2;
+    ctx.fillStyle = 'rgba(16,20,46,0.92)'; ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 5; ctx.beginPath(); ctx.roundRect(-tw / 2, -th / 2, tw, th, th / 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ffd23f'; starPath(-tw / 2 + size * 1.05, 0, size * 0.5); ctx.fill(); starPath(tw / 2 - size * 1.05, 0, size * 0.5); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.fillText('STAR EARNED!', 0, size * 0.06); ctx.restore();
+  }
+  if (!confetti.length) return;
+  confetti = confetti.filter((p) => p.y < Hh + 30);
+  for (const p of confetti) { p.vy += 1400 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c; ctx.fillRect(-p.r, -p.r * 0.45, p.r * 2, p.r * 0.9); ctx.restore(); }
+}
 const MSG = (st) => (st.loud ? 'TOO LOUD' : st.near ? 'GETTING LOUD' : 'NICE AND CALM');
 
 // ---------- style 1: Neon Sign at Night ----------
@@ -152,10 +193,22 @@ function drawNeon(now) {
   neonText('MAX', mx, y - 68, 26, '#ffffff', true, '"Space Mono"');
   neonText('quiet for ' + st.quiet, cx - L / 4, Hh * 0.72, Math.min(40, W / 28), '#b18cff', true, 'Fredoka');
   neonText('too loud × ' + st.strikes, cx + L / 4, Hh * 0.72, Math.min(40, W / 28), '#ff6fae', true, 'Fredoka');
+  if (st.sk.on) {   // quiet streak: five neon stars that light up towards the next star
+    const r = Math.min(26, W / 46), sy = Hh * 0.85;
+    for (let i = 0; i < 5; i++) {
+      const x = cx + (i - 2) * r * 2.8, f = st.sk.fill(i);
+      ctx.save(); ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,226,122,0.4)'; starPath(x, sy, r); ctx.stroke();
+      if (f > 0) { if (f < 1) { ctx.beginPath(); ctx.rect(x - r, sy - r - 4, 2 * r * f, 2 * r + 8); ctx.clip(); } starPath(x, sy, r); ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 22; ctx.fillStyle = '#ffe27a'; ctx.fill(); }
+      ctx.restore();
+    }
+    neonText('streak ' + st.sk.t + ' / ' + st.sk.goal, cx - L * 0.36, sy, Math.min(30, W / 36), '#ffe27a', true, 'Fredoka');
+    neonText('stars × ' + st.sk.stars, cx + L * 0.36, sy, Math.min(30, W / 36), '#ffe27a', true, 'Fredoka');
+  }
 }
 
 // ---------- style 2: 16-Bit Pixel ----------
 const pxc = document.createElement('canvas'); pxc.width = 320; pxc.height = 180; const px = pxc.getContext('2d');
+const PSTAR = ['...X...', '...X...', 'XXXXXXX', '.XXXXX.', '..XXX..', '.XX.XX.', '.X...X.'];
 const MON = ['..XXXXXX..', '.XXXXXXXX.', 'XXOXXXXOXX', 'XXXXXXXXXX', 'XXXMMMMXXX', 'XXXXXXXXXX', '.XXXXXXXX.', '.X.X..X.X.'];
 function drawPixel(now) {
   const st = status(), P = px; P.imageSmoothingEnabled = false;
@@ -170,6 +223,10 @@ function drawPixel(now) {
   const n = 40, x0 = 30, w = 260;
   for (let i = 0; i < n; i++) { const u = (i + 0.5) / n, on = u <= st.u; P.fillStyle = on ? (u > st.mu ? '#ff4d4d' : u > st.mu * 0.8 ? '#ffd23f' : '#5cff8a') : '#2a2f5a'; P.fillRect(x0 + i * (w / n), 30, w / n - 1, 14); }
   const mxp = Math.round(x0 + st.mu * w); P.fillStyle = '#ffffff'; P.fillRect(mxp, 26, 2, 22);
+  if (st.sk.on) for (let i = 0; i < 5; i++) {   // quiet streak: five pixel stars filling column by column
+    const f = st.sk.fill(i);
+    PSTAR.forEach((row, j) => [...row].forEach((ch, k) => { if (ch === 'X') { P.fillStyle = k < Math.round(f * 7) ? '#ffd23f' : '#3a4078'; P.fillRect(30 + i * 9 + k, 20 + j, 1, 1); } }));
+  }
   // the monster: asleep when calm, awake and shaking when loud
   const shake = st.loud ? Math.round(Math.sin(now / 40) * 2) : 0, by = 112 + (st.loud ? Math.round(Math.abs(Math.sin(now / 90)) * -6) : Math.round(Math.sin(now / 600)));
   MON.forEach((row, j) => [...row].forEach((ch, i) => {
@@ -188,7 +245,8 @@ function drawPixel(now) {
   ctx.font = `${fs}px "Press Start 2P"`; ctx.textAlign = 'center'; ctx.fillStyle = st.loud ? '#ff4d4d' : '#ffffff';
   ctx.fillText(st.loud ? 'TOO LOUD! THE MONSTER WOKE UP!' : st.near ? 'SHHH... IT IS STIRRING...' : 'THE MONSTER IS ASLEEP', W / 2, oy + 70 * sc);
   ctx.font = `${Math.round(fs * 0.8)}px "Press Start 2P"`; ctx.fillStyle = '#ffffff';
-  ctx.fillText('QUIET ' + st.quiet + '   WAKE-UPS ' + st.strikes, W / 2, oy + 172 * sc);
+  ctx.fillText('QUIET ' + st.quiet + '   WAKE-UPS ' + st.strikes + (st.sk.on ? '   STARS ' + st.sk.stars : ''), W / 2, oy + 172 * sc);
+  if (st.sk.on) { ctx.textAlign = 'left'; ctx.font = `${Math.round(fs * 0.62)}px "Press Start 2P"`; ctx.fillStyle = '#ffd23f'; ctx.fillText('STREAK ' + st.sk.t + '/' + st.sk.goal, ox + 78 * sc, oy + 26.6 * sc); }
 }
 
 // ---------- style 3: Engineering Blueprint (dial gauge) ----------
@@ -223,6 +281,11 @@ function drawBlueprint(now) {
   const bx = W - 330, by = Hh - 150; ctx.strokeStyle = '#eaf3ff'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, 300, 96); ctx.beginPath(); ctx.moveTo(bx, by + 32); ctx.lineTo(bx + 300, by + 32); ctx.moveTo(bx, by + 64); ctx.lineTo(bx + 300, by + 64); ctx.stroke();
   ctx.fillStyle = '#eaf3ff'; ctx.textAlign = 'left'; ctx.font = '700 15px "Space Mono"';
   ctx.fillText('DWG: CLASSROOM NOISE  REV A', bx + 10, by + 20); ctx.fillText('QUIET FOR   ' + st.quiet, bx + 10, by + 52); ctx.fillText('TOO LOUD    x' + st.strikes, bx + 10, by + 84);
+  if (st.sk.on) {   // quiet streak: two more rows on top of the title block
+    ctx.strokeRect(bx, by - 64, 300, 64); ctx.beginPath(); ctx.moveTo(bx, by - 32); ctx.lineTo(bx + 300, by - 32); ctx.stroke();
+    ctx.fillText('STREAK      ' + st.sk.t + ' / ' + st.sk.goal, bx + 10, by - 44); ctx.fillText('STARS x' + st.sk.stars, bx + 190, by - 12);
+    for (let i = 0; i < 5; i++) { const x = bx + 24 + i * 30, f = st.sk.fill(i); ctx.lineWidth = 1.5; starPath(x, by - 16, 11); ctx.stroke(); if (f > 0) { ctx.save(); ctx.beginPath(); ctx.rect(x - 12, by - 30, 24 * f, 28); ctx.clip(); starPath(x, by - 16, 11); ctx.fill(); ctx.restore(); } }
+  }
 }
 
 // ---------- style 4: Ballpoint Notebook (doodled thermometer) ----------
@@ -255,6 +318,15 @@ function drawBallpoint(now) {
   inkLine([[mx - 180, Hh * 0.38], [mx + 180, Hh * 0.385]], 3, st.loud ? '#b21c26' : '#1e2e96', seed + 4);
   ctx.font = '30px "Gloria Hallelujah"'; ctx.fillStyle = '#1e2e96';
   ctx.fillText('quiet for ' + st.quiet, mx, Hh * 0.52); ctx.fillText('too loud: ' + '|'.repeat(Math.min(st.strikes, 20)) + (st.strikes > 20 ? ' +' + (st.strikes - 20) : '') + (st.strikes ? '' : '0'), mx, Hh * 0.6);
+  if (st.sk.on) {   // quiet streak: five doodled stars, scribbled in as the streak grows
+    const r = Math.min(26, W / 44), sy = Hh * 0.7;
+    for (let i = 0; i < 5; i++) {
+      const x = mx + (i - 2) * r * 2.7, f = st.sk.fill(i), pts = []; for (let k = 0; k <= 10; k++) { const a = -Math.PI / 2 + (k * Math.PI) / 5, q = k % 2 ? r * 0.46 : r; pts.push([x + Math.cos(a) * q, sy + Math.sin(a) * q]); }
+      if (f > 0) { ctx.save(); starPath(x, sy, r); ctx.clip(); ctx.beginPath(); ctx.rect(x - r, sy - r, 2 * r * f, 2 * r); ctx.clip(); ctx.strokeStyle = '#e0a800'; ctx.lineWidth = 2.4; for (let k = -r * 2; k < r * 2; k += 5) { ctx.beginPath(); ctx.moveTo(x + k, sy - r); ctx.lineTo(x + k + r * 2, sy + r); ctx.stroke(); } ctx.restore(); }
+      inkLine(pts, 2.6, '#1e2e96', seed + 20 + i);
+    }
+    ctx.font = '26px "Gloria Hallelujah"'; ctx.fillStyle = '#1e2e96'; ctx.fillText('streak ' + st.sk.t + ' of ' + st.sk.goal + '   stars: ' + st.sk.stars, mx, Hh * 0.7 + r + 40);
+  }
 }
 
 // ---------- style 5: Bauhaus Poster ----------
@@ -279,15 +351,23 @@ function drawBauhaus(now) {
   ctx.fillText(words[0], W * 0.12, Hh * 0.22); ctx.fillText(words[1], W * 0.12, Hh * 0.22 + Math.min(110, W / 9));
   ctx.fillStyle = B.ink; ctx.font = `700 ${Math.round(S * 0.04)}px "Josefin Sans"`;
   ctx.fillText('QUIET  ' + st.quiet, W * 0.12, Hh * 0.82); ctx.fillText('TOO LOUD  ' + st.strikes, W * 0.12, Hh * 0.82 + S * 0.055);
+  if (st.sk.on) {   // quiet streak: five squares filling with red, then a star and the count
+    const q = S * 0.042, sx = W * 0.12, sy = Hh * 0.82 - S * 0.105;
+    for (let i = 0; i < 5; i++) { const x = sx + i * q * 1.3; ctx.fillStyle = B.paper; ctx.fillRect(x, sy, q, q); ctx.fillStyle = B.red; ctx.fillRect(x, sy, q * st.sk.fill(i), q); ctx.strokeStyle = B.ink; ctx.lineWidth = 4; ctx.strokeRect(x, sy, q, q); }
+    ctx.fillStyle = B.red; starPath(sx + q * 7.1, sy + q * 0.5, q * 0.62); ctx.fill(); ctx.fillStyle = B.ink; ctx.fillText(st.sk.stars, sx + q * 7.95, sy + q * 0.86);
+    ctx.font = `700 ${Math.round(S * 0.024)}px "Josefin Sans"`; ctx.fillText('STREAK  ' + st.sk.t + ' / ' + st.sk.goal, sx, sy - S * 0.014);
+  }
 }
 
 // ---------- loop ----------
 const STYLES = { neon: drawNeon, pixel: drawPixel, blueprint: drawBlueprint, ballpoint: drawBallpoint, bauhaus: drawBauhaus };
 let last = performance.now();
 function frame(now) {
+  if (now - last > 1000) streakStart += now - last;   // tab was in the background: that time does not count towards a star
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
   sample(now, dt);
   ctx.save(); (STYLES[$('#style').value] || drawNeon)(now); ctx.restore();
+  ctx.save(); drawParty(now, dt); ctx.restore();
   requestAnimationFrame(frame);
 }
 document.fonts && document.fonts.ready.then(() => { brick = null; bpBg = null; });

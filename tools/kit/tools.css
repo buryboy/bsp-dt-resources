@@ -1,0 +1,19 @@
+/* Shared look for BSP D&T classroom tools: big, high-contrast, works on a projector. */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+:root { --ink: #1e2e96; --ink2: #2b3fd1; --bg: #fbfaf5; --card: #fff; --line: #dfe3f3; --red: #d33a2c; --green: #2bb24c; --amber: #f2a51a; --muted: #6b7290; --radius: 18px; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: Fredoka, system-ui, sans-serif; }
+body.dark { --bg: #111527; --card: #1b2140; --ink: #f3f5ff; --ink2: #9fb0ff; --line: #2e3766; --muted: #a3abd0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.tk-top { display: flex; align-items: center; gap: 10px; padding: 10px 16px; flex-wrap: wrap; }
+.tk-top h1 { font-size: 22px; margin: 0 auto 0 0; font-weight: 600; }
+.tk-top a.home { text-decoration: none; color: var(--muted); font-weight: 600; }
+.btn { border: 0; border-radius: 12px; padding: 10px 16px; font-weight: 600; background: var(--card); color: var(--ink); box-shadow: 0 2px 0 var(--line), 0 0 0 2px var(--line) inset; cursor: pointer; min-height: 44px; }
+.btn.go { background: var(--green); color: #fff; box-shadow: 0 3px 0 #1a7a33; }
+.btn.stop { background: var(--red); color: #fff; box-shadow: 0 3px 0 #8e2219; }
+.btn.blue { background: var(--ink2); color: #fff; box-shadow: 0 3px 0 #18237a; }
+.btn:active { transform: translateY(2px); }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: 0 0 0 2px var(--line) inset; padding: 16px; }
+.muted { color: var(--muted); }
+.tk-hide-idle.idle { opacity: 0; pointer-events: none; transition: opacity .6s; }
+select.tk-class { min-height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); padding: 6px 10px; font-weight: 600; }

@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Work-mode signal · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; overflow: hidden; --c: #2b3fd1; transition: background-color .7s; background: color-mix(in srgb, var(--c) 16%, var(--bg)); }
+#stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 5vw; padding: 0 4vw 1vh; }
+#light { --n: 6; --d: min(21vh, calc((100vh - 150px - 4.4vh) / var(--n) - 1.6vh)); flex: none; background: #1b1e2b; border-radius: 46px; padding: 2.2vh; display: flex; flex-direction: column; gap: 1.6vh; box-shadow: 0 10px 0 #0c0e16, 0 20px 50px rgba(0,0,0,.3); }
+.lamp { --lc: #888; position: relative; flex: none; width: var(--d); height: var(--d); min-width: 44px; min-height: 44px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; background: color-mix(in srgb, var(--lc) 22%, #10121b); box-shadow: inset 0 0 0 4px rgba(255,255,255,.07), inset 0 -10px 18px rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center; transition: background-color .5s, box-shadow .5s, transform .2s; touch-action: manipulation; container-type: size; }
+.lamp .ic { font-size: 50cqh; line-height: 1; filter: grayscale(.9) opacity(.45); transition: filter .5s, transform .5s cubic-bezier(.3,1.6,.5,1); }
+.lamp .k { position: absolute; left: -2px; top: -2px; font-size: 13px; font-weight: 700; color: #fff; background: #3a3f55; border-radius: 9px; padding: 1px 7px; }
+.lamp.on { background: var(--lc); box-shadow: inset 0 0 0 4px rgba(255,255,255,.35), inset 0 -10px 18px rgba(0,0,0,.18), 0 0 38px 8px color-mix(in srgb, var(--lc) 75%, transparent); }
+.lamp.on .ic { filter: none; transform: scale(1.12); }
+.lamp:active { transform: scale(.95); }
+#now { flex: 1; min-width: 0; max-width: 1200px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2vh; }
+#now.swap > * { animation: pop .55s cubic-bezier(.3,1.5,.5,1); }
+@keyframes pop { from { transform: translateY(24px) scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+#icon { font-size: min(26vh, 20vw); line-height: 1.05; }
+#label { font-weight: 700; line-height: 1.02; font-size: min(19vh, 9.5vw); color: color-mix(in srgb, var(--c) 82%, var(--ink)); overflow-wrap: anywhere; text-wrap: balance; }
+body.dark #label { color: color-mix(in srgb, var(--c) 60%, #fff); }
+#voice { display: flex; align-items: center; gap: 14px; font-size: min(5vh, 3.4vw); font-weight: 600; background: var(--card); border-radius: 999px; padding: .25em .9em; box-shadow: 0 0 0 2px var(--line) inset; }
+#voice b { display: inline-flex; align-items: center; justify-content: center; width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--c); color: #fff; font-size: 1.15em; transition: background-color .5s; }
+#voice .dots { display: inline-flex; gap: .22em; }
+#voice .dots i { width: .5em; height: .5em; border-radius: 50%; background: var(--line); }
+#voice .dots i.f { background: var(--c); }
+#timer { display: flex; align-items: center; gap: 14px; font-size: min(9vh, 6vw); font-weight: 700; font-variant-numeric: tabular-nums; }
+#timer .ring { width: 1.1em; height: 1.1em; border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p, 0) * 1turn), var(--line) 0); transition: background .3s; }
+#timer.done #tval { animation: blink 1s steps(2) infinite; color: var(--red); }
+#timer.paused #tval { opacity: .45; }
+@keyframes blink { 50% { opacity: .25; } }
+#ctl { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 0 16px 10px; font-size: 14px; }
+kbd { background: var(--card); border-radius: 6px; padding: 1px 6px; box-shadow: 0 0 0 1.5px var(--line) inset; font-family: inherit; font-weight: 600; }
+/* editor */
+#ed { position: fixed; inset: 0; background: rgba(10,12,24,.55); display: none; align-items: center; justify-content: center; z-index: 20; padding: 12px; }
+#ed.open { display: flex; }
+#ed .card { width: min(900px, 100%); max-height: 100%; overflow: auto; }
+#ed h2 { margin: 0 0 4px; font-size: 22px; }
+#rows { display: grid; gap: 8px; margin: 12px 0; }
+.row { display: grid; grid-template-columns: 26px 62px minmax(120px, 1fr) 48px 96px 96px 44px; gap: 8px; align-items: center; }
+.row.hd { font-size: 13px; font-weight: 600; color: var(--muted); }
+.row input, .row select { min-height: 44px; border-radius: 10px; border: 2px solid var(--line); background: var(--card); padding: 4px 8px; font-weight: 600; width: 100%; min-width: 0; }
+.row input.i { text-align: center; font-size: 22px; padding: 0; }
+.row input[type=color] { padding: 2px; cursor: pointer; }
+.row .x { min-height: 44px; padding: 0; }
+.row .num { font-weight: 700; color: var(--muted); text-align: center; }
+#ed .foot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+#ed .foot .sp { flex: 1; }
+@media (orientation: portrait) {
+  #stage { flex-direction: column; gap: 2vh; padding-top: 1vh; }
+  #light { --d: min(17vw, calc((94vw - 3.2vw) / var(--n) - 1.4vw)); flex-direction: row; border-radius: 999px; padding: 1.6vw; gap: 1.4vw; }
+  #icon { font-size: min(20vh, 34vw); } #label { font-size: min(12vh, 15vw); } #voice { font-size: min(4vh, 3.7vw); white-space: nowrap; } #timer { font-size: min(7vh, 10vw); }
+  .row { grid-template-columns: 20px 48px minmax(90px, 1fr) 44px 112px 64px 40px; gap: 5px; }
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="light" role="radiogroup" aria-label="Work mode"></div>
+  <div id="now" aria-live="polite">
+    <div id="icon"></div>
+    <div id="label"></div>
+    <div id="voice"></div>
+    <div id="timer" style="display:none" title="Click or press space to pause / resume"><span class="ring"></span><span id="tval"></span></div>
+  </div>
+</div>
+<div id="ctl" class="tk-hide-idle muted">
+  <span id="help"></span>
+  <button class="btn" id="tbtn" style="display:none">⏸ Pause timer</button>
+  <button class="btn" id="mute" title="Sound on / off (M)">🔊</button>
+  <button class="btn" id="edit" title="Change the labels, icons, colours, voice levels and timers (E)">✎ Edit modes</button>
+</div>
+<div id="ed"><div class="card">
+  <h2>Edit the modes</h2>
+  <div class="muted">Between 3 and 9 modes. Icon: any emoji. Voice level 0–4 is optional. A timer (minutes) starts counting down whenever that mode is switched on.</div>
+  <div id="rows"></div>
+  <div class="foot"><button class="btn" id="add">＋ Add a mode</button><button class="btn" id="defaults">↺ Back to the standard six</button><span class="sp"></span><button class="btn go" id="done">Done</button></div>
+</div></div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+TK.top('Work-mode signal');
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const DEF = () => [
+  { icon: '🤫', label: 'Silent work', color: '#d33a2c', voice: 0, mins: 0 },
+  { icon: '👥', label: 'Partner talk', color: '#f2a51a', voice: 1, mins: 0 },
+  { icon: '💬', label: 'Group talk', color: '#2bb24c', voice: 2, mins: 0 },
+  { icon: '✋', label: 'Hands up', color: '#2b6fd1', voice: -1, mins: 0 },
+  { icon: '🧹', label: 'Tidy up', color: '#8a3fd1', voice: 2, mins: 0 },
+  { icon: '👀', label: 'Eyes on me', color: '#12a3a8', voice: 0, mins: 0 },
+];
+const VOICE = ['Silent', 'Whisper', 'Table talk', 'Presenter voice', 'Outdoor voice'];
+let S = Object.assign({ modes: DEF(), cur: 0, sound: true }, TK.store('traffic', {}));
+if (!Array.isArray(S.modes) || S.modes.length < 3) S.modes = DEF();
+S.cur = Math.min(Math.max(0, S.cur | 0), S.modes.length - 1);
+const save = () => TK.save('traffic', S);
+const snd = (k) => S.sound && TK.beep(k);
+
+// timer state (not saved: it belongs to the moment)
+let tEnd = 0, tLeft = 0, tTotal = 0, tRun = false, tDone = false;
+const fmt = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+function renderLamps() {
+  $('#light').innerHTML = S.modes.map((m, i) => `<button class="lamp${i === S.cur ? ' on' : ''}" role="radio" aria-checked="${i === S.cur}" data-i="${i}" style="--lc:${esc(m.color)}" title="${esc(m.label)} (key ${i + 1})"><span class="ic">${esc(m.icon)}</span><span class="k">${i + 1}</span></button>`).join('');
+  $('#light').style.setProperty('--n', S.modes.length);
+  $('#help').innerHTML = `Tap a light or press <kbd>1</kbd>–<kbd>${S.modes.length}</kbd> · <kbd>←</kbd> <kbd>→</kbd> step · <kbd>Space</kbd> pause timer · <kbd>M</kbd> sound · <kbd>E</kbd> edit`;
+}
+function show(animate) {
+  const m = S.modes[S.cur];
+  document.body.style.setProperty('--c', m.color);
+  $$('.lamp').forEach((l, i) => { l.classList.toggle('on', i === S.cur); l.setAttribute('aria-checked', i === S.cur); });
+  $('#icon').textContent = m.icon; $('#label').textContent = m.label;
+  const v = $('#voice');
+  if (m.voice >= 0 && m.voice <= 4) { v.style.display = 'flex'; v.innerHTML = `Voice level <b>${m.voice}</b><span>${VOICE[m.voice]}</span><span class="dots">${[1, 2, 3, 4].map((k) => `<i class="${k <= m.voice ? 'f' : ''}"></i>`).join('')}</span>`; } else v.style.display = 'none';
+  if (animate) { const n = $('#now'); n.classList.remove('swap'); void n.offsetWidth; n.classList.add('swap'); }
+}
+function startTimer() {
+  const m = S.modes[S.cur]; tDone = false;
+  if (m.mins > 0) { tTotal = m.mins * 60000; tLeft = tTotal; tEnd = performance.now() + tLeft; tRun = true; } else { tTotal = 0; tRun = false; }
+  tick();
+}
+function setMode(i, quiet) {
+  if (i < 0 || i >= S.modes.length) return;
+  const same = i === S.cur; S.cur = i; save(); show(!same || !quiet); startTimer();
+  if (!quiet) snd('ding');
+}
+function toggleTimer() {
+  if (!tTotal) return;
+  if (tDone) { startTimer(); return; }
+  if (tRun) { tLeft = tEnd - performance.now(); tRun = false; } else { tEnd = performance.now() + tLeft; tRun = true; }
+  tick();
+}
+function tick() {
+  const t = $('#timer'), b = $('#tbtn');
+  if (!tTotal) { t.style.display = 'none'; b.style.display = 'none'; return; }
+  if (tRun) { tLeft = tEnd - performance.now(); if (tLeft <= 0) { tLeft = 0; tRun = false; tDone = true; snd('alarm'); } }
+  t.style.display = 'flex'; b.style.display = '';
+  t.classList.toggle('done', tDone); t.classList.toggle('paused', !tRun && !tDone);
+  $('#tval').textContent = tDone ? "Time's up!" : fmt(tLeft);
+  $('.ring', t).style.setProperty('--p', tDone ? 1 : 1 - tLeft / tTotal);
+  b.textContent = tDone ? '↺ Restart timer' : tRun ? '⏸ Pause timer' : '▶ Resume timer';
+}
+setInterval(tick, 200);
+$('#light').addEventListener('click', (e) => { const l = e.target.closest('.lamp'); if (l) setMode(+l.dataset.i); });
+$('#timer').onclick = toggleTimer; $('#tbtn').onclick = toggleTimer;
+const muteUi = () => { $('#mute').textContent = S.sound ? '🔊' : '🔇'; };
+$('#mute').onclick = () => { S.sound = !S.sound; save(); muteUi(); }; muteUi();
+
+// ---------- editor ----------
+function renderRows() {
+  $('#rows').innerHTML = '<div class="row hd"><span></span><span>Icon</span><span>Label</span><span>Colour</span><span>Voice</span><span>Timer (min)</span><span></span></div>' + S.modes.map((m, i) => `<div class="row" data-i="${i}">
+    <span class="num">${i + 1}</span>
+    <input class="i" data-f="icon" value="${esc(m.icon)}" maxlength="8" aria-label="Icon">
+    <input data-f="label" value="${esc(m.label)}" maxlength="28" aria-label="Label">
+    <input type="color" data-f="color" value="${esc(m.color)}" aria-label="Colour">
+    <select data-f="voice" aria-label="Voice level"><option value="-1">–</option>${VOICE.map((n, k) => `<option value="${k}" ${m.voice === k ? 'selected' : ''}>${k} ${n}</option>`).join('')}</select>
+    <input type="number" data-f="mins" min="0" max="120" step="0.5" value="${m.mins || 0}" aria-label="Timer minutes">
+    <button class="btn x" title="Remove this mode" ${S.modes.length <= 3 ? 'disabled style="opacity:.35"' : ''}>✕</button></div>`).join('');
+  $('#add').disabled = S.modes.length >= 9; $('#add').style.opacity = S.modes.length >= 9 ? 0.4 : 1;
+}
+const openEd = (o) => { $('#ed').classList.toggle('open', o); if (o) renderRows(); else { renderLamps(); show(false); tick(); } };
+$('#edit').onclick = () => openEd(true); $('#done').onclick = () => openEd(false);
+$('#ed').addEventListener('click', (e) => { if (e.target.id === 'ed') openEd(false); });
+$('#rows').addEventListener('input', (e) => {
+  const r = e.target.closest('.row'), f = e.target.dataset.f; if (!r || !f) return; const m = S.modes[+r.dataset.i];
+  if (f === 'voice') m.voice = +e.target.value; else if (f === 'mins') m.mins = Math.max(0, Math.min(120, +e.target.value || 0)); else m[f] = e.target.value;
+  save(); renderLamps(); show(false);
+});
+$('#rows').addEventListener('click', (e) => {
+  const x = e.target.closest('.x'); if (!x || S.modes.length <= 3) return;
+  const i = +x.closest('.row').dataset.i; S.modes.splice(i, 1); if (S.cur >= S.modes.length) S.cur = S.modes.length - 1; else if (S.cur > i) S.cur--;
+  save(); renderRows(); renderLamps(); show(false); startTimer();
+});
+$('#add').onclick = () => { if (S.modes.length >= 9) return; S.modes.push({ icon: '⭐', label: 'New mode', color: '#5b6475', voice: -1, mins: 0 }); save(); renderRows(); renderLamps(); show(false); };
+let armT = 0;
+$('#defaults').onclick = (e) => {
+  const b = e.currentTarget;
+  if (!b.dataset.arm) { b.dataset.arm = 1; b.textContent = 'Tap again to replace your modes'; armT = setTimeout(() => { delete b.dataset.arm; b.textContent = '↺ Back to the standard six'; }, 3500); return; }
+  clearTimeout(armT); delete b.dataset.arm; b.textContent = '↺ Back to the standard six';
+  S.modes = DEF(); S.cur = 0; save(); renderRows(); renderLamps(); show(false); startTimer();
+};
+
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && $('#ed').classList.contains('open')) return openEd(false);
+  if (e.target.matches('input, select, textarea') || e.ctrlKey || e.metaKey || e.altKey || $('#ed').classList.contains('open')) return;
+  const m = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+  if (m) { setMode(+m[1] - 1); return; }
+  const k = e.key.toLowerCase();
+  if (k === 'arrowright' || k === 'arrowdown') { setMode((S.cur + 1) % S.modes.length); e.preventDefault(); }
+  else if (k === 'arrowleft' || k === 'arrowup') { setMode((S.cur + S.modes.length - 1) % S.modes.length); e.preventDefault(); }
+  else if (k === ' ') { toggleTimer(); e.preventDefault(); }
+  else if (k === 'm') $('#mute').click(); else if (k === 'e') openEd(true);
+});
+TK.idle([$('#ctl')], 4000);
+renderLamps(); show(false); startTimer();
+</script>
+</body>
+</html>

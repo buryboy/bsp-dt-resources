@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Classroom tools · BSP Design &amp; Technology</title>
+<link rel="stylesheet" href="kit/tools.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root { --forest: #1f4d36; --text: #1d2b24; --soft: #3d5246; --cream: #fff8ec; --edge: #e8d9bd; --drop: #d9c7a3; --panel: #ffffff55; --panel-edge: #ffffff88; }
+body.dark { --forest: #bfe6c9; --text: #f3f5ff; --soft: #c5cfe0; --cream: #1b2140; --edge: #2e3766; --drop: #0b0e1e; --panel: #ffffff0a; --panel-edge: #ffffff1c; }
+body { font-family: Nunito, system-ui, sans-serif; color: var(--text); background: radial-gradient(1400px 800px at 50% -10%, #eef8e6, #d3e9c6 55%, #b5d4a4); min-height: 100vh; }
+body.dark { background: radial-gradient(1400px 800px at 50% -10%, #1d2a44, #111527 60%); }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 26px 18px 44px; }
+.head { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.head .grow { flex: 1; min-width: 260px; }
+.tag { display: inline-block; font: 700 13px Fredoka, sans-serif; letter-spacing: .1em; background: #1f4d36; color: #fff; padding: 4px 12px; border-radius: 99px; }
+h1 { font: 700 46px Fredoka, sans-serif; color: var(--forest); margin: 10px 0 6px; line-height: 1.05; }
+.sub { font-size: 18px; color: var(--soft); margin: 0 0 8px; max-width: 760px; }
+.private { display: inline-block; font-size: 15.5px; background: var(--cream); border: 2px solid var(--edge); border-radius: 14px; padding: 8px 14px; margin: 6px 0 18px; }
+.back { text-decoration: none; display: inline-flex; align-items: center; font-family: Fredoka, sans-serif; }
+#find { min-height: 44px; border-radius: 12px; border: 2px solid var(--edge); background: var(--cream); padding: 6px 12px; font: 600 16px Fredoka, sans-serif; width: 200px; color: var(--text); }
+.col { background: var(--panel); border: 3px solid var(--panel-edge); border-radius: 28px; padding: 16px 18px 20px; margin-bottom: 20px; }
+.col h2 { font: 700 28px Fredoka, sans-serif; color: var(--forest); margin: 0 0 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 14px; }
+.set { display: flex; align-items: stretch; text-decoration: none; color: var(--text); background: var(--cream); border: 3px solid var(--edge); border-radius: 20px; overflow: hidden; box-shadow: 0 6px 0 var(--drop), 0 10px 18px #0002; transition: transform .15s; min-height: 96px; }
+.set:hover, .set:focus-visible { transform: translateY(-3px); }
+.set:focus-visible { outline: 4px solid #2b3fd1; outline-offset: 2px; }
+.set:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--drop); }
+.ico { flex: 0 0 88px; display: flex; align-items: center; justify-content: center; font-size: 44px; }
+body.dark .ico { filter: saturate(.8) brightness(.8); }
+.body { padding: 11px 14px 13px; }
+.body h3 { font: 700 21px Fredoka, sans-serif; color: var(--forest); margin: 0 0 3px; }
+.body p { margin: 0; font-size: 14.5px; line-height: 1.4; }
+.none { display: none; font-size: 18px; color: var(--soft); padding: 10px 4px; }
+footer { margin-top: 26px; font-size: 14px; color: var(--soft); }
+footer a { color: inherit; }
+@media (max-width: 600px) { h1 { font-size: 36px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="grow">
+      <span class="tag">THE BRITISH SCHOOL OF PARIS · DESIGN &amp; TECHNOLOGY</span>
+      <h1>Classroom tools</h1>
+    </div>
+    <input id="find" type="search" placeholder="🔎 Find a tool" aria-label="Find a tool">
+    <a class="btn back" href="../">← D&amp;T hub</a>
+    <button class="btn" id="theme" title="Light / dark">◐</button>
+  </div>
+  <p class="sub">Tools for the board, the teacher's laptop and iPads. Pick one to open it.</p>
+  <p class="private">🔒 These tools run on this computer. Class lists and settings stay on this computer. Only Quick poll sends anything: students’ answers go to your own results sheet, like the workbooks.</p>
+  <div id="groups"></div>
+  <p class="none" id="none">No tool matches that. Try another word.</p>
+  <footer>Mr Porter · BSP Design &amp; Technology · <a href="../">Back to the D&amp;T hub</a></footer>
+</div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+const GROUPS = [
+  ['Timing', 'linear-gradient(135deg,#9fd3f0,#cfe8b0)', [
+    ['timer.html', '⏱️', 'Big timer', 'A huge countdown or stopwatch for the board, with quick presets and an alarm.'],
+    ['sand-timer.html', '⏳', 'Visual timer', 'Time running out as a picture, so the class can see how long is left at a glance.'],
+    ['lesson-clock.html', '🕘', 'Lesson clock', 'The time now, and how long is left of this lesson.'],
+    ['rotation.html', '🔄', 'Rotation timer', 'Times each station of a carousel and tells groups when to move on.'],
+  ]],
+  ['Choosing & grouping', 'linear-gradient(135deg,#ffd36e,#ffb38a)', [
+    ['name-picker.html', '🎯', 'Name picker', 'Pick a student at random from the class list, fairly.'],
+    ['groups.html', '👥', 'Group maker', 'Split the class into random groups or pairs in one click.'],
+    ['seating.html', '🪑', 'Seating plan', 'Lay out the room and seat the class, then show the plan on the board.'],
+    ['random.html', '🎲', 'Random', 'Dice, a coin, a spinner and random numbers.'],
+    ['classes.html', '📋', 'Class lists', 'Type each class once. Every tool that uses names shares these lists.'],
+  ]],
+  ['Behaviour & noise', 'linear-gradient(135deg,#ffd6c9,#ffe9a8)', [
+    ['noise-meter.html', '🔊', 'Noise meter', 'A live volume meter with a max-volume line, a too-loud counter and a quiet timer.'],
+    ['scores.html', '🏆', 'Class points', 'Give points to teams or tables and keep the scoreboard on the board.'],
+    ['traffic-light.html', '🚦', 'Work mode', 'Show how the class should be working: silent, quiet partner talk or group talk.'],
+  ]],
+  ['Teaching on the board', 'linear-gradient(135deg,#dfe6ff,#fbfaf5)', [
+    ['board.html', '📝', 'Task board', 'Today’s objective, tasks and reminders, laid out clearly for the lesson.'],
+    ['qr.html', '🔳', 'QR codes', 'Turn a link into a big QR code for iPads to scan.'],
+    ['poll.html', '🙋', 'Quick poll', 'Ask the class a question and show the votes as a chart.'],
+    ['whiteboard.html', '🖍️', 'Whiteboard', 'A blank board to draw and write on, with pens and grids.'],
+    ['visualiser.html', '📷', 'Visualiser', 'Show practical work or a demonstration under the camera.'],
+  ]],
+  ['D&T', 'linear-gradient(135deg,#d9d2e9,#cfe8b0)', [
+    ['maths.html', '📐', 'Units & maths', 'Worked steps for D&T maths: units, area, costs, scale, gears, moments, tolerances and charts.'],
+    ['brief-generator.html', '🎰', 'Design brief generator', 'Spin up a random design brief: a product, a user, a context and a constraint.'],
+  ]],
+];
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+document.getElementById('groups').innerHTML = GROUPS.map(([name, bg, tools]) => `<section class="col"><h2>${esc(name)}</h2><div class="grid">` +
+  tools.map(([href, ico, title, desc]) => `<a class="set" href="${href}" data-q="${esc((title + ' ' + desc + ' ' + name).toLowerCase())}"><div class="ico" style="background:${bg}">${ico}</div><div class="body"><h3>${esc(title)}</h3><p>${esc(desc)}</p></div></a>`).join('') + '</div></section>').join('');
+if (TK.store('dark', false)) document.body.classList.add('dark');
+document.getElementById('theme').onclick = () => { document.body.classList.toggle('dark'); TK.save('dark', document.body.classList.contains('dark')); };
+const find = document.getElementById('find');
+find.oninput = () => {
+  const q = find.value.trim().toLowerCase(); let any = false;
+  document.querySelectorAll('.col').forEach((sec) => {
+    let n = 0; sec.querySelectorAll('.set').forEach((a) => { const ok = !q || a.dataset.q.includes(q); a.style.display = ok ? '' : 'none'; if (ok) n++; });
+    sec.style.display = n ? '' : 'none'; any = any || n > 0;
+  });
+  document.getElementById('none').style.display = any ? 'none' : 'block';
+};
+addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement !== find) { e.preventDefault(); find.focus(); } });
+</script>
+</body>
+</html>

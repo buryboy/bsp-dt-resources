@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Group maker · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 0 14px 8px; }
+.seg { display: inline-flex; border-radius: 12px; box-shadow: 0 0 0 2px var(--line) inset; overflow: hidden; background: var(--card); }
+.seg button { border: 0; background: transparent; min-width: 44px; min-height: 44px; padding: 0 12px; font-weight: 600; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink2); color: #fff; }
+.step { display: inline-flex; align-items: center; border-radius: 12px; box-shadow: 0 0 0 2px var(--line) inset; background: var(--card); }
+.step button { border: 0; background: transparent; width: 44px; height: 44px; font-size: 22px; font-weight: 700; cursor: pointer; }
+.step output { min-width: 34px; text-align: center; font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chk { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; cursor: pointer; font-weight: 500; }
+.chk input { width: 22px; height: 22px; accent-color: var(--ink2); }
+select.in { min-height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); padding: 6px 10px; font-weight: 600; }
+label.lab { display: inline-flex; gap: 6px; align-items: center; font-weight: 500; }
+button:focus-visible, select:focus-visible, input:focus-visible, [contenteditable]:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+#shuffle { font-size: 19px; padding: 10px 22px; }
+#absentPanel { display: none; margin: 0 14px 8px; padding: 10px 12px; }
+#absentPanel.open { display: block; }
+#absentPanel .chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 26vh; overflow-y: auto; }
+#absentPanel button { border: 0; border-radius: 999px; min-height: 40px; padding: 4px 14px; background: transparent; box-shadow: 0 0 0 2px var(--line) inset; cursor: pointer; font-weight: 500; }
+#absentPanel button[aria-pressed="true"] { background: var(--muted); color: var(--bg); text-decoration: line-through; box-shadow: none; }
+#area { flex: 1; min-height: 0; margin: 0 14px; display: grid; gap: 12px; overflow: auto; align-content: start; }
+.g { background: var(--card); border-radius: var(--radius); box-shadow: 0 0 0 3px var(--gc) inset; display: flex; flex-direction: column; overflow: hidden; min-width: 0; font-size: var(--fs, 24px); }
+.g.over { box-shadow: 0 0 0 6px var(--amber) inset; }
+.g header { background: var(--gc); color: #fff; display: flex; align-items: center; gap: .4em; padding: .22em .55em; font-weight: 700; font-size: .86em; line-height: 1.2; }
+.g header .nm { flex: 1; min-width: 0; outline-offset: 2px; border-radius: 6px; cursor: text; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g header .st { background: rgba(255, 255, 255, .22); border-radius: 999px; padding: .05em .55em; font-size: .78em; white-space: nowrap; }
+.g header .st b { cursor: text; font-weight: 700; display: inline-block; min-width: .7em; text-align: center; }
+.g header .ct { font-size: .7em; font-weight: 600; opacity: .9; }
+.g ul { list-style: none; margin: 0; padding: .2em .35em .3em; flex: 1; }
+.g li { padding: .04em .3em; border-radius: .3em; line-height: 1.26; font-weight: 500; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g li:hover { background: color-mix(in srgb, var(--gc) 14%, transparent); }
+.g li.drag { opacity: .3; }
+#ghost { position: fixed; z-index: 50; pointer-events: none; background: var(--ink2); color: #fff; border-radius: 10px; padding: 4px 14px; font-weight: 600; box-shadow: 0 8px 22px rgba(0, 0, 0, .35); transform: translate(-50%, -120%); white-space: nowrap; }
+#empty { grid-column: 1 / -1; text-align: center; font-size: clamp(20px, 2.4vw, 32px); padding: 8vh 20px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.foot { display: flex; gap: 14px; align-items: center; justify-content: space-between; padding: 6px 14px 8px; font-size: 13px; flex-wrap: wrap; }
+#warn { color: var(--red); font-weight: 600; }
+#printTitle { display: none; }
+@media print {
+  body { height: auto; overflow: visible; background: #fff; color: #000; }
+  .tk-top, .controls, .foot, #absentPanel { display: none !important; }
+  #printTitle { display: block; font-size: 20pt; font-weight: 700; margin: 0 0 10pt; }
+  #area { overflow: visible; margin: 0; grid-template-columns: repeat(3, 1fr) !important; }
+  .g { font-size: 14pt !important; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+body.dark .seg button[aria-pressed="true"], body.dark .btn.blue, body.dark .clist button[aria-current="true"], body.dark .tabs button[aria-selected="true"] { color: #111527; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <span class="seg" id="by" role="group" aria-label="Make groups by"><button data-v="groups">Number of groups</button><button data-v="size">People per group</button></span>
+  <span class="step"><button id="minus" aria-label="Fewer">−</button><output id="num" aria-live="polite">4</output><button id="plus" aria-label="More">＋</button></span>
+  <span class="seg" id="method" role="group" aria-label="Method"><button data-v="random">Random</button><button data-v="mixed" title="Spreads your 1–3 markers evenly across the groups">Mixed ability</button></span>
+  <label class="chk" id="apartLab" title="Pairs set in Edit classes are put in different groups"><input type="checkbox" id="apart"> <span id="apartTxt">Keep apart</span></label>
+  <button class="btn go" id="shuffle">🔀 Shuffle</button>
+  <label class="lab">Names <select class="in" id="theme"><option value="workshop">Workshop</option><option value="materials">Materials</option><option value="animals">Animals</option><option value="plain">Group 1, 2, 3</option></select></label>
+  <label class="lab">Places <select class="in" id="station"><option value="none">None</option><option>Table</option><option>Station</option><option>Bench</option></select></label>
+  <button class="btn" id="mix" title="Give the groups different table / station numbers" hidden>🎲 Mix places</button>
+  <button class="btn" id="absBtn" aria-expanded="false">Absent (0)</button>
+  <button class="btn" id="copy">📋 Copy</button>
+  <button class="btn" id="print">🖨 Print</button>
+</div>
+<div class="card" id="absentPanel"><div class="muted" style="font-size:14px;margin-bottom:8px">Tap anyone who is absent today. They are left out of the groups (and of the name picker).</div><div class="chips" id="absChips"></div></div>
+<h2 id="printTitle"></h2>
+<div id="area"></div>
+<div class="foot"><span class="muted">Space = shuffle · drag a name to another group · click a group name or place number to edit it · C = copy · P = print. Names stay on this computer.</span><span id="warn" role="status"></span></div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const slot = TK.top('Group maker');
+slot.innerHTML = '<select class="tk-class" id="cls" aria-label="Class"></select>';
+const S = Object.assign({ by: 'groups', n: 4, size: 3, method: 'random', apart: true, theme: 'workshop', station: 'none', last: {} }, TK.store('groups', {}));
+S.last = S.last || {};
+const save = () => TK.save('groups', S);
+const COLORS = ['#2b3fd1', '#d33a2c', '#1f9d45', '#b85f00', '#7c4bd6', '#0e7f91', '#d6336c', '#56617f', '#8a6d00', '#0b7a5c', '#a23bb5', '#3a6ea5'];
+const THEMES = {
+  workshop: ['The Chisels', 'Team Tenon', 'The Dovetails', 'Laser Cutters', 'The Bandsaws', 'Glue Gunners', 'The Mallets', 'Sanding Squad', 'The Prototypes', 'Team Torque', 'The Blueprints', 'Cog Crew', 'The Rivets', 'Pillar Drillers', 'The Vices', 'Team Template', 'The Try Squares', 'Coping Saws'],
+  materials: ['Team Oak', 'Team Acrylic', 'Team Brass', 'Team Bamboo', 'Team Copper', 'Team Plywood', 'Team Titanium', 'Team Carbon', 'Team Pine', 'Team Aluminium', 'Team Nylon', 'Team Steel', 'Team Kevlar', 'Team Cork', 'Team Beech', 'Team Graphene', 'Team Bronze', 'Team Balsa'],
+  animals: ['Otters', 'Falcons', 'Foxes', 'Pandas', 'Wolves', 'Dolphins', 'Owls', 'Tigers', 'Koalas', 'Hedgehogs', 'Penguins', 'Lynxes', 'Badgers', 'Geckos', 'Herons', 'Bison', 'Ravens', 'Seals'],
+};
+let cls = null, groups = [];
+
+// ---------- class data ----------
+const dayKey = () => new Date().toDateString();
+function absent() { const a = TK.store('absent', {}); return cls && a.date === dayKey() && a.by && a.by[cls.name] ? a.by[cls.name].filter((n) => cls.students.includes(n)) : []; }
+function setAbsent(list) { let a = TK.store('absent', {}); if (a.date !== dayKey() || !a.by) a = { date: dayKey(), by: {} }; a.by[cls.name] = list; TK.save('absent', a); }
+const present = () => { const ab = absent(); return cls.students.filter((n) => !ab.includes(n)); };
+function meta() { const m = (TK.store('classMeta', {})[cls.name]) || {}; return { level: m.level || {}, apart: (m.apart || []).filter((p) => cls.students.includes(p[0]) && cls.students.includes(p[1])) }; }
+
+// ---------- making groups ----------
+const together = (arr, pairs) => pairs.filter((p) => arr.some((g) => g.includes(p[0]) && g.includes(p[1]))).length;
+function deal(names, G, lv) {
+  const out = Array.from({ length: G }, () => []);
+  let order;
+  if (S.method === 'mixed') order = [3, 2, 1].flatMap((L) => TK.shuffle(names.filter((n) => (lv[n] || 2) === L)));
+  else order = TK.shuffle(names);
+  order.forEach((n, i) => { const pass = Math.floor(i / G), k = i % G; out[S.method === 'mixed' && pass % 2 ? G - 1 - k : k].push(n); });
+  return TK.shuffle(out);
+}
+function make(fresh) {
+  if (!cls) return;
+  const pres = present(), m = meta();
+  if (!pres.length) { groups = []; return render(); }
+  const G = S.by === 'groups' ? Math.max(1, Math.min(S.n, pres.length)) : Math.max(1, Math.floor(pres.length / S.size));
+  const pairs = S.apart ? m.apart.filter((p) => pres.includes(p[0]) && pres.includes(p[1])) : [];
+  let best = null;
+  for (let t = 0; t < 500; t++) { const arr = deal(pres, G, m.level), v = together(arr, pairs); if (!best || v < best.v) best = { arr, v }; if (!v) break; }
+  const keep = !fresh && groups.length === G, names = keep ? null : nameList(G), places = TK.shuffle(Array.from({ length: G }, (_, i) => i + 1));
+  groups = best.arr.map((members, i) => (keep ? Object.assign(groups[i], { members }) : { name: names[i], color: COLORS[i % COLORS.length], station: String(S.station === 'none' ? i + 1 : places[i]), members }));
+  store(); render();
+}
+function nameList(G) { const t = THEMES[S.theme]; if (!t) return Array.from({ length: G }, (_, i) => 'Group ' + (i + 1)); const a = TK.shuffle(t); return Array.from({ length: G }, (_, i) => (i < a.length ? a[i] : 'Group ' + (i + 1))); }
+function store() { if (cls) { S.last[cls.name] = groups; save(); } }
+function sync() { // after class edits or absences: drop people who are not here, add newcomers to the smallest group
+  const pres = present(); let changed = false;
+  groups.forEach((g) => { const k = g.members.filter((n) => pres.includes(n)); if (k.length !== g.members.length) { g.members = k; changed = true; } });
+  const have = groups.flatMap((g) => g.members);
+  pres.filter((n) => !have.includes(n)).forEach((n) => { groups.slice().sort((a, b) => a.members.length - b.members.length)[0].members.push(n); changed = true; });
+  if (changed) store();
+}
+
+// ---------- rendering ----------
+const area = $('#area');
+function render() {
+  const here = encodeURIComponent(location.pathname.split('/').pop());
+  paintControls();
+  if (!cls || !cls.students.length) { area.style.gridTemplateColumns = '1fr'; area.innerHTML = `<div id="empty"><b>${cls ? esc(cls.name) + ' has no names yet.' : 'No class yet.'}</b><a class="btn blue" href="classes.html?back=${here}">Add a class list</a></div>`; $('#warn').textContent = ''; return; }
+  if (!groups.length) { area.style.gridTemplateColumns = '1fr'; area.innerHTML = '<div id="empty"><b>Everyone is marked absent.</b><span class="muted">Open “Absent” to bring people back.</span></div>'; return; }
+  area.innerHTML = groups.map((g, i) => `<section class="g" data-g="${i}" style="--gc:${g.color}"><header><span class="nm" contenteditable="plaintext-only" spellcheck="false" data-f="name" aria-label="Group name">${esc(g.name)}</span>${S.station !== 'none' ? `<span class="st">${esc(S.station)} <b contenteditable="plaintext-only" data-f="station" aria-label="${esc(S.station)} number">${esc(g.station)}</b></span>` : ''}<span class="ct">${g.members.length}</span></header><ul>${g.members.map((n) => `<li data-n="${esc(n)}">${esc(n)}</li>`).join('')}</ul></section>`).join('');
+  $('#printTitle').textContent = cls.name + ' groups';
+  layout(); warn();
+}
+function layout() {
+  const G = groups.length; if (!G) return;
+  const r = area.getBoundingClientRect(), gap = 12, maxM = Math.max(1, ...groups.map((g) => g.members.length)), longest = Math.max(6, ...groups.flatMap((g) => g.members.map((n) => n.length)));
+  let best = { fs: 0, cols: 1 };
+  for (let cols = 1; cols <= G; cols++) {
+    const rows = Math.ceil(G / cols), w = (r.width - gap * (cols - 1)) / cols, h = (r.height - gap * (rows - 1)) / rows;
+    const fs = Math.min((h - 6) / (maxM * 1.26 + 2.0), (w - 20) / (longest * 0.56 + 1));
+    if (fs > best.fs) best = { fs, cols };
+  }
+  area.style.gridTemplateColumns = `repeat(${best.cols}, minmax(0, 1fr))`;
+  area.style.setProperty('--fs', Math.max(14, Math.min(60, best.fs)) + 'px');
+}
+function warn() {
+  const m = meta(), v = S.apart ? together(groups.map((g) => g.members), m.apart) : 0;
+  const hint = S.method === 'mixed' && !Object.keys(m.level).length ? 'Mixed ability needs the 1–3 markers: add them in Edit classes.' : '';
+  $('#warn').textContent = v ? `⚠ ${v} keep-apart pair${v === 1 ? ' is' : 's are'} in the same group` : hint;
+}
+function paintControls() {
+  document.querySelectorAll('#by button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.v === S.by));
+  document.querySelectorAll('#method button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.v === S.method));
+  $('#num').textContent = S.by === 'groups' ? S.n : S.size;
+  $('#apart').checked = S.apart; $('#theme').value = S.theme; $('#station').value = S.station; $('#mix').hidden = S.station === 'none';
+  const np = cls ? meta().apart.length : 0;
+  $('#apartTxt').textContent = np ? `Keep apart (${np} pair${np === 1 ? '' : 's'})` : 'Keep apart (none set)'; $('#apart').disabled = !np;
+  const ab = cls ? absent() : [];
+  $('#absBtn').textContent = `Absent (${ab.length})`;
+  $('#absChips').innerHTML = cls ? cls.students.map((n) => `<button data-n="${esc(n)}" aria-pressed="${ab.includes(n)}">${esc(n)}</button>`).join('') : '';
+}
+
+// ---------- controls ----------
+$('#by').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S.by = b.dataset.v; save(); make(true); };
+$('#method').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S.method = b.dataset.v; save(); make(false); };
+function bump(d) { if (S.by === 'groups') S.n = Math.max(1, Math.min(cls ? Math.max(1, present().length) : 20, S.n + d)); else S.size = Math.max(2, Math.min(12, S.size + d)); save(); make(true); if (!cls) paintControls(); }
+$('#minus').onclick = () => bump(-1); $('#plus').onclick = () => bump(1);
+$('#apart').onchange = (e) => { S.apart = e.target.checked; save(); make(false); };
+$('#shuffle').onclick = () => { make(false); if (groups.length) TK.beep('tick'); };
+$('#theme').onchange = (e) => { S.theme = e.target.value; save(); const nm = nameList(groups.length); groups.forEach((g, i) => (g.name = nm[i])); store(); render(); };
+$('#station').onchange = (e) => { S.station = e.target.value; save(); render(); };
+$('#mix').onclick = () => { const p = TK.shuffle(groups.map((_, i) => i + 1)); groups.forEach((g, i) => (g.station = String(p[i]))); store(); render(); };
+$('#absBtn').onclick = () => { const o = $('#absentPanel').classList.toggle('open'); $('#absBtn').setAttribute('aria-expanded', o); layout(); };
+$('#absChips').onclick = (e) => {
+  const b = e.target.closest('button'); if (!b) return; const n = b.dataset.n, ab = absent();
+  setAbsent(ab.includes(n) ? ab.filter((x) => x !== n) : ab.concat(n));
+  if (groups.length) { sync(); render(); } else make(true);
+};
+function text() { return groups.map((g) => `${g.name}${S.station !== 'none' ? ` (${S.station} ${g.station})` : ''}: ${g.members.join(', ')}`).join('\n'); }
+$('#copy').onclick = async () => {
+  if (!groups.length) return; const t = text(); let ok = false;
+  try { await navigator.clipboard.writeText(t); ok = true; } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.append(ta); ta.select(); try { ok = document.execCommand('copy'); } catch (e2) {} ta.remove(); }
+  $('#copy').textContent = ok ? '✓ Copied' : 'Copy failed'; setTimeout(() => ($('#copy').textContent = '📋 Copy'), 1600);
+};
+$('#print').onclick = () => print();
+addEventListener('keydown', (e) => {
+  if (e.target.isContentEditable) { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); e.target.blur(); } return; }
+  if (e.target.matches('input, select, textarea') || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); $('#shuffle').click(); } else if (k === 'c') $('#copy').click(); else if (k === 'p') print();
+});
+area.addEventListener('focusout', (e) => {
+  const f = e.target.dataset && e.target.dataset.f; if (!f) return;
+  const g = groups[+e.target.closest('.g').dataset.g], v = e.target.textContent.replace(/\s+/g, ' ').trim().slice(0, f === 'name' ? 30 : 4);
+  if (v) g[f] = v; e.target.textContent = g[f]; store();
+});
+
+// ---------- drag a name between groups (mouse and touch) ----------
+area.addEventListener('pointerdown', (e) => {
+  const li = e.target.closest('li[data-n]'); if (!li || e.button > 0) return;
+  const from = +li.closest('.g').dataset.g, name = li.dataset.n, x0 = e.clientX, y0 = e.clientY; let ghost = null, over = null;
+  const move = (ev) => {
+    if (!ghost) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) < 6) return; ghost = document.createElement('div'); ghost.id = 'ghost'; ghost.textContent = name; document.body.append(ghost); li.classList.add('drag'); }
+    ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px';
+    const el = document.elementFromPoint(ev.clientX, ev.clientY), g = el && el.closest('.g');
+    if (g !== over) { over && over.classList.remove('over'); over = g; over && over.classList.add('over'); }
+  };
+  const up = () => {
+    removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
+    if (!ghost) return; ghost.remove(); li.classList.remove('drag');
+    if (over) { const to = +over.dataset.g; over.classList.remove('over'); if (to !== from) { groups[from].members = groups[from].members.filter((n) => n !== name); groups[to].members.push(name); store(); render(); } }
+  };
+  addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+});
+
+// ---------- start ----------
+function load() {
+  cls = TK.currentClass(); groups = [];
+  if (cls && cls.students.length) {
+    const last = S.last[cls.name];
+    if (Array.isArray(last) && last.length && last.every((g) => g && Array.isArray(g.members))) { groups = last; sync(); render(); } else make(true);
+  } else render();
+}
+const sel = TK.classSelect($('#cls'), load);
+addEventListener('pageshow', (e) => { if (e.persisted) { sel.refresh(); load(); } });
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layout, 100); });
+load();
+</script>
+</body>
+</html>

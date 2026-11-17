@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Task board · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; overflow: hidden; }
+.tk-slot { display: flex; gap: 8px; align-items: center; }
+select.pick { min-height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); padding: 6px 10px; font-weight: 600; max-width: 260px; }
+kbd { background: var(--card); border-radius: 6px; padding: 1px 6px; box-shadow: 0 0 0 1.5px var(--line) inset; font-family: inherit; font-weight: 600; }
+
+/* ---- board view ---- */
+#view { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 3.2vw 8px; }
+#title { font-size: clamp(28px, 3.8vw, 72px); font-weight: 700; line-height: 1.05; margin: 0; overflow-wrap: anywhere; }
+#lo { font-size: clamp(18px, 2.1vw, 38px); font-weight: 500; margin: .25em 0 0; display: flex; gap: .5em; align-items: baseline; }
+#lo .tag { flex: none; background: var(--ink2); color: #fff; font-weight: 700; border-radius: 10px; padding: .05em .5em; font-size: .8em; }
+#prog { display: flex; align-items: center; gap: 12px; margin: 8px 0 4px; font-weight: 600; font-size: clamp(14px, 1.5vw, 22px); color: var(--muted); }
+#prog .bar { flex: 1; height: 12px; border-radius: 8px; background: var(--line); overflow: hidden; }
+#prog .bar i { display: block; height: 100%; width: 0; background: var(--green); border-radius: 8px; transition: width .5s cubic-bezier(.3,1.3,.5,1); }
+#tasks { flex: 1; min-height: 0; overflow: auto; list-style: none; margin: 0; padding: 6px 6px 10px; display: flex; flex-direction: column; gap: calc(var(--fs) * .2); --fs: 40px; }
+.task { display: flex; align-items: flex-start; gap: calc(var(--fs) * .5); font-size: var(--fs); line-height: 1.18; padding: calc(var(--fs) * .17) calc(var(--fs) * .45); border-radius: calc(var(--fs) * .45); background: var(--card); box-shadow: 0 0 0 2px var(--line) inset; cursor: pointer; transition: box-shadow .3s, background-color .3s, transform .3s, opacity .3s; position: relative; user-select: none; -webkit-tap-highlight-color: transparent; }
+.task .box { flex: none; width: 1.18em; height: 1.18em; border-radius: .26em; border: .09em solid var(--ink2); background: var(--card); display: flex; align-items: center; justify-content: center; transition: background-color .25s, border-color .25s, transform .3s cubic-bezier(.3,1.8,.5,1); }
+.task .box svg { width: 82%; height: 82%; }
+.task .box path { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 30; stroke-dashoffset: 30; transition: stroke-dashoffset .35s .08s ease-out; }
+.task.done .box { background: var(--green); border-color: var(--green); }
+.task.done .box path { stroke-dashoffset: 0; }
+.task.pop .box { transform: scale(1.3) rotate(-8deg); }
+.task .txt { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; transition: opacity .3s; }
+.task .txt b { font-weight: 700; }
+.task .txt ul { margin: .15em 0 0; padding-left: 1.1em; font-size: .78em; }
+.task .txt .strike { background-image: linear-gradient(currentColor, currentColor); background-repeat: no-repeat; background-position: 0 55%; background-size: 0 .07em; transition: background-size .45s ease-out; }
+.task.done .txt { opacity: .5; }
+.task.done .txt .strike { background-size: 100% .07em; }
+.task .mins { flex: none; font-size: .58em; font-weight: 700; background: var(--line); color: var(--ink); border-radius: 999px; padding: .2em .7em; margin-top: .28em; white-space: nowrap; }
+.task.now { box-shadow: 0 0 0 .1em var(--amber) inset, 0 6px 22px rgba(242,165,26,.35); background: color-mix(in srgb, var(--amber) 13%, var(--card)); transform: scale(1.012); }
+.task .nowtag { display: none; flex: none; font-size: .5em; font-weight: 700; background: var(--amber); color: #3a2600; border-radius: 999px; padding: .25em .8em; margin-top: .38em; letter-spacing: .06em; animation: pulse 1.6s ease-in-out infinite; }
+.task.now .nowtag { display: block; }
+@keyframes pulse { 50% { transform: scale(1.08); } }
+#alldone { display: none; text-align: center; font-size: clamp(22px, 3vw, 46px); font-weight: 700; color: var(--green); padding: 4px 0 2px; }
+#alldone.show { display: block; animation: pop .5s cubic-bezier(.3,1.6,.5,1); }
+@keyframes pop { from { transform: scale(.7); opacity: 0; } }
+#foot { position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%); width: max-content; max-width: 96vw; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; font-size: 14px; padding: 6px 8px 6px 16px; background: var(--card); border-radius: 16px; box-shadow: 0 0 0 2px var(--line) inset, 0 6px 24px rgba(0,0,0,.18); z-index: 5; transition: opacity .4s; }
+body.editing #foot { display: none; }
+#none { margin: auto; text-align: center; font-size: 24px; }
+
+/* ---- editor ---- */
+#ed { flex: 1; min-height: 0; overflow: auto; padding: 0 16px 16px; display: none; }
+#ed .card { max-width: 980px; margin: 0 auto; display: grid; gap: 12px; }
+#ed label { display: grid; gap: 4px; font-weight: 600; font-size: 14px; color: var(--muted); }
+#ed input[type=text], #ed textarea, #ed input[type=number] { min-height: 44px; border-radius: 10px; border: 2px solid var(--line); background: var(--card); padding: 8px 10px; font-weight: 500; font-size: 18px; color: var(--ink); width: 100%; }
+#ed textarea { resize: vertical; line-height: 1.3; }
+.g2 { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+#erows { display: grid; gap: 8px; }
+.er { display: grid; grid-template-columns: 26px 1fr 92px 44px 44px 44px; gap: 6px; align-items: start; }
+.er .num { font-weight: 700; color: var(--muted); text-align: center; padding-top: 12px; }
+.er .btn { padding: 0; }
+.er.hd { font-size: 13px; font-weight: 600; color: var(--muted); align-items: end; }
+.edfoot { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.edfoot .sp { flex: 1; }
+.btn.warn { color: var(--red); } .btn.armed { background: var(--red); color: #fff; box-shadow: 0 3px 0 #8e2219; }
+body.editing #view { display: none; } body.editing #ed { display: block; } body.editing { overflow: auto; }
+@media (max-width: 700px) { .g2 { grid-template-columns: 1fr; } .er { grid-template-columns: 20px 1fr 64px 40px 40px 40px; gap: 4px; } select.pick { max-width: 150px; } }
+</style>
+</head>
+<body>
+<div id="view">
+  <h2 id="title"></h2>
+  <div id="lo"></div>
+  <div id="prog"><span id="pt"></span><span class="bar"><i></i></span><span id="pm"></span></div>
+  <ul id="tasks"></ul>
+  <div id="alldone">🎉 All done. Great work!</div>
+  <div id="foot" class="tk-hide-idle muted">
+    <span>Tap a task to tick it · <kbd>Space</kbd> tick the current task · <kbd>⌫</kbd> untick the last one · <kbd>E</kbd> edit · <kbd>M</kbd> sound. Boards are saved on this device only.</span>
+    <button class="btn" id="mute" title="Sound on / off (M)">🔊</button>
+    <button class="btn" id="clear" title="Untick every task, ready for the next class">↺ Untick all</button>
+  </div>
+</div>
+<div id="ed"><div class="card">
+  <div class="g2">
+    <label>Board name (in the menu) <input type="text" id="e-name" maxlength="40" placeholder="e.g. 10A Tuesday"></label>
+    <label>Title on the board <input type="text" id="e-title" maxlength="80" placeholder="e.g. Polymers: vacuum forming"></label>
+  </div>
+  <label>Learning objective (optional) <input type="text" id="e-lo" maxlength="200" placeholder="e.g. Explain why HIPS is used for vacuum forming"></label>
+  <div>
+    <div class="er hd"><span></span><span>Tasks: use **bold**, and start a line with “- ” for a bullet point</span><span>Minutes</span><span></span><span></span><span></span></div>
+    <div id="erows"></div>
+  </div>
+  <div class="edfoot">
+    <button class="btn" id="e-add">＋ Add a task</button>
+    <span class="sp"></span>
+    <button class="btn" id="e-new">＋ New board</button>
+    <button class="btn" id="e-dup">⧉ Duplicate</button>
+    <button class="btn warn" id="e-del">🗑 Delete board</button>
+    <button class="btn go" id="e-done">✓ Show the board</button>
+  </div>
+</div></div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+const slot = TK.top('Task board');
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const sample = () => ({ id: uid(), name: 'Example lesson', title: 'Today’s lesson', lo: 'Change this to your learning objective', tasks: [
+  { text: '**Starter:** answer the question on your desk', mins: 5, done: false },
+  { text: 'Watch the demonstration\n- goggles on\n- stand behind the yellow line', mins: 10, done: false },
+  { text: 'Main task: mark out and cut your material', mins: 25, done: false },
+  { text: '**Tidy up** and exit question', mins: 5, done: false } ] });
+let S = Object.assign({ boards: [], cur: '', sound: true }, TK.store('board', {}));
+if (!Array.isArray(S.boards) || !S.boards.length) { S.boards = [sample()]; S.cur = S.boards[0].id; }
+const save = () => TK.save('board', S);
+const B = () => S.boards.find((b) => b.id === S.cur) || S.boards[0];
+const snd = (k) => S.sound && TK.beep(k);
+
+slot.innerHTML = '<select class="pick" id="pick" title="Choose a board"></select><button class="btn" id="edit" title="Edit this board (E)">✎ Edit</button>';
+function fillPick() { $('#pick').innerHTML = S.boards.map((b) => `<option value="${b.id}" ${b.id === B().id ? 'selected' : ''}>${esc(b.name || b.title || 'Untitled board')}</option>`).join('') + '<option value="__new">＋ New board…</option>'; }
+$('#pick').onchange = (e) => { if (e.target.value === '__new') return newBoard(); S.cur = e.target.value; save(); if (document.body.classList.contains('editing')) fillEd(); render(); };
+
+// Markdown-lite: **bold**, lines starting "- " or "* " become bullet points. Everything is escaped first.
+function md(text) {
+  const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  let out = '', list = false;
+  String(text).split('\n').forEach((ln) => {
+    const m = /^\s*[-*•]\s+(.*)$/.exec(ln);
+    if (m) { if (!list) { out += '<ul>'; list = true; } out += '<li>' + inline(m[1]) + '</li>'; }
+    else { if (list) { out += '</ul>'; list = false; } if (ln.trim()) out += (out && !out.endsWith('</ul>') ? '<br>' : '') + '<span class="strike">' + inline(ln) + '</span>'; }
+  });
+  return out + (list ? '</ul>' : '');
+}
+const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function render() {
+  const b = B(); S.cur = b.id; fillPick();
+  $('#title').textContent = b.title || b.name || '';
+  $('#lo').innerHTML = b.lo ? `<span class="tag">LO</span><span>${md(b.lo).replace(/<\/?ul>|<\/?li>/g, ' ')}</span>` : ''; $('#lo').style.display = b.lo ? 'flex' : 'none';
+  const now = b.tasks.findIndex((t) => !t.done);
+  $('#tasks').innerHTML = b.tasks.length ? b.tasks.map((t, i) => `<li class="task${t.done ? ' done' : ''}${i === now ? ' now' : ''}" data-i="${i}" role="checkbox" aria-checked="${!!t.done}" tabindex="0"><span class="box">${CHECK}</span><span class="txt">${md(t.text)}</span><span class="nowtag">NOW</span>${t.mins > 0 ? `<span class="mins">⏱ ${t.mins} min</span>` : ''}</li>`).join('') : '<li id="none" class="muted">No tasks yet. Press ✎ Edit to add some.</li>';
+  status();
+}
+function status() {
+  const b = B(), n = b.tasks.length, d = b.tasks.filter((t) => t.done).length, left = b.tasks.filter((t) => !t.done).reduce((a, t) => a + (+t.mins || 0), 0);
+  $('#pt').textContent = n ? `${d} of ${n} done` : ''; $('#prog .bar i').style.width = (n ? (d / n) * 100 : 0) + '%';
+  $('#pm').textContent = left > 0 ? `about ${left} min to go` : ''; $('#prog').style.visibility = n ? 'visible' : 'hidden';
+  $('#alldone').classList.toggle('show', n > 0 && d === n);
+  const now = b.tasks.findIndex((t) => !t.done);
+  $$('.task').forEach((el, i) => { el.classList.toggle('now', i === now); el.classList.toggle('done', !!b.tasks[i].done); el.setAttribute('aria-checked', !!b.tasks[i].done); });
+  fit();
+}
+// choose the biggest type size at which every task fits without scrolling (down to a readable minimum)
+function fit() {
+  const ul = $('#tasks'); let lo = 20, hi = Math.min(84, innerWidth / 15);
+  for (let k = 0; k < 9; k++) { const mid = (lo + hi) / 2; ul.style.setProperty('--fs', mid + 'px'); if (ul.scrollHeight > ul.clientHeight + 1) hi = mid; else lo = mid; }
+  ul.style.setProperty('--fs', Math.floor(lo) + 'px');
+}
+function toggle(i, on) {
+  const b = B(), t = b.tasks[i]; if (!t) return;
+  const was = b.tasks.every((x) => x.done);
+  t.done = on == null ? !t.done : on; save(); status();
+  const el = $(`.task[data-i="${i}"]`);
+  if (t.done && el) { el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 260); }
+  const all = b.tasks.every((x) => x.done);
+  snd(all && !was ? 'tada' : t.done ? 'ding' : 'tick');
+  const nx = $('.task.now'); if (nx) nx.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+$('#tasks').addEventListener('click', (e) => { const el = e.target.closest('.task'); if (el) toggle(+el.dataset.i); });
+$('#tasks').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('.task')) { toggle(+e.target.dataset.i); e.preventDefault(); } });
+let armC = 0;
+const arm = (b, label, sure, fn) => { b.onclick = () => { if (!b.classList.contains('armed')) { b.classList.add('armed'); b.textContent = sure; armC = setTimeout(() => { b.classList.remove('armed'); b.textContent = label; }, 3500); return; } clearTimeout(armC); b.classList.remove('armed'); b.textContent = label; fn(); }; };
+$('#clear').onclick = () => { B().tasks.forEach((t) => (t.done = false)); save(); render(); $('#tasks').scrollTop = 0; };
+const muteUi = () => { $('#mute').textContent = S.sound ? '🔊' : '🔇'; };
+$('#mute').onclick = () => { S.sound = !S.sound; save(); muteUi(); }; muteUi();
+
+// ---------- editor ----------
+function fillEd() {
+  const b = B(); $('#e-name').value = b.name || ''; $('#e-title').value = b.title || ''; $('#e-lo').value = b.lo || '';
+  $('#erows').innerHTML = b.tasks.map((t, i) => `<div class="er" data-i="${i}"><span class="num">${i + 1}</span><textarea rows="${Math.max(1, String(t.text).split('\n').length)}" aria-label="Task ${i + 1}">${esc(t.text)}</textarea><input type="number" min="0" max="240" step="1" value="${t.mins || ''}" placeholder="–" aria-label="Minutes"><button class="btn up" title="Move up" ${i ? '' : 'disabled style="opacity:.3"'}>↑</button><button class="btn dn" title="Move down" ${i < b.tasks.length - 1 ? '' : 'disabled style="opacity:.3"'}>↓</button><button class="btn warn del" title="Remove this task">✕</button></div>`).join('');
+  $('#e-del').style.display = S.boards.length > 1 ? '' : 'none';
+}
+function setEdit(on) { document.body.classList.toggle('editing', on); $('#edit').textContent = on ? '✓ Show board' : '✎ Edit'; if (on) fillEd(); else render(); }
+$('#edit').onclick = () => setEdit(!document.body.classList.contains('editing')); $('#e-done').onclick = () => setEdit(false);
+const bind = (id, f) => ($(id).oninput = (e) => { B()[f] = e.target.value; save(); if (f !== 'lo') fillPick(); });
+bind('#e-name', 'name'); bind('#e-title', 'title'); bind('#e-lo', 'lo');
+$('#erows').addEventListener('input', (e) => {
+  const r = e.target.closest('.er'); if (!r) return; const t = B().tasks[+r.dataset.i];
+  if (e.target.matches('textarea')) { t.text = e.target.value; e.target.rows = Math.max(1, t.text.split('\n').length); } else t.mins = Math.max(0, Math.min(240, +e.target.value || 0));
+  save();
+});
+$('#erows').addEventListener('click', (e) => {
+  const r = e.target.closest('.er'), btn = e.target.closest('button'); if (!r || !btn) return; const a = B().tasks, i = +r.dataset.i;
+  if (btn.matches('.up') && i > 0) [a[i - 1], a[i]] = [a[i], a[i - 1]]; else if (btn.matches('.dn') && i < a.length - 1) [a[i + 1], a[i]] = [a[i], a[i + 1]]; else if (btn.matches('.del')) a.splice(i, 1); else return;
+  save(); fillEd();
+});
+$('#e-add').onclick = () => { B().tasks.push({ text: '', mins: 0, done: false }); save(); fillEd(); const ta = $$('#erows textarea').pop(); ta && ta.focus(); };
+function newBoard() { const b = { id: uid(), name: 'New board ' + (S.boards.length + 1), title: '', lo: '', tasks: [{ text: '', mins: 0, done: false }] }; S.boards.push(b); S.cur = b.id; save(); fillPick(); setEdit(true); $('#e-name').select(); }
+$('#e-new').onclick = newBoard;
+$('#e-dup').onclick = () => { const o = B(), b = JSON.parse(JSON.stringify(o)); b.id = uid(); b.name = (o.name || 'Board') + ' (copy)'; b.tasks.forEach((t) => (t.done = false)); S.boards.push(b); S.cur = b.id; save(); fillPick(); fillEd(); };
+arm($('#e-del'), '🗑 Delete board', 'Tap again to delete', () => { if (S.boards.length < 2) return; S.boards = S.boards.filter((b) => b.id !== B().id); S.cur = S.boards[0].id; save(); fillPick(); fillEd(); });
+
+addEventListener('keydown', (e) => {
+  const editing = document.body.classList.contains('editing');
+  if (e.key === 'Escape' && editing) return setEdit(false);
+  if (editing || e.target.matches('input, select, textarea, button') || e.ctrlKey || e.metaKey || e.altKey) return;
+  const b = B(), k = e.key;
+  if (k === ' ') { const i = b.tasks.findIndex((t) => !t.done); if (i >= 0) toggle(i, true); e.preventDefault(); }
+  else if (k === 'Backspace') { let i = -1; b.tasks.forEach((t, j) => { if (t.done) i = j; }); if (i >= 0) toggle(i, false); e.preventDefault(); }
+  else if (k.toLowerCase() === 'e') setEdit(true); else if (k.toLowerCase() === 'm') $('#mute').click();
+});
+let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(fit, 80); });
+document.addEventListener('fullscreenchange', () => setTimeout(fit, 120));
+document.fonts && document.fonts.ready.then(fit);
+document.addEventListener('click', (e) => { const b = e.target.closest('#foot button, .tk-top button'); if (b) b.blur(); });
+TK.idle([$('#foot')], 4000);
+render();
+</script>
+</body>
+</html>

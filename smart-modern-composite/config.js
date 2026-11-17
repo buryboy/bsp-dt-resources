@@ -1,0 +1,27 @@
+// Lesson settings for the Smart, modern & composite materials workbook.
+window.BOOK_CONFIG = {
+  lesson: "smart-modern-composite-y10",
+  title: "Smart, modern & composite materials",
+  subtitle: "Materials that change, materials made new, materials combined, and textiles engineered for a job.",
+  course: 'AQA GCSE Design & Technology · Year 10',
+  emailDomain: 'bspcloud.net',
+  classes: ['10A', '10B', '10C', '10D', '10E', 'Other'],
+  backend: 'https://script.google.com/macros/s/AKfycbzKVTwGqoDJIE2n-dStzYwc44Vwfl4pSijs0ZcpP3AUZ90KYadLb_OHc0A8Ge_Oe7LQJQ/exec',
+  mis: {
+    "smart-meaning": "Thinks smart = electronic/powered, or doesn't know smart changes are r",
+    "stimulus-mixup": "Wrong stimulus",
+    "sma-mixup": "Doesn't understand shape memory",
+    "composite-meaning": "Confuses composites with alloys/mixtures/blends, or doesn't know matri",
+    "matrix-reinforcement": "Swaps matrix and reinforcement",
+    "concrete-tension": "Thinks concrete is strong in tension / doesn't know why steel rebar is",
+    "gfrp-cfrp": "Mixes up GRP and CFRP",
+    "modern-mixup": "Mixes up graphene, metal foam and titanium properties/uses",
+    "graphene-structure": "Wrong idea of what graphene is",
+    "metal-foam": "Doesn't know why foam absorbs impact / is light",
+    "titanium-props": "Thinks titanium is heavy, rusts or is cheap",
+    "kevlar-props": "Wrong properties/uses of Kevlar",
+    "tech-textile-mixup": "Mixes up conductive, fire resistant, Kevlar and microencapsulated fabr",
+    "microencap": "Doesn't know how micro-encapsulation releases its substance",
+    "group-mixup": "Puts a material in the wrong group",
+  },
+};

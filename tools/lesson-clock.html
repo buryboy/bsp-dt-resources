@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson clock · BSP D&amp;T tools</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E🕘%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.tk-top { flex: none; }
+#main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 2.2vw; gap: 1.4vh; }
+#date { text-align: center; font-size: clamp(18px, 3.2vh, 34px); font-weight: 600; color: var(--muted); }
+#clock { text-align: center; font-weight: 700; line-height: .86; white-space: nowrap; font-size: min(21vw, 31vh); }
+body.hasplan #clock { font-size: min(18vw, 24vh); }
+#clock .d { display: inline-block; width: .64em; text-align: center; }
+#clock .c { display: inline-block; width: .3em; text-align: center; }
+#clock .s { font-size: .36em; opacity: .7; margin-left: .12em; }
+#clock .s .d { width: .64em; }
+#clock .ap { font-size: .22em; margin-left: .25em; color: var(--muted); }
+#cards { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.6vw; }
+.pc { display: flex; flex-direction: column; justify-content: center; min-height: 0; overflow: hidden; padding: 1.6vh 2vw; position: relative; }
+.pc .tag { font-size: clamp(15px, 2.4vh, 24px); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.pc .name { font-size: min(5.4vw, 8.5vh); font-weight: 700; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc .sub { font-size: clamp(16px, 3vh, 30px); font-weight: 500; color: var(--muted); }
+#nowCard { box-shadow: 0 0 0 4px var(--ink2) inset; }
+#nowCard.gap { box-shadow: 0 0 0 2px var(--line) inset; }
+#nowRow { display: flex; align-items: flex-end; justify-content: space-between; gap: 2vw; }
+#nowText { min-width: 0; }
+#left { text-align: right; white-space: nowrap; line-height: .9; }
+#leftNum { font-size: min(11vw, 17vh); font-weight: 700; font-variant-numeric: tabular-nums; }
+#leftUnit { font-size: clamp(16px, 3vh, 30px); font-weight: 600; color: var(--muted); margin-left: .3em; }
+#nowCard.soon #leftNum { color: var(--red); }
+body.dark #nowCard.soon #leftNum { color: #ff8478; }
+.pbar { height: clamp(10px, 2vh, 20px); border-radius: 99px; background: var(--line); overflow: hidden; margin-top: 1.4vh; }
+.pbar i { display: block; height: 100%; width: 0; background: var(--ink2); border-radius: 99px; transition: width .5s linear; }
+#nowCard.gap .pbar, #nowCard.gap #left { visibility: hidden; }
+#nextIn { font-size: min(4vw, 6vh); font-weight: 700; margin-top: .6vh; }
+#strip { flex: none; }
+#stripHead { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; color: var(--muted); font-size: clamp(15px, 2.3vh, 22px); margin-bottom: 4px; }
+#phases { display: flex; gap: 6px; height: clamp(64px, 11vh, 120px); }
+.ph { position: relative; min-width: 0; border-radius: 14px; background: var(--card); box-shadow: 0 0 0 2px var(--line) inset; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding: 4px 12px; }
+.ph i { position: absolute; inset: 0 auto 0 0; width: 0; background: color-mix(in srgb, var(--ink2) 22%, transparent); }
+.ph b, .ph span { position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph b { font-size: clamp(16px, 3.2vh, 32px); font-weight: 700; }
+.ph span { font-size: clamp(13px, 2.2vh, 22px); color: var(--muted); font-weight: 600; }
+.ph.done { opacity: .5; }
+.ph.done i { width: 100% !important; }
+.ph.cur { box-shadow: 0 0 0 5px var(--ink2) inset; }
+.ph.cur span { color: var(--ink); }
+.ph.pop { animation: pop .9s ease-out; }
+@keyframes pop { 0% { transform: scale(.94); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+#controls { flex: none; padding: 8px 14px 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+label.tog { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+label.tog input { width: 20px; height: 20px; accent-color: var(--ink2); }
+.help { font-size: 14px; color: var(--muted); text-align: center; }
+.help kbd { font: inherit; font-weight: 600; border: 1.5px solid var(--line); border-radius: 6px; padding: 0 5px; background: var(--card); }
+.tk-hide-idle { transition: opacity .3s; }
+/* dialogs */
+.overlay { position: fixed; inset: 0; background: rgba(10, 14, 40, .55); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 12px; }
+.overlay[hidden] { display: none; }
+.dlg { background: var(--bg); color: var(--ink); border-radius: 20px; width: min(760px, 100%); max-height: 100%; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0, 0, 0, .4); }
+.dlg header { display: flex; align-items: center; gap: 10px; padding: 14px 18px 8px; }
+.dlg header h2 { margin: 0 auto 0 0; font-size: 24px; }
+.dlg .body { overflow: auto; padding: 4px 18px 10px; }
+.dlg footer { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 18px 16px; align-items: center; }
+.dlg p { margin: 4px 0 10px; color: var(--muted); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.btn.on { background: var(--ink); color: var(--bg); box-shadow: none; }
+.prow { display: grid; grid-template-columns: 1fr 128px 128px 48px; gap: 8px; margin-bottom: 8px; align-items: center; }
+.prow.plan { grid-template-columns: 1fr 110px 48px; }
+.prow input { min-height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); padding: 6px 10px; font-weight: 600; min-width: 0; width: 100%; }
+.prow.bad input[type=time] { border-color: var(--red); }
+.prow.head { font-weight: 600; color: var(--muted); font-size: 15px; margin-bottom: 2px; }
+.btn.del { padding: 10px 0; }
+.grow { margin-left: auto; }
+#planTotal { font-weight: 600; }
+@media (orientation: portrait) { #cards { grid-template-columns: 1fr; } .pc .name { font-size: min(8vw, 6vh); } #leftNum { font-size: min(17vw, 11vh); } #nextIn { font-size: min(6vw, 4.5vh); } }
+@media (max-width: 700px) { .prow { grid-template-columns: 1fr 104px 104px 44px; } }
+@media (max-height: 640px) { .help { display: none; } }
+</style>
+</head>
+<body>
+<main id="main">
+  <div id="date"></div>
+  <div id="clock" role="timer" aria-label="Time now"></div>
+  <section id="cards">
+    <div class="card pc" id="nowCard">
+      <div class="tag">Now</div>
+      <div id="nowRow">
+        <div id="nowText"><div class="name" id="nowName"></div><div class="sub" id="nowSub"></div></div>
+        <div id="left"><span id="leftNum"></span><span id="leftUnit"></span></div>
+      </div>
+      <div class="pbar"><i id="pfill"></i></div>
+    </div>
+    <div class="card pc" id="nextCard">
+      <div class="tag">Next</div>
+      <div class="name" id="nextName"></div>
+      <div class="sub" id="nextSub"></div>
+      <div id="nextIn"></div>
+    </div>
+  </section>
+  <section id="strip" hidden>
+    <div id="stripHead"><span id="stripTitle">Lesson plan</span><span id="stripLeft"></span></div>
+    <div id="phases"></div>
+  </section>
+</main>
+<div id="controls" class="tk-hide-idle">
+  <div class="row">
+    <button class="btn" id="ttBtn">🗓 Edit timetable</button>
+    <button class="btn" id="planBtn">📋 Lesson plan</button>
+    <button class="btn stop" id="planStop" hidden>✕ Stop plan</button>
+    <label class="btn tog"><input type="checkbox" id="h24"> 24-hour</label>
+    <label class="btn tog"><input type="checkbox" id="secs"> Seconds</label>
+    <label class="btn tog"><input type="checkbox" id="chime"> Phase chime</label>
+  </div>
+  <div class="help"><kbd>E</kbd> edit timetable · <kbd>P</kbd> lesson plan · <kbd>F</kbd> full screen · The timetable is saved on this computer only.</div>
+</div>
+
+<div class="overlay" id="ttDlg" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="ttH">
+    <header><h2 id="ttH">Timetable</h2><button class="btn blue" id="ttDone">Done</button></header>
+    <div class="body">
+      <p>Set this once. Each weekday has its own list; give every period a name, a start and an end. Breaks and lunch are just periods. Saved on this computer only.</p>
+      <div class="tabs" id="dayTabs"></div>
+      <div class="prow head"><span>Name</span><span>Starts</span><span>Ends</span><span></span></div>
+      <div id="rows"></div>
+    </div>
+    <footer>
+      <button class="btn go" id="addRow">＋ Add period</button>
+      <button class="btn" id="copyDay" title="Use this day's list for Monday to Friday">Copy to Mon–Fri</button>
+      <button class="btn" id="clearDay">Clear this day</button>
+      <button class="btn grow" id="resetDay" title="Put the standard school day back for this day">Default day</button>
+    </footer>
+  </div>
+</div>
+
+<div class="overlay" id="planDlg" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="plH">
+    <header><h2 id="plH">Lesson plan</h2><button class="btn" id="planClose">Close</button></header>
+    <div class="body">
+      <p>Split this lesson into phases. The strip under the clock shows where you are, and a chime sounds when a phase ends.</p>
+      <div class="prow plan head"><span>Phase</span><span>Minutes</span><span></span></div>
+      <div id="planRows"></div>
+      <div id="planTotal" class="muted"></div>
+    </div>
+    <footer>
+      <button class="btn" id="addPhase">＋ Add phase</button>
+      <button class="btn" id="planDefault">Starter / Main / Plenary</button>
+      <button class="btn blue grow" id="planFromStart" title="Count the phases from the start of the current period">▶ From start of period</button>
+      <button class="btn go" id="planNow">▶ Start now</button>
+    </footer>
+  </div>
+</div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+TK.top('Lesson clock');
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DEFAULT_DAY = () => [
+  { name: 'Registration', start: '08:40', end: '09:00' }, { name: 'Period 1', start: '09:00', end: '10:00' }, { name: 'Period 2', start: '10:00', end: '11:00' },
+  { name: 'Break', start: '11:00', end: '11:20' }, { name: 'Period 3', start: '11:20', end: '12:20' }, { name: 'Lunch', start: '12:20', end: '13:10' },
+  { name: 'Period 4', start: '13:10', end: '14:10' }, { name: 'Period 5', start: '14:10', end: '15:10' }];
+const DEFAULT_PLAN = () => [{ n: 'Starter', m: 10 }, { n: 'Main', m: 30 }, { n: 'Plenary', m: 10 }];
+const D = Object.assign({ days: null, h24: true, secs: true, chime: true, phases: DEFAULT_PLAN(), anchor: 0 }, TK.store('lessonClock', {}));
+if (!D.days) { D.days = {}; for (let d = 0; d < 7; d++) D.days[d] = d >= 1 && d <= 5 ? DEFAULT_DAY() : []; }
+for (let d = 0; d < 7; d++) if (!Array.isArray(D.days[d])) D.days[d] = [];
+if (!Array.isArray(D.phases) || !D.phases.length) D.phases = DEFAULT_PLAN();
+const save = () => TK.save('lessonClock', D);
+
+// ?now=2026-11-17T09:25:00 pretends it is that time (for trying the timetable out of hours)
+let offset = 0; { const q = new URLSearchParams(location.search).get('now'); if (q) { const t = new Date(q).getTime(); if (isFinite(t)) offset = t - Date.now(); } }
+const nowMs = () => Date.now() + offset;
+const pad = (n) => String(n).padStart(2, '0');
+const mins = (hm) => { const m = /^(\d{1,2}):(\d{2})$/.exec(hm || ''); return m ? +m[1] * 60 + +m[2] : NaN; };
+const valid = (p) => isFinite(mins(p.start)) && isFinite(mins(p.end)) && mins(p.end) > mins(p.start);
+const hm = (m) => { const h = Math.floor(m / 60), mm = m % 60; return D.h24 ? pad(h) + ':' + pad(mm) : ((h + 11) % 12 + 1) + ':' + pad(mm); };
+const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+function span(mn) { mn = Math.max(1, Math.ceil(mn)); return mn < 60 ? mn + ' min' : Math.floor(mn / 60) + ' h' + (mn % 60 ? ' ' + mn % 60 + ' min' : ''); }
+const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; };
+const cells = (s) => [...s].map((ch) => `<span class="${/\d/.test(ch) ? 'd' : 'c'}">${ch}</span>`).join('');
+
+let lastClock = '', lastPhase = null, lastStripKey = '';
+function current(d) {
+  const list = D.days[d.getDay()].filter(valid).map((p) => ({ name: p.name || 'Period', s: mins(p.start), e: mins(p.end) })).sort((a, b) => a.s - b.s);
+  const m = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+  return { list, m, cur: list.find((p) => m >= p.s && m < p.e) || null, next: list.find((p) => p.s > m) || null };
+}
+function tick() {
+  const d = new Date(nowMs()), h = d.getHours();
+  const clock = (D.h24 ? pad(h) : String((h + 11) % 12 + 1)) + ':' + pad(d.getMinutes()) + '|' + (D.secs ? pad(d.getSeconds()) : '') + '|' + (D.h24 ? '' : h < 12 ? 'am' : 'pm');
+  if (clock !== lastClock) { lastClock = clock; const [a, s, ap] = clock.split('|'); $('#clock').innerHTML = cells(a) + (s ? `<span class="s">${cells(s)}</span>` : '') + (ap ? `<span class="ap">${ap}</span>` : ''); }
+  setText($('#date'), DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()]);
+  const { list, m, cur, next } = current(d), nc = $('#nowCard');
+  nc.classList.toggle('gap', !cur);
+  if (cur) {
+    const secsLeft = Math.max(0, (cur.e - m) * 60);
+    setText($('#nowName'), cur.name); setText($('#nowSub'), hm(cur.s) + ' – ' + hm(cur.e));
+    if (secsLeft > 60) { setText($('#leftNum'), String(Math.ceil(secsLeft / 60))); setText($('#leftUnit'), 'min left'); }
+    else { setText($('#leftNum'), String(Math.ceil(secsLeft))); setText($('#leftUnit'), 'sec left'); }
+    nc.classList.toggle('soon', secsLeft <= 300);
+    $('#pfill').style.width = (Math.min(1, (m - cur.s) / (cur.e - cur.s)) * 100).toFixed(2) + '%';
+    document.title = Math.ceil(secsLeft / 60) + ' min left · ' + cur.name;
+  } else {
+    nc.classList.remove('soon');
+    const t = !list.length ? 'No lessons today' : m < list[0].s ? 'Before school' : !next ? 'School day finished' : 'Between lessons';
+    setText($('#nowName'), t); setText($('#nowSub'), !list.length ? 'Nothing is set for ' + DAYS[d.getDay()] + ' — use Edit timetable to add periods.' : '');
+    document.title = 'Lesson clock';
+  }
+  if (next) { setText($('#nextName'), next.name); setText($('#nextSub'), hm(next.s) + ' – ' + hm(next.e)); setText($('#nextIn'), 'in ' + span(next.s - m)); }
+  else { setText($('#nextName'), list.length ? 'Nothing else today' : '—'); setText($('#nextSub'), ''); setText($('#nextIn'), ''); }
+  plan();
+}
+
+// ---------- lesson-phase plan ----------
+const phasesOK = () => D.phases.filter((p) => p.m > 0);
+function plan() {
+  const ph = phasesOK(), total = ph.reduce((a, p) => a + p.m, 0), now = nowMs();
+  let active = D.anchor && ph.length && now >= D.anchor - 1000 && now < D.anchor + total * 60000 + 90000;
+  if (D.anchor && !active) { D.anchor = 0; save(); lastPhase = null; }
+  document.body.classList.toggle('hasplan', !!active); $('#strip').hidden = !active; $('#planStop').hidden = !active;
+  if (!active) { lastStripKey = ''; return; }
+  const el = Math.max(0, (now - D.anchor) / 60000); let idx = ph.length, acc = 0, into = 0;
+  for (let i = 0; i < ph.length; i++) { if (el < acc + ph[i].m) { idx = i; into = el - acc; break; } acc += ph[i].m; }
+  const key = ph.map((p) => p.n + ':' + p.m).join('|');
+  if (key !== lastStripKey) { lastStripKey = key; $('#phases').innerHTML = ph.map((p) => `<div class="ph" style="flex:${p.m} 1 0"><i></i><b>${esc(p.n || 'Phase')}</b><span></span></div>`).join(''); }
+  const els = $('#phases').children;
+  for (let i = 0; i < ph.length; i++) {
+    const e = els[i], done = i < idx, cur = i === idx;
+    e.classList.toggle('done', done); e.classList.toggle('cur', cur);
+    e.firstChild.style.width = cur ? (into / ph[i].m * 100).toFixed(2) + '%' : done ? '100%' : '0';
+    const left = (ph[i].m - into) * 60;
+    setText(e.lastChild, done ? '✓ done' : cur ? (left > 60 ? Math.ceil(left / 60) + ' min left' : Math.ceil(left) + ' s left') : ph[i].m + ' min');
+  }
+  setText($('#stripLeft'), idx >= ph.length ? 'Plan finished' : span(total - el) + ' of plan left');
+  setText($('#stripTitle'), idx >= ph.length ? 'Lesson plan' : 'Lesson plan · ' + (ph[idx].n || 'Phase') + ' (' + (idx + 1) + ' of ' + ph.length + ')');
+  if (lastPhase !== null && idx > lastPhase) { // a phase has just ended
+    if (D.chime) TK.beep(idx >= ph.length ? 'tada' : 'ding');
+    if (els[idx]) { els[idx].classList.remove('pop'); void els[idx].offsetWidth; els[idx].classList.add('pop'); }
+  }
+  lastPhase = idx;
+}
+function startPlan(at) { readPlan(); if (!phasesOK().length) return; D.anchor = at; lastPhase = null; lastStripKey = ''; save(); closeDlg(); tick(); }
+
+// ---------- timetable editor ----------
+let editDay = 1;
+function openTT() { editDay = new Date(nowMs()).getDay(); drawTT(); $('#ttDlg').hidden = false; }
+function drawTT() {
+  $('#dayTabs').innerHTML = [1, 2, 3, 4, 5, 6, 0].map((d) => `<button class="btn ${d === editDay ? 'on' : ''}" data-day="${d}">${DAYS[d].slice(0, 3)}${D.days[d].length ? '' : ' ·'}</button>`).join('');
+  $('#rows').innerHTML = D.days[editDay].map((p, i) => `<div class="prow ${p.start && p.end && !valid(p) ? 'bad' : ''}" data-i="${i}"><input class="pn" value="${esc(p.name || '')}" placeholder="Name" aria-label="Period name"><input class="ps" type="time" value="${esc(p.start || '')}" aria-label="Starts"><input class="pe" type="time" value="${esc(p.end || '')}" aria-label="Ends"><button class="btn del" title="Remove this period" aria-label="Remove">✕</button></div>`).join('')
+    || `<p>No periods on ${DAYS[editDay]}. Add one, or use “Default day”.</p>`;
+}
+function readTT() {
+  D.days[editDay] = [...$('#rows').querySelectorAll('.prow')].map((r) => ({ name: r.querySelector('.pn').value.trim(), start: r.querySelector('.ps').value, end: r.querySelector('.pe').value }));
+  [...$('#rows').querySelectorAll('.prow')].forEach((r, i) => { const p = D.days[editDay][i]; r.classList.toggle('bad', !!(p.start && p.end && !valid(p))); });
+  save();
+}
+const sortDay = (d) => D.days[d].sort((a, b) => (isFinite(mins(a.start)) ? mins(a.start) : 1e9) - (isFinite(mins(b.start)) ? mins(b.start) : 1e9));
+$('#rows').addEventListener('input', readTT);
+$('#rows').addEventListener('click', (e) => { const b = e.target.closest('.del'); if (!b) return; readTT(); D.days[editDay].splice(+b.parentNode.dataset.i, 1); save(); drawTT(); });
+$('#dayTabs').onclick = (e) => { const b = e.target.closest('[data-day]'); if (!b) return; readTT(); sortDay(editDay); editDay = +b.dataset.day; save(); drawTT(); };
+$('#addRow').onclick = () => {
+  readTT(); const L = D.days[editDay].filter(valid), last = L.length ? L.reduce((a, p) => (mins(p.end) > mins(a.end) ? p : a)) : null;
+  const s = last ? mins(last.end) : 9 * 60, e = Math.min(s + 60, 23 * 60 + 59), f = (m) => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+  D.days[editDay].push({ name: 'Period ' + (D.days[editDay].filter((p) => /^Period/i.test(p.name)).length + 1), start: f(s), end: f(e) }); save(); drawTT();
+  const rows = $('#rows').querySelectorAll('.pn'); rows.length && rows[rows.length - 1].select();
+};
+$('#copyDay').onclick = () => { readTT(); sortDay(editDay); for (let d = 1; d <= 5; d++) if (d !== editDay) D.days[d] = JSON.parse(JSON.stringify(D.days[editDay])); save(); drawTT(); flash($('#copyDay'), 'Copied ✓'); };
+$('#clearDay').onclick = () => { D.days[editDay] = []; save(); drawTT(); };
+$('#resetDay').onclick = () => { D.days[editDay] = DEFAULT_DAY(); save(); drawTT(); };
+function flash(btn, txt) { const o = btn.textContent; btn.textContent = txt; setTimeout(() => (btn.textContent = o), 1200); }
+
+// ---------- plan editor ----------
+function openPlan() { drawPlan(); $('#planDlg').hidden = false; }
+function drawPlan() {
+  $('#planRows').innerHTML = D.phases.map((p, i) => `<div class="prow plan" data-i="${i}"><input class="pn" value="${esc(p.n || '')}" placeholder="Phase name" aria-label="Phase name"><input class="pm" type="number" min="1" max="240" step="1" value="${p.m || ''}" aria-label="Minutes"><button class="btn del" title="Remove this phase" aria-label="Remove">✕</button></div>`).join('');
+  planTotal();
+}
+function planTotal() {
+  const total = phasesOK().reduce((a, p) => a + p.m, 0), { cur } = current(new Date(nowMs()));
+  let t = 'Total ' + plural(total, 'minute') + '.';
+  if (cur) { const len = cur.e - cur.s; t += ' ' + cur.name + ' is ' + len + ' minutes' + (total > len ? ' — the plan is ' + (total - len) + ' min too long.' : total < len ? ' — ' + (len - total) + ' min spare.' : ' — a perfect fit.'); }
+  $('#planTotal').textContent = t; $('#planFromStart').hidden = !cur;
+}
+function readPlan() {
+  if ($('#planDlg').hidden) return;
+  D.phases = [...$('#planRows').querySelectorAll('.prow')].map((r) => ({ n: r.querySelector('.pn').value.trim(), m: Math.max(0, Math.min(240, parseFloat(r.querySelector('.pm').value) || 0)) }));
+  save(); planTotal();
+}
+$('#planRows').addEventListener('input', readPlan);
+$('#planRows').addEventListener('click', (e) => { const b = e.target.closest('.del'); if (!b) return; readPlan(); D.phases.splice(+b.parentNode.dataset.i, 1); save(); drawPlan(); });
+$('#addPhase').onclick = () => { readPlan(); D.phases.push({ n: 'Phase ' + (D.phases.length + 1), m: 10 }); save(); drawPlan(); const r = $('#planRows').querySelectorAll('.pn'); r[r.length - 1].select(); };
+$('#planDefault').onclick = () => { D.phases = DEFAULT_PLAN(); save(); drawPlan(); };
+$('#planNow').onclick = () => { TK.beep('tick'); startPlan(nowMs()); };
+$('#planFromStart').onclick = () => { const d = new Date(nowMs()), { cur, m } = current(d); if (!cur) return; TK.beep('tick'); startPlan(nowMs() - (m - cur.s) * 60000); };
+$('#planStop').onclick = () => { D.anchor = 0; lastPhase = null; save(); tick(); };
+
+function closeDlg() {
+  if (!$('#ttDlg').hidden) { readTT(); for (let d = 0; d < 7; d++) sortDay(d); save(); }
+  if (!$('#planDlg').hidden) readPlan();
+  $('#ttDlg').hidden = true; $('#planDlg').hidden = true; tick();
+}
+$('#ttBtn').onclick = openTT; $('#planBtn').onclick = openPlan; $('#ttDone').onclick = closeDlg; $('#planClose').onclick = closeDlg;
+document.querySelectorAll('.overlay').forEach((o) => o.addEventListener('mousedown', (e) => { if (e.target === o) closeDlg(); }));
+$('#h24').checked = D.h24; $('#secs').checked = D.secs; $('#chime').checked = D.chime;
+$('#h24').onchange = (e) => { D.h24 = e.target.checked; save(); tick(); };
+$('#secs').onchange = (e) => { D.secs = e.target.checked; save(); tick(); };
+$('#chime').onchange = (e) => { D.chime = e.target.checked; save(); if (D.chime) TK.beep('ding'); };
+document.addEventListener('click', (e) => { const t = e.target.closest('#controls button, label.tog'); if (t && e.detail > 0) { t.blur(); const i = t.querySelector && t.querySelector('input'); i && i.blur(); } });
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeDlg(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const a = document.activeElement, tag = a && a.tagName;
+  if (tag === 'INPUT' && a.type !== 'checkbox' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (!$('#ttDlg').hidden || !$('#planDlg').hidden) return;
+  const k = e.key.toLowerCase();
+  if (k === 'f') { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (err) {} }
+  else if (k === 'e') { e.preventDefault(); openTT(); }
+  else if (k === 'p') { e.preventDefault(); openPlan(); }
+});
+TK.idle([$('#controls'), document.querySelector('.tk-top')], 4000);
+document.querySelector('.tk-top').classList.add('tk-hide-idle');
+tick(); setInterval(tick, 250);
+</script>
+</body>
+</html>

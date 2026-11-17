@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Class lists · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+main { max-width: 1240px; margin: 0 auto; padding: 0 16px 40px; display: grid; grid-template-columns: 290px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+.privacy { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; background: color-mix(in srgb, var(--green) 14%, var(--card)); border-radius: var(--radius); padding: 12px 16px; font-size: 17px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 45%, transparent) inset; }
+.privacy b { font-weight: 600; }
+.privacy .lock { font-size: 26px; }
+h2 { font-size: 18px; margin: 0 0 10px; font-weight: 600; }
+h3 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
+.clist { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.clist button { display: flex; justify-content: space-between; align-items: center; text-align: left; border: 0; border-radius: 12px; min-height: 46px; padding: 8px 14px; background: transparent; box-shadow: 0 0 0 2px var(--line) inset; cursor: pointer; font-weight: 600; font-size: 17px; }
+.clist button[aria-current="true"] { background: var(--ink2); color: #fff; box-shadow: none; }
+.clist .n { font-weight: 500; opacity: .75; font-size: 14px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+input[type=text], textarea, select.in { border: 2px solid var(--line); border-radius: 12px; background: var(--card); padding: 9px 12px; min-height: 44px; }
+input[type=text]:focus, textarea:focus, select:focus, button:focus-visible { outline: 3px solid var(--amber); outline-offset: 1px; }
+#cname { font-size: 24px; font-weight: 600; flex: 1; min-width: 180px; }
+textarea { width: 100%; min-height: 150px; resize: vertical; font-size: 16px; line-height: 1.35; }
+.chk { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; cursor: pointer; }
+.chk input { width: 22px; height: 22px; accent-color: var(--ink2); }
+.preview { font-size: 14px; margin: 6px 0; min-height: 20px; }
+.btn.sm { padding: 6px 12px; min-height: 44px; font-size: 15px; }
+.btn.danger { color: var(--red); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 13px; font-weight: 600; color: var(--muted); padding: 4px 6px; text-transform: uppercase; letter-spacing: .04em; }
+td { padding: 4px 6px; border-top: 2px solid var(--line); vertical-align: middle; }
+td.num { color: var(--muted); width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+td input.nm { width: 100%; min-width: 150px; font-weight: 500; border-color: transparent; background: transparent; }
+td input.nm:hover { border-color: var(--line); }
+.seg { display: inline-flex; border-radius: 12px; box-shadow: 0 0 0 2px var(--line) inset; overflow: hidden; }
+.seg button { border: 0; background: transparent; min-width: 40px; min-height: 44px; font-weight: 600; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink2); color: #fff; }
+.apart { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 4px; background: color-mix(in srgb, var(--amber) 22%, var(--card)); border-radius: 999px; padding: 2px 4px 2px 10px; font-size: 14px; }
+.chip button { border: 0; background: transparent; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; font-weight: 700; }
+.apart select { max-width: 150px; border: 2px dashed var(--line); border-radius: 999px; background: transparent; min-height: 36px; padding: 2px 8px; font-size: 14px; color: var(--muted); }
+td .x { border: 0; background: transparent; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; font-size: 18px; color: var(--red); }
+td .x:hover { background: color-mix(in srgb, var(--red) 12%, transparent); }
+.empty { text-align: center; padding: 40px 16px; font-size: 19px; }
+#flash { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 600; opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 92vw; text-align: center; z-index: 9; }
+#flash.on { opacity: 1; }
+a.backlink { text-decoration: none; display: inline-flex; align-items: center; }
+.tablewrap { overflow-x: auto; }
+.legend { font-size: 14px; margin: 4px 0 10px; }
+body.dark .seg button[aria-pressed="true"], body.dark .btn.blue, body.dark .clist button[aria-current="true"], body.dark .tabs button[aria-selected="true"] { color: #111527; }
+</style>
+</head>
+<body>
+<main>
+  <div class="privacy"><span class="lock" aria-hidden="true">🔒</span><span><b>Names stay on this computer only.</b> They are saved in this browser, never uploaded or sent anywhere. Use Export to back them up or move them to another computer.</span></div>
+  <section class="card" aria-label="Classes">
+    <h2>Classes</h2>
+    <div class="clist" id="clist"></div>
+    <div class="row"><input type="text" id="newname" placeholder="New class, e.g. 7A" maxlength="40" style="flex:1;min-width:120px" aria-label="New class name"><button class="btn go sm" id="add">＋ Add</button></div>
+    <h3>Backup / move</h3>
+    <div class="row">
+      <button class="btn sm" id="expJson" title="Everything: names, markers, keep-apart pairs and seating plans">⬇ Export JSON</button>
+      <button class="btn sm" id="expCsv" title="A spreadsheet-friendly list: class, name, marker, keep apart">⬇ Export CSV</button>
+      <button class="btn sm" id="imp">⬆ Import file…</button>
+      <input type="file" id="file" accept=".json,.csv,.txt,application/json,text/csv" hidden>
+    </div>
+    <p class="muted legend">JSON is the full backup (includes seating plans). CSV opens in a spreadsheet. Importing a class with the same name replaces it.</p>
+  </section>
+  <section class="card" id="editor" aria-label="Class editor"></section>
+</main>
+<div id="flash" role="status"></div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const slot = TK.top('Class lists');
+const TOOL_NAMES = { 'name-picker.html': 'Name picker', 'groups.html': 'Group maker', 'seating.html': 'Seating planner' };
+const back = new URLSearchParams(location.search).get('back');
+if (back && /^[\w-]+\.html$/.test(back)) {
+  const a = document.createElement('a'); a.className = 'btn blue backlink'; a.href = back; a.textContent = '← Back to ' + (TOOL_NAMES[back] || 'the tool'); slot.append(a);
+}
+
+let classes = TK.classes(), meta = TK.store('classMeta', {}), cur = TK.store('lastClass', '');
+const sorted = () => Object.keys(classes).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+if (!classes[cur]) cur = sorted()[0] || '';
+const M = (n) => { const m = (meta[n] = meta[n] || {}); m.level = m.level || {}; m.apart = m.apart || []; return m; };
+let flashT;
+function flash(t) { const f = $('#flash'); f.textContent = t; f.classList.add('on'); clearTimeout(flashT); flashT = setTimeout(() => f.classList.remove('on'), 2200); }
+function saveAll(msg) { TK.saveClasses(classes); TK.save('classMeta', meta); TK.save('lastClass', cur); if (msg !== false) flash(msg || 'Saved on this computer'); }
+
+// ---------- other tools' data that is keyed by class / student name ----------
+function migrate(fn) { ['seating', 'picker', 'groups', 'absent'].forEach((k) => { const v = TK.store(k, null); if (v && fn(k, v) !== false) TK.save(k, v); }); }
+function renameKey(o, a, b) { if (o && Object.prototype.hasOwnProperty.call(o, a)) { o[b] = o[a]; delete o[a]; } }
+function renameClassEverywhere(a, b) {
+  migrate((k, v) => { if (k === 'seating') renameKey(v, a, b); else if (k === 'picker') renameKey(v.picked, a, b); else if (k === 'groups') renameKey(v.last, a, b); else if (k === 'absent') renameKey(v.by, a, b); });
+}
+function renameStudentEverywhere(cls, a, b) {
+  const sw = (arr) => { if (Array.isArray(arr)) { const i = arr.indexOf(a); if (i >= 0) arr[i] = b; } };
+  migrate((k, v) => {
+    if (k === 'seating' && v[cls]) (v[cls].plans || []).forEach((p) => Object.keys(p.seats || {}).forEach((s) => { if (p.seats[s] === a) p.seats[s] = b; }));
+    else if (k === 'picker') sw(v.picked && v.picked[cls]);
+    else if (k === 'absent') sw(v.by && v.by[cls]);
+    else if (k === 'groups' && v.last && v.last[cls]) v.last[cls].forEach((g) => sw(g.members));
+  });
+}
+
+// ---------- pasted names ----------
+const HEADER = /^(names?|students?|pupils?|surname|last ?name|first ?name|forename|full ?name|nom|pr[ée]nom|[ée]l[èe]ves?)$/i;
+const isCaps = (t) => t.length >= 2 && t === t.toUpperCase() && /\p{L}/u.test(t);
+const title = (t) => t.toLowerCase().replace(/(^|[-' ])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+function parseNames(text, conv) {
+  const out = [];
+  text.split(/\r?\n/).forEach((line) => {
+    const cells = line.split('\t').map((c) => c.trim().replace(/^"(.*)"$/, '$1').trim()).filter((c) => c && !/^\d+[.)]?$/.test(c));
+    if (!cells.length) return;
+    let s = cells[0];
+    // two spreadsheet columns (Surname | First, or First | Surname)
+    if (cells.length >= 2 && !/[ ,]/.test(s) && /^[^\d@]+$/.test(cells[1]) && !HEADER.test(s)) s = conv ? cells[1] + ' ' + (isCaps(s) ? title(s) : s) : s + ' ' + cells[1];
+    s = s.replace(/^\d+[.)]\s*/, '').replace(/^[-•*]\s*/, '');
+    if (conv) {
+      if (s.includes(',')) { const p = s.split(','), sur = p.shift().trim(), first = p.join(' ').trim(); s = first ? first + ' ' + (isCaps(sur) ? title(sur) : sur) : sur; }
+      else { const t = s.split(/\s+/); let i = 0; while (i < t.length - 1 && isCaps(t[i])) i++; if (i > 0 && !isCaps(t[i])) s = t.slice(i).join(' ') + ' ' + t.slice(0, i).map(title).join(' '); }
+    }
+    s = s.replace(/\s+/g, ' ').trim().slice(0, 60);
+    if (s && !HEADER.test(s)) out.push(s);
+  });
+  return out;
+}
+
+// ---------- rendering ----------
+function renderList() {
+  const names = sorted();
+  $('#clist').innerHTML = names.length ? names.map((n) => `<button data-c="${esc(n)}" aria-current="${n === cur}"><span>${esc(n)}</span><span class="n">${classes[n].length}</span></button>`).join('') : '<p class="muted" style="margin:0">No classes yet. Add your first one below.</p>';
+}
+function renderEditor() {
+  const ed = $('#editor');
+  if (!cur) { ed.innerHTML = '<div class="empty"><b>Add a class to begin.</b><br><span class="muted">Type a class name on the left (for example 7A), then paste in the names.</span></div>'; return; }
+  const st = classes[cur], m = M(cur);
+  const partners = (n) => m.apart.filter((p) => p.includes(n)).map((p) => (p[0] === n ? p[1] : p[0]));
+  ed.innerHTML = `
+    <div class="row"><input type="text" id="cname" value="${esc(cur)}" maxlength="40" aria-label="Class name" title="Rename this class"><span class="muted">${st.length} student${st.length === 1 ? '' : 's'}</span><button class="btn sm danger" id="del">🗑 Delete class</button></div>
+    <h3>Add names</h3>
+    <textarea id="paste" placeholder="Paste or type names here, one per line.&#10;You can paste a column (or two columns) straight from a spreadsheet or register."></textarea>
+    <div class="row"><label class="chk"><input type="checkbox" id="conv"> List is “Surname, First” or “SURNAME First”: change to “First Surname”</label></div>
+    <div class="preview muted" id="preview"></div>
+    <div class="row"><button class="btn go" id="addNames">＋ Add these names</button><button class="btn sm" id="sortAz" ${st.length < 2 ? 'disabled' : ''}>Sort A–Z</button><button class="btn sm" id="sortSur" ${st.length < 2 ? 'disabled' : ''}>Sort by surname</button></div>
+    <h3>Students</h3>
+    ${st.length ? `<p class="muted legend"><b>Marker 1–3</b> is your own scale (for example 1 = needs more support, 3 = most confident). The group maker uses it for mixed groups. <b>Keep apart</b> pairs are respected by the group maker and seating planner. Neither is ever shown on the board.</p>
+    <div class="tablewrap"><table><thead><tr><th></th><th>Name</th><th>Marker</th><th>Keep apart from</th><th></th></tr></thead><tbody>
+    ${st.map((n, i) => `<tr data-i="${i}"><td class="num">${i + 1}</td><td><input type="text" class="nm" value="${esc(n)}" maxlength="60" aria-label="Student name"></td>
+      <td><span class="seg" role="group" aria-label="Marker for ${esc(n)}">${[0, 1, 2, 3].map((v) => `<button data-lv="${v}" aria-pressed="${(m.level[n] || 0) === v}" title="${v ? 'Marker ' + v : 'No marker'}">${v || '–'}</button>`).join('')}</span></td>
+      <td><div class="apart">${partners(n).map((p) => `<span class="chip">${esc(p)}<button data-un="${esc(p)}" title="Remove this pair" aria-label="Stop keeping apart from ${esc(p)}">×</button></span>`).join('')}
+        <select class="ka" aria-label="Keep ${esc(n)} apart from"><option value="">＋ add…</option>${st.filter((o) => o !== n && !partners(n).includes(o)).map((o) => `<option>${esc(o)}</option>`).join('')}</select></div></td>
+      <td><button class="x" title="Remove ${esc(n)}" aria-label="Remove ${esc(n)}">✕</button></td></tr>`).join('')}
+    </tbody></table></div>` : '<p class="muted">No names yet. Paste a list above.</p>'}`;
+  const upd = () => { const a = parseNames($('#paste').value, $('#conv').checked); $('#preview').textContent = a.length ? `${a.length} name${a.length === 1 ? '' : 's'} to add: ${a.slice(0, 6).join(', ')}${a.length > 6 ? ', …' : ''}` : ''; };
+  $('#paste').oninput = upd; $('#conv').onchange = upd;
+  $('#paste').addEventListener('paste', () => setTimeout(() => {
+    const lines = $('#paste').value.split(/\r?\n/).filter((l) => l.trim());
+    const hit = lines.filter((l) => l.includes(',') || isCaps(l.trim().split(/[\s\t]+/)[0] || '')).length;
+    if (lines.length && hit / lines.length > 0.5) $('#conv').checked = true;
+    upd();
+  }, 0));
+}
+function render() { renderList(); renderEditor(); }
+
+// ---------- class list actions ----------
+$('#clist').onclick = (e) => { const b = e.target.closest('button[data-c]'); if (!b) return; cur = b.dataset.c; TK.save('lastClass', cur); render(); };
+function addClass() {
+  const n = $('#newname').value.replace(/\s+/g, ' ').trim();
+  if (!n) { $('#newname').focus(); return; }
+  if (n === '__edit') return flash('Please choose a different name');
+  if (classes[n]) { cur = n; render(); return flash('That class already exists'); }
+  classes[n] = []; cur = n; $('#newname').value = ''; saveAll('Class added'); render(); $('#paste').focus();
+}
+$('#add').onclick = addClass;
+$('#newname').onkeydown = (e) => { if (e.key === 'Enter') addClass(); };
+
+// ---------- editor actions (delegated) ----------
+const ed = $('#editor');
+ed.addEventListener('click', (e) => {
+  const st = classes[cur]; if (!st) return;
+  const tr = e.target.closest('tr[data-i]'), name = tr ? st[+tr.dataset.i] : null, m = M(cur);
+  if (e.target.id === 'del') {
+    if (!confirm(`Delete the class “${cur}” and its ${st.length} names? Its seating plans are deleted too.`)) return;
+    const old = cur; delete classes[cur]; delete meta[cur];
+    migrate((k, v) => { if (k === 'seating') delete v[old]; else if (k === 'picker' && v.picked) delete v.picked[old]; else if (k === 'groups' && v.last) delete v.last[old]; else if (k === 'absent' && v.by) delete v.by[old]; });
+    cur = sorted()[0] || ''; saveAll('Class deleted'); render();
+  } else if (e.target.id === 'addNames') {
+    const add = parseNames($('#paste').value, $('#conv').checked); let dup = 0, n = 0;
+    add.forEach((s) => { if (st.includes(s)) dup++; else { st.push(s); n++; } });
+    if (!add.length) return flash('Nothing to add yet: paste some names first');
+    saveAll(`${n} added${dup ? `, ${dup} already in the class (skipped)` : ''}`); render();
+  } else if (e.target.id === 'sortAz') { st.sort((a, b) => a.localeCompare(b)); saveAll('Sorted A–Z'); render(); }
+  else if (e.target.id === 'sortSur') { const k = (s) => s.split(' ').slice(-1)[0] + ' ' + s; st.sort((a, b) => k(a).localeCompare(k(b))); saveAll('Sorted by surname'); render(); }
+  else if (e.target.dataset.lv != null && name) { const v = +e.target.dataset.lv; if (v) m.level[name] = v; else delete m.level[name]; saveAll(false); tr.querySelectorAll('[data-lv]').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.lv === v)); }
+  else if (e.target.dataset.un != null && name) { const o = e.target.dataset.un; m.apart = m.apart.filter((p) => !(p.includes(name) && p.includes(o))); saveAll(false); render(); }
+  else if (e.target.classList.contains('x') && name) {
+    st.splice(+tr.dataset.i, 1); delete m.level[name]; m.apart = m.apart.filter((p) => !p.includes(name)); saveAll(`${name} removed`); render();
+  }
+});
+ed.addEventListener('change', (e) => {
+  const st = classes[cur]; if (!st) return; const m = M(cur);
+  if (e.target.id === 'cname') {
+    const n = e.target.value.replace(/\s+/g, ' ').trim();
+    if (!n || n === cur) { e.target.value = cur; return; }
+    if (classes[n] || n === '__edit') { e.target.value = cur; return flash('There is already a class with that name'); }
+    classes[n] = st; delete classes[cur]; if (meta[cur]) { meta[n] = meta[cur]; delete meta[cur]; }
+    renameClassEverywhere(cur, n); cur = n; saveAll('Class renamed'); render();
+  } else if (e.target.classList.contains('nm')) {
+    const tr = e.target.closest('tr'), i = +tr.dataset.i, old = st[i], n = e.target.value.replace(/\s+/g, ' ').trim();
+    if (!n || n === old) { e.target.value = old; return; }
+    if (st.includes(n)) { e.target.value = old; return flash('That name is already in this class'); }
+    st[i] = n; if (m.level[old]) { m.level[n] = m.level[old]; delete m.level[old]; }
+    m.apart.forEach((p) => { if (p[0] === old) p[0] = n; if (p[1] === old) p[1] = n; });
+    renameStudentEverywhere(cur, old, n); saveAll('Name changed'); render();
+  } else if (e.target.classList.contains('ka') && e.target.value) {
+    const name = st[+e.target.closest('tr').dataset.i]; m.apart.push([name, e.target.value]); saveAll(false); render();
+  }
+});
+ed.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input[type=text]')) e.target.blur(); });
+
+// ---------- export / import ----------
+function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+const stamp = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const csvCell = (s) => (/[",\n;]/.test(s) ? '"' + String(s).replace(/"/g, '""') + '"' : String(s));
+$('#expJson').onclick = () => {
+  if (!sorted().length) return flash('No classes to export yet');
+  download(`bsp-classes-${stamp()}.json`, JSON.stringify({ app: 'bsp-dt-tools-classes', version: 1, exported: new Date().toISOString(), classes, meta, seating: TK.store('seating', {}) }, null, 2), 'application/json');
+};
+$('#expCsv').onclick = () => {
+  if (!sorted().length) return flash('No classes to export yet');
+  const rows = [['class', 'name', 'marker', 'keep_apart']];
+  sorted().forEach((c) => { const m = M(c); classes[c].forEach((n) => rows.push([c, n, m.level[n] || '', m.apart.filter((p) => p.includes(n)).map((p) => (p[0] === n ? p[1] : p[0])).join('; ')])); });
+  download(`bsp-classes-${stamp()}.csv`, '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n'), 'text/csv');
+};
+function parseCsv(text) {
+  const rows = []; let row = [], cell = '', q = false; text = text.replace(/^﻿/, '');
+  const sep = (text.split('\n')[0].match(/;/g) || []).length > (text.split('\n')[0].match(/,/g) || []).length ? ';' : ',';
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"') q = true; else if (ch === sep) { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.map((r) => r.map((c) => c.trim())).filter((r) => r.some((c) => c));
+}
+function importData(text, fileName) {
+  const inC = {}, inM = {}; let inSeat = null;
+  const t = text.trim();
+  if (t[0] === '{') {
+    const d = JSON.parse(t), src = d.classes || d;
+    Object.keys(src).forEach((c) => { if (Array.isArray(src[c])) inC[c] = [...new Set(src[c].map((s) => String(s).trim()).filter(Boolean))]; });
+    if (d.meta) Object.keys(d.meta).forEach((c) => { if (inC[c]) inM[c] = d.meta[c]; });
+    if (d.seating && typeof d.seating === 'object') inSeat = d.seating;
+  } else {
+    const rows = parseCsv(t); if (!rows.length) throw new Error('empty');
+    const head = rows[0].map((h) => h.toLowerCase()), hasHead = head.includes('name') || head.includes('class');
+    const ci = hasHead ? head.indexOf('class') : (rows[0].length > 1 ? 0 : -1), ni = hasHead ? head.indexOf('name') : (rows[0].length > 1 ? 1 : 0);
+    const mi = hasHead ? head.indexOf('marker') : 2, ki = hasHead ? head.indexOf('keep_apart') : 3;
+    if (ni < 0) throw new Error('no name column');
+    const fallback = (fileName || 'Imported class').replace(/\.[^.]+$/, '').slice(0, 40);
+    rows.slice(hasHead ? 1 : 0).forEach((r) => {
+      const c = (ci >= 0 && r[ci]) || fallback, n = r[ni]; if (!n) return;
+      inC[c] = inC[c] || []; inM[c] = inM[c] || { level: {}, apart: [] };
+      if (!inC[c].includes(n)) inC[c].push(n);
+      const lv = +r[mi]; if (lv >= 1 && lv <= 3) inM[c].level[n] = lv;
+      if (ki >= 0 && r[ki]) r[ki].split(';').map((s) => s.trim()).filter(Boolean).forEach((o) => { if (!inM[c].apart.some((p) => p.includes(n) && p.includes(o))) inM[c].apart.push([n, o]); });
+    });
+  }
+  const names = Object.keys(inC).filter((c) => c !== '__edit'); if (!names.length) throw new Error('no classes');
+  const clash = names.filter((c) => classes[c]);
+  if (clash.length && !confirm(`This file contains ${names.length} class${names.length === 1 ? '' : 'es'}.\n\n${clash.join(', ')} already exist${clash.length === 1 ? 's' : ''} here and will be replaced by the version in the file. Continue?`)) return;
+  const seat = TK.store('seating', {});
+  names.forEach((c) => {
+    classes[c] = inC[c]; const m = inM[c] || {}, lv = {}, ap = [];
+    Object.keys(m.level || {}).forEach((n) => { if (inC[c].includes(n) && m.level[n] >= 1 && m.level[n] <= 3) lv[n] = +m.level[n]; });
+    (m.apart || []).forEach((p) => { if (Array.isArray(p) && inC[c].includes(p[0]) && inC[c].includes(p[1]) && p[0] !== p[1]) ap.push([p[0], p[1]]); });
+    meta[c] = { level: lv, apart: ap };
+    if (inSeat && inSeat[c]) seat[c] = inSeat[c];
+  });
+  if (inSeat) TK.save('seating', seat);
+  cur = names.sort()[0]; saveAll(`Imported ${names.length} class${names.length === 1 ? '' : 'es'}`); render();
+}
+$('#imp').onclick = () => $('#file').click();
+$('#file').onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { try { importData(String(r.result), f.name); } catch (err) { flash('That file could not be read as a class list (JSON or CSV)'); } e.target.value = ''; };
+  r.readAsText(f);
+};
+render();
+</script>
+</body>
+</html>

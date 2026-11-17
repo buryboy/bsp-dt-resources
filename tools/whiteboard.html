@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Whiteboard · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+body { display: flex; flex-direction: column; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.tk-top { flex: none; padding: 6px 12px; gap: 8px; }
+.tk-top h1 { font-size: 20px; }
+.tk-slot { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.tk-slot select, .tk-slot .btn { min-height: 44px; padding: 6px 12px; border-radius: 12px; }
+.tk-slot select { border: 2px solid var(--line); background: var(--card); font-weight: 600; }
+.btn.on { background: var(--ink2); color: #fff; box-shadow: 0 3px 0 #18237a; }
+.btn[disabled] { opacity: .35; pointer-events: none; }
+#stage { flex: 1; min-height: 0; position: relative; overflow: hidden; background: #fff; touch-action: none; }
+#stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#live { cursor: crosshair; }
+#live.text { cursor: text; }
+
+/* tool rail + bars */
+#rail { position: absolute; left: 8px; top: 8px; display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: 16px; background: color-mix(in srgb, var(--card) 94%, transparent); box-shadow: 0 4px 18px rgba(0, 0, 30, .22), 0 0 0 2px var(--line) inset; z-index: 5; max-height: calc(100% - 16px); flex-wrap: wrap; }
+#rail button, #bar button.ic { width: 44px; height: 44px; border: 0; border-radius: 11px; background: transparent; color: var(--ink); cursor: pointer; display: grid; place-items: center; padding: 0; }
+#rail button svg, #bar button.ic svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+#rail button.on { background: var(--ink2); color: #fff; }
+#rail button:disabled { opacity: .3; }
+#rail hr { border: 0; border-top: 2px solid var(--line); width: 80%; margin: 2px auto; }
+#bar { position: absolute; left: 8px; right: 8px; bottom: 8px; margin: 0 auto; width: fit-content; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 16px; background: color-mix(in srgb, var(--card) 94%, transparent); box-shadow: 0 4px 18px rgba(0, 0, 30, .22), 0 0 0 2px var(--line) inset; z-index: 5; flex-wrap: wrap; justify-content: center; }
+.sw { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--card); box-shadow: 0 0 0 2px var(--line); cursor: pointer; padding: 0; flex: none; }
+.sw.on { box-shadow: 0 0 0 3px var(--ink2); transform: scale(1.12); }
+#custom { width: 40px; height: 40px; padding: 0; border: 0; background: none; cursor: pointer; }
+#size { width: 120px; accent-color: var(--ink2); height: 44px; }
+#dot { width: 44px; height: 44px; display: grid; place-items: center; flex: none; }
+#dot i { display: block; border-radius: 50%; background: var(--ink); }
+.vsep { width: 2px; align-self: stretch; background: var(--line); margin: 0 4px; }
+#pg { font-weight: 700; min-width: 3.4em; text-align: center; font-variant-numeric: tabular-nums; }
+#help { position: absolute; right: 10px; bottom: 70px; z-index: 6; max-width: 380px; font-size: 14px; line-height: 1.5; display: none; -webkit-user-select: text; user-select: text; }
+#help.on { display: block; }
+#help b { display: inline-block; min-width: 5.2em; }
+#toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: #1b2140; color: #fff; padding: 8px 16px; border-radius: 12px; font-weight: 600; z-index: 9; opacity: 0; transition: opacity .3s; pointer-events: none; }
+#toast.on { opacity: 1; }
+
+/* text entry */
+#tin { position: absolute; z-index: 4; border: 2px dashed #7d8ad6; border-radius: 6px; background: rgba(255, 255, 255, .12); outline: 0; resize: none; overflow: hidden; padding: 2px 6px; margin: -4px 0 0 -8px; font-family: Fredoka, system-ui, sans-serif; font-weight: 500; line-height: 1.2; white-space: pre; min-width: 60px; -webkit-user-select: text; user-select: text; }
+
+/* ruler + protractor */
+.ov { position: absolute; left: 0; top: 0; transform-origin: 0 0; z-index: 3; touch-action: none; }
+#ruler { width: 700px; height: 70px; cursor: grab; background: rgba(255, 214, 92, .82); border: 1.5px solid #8a6a00; border-top-width: 2px; border-radius: 0 0 8px 8px; box-shadow: 0 6px 14px rgba(0, 0, 0, .22); color: #3d2f00; }
+#ruler svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#ruler .ang, #pro .ang { position: absolute; font-weight: 700; font-size: 15px; pointer-events: none; font-variant-numeric: tabular-nums; }
+#ruler .ang { left: 50%; bottom: 4px; transform: translateX(-50%); }
+.grip { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: #1e2e96; color: #fff; display: grid; place-items: center; cursor: grab; font-size: 22px; box-shadow: 0 2px 6px rgba(0, 0, 0, .35); touch-action: none; }
+#ruler .grip { right: 6px; bottom: 6px; }
+#pro { width: 0; height: 0; }
+#pro svg { position: absolute; left: -270px; top: -270px; width: 540px; height: 310px; overflow: visible; pointer-events: none; }
+#pro svg .body { pointer-events: visiblePainted; cursor: grab; }
+#pro .grip { left: 226px; top: -4px; }
+#pro .ang { left: -28px; top: -64px; width: 56px; text-align: center; color: #0b3a55; }
+.ov[hidden] { display: none; }
+@media (max-width: 760px) { #size { width: 84px; } .sw { width: 32px; height: 32px; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bg"></canvas><canvas id="ink"></canvas><canvas id="live"></canvas>
+  <div id="ruler" class="ov" hidden><svg id="rsvg"></svg><span class="ang" id="rang">0°</span><span class="grip" id="rgrip" title="Drag to rotate the ruler">⟳</span></div>
+  <div id="pro" class="ov" hidden><svg id="psvg" viewBox="-270 -270 540 310"></svg><span class="ang" id="pang">0°</span><span class="grip" id="pgrip" title="Drag to rotate the protractor">⟳</span></div>
+  <div id="rail"></div>
+  <div id="bar">
+    <span id="swatches" style="display:flex;gap:6px;align-items:center"></span>
+    <input type="color" id="custom" title="Any colour" value="#00a3a3" aria-label="Custom colour">
+    <span class="vsep"></span>
+    <span id="dot" title="Pen size"><i></i></span><input type="range" id="size" min="1" max="30" step="1" aria-label="Size">
+    <span class="vsep"></span>
+    <button class="ic" id="pprev" title="Previous page (←)"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <span id="pg">1 / 1</span>
+    <button class="ic" id="pnext" title="Next page (→)"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="ic" id="padd" title="Add a page after this one"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="ic" id="pdel" title="Delete this page"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg></button>
+    <button class="ic" id="bhelp" title="Keyboard shortcuts"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1 1-1.1 1.8M12 17v.2"/></svg></button>
+  </div>
+  <div id="help" class="card">
+    <b>P</b> pen · <b>H</b> highlighter · <b>E</b> eraser<br><b>L</b> line · <b>A</b> arrow · <b>R</b> rectangle · <b>C</b> circle · <b>T</b> text<br>
+    <b>Shift</b> straight at 15°, square, true circle<br><b>Ctrl+Z / Y</b> undo / redo · <b>Ctrl+S</b> save PNG · <b>Ctrl+V</b> paste a picture<br>
+    <b>← →</b> pages · <b>[ ]</b> thinner / thicker · <b>1–8</b> colours<br>Draw close to the ruler's top edge for a straight line. Everything stays on this computer.
+  </div>
+  <div id="toast"></div>
+</div>
+<input type="file" id="file" accept="image/*" hidden>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const slot = TK.top('Whiteboard');
+slot.innerHTML = `<select id="bgsel" title="Background" aria-label="Background">
+    <option value="blank">Blank</option><option value="lined">Lined</option><option value="grid">Square grid</option><option value="dots">Dot grid</option><option value="iso">Isometric grid</option><option value="ortho">Orthographic (3rd angle)</option></select>
+  <select id="paper" title="Paper colour" aria-label="Paper colour"><option value="white">White</option><option value="black">Blackboard</option><option value="green">Green board</option></select>
+  <button class="btn" id="bpic" title="Upload a picture to draw on (or paste / drop one)">🖼 Picture</button>
+  <button class="btn" id="bruler" title="Ruler (drag to move, ⟳ to rotate)">📏 Ruler</button>
+  <button class="btn" id="bpro" title="Protractor (drag to move, ⟳ to rotate)">◓ Protractor</button>
+  <button class="btn blue" id="bsave" title="Save this page as a PNG picture (Ctrl+S)">⬇ PNG</button>`;
+
+// ---------- settings + pages ----------
+const U = 40;                                   // grid unit in px (the ruler uses the same unit)
+const COLORS = ['#111111', '#1e2e96', '#d33a2c', '#1f9d45', '#f08a00', '#8a3fd1', '#ffffff'];
+const PAPER = { white: '#ffffff', black: '#14171f', green: '#1d4a38' };
+const TOOLS = [
+  ['pen', 'Pen (P)', '<path d="M4 20l1-5L16 4l4 4L9 19z"/><path d="M14 6l4 4"/>'],
+  ['hl', 'Highlighter (H)', '<path d="M9 15l-2 5h6l1-3"/><path d="M8 14l8-10 4 3-8 10z"/>'],
+  ['eraser', 'Eraser (E)', '<path d="M4 15l9-10 7 6-8 9H8z"/><path d="M9 10l7 6M4 20h16"/>'],
+  ['line', 'Straight line (L)', '<path d="M5 19L19 5"/>'],
+  ['arrow', 'Arrow (A)', '<path d="M5 19L19 5M10 5h9v9"/>'],
+  ['rect', 'Rectangle (R)', '<rect x="4" y="6" width="16" height="12" rx="1"/>'],
+  ['ellipse', 'Circle / ellipse (C)', '<circle cx="12" cy="12" r="8"/>'],
+  ['text', 'Text (T)', '<path d="M5 6h14M12 6v13M9 19h6"/>'],
+];
+const set = Object.assign({ tool: 'pen', color: '#111111', size: 4, bg: 'blank', paper: 'white', ruler: null, pro: null }, TK.store('wb.set', {}));
+const saveSet = () => TK.save('wb.set', set);
+const newPage = () => ({ bg: set.bg, paper: set.paper, img: null, objs: [], redo: [] });
+let pages = [], pi = 0;
+try { const sv = TK.store('wb.pages', null); if (sv && Array.isArray(sv.pages) && sv.pages.length) { pages = sv.pages.map((p) => ({ bg: p.bg || 'blank', paper: PAPER[p.paper] ? p.paper : 'white', img: null, objs: Array.isArray(p.objs) ? p.objs : [], redo: [] })); pi = Math.min(sv.pi || 0, pages.length - 1); } } catch (e) {}
+if (!pages.length) pages = [newPage()];
+const page = () => pages[pi];
+let saveT = null;
+function persist() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => { try { const s = JSON.stringify({ pi, pages: pages.map((p) => ({ bg: p.bg, paper: p.paper, objs: p.objs })) }); if (s.length < 2.5e6) localStorage.setItem('bsp-tools.wb.pages', s); } catch (e) {} }, 600);
+}
+
+// ---------- canvases ----------
+const stage = $('#stage'), cbg = $('#bg'), cink = $('#ink'), clive = $('#live');
+const xbg = cbg.getContext('2d'), xink = cink.getContext('2d'), xlive = clive.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  const r = stage.getBoundingClientRect(); W = Math.round(r.width); H = Math.round(r.height); DPR = Math.min(3, window.devicePixelRatio || 1);
+  [cbg, cink, clive].forEach((c) => { c.width = Math.max(1, Math.round(W * DPR)); c.height = Math.max(1, Math.round(H * DPR)); c.getContext('2d').setTransform(DPR, 0, 0, DPR, 0, 0); });
+  redrawAll();
+}
+const dark = (p) => p.paper !== 'white';
+
+function drawBg(x, w, h, p) {
+  x.fillStyle = PAPER[p.paper] || '#fff'; x.fillRect(0, 0, w, h);
+  const fine = dark(p) ? 'rgba(255,255,255,.16)' : 'rgba(40,70,170,.22)', bold = dark(p) ? 'rgba(255,255,255,.34)' : 'rgba(40,70,170,.45)', inkc = dark(p) ? 'rgba(255,255,255,.75)' : 'rgba(25,40,120,.85)';
+  x.lineWidth = 1; x.lineCap = 'butt';
+  const L = (x0, y0, x1, y1) => { x.moveTo(x0, y0); x.lineTo(x1, y1); };
+  if (p.bg === 'lined') {
+    x.strokeStyle = bold; x.beginPath(); for (let y = U * 2; y < h; y += U) L(0, y + .5, w, y + .5); x.stroke();
+    x.strokeStyle = dark(p) ? 'rgba(255,140,140,.5)' : 'rgba(211,58,44,.5)'; x.beginPath(); L(U * 2.5 + .5, 0, U * 2.5 + .5, h); x.stroke();
+  } else if (p.bg === 'grid') {
+    x.strokeStyle = fine; x.beginPath(); for (let i = 0; i * U <= w; i++) if (i % 5) L(i * U + .5, 0, i * U + .5, h); for (let j = 0; j * U <= h; j++) if (j % 5) L(0, j * U + .5, w, j * U + .5); x.stroke();
+    x.strokeStyle = bold; x.beginPath(); for (let i = 0; i * U <= w; i += 5) L(i * U + .5, 0, i * U + .5, h); for (let j = 0; j * U <= h; j += 5) L(0, j * U + .5, w, j * U + .5); x.stroke();
+  } else if (p.bg === 'dots') {
+    x.fillStyle = bold; for (let i = U; i < w; i += U) for (let j = U; j < h; j += U) { x.beginPath(); x.arc(i, j, 2, 0, 7); x.fill(); }
+  } else if (p.bg === 'iso') {
+    const dx = U * Math.cos(Math.PI / 6), t = Math.tan(Math.PI / 6);
+    x.strokeStyle = fine; x.beginPath();
+    for (let i = 0; i * dx <= w; i++) L(i * dx + .5, 0, i * dx + .5, h);
+    const n = Math.ceil((h + w * t) / U) + 1;
+    for (let k = -n; k <= n; k++) { L(0, k * U, w, k * U + w * t); L(0, k * U, w, k * U - w * t); }
+    x.stroke();
+  } else if (p.bg === 'ortho') {
+    const m = 24, tb = 62, x0 = 76, y0 = m, x1 = w - m, yb = h - Math.max(72, (document.getElementById('bar').offsetHeight || 56) + 16), y1 = yb - tb, // left and bottom margins keep the template clear of the tool rail and colour bar
+      gx = Math.round(x0 + (x1 - x0) * 0.58), gy = Math.round(y0 + (y1 - y0) * 0.42);
+    // light construction grid, anchored on the fold lines so the three views line up
+    x.save(); x.beginPath(); x.rect(x0, y0, x1 - x0, y1 - y0); x.clip();
+    x.strokeStyle = dark(p) ? 'rgba(255,255,255,.09)' : 'rgba(40,70,170,.12)'; x.beginPath();
+    for (let gxx = gx % U; gxx < w; gxx += U) L(gxx + .5, 0, gxx + .5, h); for (let gyy = gy % U; gyy < h; gyy += U) L(0, gyy + .5, w, gyy + .5); x.stroke();
+    // fold lines + 45° mitre line
+    x.strokeStyle = bold; x.lineWidth = 1.5; x.setLineDash([14, 5, 3, 5]); x.beginPath(); L(x0, gy, x1, gy); L(gx, y0, gx, y1); x.stroke();
+    x.setLineDash([6, 6]); x.beginPath(); L(gx, gy, gx + (gy - y0), y0); x.stroke(); x.setLineDash([]);
+    x.restore();
+    x.fillStyle = inkc; x.font = '600 15px Fredoka, system-ui, sans-serif'; x.textBaseline = 'top';
+    x.fillText('PLAN', x0 + 10, y0 + 8); x.fillText('FRONT ELEVATION', x0 + 10, gy + 8); x.fillText('END ELEVATION', gx + 10, gy + 8);
+    x.fillStyle = bold; x.font = '500 13px Fredoka, system-ui, sans-serif'; x.save(); x.translate(gx + (gy - y0) * 0.5 + 12, y0 + (gy - y0) * 0.5 + 4); x.rotate(-Math.PI / 4); x.fillText('45° mitre line', -40, 0); x.restore();
+    // border + title block
+    x.strokeStyle = inkc; x.lineWidth = 2; x.strokeRect(x0, y0, x1 - x0, yb - y0);
+    x.beginPath(); L(x0, y1, x1, y1); const cells = [['TITLE', 0.34], ['NAME', 0.2], ['CLASS', 0.1], ['DATE', 0.12], ['SCALE', 0.08]]; let cx = x0; const tw = x1 - x0;
+    cells.forEach(([, f]) => { cx += tw * f; L(cx, y1, cx, yb); }); x.stroke();
+    x.fillStyle = inkc; x.font = '600 11px Fredoka, system-ui, sans-serif'; cx = x0; cells.forEach(([n, f]) => { x.fillText(n, cx + 6, y1 + 5); cx += tw * f; });
+    x.fillText('THIRD ANGLE PROJECTION', cx + 6, y1 + 5); x.fillText('ALL DIMENSIONS IN mm', cx + 6, yb - 16);
+    // third-angle symbol: circles (end view of the cone) on the left, truncated cone on the right
+    const sx = Math.min(x1 - 78, cx + 150), sy = y1 + tb / 2 + 4; x.lineWidth = 1.6; x.beginPath(); x.arc(sx, sy, 15, 0, 7); x.moveTo(sx + 8, sy); x.arc(sx, sy, 8, 0, 7);
+    x.moveTo(sx + 28, sy - 8); x.lineTo(sx + 62, sy - 15); x.lineTo(sx + 62, sy + 15); x.lineTo(sx + 28, sy + 8); x.closePath(); x.stroke();
+    x.lineWidth = 1; x.setLineDash([8, 3, 2, 3]); x.beginPath(); L(sx - 20, sy, sx + 68, sy); L(sx, sy - 20, sx, sy + 20); x.stroke(); x.setLineDash([]);
+  }
+  if (p.img) { const s = Math.min((w - 16) / p.img.naturalWidth, (h - 16) / p.img.naturalHeight); const iw = p.img.naturalWidth * s, ih = p.img.naturalHeight * s; x.drawImage(p.img, (w - iw) / 2, (h - ih) / 2, iw, ih); }
+}
+
+// ---------- drawing objects ----------
+const widthOf = (o) => (o.t === 'hl' ? o.s * 4 + 10 : o.t === 'eraser' ? o.s * 5 + 12 : o.s);
+function drawObj(x, o) {
+  x.save(); x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = x.fillStyle = o.c; x.lineWidth = widthOf(o);
+  if (o.t === 'eraser') { x.globalCompositeOperation = 'destination-out'; x.strokeStyle = '#000'; }
+  if (o.t === 'hl') { x.globalAlpha = 0.38; x.lineCap = 'butt'; }
+  if (o.t === 'pen' || o.t === 'hl' || o.t === 'eraser') {
+    const P = o.p;
+    if (P.length === 1) { x.beginPath(); x.arc(P[0][0], P[0][1], (o.pr ? pw(o, P[0][2]) : x.lineWidth) / 2, 0, 7); x.fillStyle = o.t === 'eraser' ? '#000' : o.c; x.fill(); }
+    else if (o.pr) { // pen pressure: width changes along the stroke
+      let mx = P[0][0], my = P[0][1];
+      for (let i = 1; i < P.length; i++) { const nx = (P[i - 1][0] + P[i][0]) / 2, ny = (P[i - 1][1] + P[i][1]) / 2; x.lineWidth = pw(o, (P[i - 1][2] + P[i][2]) / 2); x.beginPath(); x.moveTo(mx, my); x.quadraticCurveTo(P[i - 1][0], P[i - 1][1], nx, ny); x.stroke(); mx = nx; my = ny; }
+      x.lineWidth = pw(o, P[P.length - 1][2]); x.beginPath(); x.moveTo(mx, my); x.lineTo(P[P.length - 1][0], P[P.length - 1][1]); x.stroke();
+    } else {
+      x.beginPath(); x.moveTo(P[0][0], P[0][1]);
+      for (let i = 1; i < P.length - 1; i++) x.quadraticCurveTo(P[i][0], P[i][1], (P[i][0] + P[i + 1][0]) / 2, (P[i][1] + P[i + 1][1]) / 2);
+      x.lineTo(P[P.length - 1][0], P[P.length - 1][1]); x.stroke();
+    }
+  } else if (o.t === 'line' || o.t === 'arrow') {
+    x.beginPath(); x.moveTo(o.a[0], o.a[1]); x.lineTo(o.b[0], o.b[1]); x.stroke();
+    if (o.t === 'arrow') { const an = Math.atan2(o.b[1] - o.a[1], o.b[0] - o.a[0]), hl = Math.max(14, o.s * 4); x.beginPath(); x.moveTo(o.b[0] - hl * Math.cos(an - 0.45), o.b[1] - hl * Math.sin(an - 0.45)); x.lineTo(o.b[0], o.b[1]); x.lineTo(o.b[0] - hl * Math.cos(an + 0.45), o.b[1] - hl * Math.sin(an + 0.45)); x.stroke(); }
+  } else if (o.t === 'rect') { x.lineJoin = 'miter'; x.strokeRect(Math.min(o.a[0], o.b[0]), Math.min(o.a[1], o.b[1]), Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])); }
+  else if (o.t === 'ellipse') { x.beginPath(); x.ellipse((o.a[0] + o.b[0]) / 2, (o.a[1] + o.b[1]) / 2, Math.abs(o.b[0] - o.a[0]) / 2, Math.abs(o.b[1] - o.a[1]) / 2, 0, 0, 7); x.stroke(); }
+  else if (o.t === 'text') { x.font = `500 ${o.fs}px Fredoka, system-ui, sans-serif`; x.textBaseline = 'top'; o.text.split('\n').forEach((ln, i) => x.fillText(ln, o.a[0], o.a[1] + i * o.fs * 1.2)); }
+  x.restore();
+}
+const pw = (o, p) => Math.max(0.6, o.s * (0.3 + 1.4 * (p == null ? 0.5 : p)));
+function redrawInk() {
+  xink.clearRect(0, 0, W, H);
+  const O = page().objs; let from = 0; for (let i = O.length - 1; i >= 0; i--) if (O[i].t === 'clear') { from = i + 1; break; }
+  for (let i = from; i < O.length; i++) drawObj(xink, O[i]);
+}
+function redrawAll() { drawBg(xbg, W, H, page()); redrawInk(); xlive.clearRect(0, 0, W, H); syncUI(); }
+function commit(o) { page().objs.push(o); page().redo.length = 0; persist(); syncUI(); }
+function undo() { commitText(); const p = page(); if (!p.objs.length) return; p.redo.push(p.objs.pop()); redrawInk(); persist(); syncUI(); }
+function redo() { const p = page(); if (!p.redo.length) return; p.objs.push(p.redo.pop()); redrawInk(); persist(); syncUI(); }
+function clearPage() { commitText(); const O = page().objs; if (!O.length || O[O.length - 1].t === 'clear') return; commit({ t: 'clear' }); redrawInk(); toast('Cleared: Undo brings it back'); }
+
+// ---------- pointer input ----------
+let cur = null, pid = null, snap = null, penSeen = 0;
+const r1 = (v) => Math.round(v * 10) / 10;
+function pos(e) { const r = clive.getBoundingClientRect(); return [r1(e.clientX - r.left), r1(e.clientY - r.top)]; }
+function snapTo(pt) { // project onto the ruler's top edge
+  const d = (pt[0] - snap.o[0]) * snap.d[0] + (pt[1] - snap.o[1]) * snap.d[1];
+  return [r1(snap.o[0] + d * snap.d[0] - snap.n[0] * snap.off), r1(snap.o[1] + d * snap.d[1] - snap.n[1] * snap.off)];
+}
+function rulerSnap(pt, half) {
+  if ($('#ruler').hidden) return null;
+  const a = RU.a * Math.PI / 180, d = [Math.cos(a), Math.sin(a)], n = [-Math.sin(a), Math.cos(a)];   // n points into the ruler body
+  const rx = pt[0] - RU.x, ry = pt[1] - RU.y, along = rx * d[0] + ry * d[1], perp = rx * n[0] + ry * n[1];
+  if (along < -10 || along > 710 || perp > 6 || perp < -26) return null;
+  return { o: [RU.x, RU.y], d, n, off: half + 0.5 };
+}
+clive.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 || pid !== null) return;
+  if (e.pointerType === 'pen') penSeen = Date.now(); else if (e.pointerType === 'touch' && Date.now() - penSeen < 1500) return; // resting palm while using a pencil
+  if ($('#tin')) { commitText(); if (set.tool === 'text') return; }
+  $('#help').classList.remove('on');
+  let pt = pos(e);
+  if (set.tool === 'text') { e.preventDefault(); startText(pt); return; }
+  pid = e.pointerId; try { clive.setPointerCapture(pid); } catch (x) {}
+  const t = set.tool, base = { t, c: set.color, s: set.size };
+  if (t === 'pen' || t === 'hl' || t === 'eraser') {
+    const pr = t === 'pen' && e.pointerType === 'pen' && e.pressure > 0;
+    snap = t === 'eraser' ? null : rulerSnap(pt, widthOf(base) / 2); if (snap) pt = snapTo(pt);
+    cur = Object.assign(base, { p: [pr ? [pt[0], pt[1], r1(e.pressure)] : pt], pr: pr || undefined });
+    if (t === 'eraser') drawObj(xink, cur); else drawLive();
+  } else { snap = null; cur = Object.assign(base, { a: pt, b: pt }); }
+  e.preventDefault();
+});
+clive.addEventListener('pointermove', (e) => {
+  if (e.pointerId !== pid || !cur) return;
+  const evs = cur.p && e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  if (cur.p) {
+    (evs.length ? evs : [e]).forEach((ev) => {
+      let pt = pos(ev); if (snap) pt = snapTo(pt);
+      const last = cur.p[cur.p.length - 1]; if (Math.hypot(pt[0] - last[0], pt[1] - last[1]) < 1.2) return;
+      if (cur.pr) pt = [pt[0], pt[1], r1(ev.pressure || 0.5)];
+      if (cur.t === 'eraser') { xink.save(); xink.globalCompositeOperation = 'destination-out'; xink.lineCap = 'round'; xink.lineWidth = widthOf(cur); xink.beginPath(); xink.moveTo(last[0], last[1]); xink.lineTo(pt[0], pt[1]); xink.stroke(); xink.restore(); }
+      cur.p.push(pt);
+    });
+    if (cur.t === 'eraser') { xlive.clearRect(0, 0, W, H); const p = pos(e); xlive.beginPath(); xlive.arc(p[0], p[1], widthOf(cur) / 2, 0, 7); xlive.strokeStyle = '#888'; xlive.lineWidth = 1.5; xlive.stroke(); } else drawLive();
+  } else {
+    let b = pos(e); const a = cur.a;
+    if (e.shiftKey) {
+      if (cur.t === 'line' || cur.t === 'arrow') { const len = Math.hypot(b[0] - a[0], b[1] - a[1]), an = Math.round(Math.atan2(b[1] - a[1], b[0] - a[0]) / (Math.PI / 12)) * (Math.PI / 12); b = [r1(a[0] + len * Math.cos(an)), r1(a[1] + len * Math.sin(an))]; }
+      else { const s = Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])); b = [a[0] + s * Math.sign(b[0] - a[0] || 1), a[1] + s * Math.sign(b[1] - a[1] || 1)]; }
+    }
+    cur.b = b; drawLive();
+  }
+});
+function endStroke(e) {
+  if (e.pointerId !== pid) return;
+  try { clive.releasePointerCapture(pid); } catch (x) {}
+  pid = null; const o = cur; cur = null; snap = null; xlive.clearRect(0, 0, W, H);
+  if (!o) return;
+  if (!o.p && Math.hypot(o.b[0] - o.a[0], o.b[1] - o.a[1]) < 3) return; // a tap with a shape tool: nothing
+  if (o.t !== 'eraser') drawObj(xink, o);
+  commit(o);
+}
+clive.addEventListener('pointerup', endStroke); clive.addEventListener('pointercancel', endStroke);
+function drawLive() { xlive.clearRect(0, 0, W, H); if (cur) drawObj(xlive, cur); }
+stage.addEventListener('contextmenu', (e) => e.preventDefault());
+clive.addEventListener('mousedown', (e) => e.preventDefault()); // keep the keyboard focus in the text box
+
+// ---------- text ----------
+function startText(pt) {
+  const ta = document.createElement('textarea'); ta.id = 'tin'; ta.rows = 1; ta.spellcheck = false; ta._pt = pt; ta._fs = 16 + set.size * 3; ta._c = set.color;
+  ta.style.left = pt[0] + 'px'; ta.style.top = pt[1] + 'px'; ta.style.font = `500 ${ta._fs}px/1.2 Fredoka, system-ui, sans-serif`; ta.style.color = set.color; ta.style.caretColor = set.color;
+  const fit = () => { ta.style.width = '60px'; ta.style.height = 'auto'; ta.style.width = Math.min(W - pt[0] - 4, ta.scrollWidth + 24) + 'px'; ta.style.height = ta.scrollHeight + 4 + 'px'; };
+  ta.addEventListener('input', fit);
+  ta.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') { ta.value = ''; commitText(); } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) commitText(); });
+  ta.addEventListener('blur', () => setTimeout(() => { if ($('#tin') === ta && document.activeElement !== ta) commitText(); }, 150));
+  stage.appendChild(ta); fit(); ta.focus(); setTimeout(() => ta.focus(), 0);
+}
+function commitText() {
+  const ta = $('#tin'); if (!ta) return; const text = ta.value.replace(/\s+$/, ''); ta.remove();
+  if (!text.trim()) return;
+  const o = { t: 'text', c: ta._c, s: set.size, fs: ta._fs, a: ta._pt, text }; drawObj(xink, o); commit(o);
+}
+
+// ---------- ruler + protractor ----------
+const RU = Object.assign({ x: 120, y: 140, a: 0 }, set.ruler || {}), PR = Object.assign({ x: 760, y: 560, a: 0 }, set.pro || {});
+(function buildOverlays() {
+  let s = ''; const L = 680;
+  for (let i = 0; i <= L / (U / 10); i++) { const x = 10 + i * (U / 10), big = i % 10 === 0, mid = i % 5 === 0; s += `<line x1="${x}" y1="0" x2="${x}" y2="${big ? 22 : mid ? 15 : 9}" stroke="#3d2f00" stroke-width="${big ? 1.6 : 1}"/>`; if (big) s += `<text x="${x}" y="38" font-size="15" font-weight="700" text-anchor="middle" fill="#3d2f00" font-family="Fredoka,system-ui,sans-serif">${i / 10}</text>`; }
+  $('#rsvg').innerHTML = s;
+  const R = 250; let p = `<path class="body" d="M${-R - 14} 0 A${R + 14} ${R + 14} 0 0 1 ${R + 14} 0 L${R + 14} 30 L${-R - 14} 30 Z" fill="rgba(120,205,255,.36)" stroke="#0b5c8a" stroke-width="1.5"/><line x1="${-R - 14}" y1="0" x2="${R + 14}" y2="0" stroke="#0b5c8a" stroke-width="1.2"/><line x1="0" y1="-16" x2="0" y2="16" stroke="#0b5c8a" stroke-width="1.2"/><circle r="4" fill="none" stroke="#d33a2c" stroke-width="2"/>`;
+  for (let d = 0; d <= 180; d++) { const a = d * Math.PI / 180, c = Math.cos(a), sn = -Math.sin(a), len = d % 10 === 0 ? 24 : d % 5 === 0 ? 16 : 9; p += `<line x1="${(R * c).toFixed(1)}" y1="${(R * sn).toFixed(1)}" x2="${((R - len) * c).toFixed(1)}" y2="${((R - len) * sn).toFixed(1)}" stroke="#0b3a55" stroke-width="${d % 10 === 0 ? 1.5 : 0.9}"/>`;
+    if (d % 10 === 0) { p += `<text x="${((R - 40) * c).toFixed(1)}" y="${((R - 40) * sn + 5).toFixed(1)}" font-size="15" font-weight="700" text-anchor="middle" fill="#0b3a55" font-family="Fredoka,system-ui,sans-serif">${d}</text>`; if (d % 30 === 0 && d % 180) p += `<line x1="0" y1="0" x2="${((R - 62) * c).toFixed(1)}" y2="${((R - 62) * sn).toFixed(1)}" stroke="#0b5c8a" stroke-width=".7" stroke-dasharray="4 5"/>`; } }
+  $('#psvg').innerHTML = p;
+})();
+function place() {
+  $('#ruler').style.transform = `translate(${RU.x}px,${RU.y}px) rotate(${RU.a}deg)`; $('#rang').textContent = norm(RU.a) + '°';
+  $('#pro').style.transform = `translate(${PR.x}px,${PR.y}px) rotate(${PR.a}deg)`; $('#pang').textContent = norm(PR.a) + '°'; $('#pang').style.transform = `rotate(${-PR.a}deg)`;
+}
+const norm = (a) => { a = Math.round(((-a % 360) + 360) % 360); return a > 180 ? a - 360 : a; };
+function dragOverlay(el, grip, st, key, hit) {
+  let mode = null, sx = 0, sy = 0, ox = 0, oy = 0;
+  const down = (e, m) => { if (e.button !== 0) return; mode = m; sx = e.clientX; sy = e.clientY; ox = st.x; oy = st.y; e.currentTarget.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation(); };
+  const move = (e) => {
+    if (!mode) return; const r = stage.getBoundingClientRect();
+    if (mode === 'move') { st.x = Math.max(-200, Math.min(W - 40, ox + e.clientX - sx)); st.y = Math.max(10, Math.min(H - 20, oy + e.clientY - sy)); }
+    else { let a = Math.atan2(e.clientY - r.top - st.y, e.clientX - r.left - st.x) * 180 / Math.PI - (key === 'ruler' ? Math.atan2(40, 670) * 180 / Math.PI : 0); const q = Math.round(a / 15) * 15; if (Math.abs(a - q) < 2.5 || e.shiftKey) a = q; st.a = Math.round(a * 2) / 2; }
+    place();
+  };
+  const up = () => { if (!mode) return; mode = null; set[key] = { x: st.x, y: st.y, a: st.a }; saveSet(); };
+  hit.addEventListener('pointerdown', (e) => down(e, 'move')); grip.addEventListener('pointerdown', (e) => down(e, 'rot'));
+  [hit, grip].forEach((t) => { t.addEventListener('pointermove', move); t.addEventListener('pointerup', up); t.addEventListener('pointercancel', up); });
+}
+dragOverlay($('#ruler'), $('#rgrip'), RU, 'ruler', $('#ruler'));
+dragOverlay($('#pro'), $('#pgrip'), PR, 'pro', $('#psvg').querySelector('.body'));
+function toggleOv(id, btn, st) {
+  const el = $(id); el.hidden = !el.hidden; $(btn).classList.toggle('on', !el.hidden);
+  if (!el.hidden) { st.x = Math.max(66, Math.min(W - (st === RU ? 706 : 280), st.x)); st.y = Math.max(40, Math.min(H - 100, st.y)); place(); }
+}
+$('#bruler').onclick = () => toggleOv('#ruler', '#bruler', RU);
+$('#bpro').onclick = () => toggleOv('#pro', '#bpro', PR);
+
+// ---------- UI ----------
+$('#rail').innerHTML = TOOLS.map(([id, title, d]) => `<button data-tool="${id}" title="${title}" aria-label="${title}"><svg viewBox="0 0 24 24">${d}</svg></button>`).join('') + '<hr>' +
+  `<button id="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 24 24"><path d="M8 5L3 10l5 5M3 10h11a6 6 0 0 1 0 12h-3"/></svg></button>
+   <button id="redo" title="Redo (Ctrl+Y)" aria-label="Redo"><svg viewBox="0 0 24 24"><path d="M16 5l5 5-5 5M21 10H10a6 6 0 0 0 0 12h3"/></svg></button>
+   <button id="clear" title="Clear the page (can be undone)" aria-label="Clear the page"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 16l9-11 4 3-9 11H7z"/><path d="M17 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" stroke-width="1.4"/></svg></button>`;
+$('#swatches').innerHTML = COLORS.map((c) => `<button class="sw" data-c="${c}" style="background:${c}" title="${c}" aria-label="Colour ${c}"></button>`).join('');
+function setTool(t) { commitText(); set.tool = t; saveSet(); syncUI(); }
+function setColor(c) { set.color = c; saveSet(); const ta = $('#tin'); if (ta) { ta._c = c; ta.style.color = c; } if (set.tool === 'eraser') set.tool = 'pen'; syncUI(); }
+function syncUI() {
+  document.querySelectorAll('#rail [data-tool]').forEach((b) => b.classList.toggle('on', b.dataset.tool === set.tool));
+  document.querySelectorAll('.sw').forEach((b) => b.classList.toggle('on', b.dataset.c === set.color));
+  clive.classList.toggle('text', set.tool === 'text');
+  const w = Math.min(40, widthOf({ t: set.tool === 'hl' || set.tool === 'eraser' ? set.tool : 'pen', s: set.size })); const i = $('#dot i'); i.style.width = i.style.height = Math.max(2, w) + 'px'; i.style.background = set.tool === 'eraser' ? 'var(--muted)' : set.color; i.style.boxShadow = set.color === '#ffffff' ? '0 0 0 1px var(--muted)' : ''; i.style.opacity = set.tool === 'hl' ? 0.5 : 1;
+  $('#size').value = set.size; $('#pg').textContent = (pi + 1) + ' / ' + pages.length;
+  $('#pprev').disabled = pi === 0; $('#pnext').disabled = pi >= pages.length - 1;
+  $('#undo').disabled = !page().objs.length; $('#redo').disabled = !page().redo.length;
+  $('#bgsel').value = page().bg; $('#paper').value = page().paper;
+  $('#bpic').textContent = page().img ? '✕ Picture' : '🖼 Picture'; $('#bpic').classList.toggle('on', !!page().img);
+  stage.style.background = PAPER[page().paper];
+}
+$('#rail').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.tool) setTool(b.dataset.tool); else if (b.id === 'undo') undo(); else if (b.id === 'redo') redo(); else if (b.id === 'clear') clearPage(); });
+$('#swatches').addEventListener('click', (e) => { const b = e.target.closest('.sw'); if (b) setColor(b.dataset.c); });
+$('#custom').addEventListener('input', (e) => setColor(e.target.value));
+$('#size').addEventListener('input', (e) => { set.size = +e.target.value; saveSet(); syncUI(); });
+$('#bgsel').onchange = (e) => { page().bg = set.bg = e.target.value; saveSet(); persist(); drawBg(xbg, W, H, page()); e.target.blur(); };
+$('#paper').onchange = (e) => {
+  const was = dark(page()); page().paper = set.paper = e.target.value; const now = dark(page());
+  if (was !== now && (set.color === '#111111' || set.color === '#ffffff')) set.color = now ? '#ffffff' : '#111111'; // keep the pen visible
+  saveSet(); persist(); redrawAll(); e.target.blur();
+};
+function gotoPage(i) { if (i < 0 || i >= pages.length) return; commitText(); pi = i; redrawAll(); persist(); }
+$('#pprev').onclick = () => gotoPage(pi - 1); $('#pnext').onclick = () => gotoPage(pi + 1);
+$('#padd').onclick = () => { commitText(); pages.splice(pi + 1, 0, newPage()); gotoPage(pi + 1); toast('Page ' + (pi + 1) + ' added'); };
+$('#pdel').onclick = () => {
+  commitText(); const used = page().objs.length || page().img;
+  if (used && !confirm('Delete page ' + (pi + 1) + ' and everything on it?')) return;
+  if (pages.length === 1) pages[0] = newPage(); else pages.splice(pi, 1);
+  pi = Math.min(pi, pages.length - 1); redrawAll(); persist();
+};
+$('#bhelp').onclick = () => $('#help').classList.toggle('on');
+let toastT; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1800); }
+
+// picture: upload, paste or drop (stays on this computer)
+function loadPicture(file) {
+  if (!file || !/^image\//.test(file.type)) return toast('That is not a picture');
+  const url = URL.createObjectURL(file), im = new Image();
+  im.onload = () => { page().img = im; redrawAll(); toast('Picture added: draw on top of it'); };
+  im.onerror = () => { URL.revokeObjectURL(url); toast('That picture could not be opened'); };
+  im.src = url;
+}
+$('#bpic').onclick = () => { if (page().img) { page().img = null; redrawAll(); } else $('#file').click(); };
+$('#file').onchange = (e) => { loadPicture(e.target.files[0]); e.target.value = ''; };
+addEventListener('paste', (e) => { const it = [...(e.clipboardData ? e.clipboardData.items : [])].find((i) => i.type.startsWith('image/')); if (it) { e.preventDefault(); loadPicture(it.getAsFile()); } });
+stage.addEventListener('dragover', (e) => e.preventDefault());
+stage.addEventListener('drop', (e) => { e.preventDefault(); if (e.dataTransfer.files[0]) loadPicture(e.dataTransfer.files[0]); });
+
+// save PNG
+function savePNG() {
+  commitText();
+  const c = document.createElement('canvas'), k = Math.max(2, DPR); c.width = Math.round(W * k); c.height = Math.round(H * k);
+  const x = c.getContext('2d'); x.setTransform(k, 0, 0, k, 0, 0); drawBg(x, W, H, page());
+  x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(cink, 0, 0, c.width, c.height);
+  if (k !== DPR) { // redraw the ink sharply at the export size
+    const c2 = document.createElement('canvas'); c2.width = c.width; c2.height = c.height; const x2 = c2.getContext('2d'); x2.setTransform(k, 0, 0, k, 0, 0);
+    const O = page().objs; let from = 0; for (let i = O.length - 1; i >= 0; i--) if (O[i].t === 'clear') { from = i + 1; break; } for (let i = from; i < O.length; i++) drawObj(x2, O[i]);
+    x.setTransform(k, 0, 0, k, 0, 0); drawBg(x, W, H, page()); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(c2, 0, 0);
+  }
+  c.toBlob((b) => { const a = document.createElement('a'), d = new Date(), z = (n) => String(n).padStart(2, '0'); a.href = URL.createObjectURL(b); a.download = `whiteboard-${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}-page-${pi + 1}.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('Saved page ' + (pi + 1) + ' as a PNG'); }, 'image/png');
+}
+$('#bsave').onclick = savePNG;
+
+addEventListener('keydown', (e) => {
+  if (e.target.matches('textarea, input[type=text]')) return;
+  const k = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
+  if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+  else if (mod && k === 'y') { e.preventDefault(); redo(); }
+  else if (mod && k === 's') { e.preventDefault(); savePNG(); }
+  else if (mod || e.altKey) return;
+  else if ({ p: 'pen', h: 'hl', e: 'eraser', l: 'line', a: 'arrow', r: 'rect', c: 'ellipse', t: 'text' }[k]) { setTool({ p: 'pen', h: 'hl', e: 'eraser', l: 'line', a: 'arrow', r: 'rect', c: 'ellipse', t: 'text' }[k]); e.preventDefault(); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') gotoPage(pi - 1);
+  else if (e.key === 'ArrowRight' || e.key === 'PageDown') gotoPage(pi + 1);
+  else if (k === '[') { set.size = Math.max(1, set.size - 1); saveSet(); syncUI(); }
+  else if (k === ']') { set.size = Math.min(30, set.size + 1); saveSet(); syncUI(); }
+  else if (/^[1-7]$/.test(k)) setColor(COLORS[+k - 1]);
+  else if (k === 'escape') $('#help').classList.remove('on');
+});
+
+new ResizeObserver(resize).observe(stage);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => redrawAll());
+place(); resize();
+</script>
+</body>
+</html>

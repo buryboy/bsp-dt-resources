@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Name picker · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+.wrap { flex: 1; min-height: 0; display: flex; gap: 12px; padding: 0 14px 10px; }
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+#stage { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+#wheel { display: block; }
+#result { min-height: 1.25em; display: flex; gap: .4em; justify-content: center; align-items: center; flex-wrap: wrap; font-weight: 700; line-height: 1.1; font-size: clamp(34px, 6.4vw, 110px); text-align: center; }
+#result.multi { font-size: clamp(28px, 4.2vw, 76px); }
+#result .w { background: var(--ink2); color: #fff; border-radius: .35em; padding: .08em .45em; animation: pop .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+#result .w:nth-child(2) { background: #c2410c; animation-delay: .08s; } #result .w:nth-child(3) { background: #15803d; animation-delay: .16s; }
+#result .hint { font-size: clamp(18px, 2vw, 30px); font-weight: 500; color: var(--muted); }
+body.dark #result .w:first-child { background: #3d52e6; }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
+.seg { display: inline-flex; border-radius: 12px; box-shadow: 0 0 0 2px var(--line) inset; overflow: hidden; background: var(--card); }
+.seg button { border: 0; background: transparent; min-width: 44px; min-height: 44px; padding: 0 14px; font-weight: 600; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink2); color: #fff; }
+.chk { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; cursor: pointer; font-weight: 500; }
+.chk input { width: 22px; height: 22px; accent-color: var(--ink2); }
+#pick { font-size: 24px; padding: 12px 34px; min-height: 56px; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.help { text-align: center; font-size: 13px; margin: 0; }
+aside { width: 280px; display: flex; flex-direction: column; min-height: 0; padding: 12px; }
+body.nolist aside { display: none; }
+aside h2 { font-size: 16px; margin: 0 0 2px; font-weight: 600; }
+aside .counts { font-size: 14px; margin-bottom: 8px; }
+#names { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin: 0 -4px; padding: 0 4px; }
+#names button { border: 0; background: transparent; text-align: left; border-radius: 10px; min-height: 40px; padding: 4px 10px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; align-items: center; font-weight: 500; font-size: 16px; }
+#names button:hover { background: color-mix(in srgb, var(--ink2) 10%, transparent); }
+#names button.picked { color: var(--muted); text-decoration: line-through; }
+#names button.absent { color: var(--muted); font-style: italic; }
+#names .tag { font-size: 12px; text-decoration: none; font-style: normal; font-weight: 600; border-radius: 999px; padding: 1px 8px; background: var(--line); display: inline-block; }
+#names .picked .tag { background: color-mix(in srgb, var(--green) 25%, var(--card)); color: var(--ink); }
+/* reel */
+#reel { display: none; gap: 2vw; width: 100%; height: 100%; align-items: center; justify-content: center; }
+.reelbox { flex: 1; max-width: 46vw; height: min(100%, 420px); border-radius: 22px; overflow: hidden; position: relative; background: var(--card); box-shadow: 0 0 0 4px var(--ink2) inset, 0 8px 0 var(--line); }
+.reelbox::before, .reelbox::after { content: ''; position: absolute; left: 0; right: 0; height: 33.4%; z-index: 2; pointer-events: none; }
+.reelbox::before { top: 0; background: linear-gradient(var(--card), transparent); } .reelbox::after { bottom: 0; background: linear-gradient(transparent, var(--card)); }
+.reelbox .mark { position: absolute; left: 4px; right: 4px; top: 33.3%; height: 33.4%; border-top: 4px solid var(--amber); border-bottom: 4px solid var(--amber); z-index: 3; pointer-events: none; }
+.strip { will-change: transform; }
+.strip div { display: flex; align-items: center; justify-content: center; font-weight: 600; white-space: nowrap; overflow: hidden; padding: 0 12px; }
+/* cards */
+#cards { display: none; width: 100%; height: 100%; align-content: center; justify-content: center; gap: 10px; flex-wrap: wrap; perspective: 1200px; padding: 6px; }
+.pc { position: relative; transform-style: preserve-3d; transition: transform .38s ease; }
+.pc .in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3, 1.3, .5, 1); }
+.pc.flip .in { transform: rotateY(180deg); }
+.pc.flip { z-index: 5; }
+.pc .f { position: absolute; inset: 0; border-radius: 12px; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; }
+.pc .bk { background: repeating-linear-gradient(45deg, #2b3fd1 0 10px, #2536b8 10px 20px); color: #fff; box-shadow: 0 0 0 3px #fff inset, 0 3px 0 rgba(0, 0, 0, .25); }
+.pc .ft { background: #fff; color: #1e2e96; transform: rotateY(180deg); box-shadow: 0 0 0 4px var(--amber) inset, 0 6px 18px rgba(0, 0, 0, .3); padding: 4px; line-height: 1.05; overflow-wrap: anywhere; }
+.pc.dim { opacity: .35; }
+#msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; font-size: clamp(20px, 2.4vw, 34px); padding: 20px; flex-direction: column; gap: 14px; }
+#msg a { color: inherit; }
+@media (max-width: 900px) { aside { width: 210px; } #pick { padding: 12px 22px; } }
+@media (max-width: 620px) { .wrap { flex-direction: column; } aside { width: auto; max-height: 30vh; } }
+@media (prefers-reduced-motion: reduce) { #result .w { animation: none; } }
+body.dark .seg button[aria-pressed="true"], body.dark .btn.blue, body.dark .clist button[aria-current="true"], body.dark .tabs button[aria-selected="true"] { color: #111527; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="main">
+    <div id="stage">
+      <canvas id="wheel"></canvas>
+      <div id="reel"></div>
+      <div id="cards"></div>
+      <div id="msg"></div>
+    </div>
+    <div id="result" aria-live="polite"></div>
+    <div class="controls">
+      <span class="seg" id="mode" role="group" aria-label="Animation"><button data-v="wheel">🎡 Wheel</button><button data-v="reel">🎰 Reel</button><button data-v="cards">🃏 Cards</button></span>
+      <span class="seg" id="count" role="group" aria-label="How many to pick"><button data-v="1">Pick 1</button><button data-v="2">2</button><button data-v="3">3</button></span>
+      <button class="btn go" id="pick">Pick!</button>
+      <label class="chk" title="Nobody is picked twice until everyone has had a turn"><input type="checkbox" id="norep"> No repeats</label>
+      <button class="btn" id="reset" title="Everyone back in (R)">↺ Reset</button>
+    </div>
+    <p class="help muted">Space = pick · 1 2 3 = how many · R = reset · M = mute · L = show/hide the list. Names stay on this computer.</p>
+  </div>
+  <aside class="card">
+    <h2>Class list</h2>
+    <div class="counts muted" id="counts"></div>
+    <div id="names"></div>
+    <p class="muted" style="font-size:13px;margin:8px 0 0">Tap a name to mark absent today.</p>
+  </aside>
+</div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const slot = TK.top('Name picker');
+slot.innerHTML = '<select class="tk-class" id="cls" aria-label="Class"></select> <button class="btn" id="list" title="Show / hide the class list (L)">☰ List</button> <button class="btn" id="mute" title="Sound on / off (M)"></button>';
+const S = Object.assign({ mode: 'wheel', count: 1, norep: true, mute: false, list: true, picked: {} }, TK.store('picker', {}));
+S.picked = S.picked || {};
+const save = () => TK.save('picker', S);
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches, SPEED = REDUCED ? 0.2 : 1;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const beep = (k) => { if (!S.mute) TK.beep(k); };
+
+// ---------- class, absent, picked ----------
+let cls = null, busy = false;
+const dayKey = () => new Date().toDateString();
+function absent() { const a = TK.store('absent', {}); return a.date === dayKey() && a.by && a.by[cls.name] ? a.by[cls.name].filter((n) => cls.students.includes(n)) : []; }
+function setAbsent(list) { let a = TK.store('absent', {}); if (a.date !== dayKey() || !a.by) a = { date: dayKey(), by: {} }; a.by[cls.name] = list; TK.save('absent', a); }
+const picked = () => (cls ? (S.picked[cls.name] = (S.picked[cls.name] || []).filter((n) => cls.students.includes(n))) : []);
+const present = () => { const ab = absent(); return cls.students.filter((n) => !ab.includes(n)); };
+const pool = () => { const p = picked(); return present().filter((n) => !S.norep || !p.includes(n)); };
+
+const sel = TK.classSelect($('#cls'), () => { load(); });
+addEventListener('pageshow', (e) => { if (e.persisted) { sel.refresh(); load(); } });
+function load() { cls = TK.currentClass(); $('#result').innerHTML = ''; renderList(); showStage(); }
+
+function renderList() {
+  if (!cls) { $('#names').innerHTML = ''; $('#counts').textContent = ''; return; }
+  const ab = absent(), p = picked();
+  $('#names').innerHTML = cls.students.map((n) => { const a = ab.includes(n), k = !a && p.includes(n); return `<button data-n="${esc(n)}" class="${a ? 'absent' : k ? 'picked' : ''}" aria-pressed="${a}" title="${a ? 'Absent today: tap to bring back' : 'Tap to mark absent today'}"><span>${esc(n)}</span>${a ? '<span class="tag">absent</span>' : k ? '<span class="tag">✓ picked</span>' : ''}</button>`; }).join('');
+  const pr = present(), done = pr.filter((n) => p.includes(n)).length;
+  $('#counts').textContent = `${pr.length - done} still to go · ${done} picked` + (ab.length ? ` · ${ab.length} absent` : '');
+}
+$('#names').onclick = (e) => {
+  const b = e.target.closest('button[data-n]'); if (!b || busy) return;
+  const n = b.dataset.n, ab = absent(); setAbsent(ab.includes(n) ? ab.filter((x) => x !== n) : ab.concat(n)); renderList(); showStage();
+};
+
+// ---------- controls ----------
+function seg(id, key, cast) {
+  const el = $(id), paint = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', cast(b.dataset.v) === S[key]));
+  el.onclick = (e) => { const b = e.target.closest('button'); if (!b || busy) return; S[key] = cast(b.dataset.v); save(); paint(); if (key === 'mode') { $('#result').innerHTML = ''; showStage(); } };
+  paint(); return paint;
+}
+const paintMode = seg('#mode', 'mode', String), paintCount = seg('#count', 'count', Number);
+$('#norep').checked = S.norep; $('#norep').onchange = (e) => { S.norep = e.target.checked; save(); if (!busy) showStage(); };
+const paintMute = () => { $('#mute').textContent = S.mute ? '🔇 Muted' : '🔊 Sound'; $('#mute').setAttribute('aria-pressed', S.mute); };
+$('#mute').onclick = () => { S.mute = !S.mute; save(); paintMute(); }; paintMute();
+const paintList = () => { document.body.classList.toggle('nolist', !S.list); sizeWheel(); };
+$('#list').onclick = () => { S.list = !S.list; save(); paintList(); if (!busy) showStage(); };
+function reset() { if (busy || !cls) return; S.picked[cls.name] = []; save(); $('#result').innerHTML = ''; renderList(); showStage(); }
+$('#reset').onclick = reset;
+$('#pick').onclick = () => pick();
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, select, textarea') && e.key !== ' ') return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ' || k === 'enter') { if (e.target.matches('button, select, a') && k === 'enter') return; e.preventDefault(); pick(); }
+  else if (k === 'r') reset(); else if (k === 'm') $('#mute').click(); else if (k === 'l') $('#list').click();
+  else if ('123'.includes(k) && !busy) { S.count = +k; save(); paintCount(); }
+});
+
+// ---------- stage ----------
+const stage = $('#stage'), cv = $('#wheel'), ctx = cv.getContext('2d');
+function message(html) { const m = $('#msg'); m.innerHTML = html; m.style.display = html ? 'flex' : 'none'; cv.style.visibility = html ? 'hidden' : 'visible'; $('#reel').style.visibility = $('#cards').style.visibility = html ? 'hidden' : 'visible'; }
+function showStage() {
+  cv.style.display = S.mode === 'wheel' ? 'block' : 'none'; $('#reel').style.display = S.mode === 'reel' ? 'flex' : 'none'; $('#cards').style.display = S.mode === 'cards' ? 'flex' : 'none';
+  const here = encodeURIComponent(location.pathname.split('/').pop());
+  if (!cls) return message(`<b>No class yet.</b><a class="btn blue" href="classes.html?back=${here}">Add a class list</a>`);
+  if (!cls.students.length) return message(`<b>${esc(cls.name)} has no names yet.</b><a class="btn blue" href="classes.html?back=${here}">Add names</a>`);
+  const p = pool();
+  if (!p.length) return message(present().length ? '<b>Everyone has had a turn! 🎉</b><button class="btn go" onclick="reset()">↺ Start again</button>' : '<b>Everyone is marked absent.</b><span class="muted">Tap a name in the list to bring them back.</span>');
+  message('');
+  if (S.mode === 'wheel') { wheelNames = p; sizeWheel(); } else if (S.mode === 'reel') buildReels(p, null); else buildCards(p);
+}
+
+// ---------- wheel ----------
+const COLS = ['#2b3fd1', '#f2a51a', '#1f9d45', '#d33a2c', '#7c4bd6', '#0e8fa3', '#e2578a', '#56617f'];
+const INK = ['#fff', '#1b1f3a', '#fff', '#fff', '#fff', '#fff', '#fff', '#fff'];
+let wheelNames = [], ang = 0, hot = -1;
+function sizeWheel() {
+  const r = stage.getBoundingClientRect(), s = Math.max(120, Math.floor(Math.min(r.width, r.height))), d = Math.min(2, devicePixelRatio || 1);
+  cv.style.width = cv.style.height = s + 'px'; cv.width = cv.height = s * d; ctx.setTransform(d, 0, 0, d, 0, 0); drawWheel();
+}
+function drawWheel() {
+  const s = cv.clientWidth, n = wheelNames.length, cx = s / 2, cy = s / 2, R = s / 2 - 16;
+  if (s < 40) return; ctx.clearRect(0, 0, s, s); if (!n) return;
+  const seg = (Math.PI * 2) / n, css = getComputedStyle(document.body), fs = Math.max(9, Math.min(R * 0.105, seg * R * 0.62 * 0.8));
+  ctx.font = `600 ${fs}px Fredoka, system-ui, sans-serif`; ctx.textBaseline = 'middle'; ctx.textAlign = 'right';
+  for (let i = 0; i < n; i++) {
+    let c = i % COLS.length; if (i === n - 1 && c === 0 && n > 1) c = 4;
+    const a0 = ang + i * seg;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, a0, a0 + seg); ctx.closePath(); ctx.fillStyle = COLS[c]; ctx.fill();
+    if (i === hot) { ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fill(); }
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = n > 40 ? 1 : 2; ctx.stroke();
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(a0 + seg / 2); ctx.fillStyle = INK[c];
+    let t = wheelNames[i]; const max = R * 0.74;
+    if (ctx.measureText(t).width > max) { while (t.length > 2 && ctx.measureText(t + '…').width > max) t = t.slice(0, -1); t += '…'; }
+    ctx.fillText(t, R - 12, 0); ctx.restore();
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = css.getPropertyValue('--ink'); ctx.lineWidth = 5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.13, 0, Math.PI * 2); ctx.fillStyle = css.getPropertyValue('--card'); ctx.fill(); ctx.stroke();
+  // pointer at 3 o'clock
+  ctx.beginPath(); ctx.moveTo(s - 1, cy - 17); ctx.lineTo(s - 1, cy + 17); ctx.lineTo(s - 36, cy); ctx.closePath(); ctx.fillStyle = '#f2a51a'; ctx.fill(); ctx.strokeStyle = css.getPropertyValue('--ink'); ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.stroke();
+}
+function spinTo(name, dur) {
+  return new Promise((res) => {
+    const n = wheelNames.length, seg = (Math.PI * 2) / n, i = wheelNames.indexOf(name), TAU = Math.PI * 2;
+    const start = ((ang % TAU) + TAU) % TAU, rest = -(i + 0.5) * seg + (Math.random() - 0.5) * seg * 0.7;
+    let end = rest; while (end < start + TAU * (REDUCED ? 1 : 4)) end += TAU;
+    const t0 = performance.now(); let last = -1; hot = -1;
+    const frame = (now) => {
+      const u = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - u, 3.4); ang = start + (end - start) * e;
+      const at = Math.floor(((-ang % TAU) + TAU) % TAU / seg); if (at !== last) { if (last >= 0) beep('tick'); last = at; }
+      if (u >= 1) hot = i;
+      drawWheel(); if (u < 1) requestAnimationFrame(frame); else res();
+    };
+    requestAnimationFrame(frame);
+  });
+}
+async function runWheel(winners, p) {
+  let names = p.slice();
+  for (let k = 0; k < winners.length; k++) {
+    wheelNames = names; hot = -1; drawWheel();
+    await spinTo(winners[k], (k ? 2600 : 4200) * SPEED);
+    reveal(winners.slice(0, k + 1), k === winners.length - 1);
+    if (k < winners.length - 1) { await sleep(900 * SPEED); names = names.filter((n) => n !== winners[k]); }
+  }
+}
+
+// ---------- reel ----------
+function buildReels(p, winners) {
+  const el = $('#reel'), n = winners ? winners.length : Math.min(S.count, p.length); el.innerHTML = '';
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    const box = document.createElement('div'); box.className = 'reelbox'; box.innerHTML = '<div class="strip"></div><div class="mark"></div>'; el.append(box);
+    const h = box.clientHeight / 3, len = winners ? 26 + k * 9 : 3, items = [];
+    for (let i = 0; i < len; i++) { let x; do { x = TK.pick(p); } while (p.length > 1 && x === items[i - 1]); items.push(x); }
+    if (winners) { items[len - 2] = winners[k]; if (p.length > 2) { let g = 0; while ((items[len - 1] === winners[k] || items[len - 3] === winners[k]) && g++ < 50) { items[len - 1] = TK.pick(p); items[len - 3] = TK.pick(p); } } }
+    else items[1] = '?';
+    const longest = Math.max(...items.map((s) => s.length)), fs = Math.max(16, Math.min(h * 0.52, (box.clientWidth - 24) / (longest * 0.56)));
+    const strip = box.firstChild; strip.innerHTML = items.map((s) => `<div style="height:${h}px;font-size:${fs}px">${esc(s)}</div>`).join('');
+    out.push({ strip, h, len });
+  }
+  return out;
+}
+async function runReel(winners, p) {
+  const reels = buildReels(p, winners); await sleep(30);
+  const tick = setInterval(() => beep('tick'), 95);
+  await Promise.all(reels.map((r, k) => new Promise((res) => {
+    const dur = (2200 + k * 900) * SPEED;
+    r.strip.style.transition = `transform ${dur}ms cubic-bezier(.12,.7,.18,1)`; r.strip.style.transform = `translateY(${-(r.len - 3) * r.h}px)`;
+    setTimeout(() => { if (k === reels.length - 1) clearInterval(tick); beep('ding'); res(); }, dur + 40);
+  })));
+  clearInterval(tick); reveal(winners, true);
+}
+
+// ---------- cards ----------
+function buildCards(p) {
+  const el = $('#cards'), n = Math.min(p.length, 40), r = stage.getBoundingClientRect(); el.innerHTML = '';
+  let best = { w: 0 };
+  for (let cols = 1; cols <= n; cols++) { const rows = Math.ceil(n / cols), w = Math.min((r.width - 12) / cols - 10, ((r.height - 12) / rows - 10) / 1.3); if (w > best.w) best = { w, cols }; }
+  const w = Math.max(40, Math.min(best.w, 190)), h = w * 1.3;
+  el.style.maxWidth = (best.cols * (w + 10) + 12) + 'px';
+  for (let i = 0; i < n; i++) { const c = document.createElement('div'); c.className = 'pc'; c.style.cssText = `width:${w}px;height:${h}px`; c.innerHTML = `<div class="in"><div class="f bk" style="font-size:${w * 0.45}px">?</div><div class="f ft"></div></div>`; el.append(c); }
+  return { w, h };
+}
+async function runCards(winners, p) {
+  const { w } = buildCards(p), cards = [...$('#cards').children]; await sleep(30);
+  const home = cards.map((c) => c.getBoundingClientRect());
+  for (let round = 0; round < (REDUCED ? 1 : 4); round++) {
+    const perm = TK.shuffle(cards.map((_, i) => i));
+    cards.forEach((c, i) => { const t = home[perm[i]], f = home[i]; c.style.transform = `translate(${t.left - f.left}px,${t.top - f.top}px) rotate(${(Math.random() - 0.5) * 16}deg)`; });
+    beep('tick'); await sleep(400 * SPEED + 30);
+  }
+  cards.forEach((c) => { c.style.transform = ''; }); await sleep(420 * SPEED);
+  const chosen = TK.shuffle(cards).slice(0, winners.length);
+  cards.forEach((c) => { if (!chosen.includes(c)) c.classList.add('dim'); });
+  for (let k = 0; k < chosen.length; k++) {
+    const c = chosen[k], ft = c.querySelector('.ft'), name = winners[k], longest = Math.max(...name.split(' ').map((s) => s.length));
+    ft.textContent = name; ft.style.fontSize = Math.max(9, Math.min(w * 0.24, (w - 10) / (longest * 0.58))) + 'px';
+    c.classList.add('flip'); c.style.transform = 'scale(1.18)'; beep('ding'); await sleep(650 * SPEED);
+  }
+  reveal(winners, true);
+}
+
+// ---------- pick ----------
+function reveal(names, final) {
+  const r = $('#result'); r.classList.toggle('multi', names.length > 1);
+  r.innerHTML = names.map((n) => `<span class="w">${esc(n)}</span>`).join('');
+  if (final) beep('tada');
+}
+async function pick() {
+  if (busy || !cls) return;
+  const p = pool(); if (!p.length) return showStage();
+  busy = true; document.querySelectorAll('.controls button, .controls input').forEach((b) => (b.disabled = true));
+  $('#result').innerHTML = ''; message('');
+  const winners = TK.shuffle(p).slice(0, S.count);
+  try { await (S.mode === 'wheel' ? runWheel : S.mode === 'reel' ? runReel : runCards)(winners, p); } catch (e) { reveal(winners, true); }
+  const pk = picked(); winners.forEach((n) => { if (!pk.includes(n)) pk.push(n); }); save(); renderList();
+  if (S.norep && !pool().length) $('#result').insertAdjacentHTML('beforeend', '<span class="hint">That is everyone. Reset to start again.</span>');
+  busy = false; document.querySelectorAll('.controls button, .controls input').forEach((b) => (b.disabled = false));
+}
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (!busy) showStage(); }, 120); });
+paintList(); load();
+document.fonts && document.fonts.ready.then(() => { if (!busy && S.mode === 'wheel') drawWheel(); });
+</script>
+</body>
+</html>

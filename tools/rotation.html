@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rotation timer · BSP D&amp;T tools</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E🔄%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; transition: background-color .5s, color .5s; }
+body.move, body.dark.move { --bg: #f4ab1c; --ink: #2a1800; --ink2: #2a1800; --muted: #5d3d00; --card: #fff3d6; --line: #c88a0a; }
+body.move { animation: moveflash 1s steps(1) 4; }
+@keyframes moveflash { 0% { background-color: #f4ab1c; } 50% { background-color: #ffe08a; } }
+@media (prefers-reduced-motion: reduce) { body.move { animation: none; } }
+.tk-top { flex: none; }
+#run { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 2vw; gap: 1.2vh; }
+#run[hidden], #setup[hidden], #grid[hidden] { display: none; }
+#head { flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2vw; }
+#round { font-size: min(4.6vw, 7.5vh); font-weight: 700; line-height: 1.05; }
+#round small { display: block; font-size: .5em; font-weight: 600; color: var(--muted); }
+body.move #round span { display: block; font-size: 1.9em; line-height: .95; animation: shout .5s ease-in-out 6; transform-origin: left center; }
+body.move #round small { font-size: .4em; }
+@keyframes shout { 50% { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { body.move #round span { animation: none; } }
+#count { font-size: min(17vw, 27vh); font-weight: 700; line-height: .86; white-space: nowrap; text-align: center; }
+#count .d { display: inline-block; width: .64em; text-align: center; }
+#count .c { display: inline-block; width: .3em; text-align: center; }
+body.amber #count { color: #b36b00; } body.dark.amber #count { color: #ffc14d; }
+body.red #count { color: var(--red); } body.dark.red #count { color: #ff8478; }
+body.paused #count { animation: breathe 1.6s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .35; } }
+#info { text-align: right; font-size: min(2.4vw, 3.8vh); font-weight: 600; color: var(--muted); line-height: 1.25; }
+#info b { color: var(--ink); }
+#pbar { flex: none; height: clamp(10px, 2vh, 20px); border-radius: 99px; background: color-mix(in srgb, var(--ink) 15%, transparent); overflow: hidden; }
+#pbar i { display: block; height: 100%; width: 100%; background: var(--ink2); border-radius: 99px; transition: width .25s linear; }
+#grid { flex: 1; min-height: 0; display: grid; gap: 1vw; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); }
+.st { display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; border-radius: var(--radius); background: var(--card); box-shadow: 0 0 0 3px var(--line) inset; padding: .5em .6em .6em; font-size: var(--fs, 26px); gap: .35em; }
+.st .sn { flex: none; font-weight: 700; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st .sn small { font-weight: 600; color: var(--muted); margin-right: .35em; }
+.st .gp { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: calc(var(--radius) - 6px); color: #fff; font-weight: 700; font-size: 1.45em; line-height: 1.05; text-align: center; padding: .1em .3em; overflow: hidden; }
+.st .gp span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+.st .gp small { font-size: .45em; font-weight: 600; opacity: .9; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+.st .gp.none { background: transparent; color: var(--muted); box-shadow: 0 0 0 3px var(--line) inset; font-size: 1em; font-weight: 600; }
+body.move .st .gp { animation: arrive .6s ease-out; }
+@keyframes arrive { 0% { transform: translateX(-40%); opacity: 0; } }
+#finish { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2vh; text-align: center; }
+#finish[hidden] { display: none; }
+#finish h2 { font-size: min(11vw, 18vh); margin: 0; line-height: 1; }
+#finish p { font-size: min(3.4vw, 5vh); margin: 0; color: var(--muted); font-weight: 600; }
+#controls { flex: none; padding: 8px 14px 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+#controls[hidden] { display: none; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+.btn.big { font-size: 20px; padding: 10px 24px; min-width: 150px; }
+label.tog { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+label.tog input { width: 20px; height: 20px; accent-color: var(--ink2); }
+.help { font-size: 14px; color: var(--muted); text-align: center; }
+.help kbd { font: inherit; font-weight: 600; border: 1.5px solid var(--line); border-radius: 6px; padding: 0 5px; background: var(--card); }
+.tk-hide-idle { transition: opacity .3s; }
+/* stop banner */
+#banner { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: rgba(198, 47, 34, .96); color: #fff; cursor: pointer; padding: 3vw; }
+#banner[hidden] { display: none; }
+#banner h2 { font-size: min(15vw, 26vh); line-height: .95; margin: 0; }
+#banner p { font-size: min(4.6vw, 7vh); font-weight: 600; margin: 2vh 0 0; }
+#banner small { font-size: clamp(16px, 2.6vh, 24px); margin-top: 4vh; opacity: .85; }
+/* setup */
+#setup { flex: 1; min-height: 0; overflow: auto; padding: 4px 16px 20px; }
+#setup .wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+#setup h2 { margin: 0 0 8px; font-size: 22px; }
+#setup label.f { display: block; font-weight: 600; margin: 10px 0 4px; }
+#setup input[type=number], #setup textarea { width: 100%; min-height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); padding: 8px 10px; font-weight: 600; }
+#setup textarea { min-height: 150px; resize: vertical; line-height: 1.35; }
+#setup .two { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+#setup .full { grid-column: 1 / -1; }
+#sum { font-size: 19px; font-weight: 600; }
+#sum small { display: block; font-weight: 500; color: var(--muted); margin-top: 2px; }
+#setup .acts { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+.hint { font-size: 14px; color: var(--muted); font-weight: 500; }
+@media (max-width: 760px) { #setup .wrap { grid-template-columns: 1fr; } #head { grid-template-columns: 1fr; text-align: center; } #info { text-align: center; } }
+@media (max-height: 640px) { .help { display: none; } }
+</style>
+</head>
+<body>
+<section id="setup" hidden>
+  <div class="wrap">
+    <div class="card">
+      <h2>Stations</h2>
+      <label class="f" for="nS">How many stations? (2–10)</label><input id="nS" type="number" min="2" max="10" step="1">
+      <label class="f" for="sN">Station names <span class="hint">(optional, one per line)</span></label><textarea id="sN" placeholder="Station 1&#10;Station 2&#10;…" spellcheck="false"></textarea>
+    </div>
+    <div class="card">
+      <h2>Groups</h2>
+      <label class="f" for="nG">How many groups? <span class="hint">(up to one per station)</span></label><input id="nG" type="number" min="1" max="10" step="1">
+      <label class="f" for="gN">Group names <span class="hint">(optional, one per line)</span></label><textarea id="gN" placeholder="Group 1&#10;Group 2&#10;…" spellcheck="false"></textarea>
+    </div>
+    <div class="card full">
+      <h2>Timing</h2>
+      <div class="two">
+        <div><label class="f" for="wT">Work time (minutes)</label><input id="wT" type="number" min="0.5" max="120" step="0.5"></div>
+        <div><label class="f" for="cT">Changeover (seconds)</label><input id="cT" type="number" min="0" max="600" step="5"></div>
+        <div><label class="f" for="nR">Rounds <span class="hint">(blank = every station)</span></label><input id="nR" type="number" min="1" max="30" step="1" placeholder="every station"></div>
+      </div>
+      <div class="acts">
+        <div id="sum" style="margin-right:auto"></div>
+        <button class="btn" id="cancelSetup" hidden>Back to the timer</button>
+        <button class="btn go big" id="begin">▶ Start rotation</button>
+      </div>
+      <div class="hint" style="margin-top:8px">Each round every group moves on one station (1 → 2 → 3 … and the last goes back to 1). Everything is saved on this computer only.</div>
+    </div>
+  </div>
+</section>
+
+<main id="run" hidden>
+  <div id="head">
+    <div id="round"></div>
+    <div id="count" role="timer"></div>
+    <div id="info"></div>
+  </div>
+  <div id="pbar"><i id="pfill"></i></div>
+  <div id="grid"></div>
+  <div id="finish" hidden><h2>All done! 🎉</h2><p id="finP"></p><div class="row"><button class="btn go big" id="again">↺ Run again</button><button class="btn big" id="toSetup">⚙ Setup</button></div></div>
+</main>
+<div id="controls" hidden>
+  <div class="row">
+    <button class="btn" id="setupBtn" title="Change stations, groups and times">⚙ Setup</button>
+    <button class="btn" id="backBtn" title="Back: restart this part, or go to the one before (←)">⏮ Back</button>
+    <button class="btn blue big" id="pauseBtn">⏸ Pause</button>
+    <button class="btn" id="skipBtn" title="Skip to the next part (→)">Skip ⏭</button>
+    <button class="btn stop" id="stopBtn" title="Pause everything and show a big STOP banner (S)">✋ Stop &amp; listen</button>
+    <label class="btn tog"><input type="checkbox" id="snd"> Sound</label>
+  </div>
+  <div class="help"><kbd>Space</kbd> pause / resume · <kbd>→</kbd> skip · <kbd>←</kbd> back · <kbd>S</kbd> stop &amp; listen · <kbd>F</kbd> full screen</div>
+</div>
+<div id="banner" hidden><h2>✋ STOP</h2><p>Look this way and listen</p><small>Timer paused · tap or press space to carry on</small></div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+TK.top('Rotation timer');
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const COLS = ['#2b3fd1', '#c8321f', '#1c8a3b', '#a85a00', '#7b2fbf', '#0b7d88', '#c2267d', '#56607a', '#7d5a12', '#0f5a9c']; // one per group, all dark enough for white text
+const R = Object.assign({ cfg: { stations: 6, sNames: '', groups: 6, gNames: '', work: 8, change: 30, rounds: '' }, run: null, sound: true }, TK.store('rotation', {}));
+const save = () => TK.save('rotation', R);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const pad = (n) => String(n).padStart(2, '0');
+const fmt = (sec) => { sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60; return h ? h + ':' + pad(m) + ':' + pad(s) : m + ':' + pad(s); };
+const lines = (t) => String(t || '').split('\n').map((x) => x.trim());
+const beep = (k) => { if (R.sound) TK.beep(k); };
+
+// ---------- the plan: work, move, work, move … ----------
+let C = null; // normalised config
+function norm() {
+  const c = R.cfg, S = clamp(Math.round(+c.stations) || 2, 2, 10), G = clamp(Math.round(+c.groups) || S, 1, S);
+  const rounds = c.rounds === '' || c.rounds == null || !(+c.rounds > 0) ? S : clamp(Math.round(+c.rounds), 1, 30);
+  const sn = lines(c.sNames), gn = lines(c.gNames);
+  C = { S, G, rounds, work: clamp(+c.work || 8, 0.1, 120) * 60, change: clamp(Math.round(+c.change) || 0, 0, 600),
+    sName: (i) => sn[i] || 'Station ' + (i + 1), sNamed: (i) => !!sn[i], gName: (i) => gn[i] || 'Group ' + (i + 1) };
+  C.segs = [];
+  for (let r = 0; r < rounds; r++) { C.segs.push({ t: 'work', r, dur: C.work }); if (r < rounds - 1 && C.change > 0) C.segs.push({ t: 'move', r: r + 1, dur: C.change }); }
+  C.total = C.segs.reduce((a, s) => a + s.dur, 0);
+}
+const groupAt = (st, round) => { const g = ((st - round) % C.S + C.S) % C.S; return g < C.G ? g : -1; }; // group g is at station (g + round) mod S
+
+// ---------- run state ----------
+const run = () => R.run;
+const leftMs = () => { const r = run(); return !r ? 0 : r.state === 'run' ? r.endAt - Date.now() : r.left; };
+function enter(idx, quiet) {
+  const r = run(); r.idx = idx; lastSec = -1;
+  if (idx >= C.segs.length) { r.state = 'done'; r.left = 0; if (!quiet) beep('tada'); save(); draw(true); return; }
+  const seg = C.segs[idx]; r.left = seg.dur * 1000; if (r.state === 'run') r.endAt = Date.now() + r.left;
+  if (!quiet) beep(seg.t === 'move' || (seg.t === 'work' && idx > 0 && C.change === 0) ? 'alarm' : 'ding');
+  if (seg.t === 'move' || (idx > 0 && C.change === 0)) { document.body.classList.remove('move'); void document.body.offsetWidth; }
+  save(); draw(true);
+}
+function begin() { norm(); R.run = { idx: 0, state: 'run', endAt: 0, left: 0, stop: false }; show('run'); enter(0); }
+function pause() { const r = run(); if (!r || r.state !== 'run') return; r.left = Math.max(0, leftMs()); r.state = 'pause'; save(); draw(); }
+function resume() { const r = run(); if (!r || r.state !== 'pause') return; r.stop = false; r.endAt = Date.now() + r.left; r.state = 'run'; save(); draw(); }
+function toggle() { const r = run(); if (!r) return; if (r.state === 'run') pause(); else if (r.state === 'pause') resume(); }
+function skip() { const r = run(); if (!r || r.state === 'done') return; r.stop = false; enter(r.idx + 1); }
+function back() {
+  const r = run(); if (!r) return; r.stop = false;
+  if (r.state === 'done') { r.state = 'pause'; enter(C.segs.length - 1, true); return; }
+  const seg = C.segs[r.idx], gone = seg.dur * 1000 - leftMs();
+  enter(gone > 3000 || r.idx === 0 ? r.idx : r.idx - 1, true);
+}
+function stopAll() { const r = run(); if (!r || r.state === 'done') return; if (r.state === 'run') pause(); r.stop = true; save(); beep('buzz'); draw(); }
+function carryOn() { const r = run(); if (!r) return; r.stop = false; resume(); draw(); }
+
+// ---------- drawing ----------
+let lastSec = -1, gridKey = '', lastCount = '';
+const cells = (s) => [...s].map((ch) => `<span class="${/\d/.test(ch) ? 'd' : 'c'}">${ch}</span>`).join('');
+function show(v) {
+  $('#setup').hidden = v !== 'setup'; $('#run').hidden = v !== 'run'; $('#controls').hidden = v !== 'run';
+  if (v === 'setup') { fillSetup(); document.body.classList.remove('move', 'amber', 'red', 'paused'); $('#banner').hidden = true; }
+}
+function layoutGrid() {
+  const n = C.S, g = $('#grid'), w = g.clientWidth, h = g.clientHeight; if (!w || !h) return;
+  let len = 6; for (let i = 0; i < n; i++) len = Math.max(len, (C.sName(i).length + (C.sNamed(i) ? 2 : 0)) * 0.62, i < C.G ? C.gName(i).length * 0.9 : 0);
+  let best = { cols: n, fs: 0 };
+  for (let cols = 1; cols <= n; cols++) { const rows = Math.ceil(n / cols), fs = Math.min((w / cols - 12) / (len + 1.4), (h / rows - 12) / 5.5); if (fs > best.fs) best = { cols, fs }; } // biggest type that fits a card
+  let fs = clamp(best.fs, 11, 90); g.style.setProperty('--cols', best.cols); g.style.setProperty('--fs', fs.toFixed(1) + 'px');
+  const over = () => [...g.querySelectorAll('.sn, .gp span, .gp small')].some((e) => e.scrollWidth > e.clientWidth + 1) || [...g.querySelectorAll('.gp')].some((e) => e.scrollHeight > e.clientHeight + 1);
+  for (let k = 0; k < 14 && fs > 11 && over(); k++) { fs *= 0.93; g.style.setProperty('--fs', fs.toFixed(1) + 'px'); } // long names: shrink until nothing is cut off
+}
+function draw(force) {
+  const r = run(); if (!r || !C) return;
+  const b = document.body, done = r.state === 'done', seg = done ? null : C.segs[r.idx];
+  $('#finish').hidden = !done; $('#grid').hidden = done; $('#head').style.display = done ? 'none' : ''; $('#pbar').style.display = done ? 'none' : '';
+  $('#banner').hidden = !(r.stop && !done);
+  b.classList.toggle('paused', r.state === 'pause');
+  [$('#controls'), document.querySelector('.tk-top')].forEach((e) => e.classList.toggle('tk-hide-idle', r.state === 'run'));
+  const pb = $('#pauseBtn'), txt = r.state === 'pause' ? '▶ Resume' : '⏸ Pause';
+  if (pb.textContent !== txt) { pb.textContent = txt; pb.classList.toggle('go', r.state === 'pause'); pb.classList.toggle('blue', r.state !== 'pause'); }
+  pb.disabled = done; $('#skipBtn').disabled = done; $('#stopBtn').disabled = done;
+  if (done) {
+    b.classList.remove('move', 'amber', 'red');
+    $('#finP').textContent = C.rounds + (C.rounds === 1 ? ' round' : ' rounds') + ' finished. Tidy up your station.'; document.title = 'All done · Rotation timer'; gridKey = ''; return;
+  }
+  const left = Math.max(0, leftMs()), sec = Math.ceil(left / 1000), move = seg.t === 'move';
+  const c = fmt(sec); if (c !== lastCount || force) { lastCount = c; $('#count').innerHTML = cells(c); }
+  b.classList.toggle('move', move);
+  b.classList.toggle('red', !move && sec <= 10); b.classList.toggle('amber', !move && sec > 10 && sec <= Math.min(60, seg.dur / 2));
+  $('#pfill').style.width = (clamp(left / (seg.dur * 1000), 0, 1) * 100).toFixed(2) + '%';
+  const rl = move ? '<span>MOVE!</span><small>Go to your next station · round ' + (seg.r + 1) + ' starts soon</small>' : 'Round ' + (seg.r + 1) + ' <span style="font-weight:600">of ' + C.rounds + '</span><small>' + (r.state === 'pause' ? 'Paused' : seg.r === C.rounds - 1 ? 'Last round' : 'Working') + '</small>';
+  if ($('#round').dataset.k !== rl) { $('#round').dataset.k = rl; $('#round').innerHTML = rl; }
+  let rest = left / 1000; for (let i = r.idx + 1; i < C.segs.length; i++) rest += C.segs[i].dur;
+  const fin = new Date(Date.now() + rest * 1000);
+  const inf = (move ? 'Then <b>' + fmt(C.work) + '</b> of work' : seg.r < C.rounds - 1 ? 'Next: <b>move on one station</b>' : 'Then <b>finished</b>') + '<br>' + (r.state === 'run' ? 'All done at <b>' + fin.getHours() + ':' + pad(fin.getMinutes()) + '</b>' : '<b>' + fmt(rest) + '</b> left in total');
+  if ($('#info').dataset.k !== inf) { $('#info').dataset.k = inf; $('#info').innerHTML = inf; }
+  document.title = (move ? 'MOVE ' : 'R' + (seg.r + 1) + ' ') + c + ' · Rotation timer';
+  // station grid for this round (during MOVE: the round they are walking to)
+  const key = seg.r + '|' + move;
+  if (key !== gridKey || force) {
+    gridKey = key;
+    $('#grid').innerHTML = Array.from({ length: C.S }, (_, s) => {
+      const g = groupAt(s, seg.r), from = ((s - 1) % C.S + C.S) % C.S;
+      const nm = C.sNamed(s) ? `<small>${s + 1}</small>${esc(C.sName(s))}` : esc(C.sName(s));
+      const gp = g < 0 ? `<div class="gp none">${move ? 'nobody' : 'empty'}</div>` : `<div class="gp" style="background:${COLS[g % COLS.length]}"><span>${esc(C.gName(g))}</span>${move ? `<small>from ${esc(C.sName(from))}</small>` : ''}</div>`;
+      return `<div class="st"><div class="sn">${nm}</div>${gp}</div>`;
+    }).join('');
+    layoutGrid();
+  }
+  if (r.state === 'run' && sec !== lastSec) { // countdown pips before each change
+    if (lastSec !== -1 && sec <= 5 && sec > 0) beep('tick');
+    if (lastSec !== -1 && !move && sec === 60 && seg.dur > 120) beep('ding');
+    lastSec = sec;
+  }
+}
+function tick() {
+  const r = run(); if (!r || !C || r.state !== 'run') return;
+  let guard = 0, late = false;
+  while (r.state === 'run' && r.endAt <= Date.now() && guard++ < 100) { // catches up quietly if the laptop was asleep
+    const over = Date.now() - r.endAt; late = over > 1500;
+    enter(r.idx + 1, late);
+    if (r.state === 'run' && late) { r.endAt -= over; r.left = Math.max(0, r.endAt - Date.now()); }
+  }
+  if (late) save();
+  draw();
+}
+
+// ---------- setup ----------
+function fillSetup() {
+  const c = R.cfg; $('#nS').value = c.stations; $('#sN').value = c.sNames; $('#nG').value = c.groups; $('#gN').value = c.gNames; $('#wT').value = c.work; $('#cT').value = c.change; $('#nR').value = c.rounds;
+  $('#cancelSetup').hidden = !run(); $('#begin').textContent = run() ? '▶ Restart from round 1' : '▶ Start rotation'; summary();
+}
+function readSetup() {
+  const c = R.cfg, S = clamp(Math.round(+$('#nS').value) || 2, 2, 10);
+  c.stations = S; c.sNames = $('#sN').value; c.groups = clamp(Math.round(+$('#nG').value) || S, 1, S); c.gNames = $('#gN').value;
+  c.work = clamp(+$('#wT').value || 8, 0.5, 120); c.change = clamp(Math.round(+$('#cT').value) || 0, 0, 600); c.rounds = $('#nR').value === '' ? '' : clamp(Math.round(+$('#nR').value) || 1, 1, 30);
+}
+function summary() {
+  readSetup(); const keep = C; norm();
+  const moves = C.segs.filter((s) => s.t === 'move').length, fin = new Date(Date.now() + C.total * 1000);
+  let note = '';
+  if (C.G < C.S) note = (C.S - C.G) + (C.S - C.G === 1 ? ' station is' : ' stations are') + ' empty each round. ';
+  if (C.rounds < C.S) note += 'Groups will not reach every station. '; else if (C.rounds > C.S) note += 'Groups come back round to stations they have done. ';
+  $('#sum').innerHTML = `${C.rounds} × ${fmt(C.work)}${moves ? ` + ${moves} × ${C.change} s changeover` : ''} = ${fmt(C.total)} <small>${note}Starting now it ends at ${fin.getHours()}:${pad(fin.getMinutes())}.</small>`;
+  if (run() && keep) C = keep; // keep the live plan until Restart is pressed
+}
+$('#setup').addEventListener('input', summary);
+$('#nS').addEventListener('change', () => { const S = clamp(Math.round(+$('#nS').value) || 2, 2, 10); $('#nS').value = S; if (+$('#nG').value > S || R.cfg.groups === R.cfg.stations) $('#nG').value = S; summary(); });
+$('#nG').addEventListener('change', () => { $('#nG').value = clamp(Math.round(+$('#nG').value) || 1, 1, +$('#nS').value || 10); summary(); });
+$('#begin').onclick = () => { readSetup(); save(); begin(); };
+$('#cancelSetup').onclick = () => { R.cfg = savedCfg || R.cfg; save(); norm(); show('run'); draw(true); };
+let savedCfg = null;
+function openSetup() { const r = run(); if (r && r.state === 'run') pause(); savedCfg = JSON.parse(JSON.stringify(R.cfg)); show('setup'); }
+
+// ---------- wiring ----------
+$('#setupBtn').onclick = openSetup; $('#toSetup').onclick = openSetup;
+$('#pauseBtn').onclick = toggle; $('#skipBtn').onclick = skip; $('#backBtn').onclick = back; $('#stopBtn').onclick = stopAll;
+$('#again').onclick = begin; $('#banner').onclick = carryOn;
+$('#snd').checked = R.sound; $('#snd').onchange = (e) => { R.sound = e.target.checked; save(); if (R.sound) TK.beep('ding'); };
+document.addEventListener('click', (e) => { const t = e.target.closest('#controls button, #finish button, label.tog'); if (t && e.detail > 0) { t.blur(); const i = t.querySelector && t.querySelector('input'); i && i.blur(); } });
+addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const a = document.activeElement, tag = a && a.tagName;
+  if (tag === 'INPUT' && a.type !== 'checkbox' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const k = e.key;
+  if (k === 'f' || k === 'F') { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (err) {} return; }
+  if ($('#run').hidden || !run()) return;
+  if (k === ' ' || k === 'Spacebar') { if (tag === 'BUTTON' || tag === 'INPUT') return; e.preventDefault(); run().stop ? carryOn() : toggle(); }
+  else if (k === 'Escape' && run().stop) carryOn();
+  else if (k === 'ArrowRight') { e.preventDefault(); skip(); }
+  else if (k === 'ArrowLeft') { e.preventDefault(); back(); }
+  else if (k === 's' || k === 'S') { run().stop ? carryOn() : stopAll(); }
+});
+addEventListener('resize', () => { if (C && run()) layoutGrid(); });
+new ResizeObserver(() => { if (C && run() && !$('#run').hidden) layoutGrid(); }).observe($('#grid'));
+TK.idle([$('#controls'), document.querySelector('.tk-top')], 3500);
+
+// a rotation that was running when the page was closed carries on from where the clock says it should be
+if (R.run) { norm(); if (R.run.idx > C.segs.length) R.run.idx = C.segs.length; if (R.run.state === 'run' && Date.now() - R.run.endAt > 6 * 3600e3) R.run = null; }
+if (R.run) { show('run'); tick(); draw(true); } else show('setup');
+setInterval(tick, 100);
+</script>
+</body>
+</html>

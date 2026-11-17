@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Answer the poll · BSP D&amp;T</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); }
+#head { width: 100%; max-width: 720px; display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+#head b { font-size: 18px; }
+#head .code { margin-left: auto; font-weight: 700; letter-spacing: .1em; background: var(--card); box-shadow: 0 0 0 2px var(--line) inset; border-radius: 999px; padding: 4px 14px; }
+#me { font-size: 14px; color: var(--muted); background: none; border: 0; text-decoration: underline; cursor: pointer; min-height: 44px; padding: 0 4px; }
+main { width: 100%; max-width: 720px; flex: 1; display: flex; flex-direction: column; }
+.card { padding: 20px; }
+h1 { font-size: clamp(24px, 5vw, 36px); margin: 0 0 6px; line-height: 1.15; font-weight: 600; overflow-wrap: anywhere; }
+.qn { display: inline-block; font-weight: 700; background: var(--ink2); color: #fff; border-radius: 999px; padding: 3px 14px; margin-bottom: 10px; font-size: 15px; }
+label { display: block; font-weight: 600; margin: 14px 0 4px; }
+input[type=text], input[type=email], textarea { width: 100%; border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--card); font-size: 19px; min-height: 50px; }
+textarea { resize: vertical; min-height: 110px; }
+input:focus, textarea:focus, .choice:focus-visible { outline: 3px solid var(--ink2); outline-offset: 1px; }
+.err { color: var(--red); font-weight: 600; min-height: 1.4em; margin-top: 8px; }
+.big { width: 100%; font-size: 22px; padding: 16px; margin-top: 14px; }
+.choices { display: grid; gap: 12px; margin-top: 14px; }
+.choices.two { grid-template-columns: 1fr 1fr; }
+.choices.five { grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.choice { display: flex; align-items: center; gap: 14px; text-align: left; border: 0; border-radius: 16px; padding: 14px 16px; min-height: 64px; background: var(--card); box-shadow: 0 3px 0 var(--line), 0 0 0 2px var(--line) inset; font-size: 20px; font-weight: 500; cursor: pointer; overflow-wrap: anywhere; }
+.choice .k { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-weight: 700; font-size: 22px; background: var(--ink2); color: #fff; }
+.choice.sel { background: var(--ink2); color: #fff; box-shadow: 0 3px 0 #18237a; }
+.choice.sel .k { background: #fff; color: var(--ink2); }
+.choice.right { background: var(--green); color: #fff; box-shadow: 0 3px 0 #1a7a33; }
+.choice.right .k { background: #fff; color: var(--green); }
+.choices.two .choice, .choices.five .choice { justify-content: center; text-align: center; flex-direction: column; gap: 6px; }
+.choices.five .choice { padding: 10px 4px; font-size: 12px; line-height: 1.15; }
+.choices.five .choice .k { width: 48px; height: 48px; font-size: 26px; }
+.choices[aria-disabled=true] .choice { pointer-events: none; }
+.choices[aria-disabled=true] .choice:not(.sel):not(.right) { opacity: .5; }
+.sent { text-align: center; margin-top: 16px; padding: 14px; border-radius: 16px; background: color-mix(in srgb, var(--green) 16%, transparent); font-size: 20px; font-weight: 600; }
+.sent .tick { display: block; font-size: 54px; line-height: 1; color: var(--green); animation: pop .4s cubic-bezier(.2, 1.6, .4, 1); }
+.sent.bad { background: color-mix(in srgb, var(--red) 14%, transparent); }
+.sent small { display: block; font-weight: 400; color: var(--muted); margin-top: 4px; font-size: 15px; }
+@keyframes pop { from { transform: scale(.3); opacity: 0; } }
+.wait { text-align: center; margin: auto; padding: 30px 10px; }
+.wait .dots { font-size: 60px; line-height: 1; letter-spacing: .1em; animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+.wait p { font-size: 20px; }
+.grp { margin-top: 16px; }
+.grp h2 { font-size: 20px; margin: 0 0 6px; }
+.grp input { margin-top: 8px; }
+.link { background: none; border: 0; color: var(--ink2); text-decoration: underline; cursor: pointer; min-height: 44px; font-weight: 600; }
+.padset { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 16px; font-size: 14px; color: var(--muted); }
+.padset select { min-height: 44px; border-radius: 10px; border: 2px solid var(--line); background: var(--card); padding: 4px 8px; }
+footer { max-width: 720px; font-size: 13px; color: var(--muted); text-align: center; margin-top: 14px; line-height: 1.4; }
+#codein { text-transform: uppercase; letter-spacing: .3em; text-align: center; font-size: 30px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="head"><b>Quick poll</b><button id="me" hidden></button><span class="code" id="hcode" hidden></span></div>
+<main id="app"></main>
+<footer>Your answer is saved with your name and school email in your teacher's Google results sheet, like the D&amp;T workbooks. It is not sent anywhere else.</footer>
+<script src="../workbooks.js"></script>
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ls = { get(k, d) { try { const v = localStorage.getItem('bsp-poll.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('bsp-poll.' + k, JSON.stringify(v)); } catch (e) {} } };
+try { if (localStorage.getItem('bsp-tools.dark') === 'true') document.body.classList.add('dark'); } catch (e) {}
+
+const params = new URLSearchParams(location.search);
+const BACKEND = params.get('backend') /* testing only */ || (window.WORKBOOKS && WORKBOOKS.backend) || '';
+const DOMAIN = 'bspcloud.net';
+const BOARD_EMAIL = 'board@poll.local';
+const LETTERS = 'ABCDEF';
+const SCALE = ['Not at all confident', 'A little unsure', 'Getting there', 'Confident', 'Could teach it'];
+const E321 = [['3', 'things I learned', 3], ['2', 'things I found interesting', 2], ['1', 'question I still have', 1]];
+const TYPES = { mc: 'Multiple choice', tf: 'True / false', scale: 'Confidence 1–5', text: 'Short answer', 321: '3-2-1 exit ticket' };
+const app = $('#app');
+
+let code = (params.get('s') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+let student = ls.get('student', null);
+let state = null;          // the question published by the board (or built from the link in answer-pad mode)
+let padMode = false;       // true when the question cannot be read from the backend
+let pad = { n: Math.max(1, parseInt(params.get('q'), 10) || 1), type: TYPES[params.get('t')] ? params.get('t') : 'mc', opts: Math.min(6, Math.max(2, parseInt(params.get('n'), 10) || 4)) };
+let shownKey = '';         // which question is on screen (so polling does not wipe what a student is typing)
+let fails = 0, timer = null, sending = false;
+const lesson = () => 'poll-' + code;
+const sentKey = () => 'sent.' + code;
+const sentAll = () => ls.get(sentKey(), {});
+
+// ---------- sign in ----------
+function signIn(msg) {
+  shownKey = 'signin'; clearTimeout(timer);
+  app.innerHTML = `<form class="card" id="f" novalidate><h1>Who are you?</h1><p class="muted" style="margin:0">Only asked once on this iPad.</p>
+    <label for="nm">Your name</label><input id="nm" type="text" autocomplete="name" placeholder="First name and surname" maxlength="80" value="${esc(student ? student.name : '')}">
+    <label for="em">School email</label><input id="em" type="email" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="email" placeholder="name@${DOMAIN}" maxlength="120" value="${esc(student ? student.email : '')}">
+    <div class="err" id="err">${esc(msg || '')}</div><button class="btn go big" type="submit">Continue</button></form>`;
+  $('#f').onsubmit = (e) => {
+    e.preventDefault();
+    const name = $('#nm').value.trim().replace(/\s+/g, ' '), email = $('#em').value.trim().toLowerCase();
+    const err = !name || name.split(' ').length < 2 ? 'Please write your first name and surname.' : !/^[^@\s]+@/.test(email) || !email.endsWith('@' + DOMAIN) ? `Please use your school email (…@${DOMAIN}).` : '';
+    if (err) { $('#err').textContent = err; return; }
+    student = { name, email, cls: (student && student.cls) || '' }; ls.set('student', student); start();
+  };
+  $('#nm').focus();
+}
+function askCode(msg) {
+  shownKey = 'code'; clearTimeout(timer);
+  app.innerHTML = `<form class="card" id="f"><h1>Type the code on the board</h1><input id="codein" type="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="8" placeholder="····"><div class="err" id="err">${esc(msg || '')}</div><button class="btn go big" type="submit">Join</button></form>`;
+  $('#f').onsubmit = (e) => { e.preventDefault(); const v = $('#codein').value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (v.length < 3) { $('#err').textContent = 'Type the code shown on the board.'; return; } code = v; const u = new URL(location.href); u.searchParams.set('s', code); history.replaceState(null, '', u); start(); };
+  $('#codein').focus();
+}
+$('#me').onclick = () => signIn();
+
+// ---------- backend ----------
+async function fetchState() {
+  const r = await fetch(BACKEND + (BACKEND.includes('?') ? '&' : '?') + 'a=progress&full=1&lesson=' + encodeURIComponent(lesson()) + '&email=' + encodeURIComponent(BOARD_EMAIL), { cache: 'no-store' });
+  const j = await r.json();
+  if (!j || j.ok === false) throw new Error('bad');
+  if (j.items === undefined) return { pad: true };                 // older backend: cannot read the question back
+  const it = j.items.state; if (!it) return { none: true };
+  try { return { state: JSON.parse(it.answer) }; } catch (e) { return { none: true }; }
+}
+async function tick() {
+  clearTimeout(timer);
+  if (!student || !code) return;
+  let wait = 5000;
+  if (document.visibilityState === 'visible' && !sending) {
+    try {
+      const r = await fetchState(); fails = 0;
+      if (r.pad) { padMode = true; state = padState(); }
+      else { padMode = false; state = r.state || null; }
+      draw();
+      if (padMode) return;                                         // nothing to poll for in answer-pad mode
+      if (state && sentAll()['q' + state.n]) wait = 7000;
+    } catch (e) { fails++; wait = Math.min(20000, 4000 * fails); if (fails >= 2 && !state) waiting('Looking for the poll… check the internet connection.'); }
+  }
+  timer = setTimeout(tick, wait + Math.random() * 1500);            // spread the class's requests out
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !padMode) tick(); });
+const padState = () => ({ n: pad.n, type: pad.type, text: 'Read question ' + pad.n + ' on the board', opts: pad.type === 'mc' ? Array.from({ length: pad.opts }, () => '') : undefined, open: true, pad: true });
+
+async function send(q, answer, shown) {
+  if (sending) return; sending = true;
+  const now = Date.now(), all = sentAll(), prev = all['q' + q.n] || all['_' + q.n]; // '_n' = the earlier answer while it is being changed
+  note('<span class="dots">Sending…</span>', false);
+  const body = { v: 1, lesson: lesson(), event: 'page', session: code, student: { name: student.name, email: student.email, cls: student.cls || '' }, page: { id: 'poll', title: 'Quick poll ' + code, n: 0 }, seconds: 0, visits: 1,
+    items: [{ id: 'q' + q.n, label: q.pad ? 'Question ' + q.n : q.text, type: String(q.type), answer, correct: null, first: null, score: null, max: null, attempts: (prev ? prev.attempts || 1 : 0) + 1, mis: '', at: prev ? prev.at : now, last: now }], unanswered: [], ts: now };
+  let ok = false;
+  for (let i = 0; i < 3 && !ok; i++) {
+    try { const r = await fetch(BACKEND, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }); const j = await r.json(); ok = !!(j && j.ok); if (!ok && j && j.error !== 'busy') break; }
+    catch (e) {}
+    if (!ok) await new Promise((r) => setTimeout(r, 1200 * (i + 1)));
+  }
+  sending = false;
+  if (ok) { all['q' + q.n] = { answer, shown, at: body.items[0].at, attempts: body.items[0].attempts }; ls.set(sentKey(), all); shownKey = ''; draw(); }
+  else note('Not sent. Check the internet and try again.', true);
+}
+function note(html, bad) { let n = $('#note'); if (!n) return; n.className = 'sent' + (bad ? ' bad' : ''); n.innerHTML = html; n.hidden = false; }
+
+// ---------- screens ----------
+function waiting(msg) {
+  if (shownKey === 'wait:' + msg) return; shownKey = 'wait:' + msg;
+  app.innerHTML = `<div class="wait"><div class="dots">···</div><p>${esc(msg)}</p><p><button class="link" id="chg">Wrong code? Change it</button></p></div>`;
+  $('#chg').onclick = () => askCode();
+}
+function draw() {
+  $('#hcode').hidden = !code; $('#hcode').textContent = code;
+  $('#me').hidden = !student; if (student) $('#me').textContent = student.name.split(' ')[0] + ' (not you?)';
+  const q = state;
+  if (!q) return waiting('You are in! Waiting for your teacher to ask a question…');
+  const mine = sentAll()['q' + q.n];
+  const key = [q.n, q.type, q.text, (q.opts || []).join('|'), q.open, q.reveal, mine ? mine.answer : '', padMode].join('~');
+  if (key === shownKey) return; shownKey = key;
+  const locked = !!mine || !q.open;
+  let h = `<div class="card"><span class="qn">Question ${q.n}</span><h1>${esc(q.text)}</h1>`;
+  if (q.type === 'mc' || q.type === 'tf' || q.type === 'scale') {
+    const opts = q.type === 'mc' ? q.opts : q.type === 'tf' ? ['True', 'False'] : SCALE;
+    const keys = q.type === 'mc' ? opts.map((_, i) => LETTERS[i]) : q.type === 'tf' ? ['✓', '✗'] : ['1', '2', '3', '4', '5'];
+    const vals = q.type === 'mc' ? opts.map((o, i) => LETTERS[i] + (o ? ': ' + o : '')) : q.type === 'tf' ? ['True', 'False'] : ['1', '2', '3', '4', '5'];
+    h += `<div class="choices${q.type === 'tf' ? ' two' : q.type === 'scale' ? ' five' : ''}" aria-disabled="${locked}">` + opts.map((o, i) => `<button class="choice${mine && mine.answer === vals[i] ? ' sel' : ''}${q.reveal === i ? ' right' : ''}" data-v="${esc(vals[i])}" data-s="${esc(o || 'Option ' + LETTERS[i])}"><span class="k">${keys[i]}</span><span>${esc(o || (q.type === 'mc' ? 'Option ' + LETTERS[i] : ''))}</span></button>`).join('') + '</div>';
+  } else if (q.type === 'text') {
+    h += locked ? '' : `<form id="tf"><textarea id="ta" maxlength="200" placeholder="Type your answer…" aria-label="Your answer"></textarea><div class="err" id="err"></div><button class="btn go big" type="submit">Send</button></form>`;
+  } else {
+    h += locked ? '' : `<form id="x321">` + E321.map(([n, t, c]) => `<div class="grp"><h2><b>${n}</b> ${t}</h2>${Array.from({ length: c }, (_, i) => `<input type="text" maxlength="140" data-g="${n}" aria-label="${n} ${t}: ${i + 1}" placeholder="${i + 1}.">`).join('')}</div>`).join('') + `<div class="err" id="err"></div><button class="btn go big" type="submit">Send</button></form>`;
+  }
+  h += `<div id="note" class="sent" ${mine || !q.open ? '' : 'hidden'}>`;
+  if (mine) {
+    const verdict = q.reveal != null && (q.type === 'mc' || q.type === 'tf') ? (mine.answer === (q.type === 'mc' ? LETTERS[q.reveal] + (q.opts[q.reveal] ? ': ' + q.opts[q.reveal] : '') : ['True', 'False'][q.reveal]) || mine.answer.split(':')[0] === LETTERS[q.reveal] ? 'Correct, well done!' : 'Not quite: the correct answer is highlighted.') : '';
+    h += `<span class="tick">✓</span>Sent${q.type === 'text' || q.type === '321' ? '' : ': ' + esc(mine.shown || mine.answer)}${q.type === 'text' ? `<small>“${esc(mine.answer)}”</small>` : ''}${verdict ? `<small><b>${verdict}</b></small>` : ''}${q.open && q.reveal == null ? '<br><button class="link" id="change">Change my answer</button>' : ''}`;
+  } else if (!q.open) h += 'Voting is closed for this question.<small>Wait for the next one.</small>';
+  h += '</div>';
+  if (padMode) h += `<div class="padset">Answer pad: <label style="margin:0;display:flex;align-items:center;gap:6px">Question <select id="pn">${Array.from({ length: 20 }, (_, i) => `<option${i + 1 === pad.n ? ' selected' : ''}>${i + 1}</option>`).join('')}</select></label><select id="pt" aria-label="Type of question">${Object.keys(TYPES).map((t) => `<option value="${t}"${t === pad.type ? ' selected' : ''}>${TYPES[t]}</option>`).join('')}</select>${pad.type === 'mc' ? `<select id="po" aria-label="Number of options">${[2, 3, 4, 5, 6].map((n) => `<option${n === pad.opts ? ' selected' : ''} value="${n}">${n} options</option>`).join('')}</select>` : ''}</div>`;
+  h += '</div>';
+  app.innerHTML = h;
+
+  app.querySelectorAll('.choice').forEach((b) => (b.onclick = () => { if (locked) return; app.querySelectorAll('.choice').forEach((x) => x.classList.toggle('sel', x === b)); send(q, b.dataset.v, q.type === 'scale' ? b.dataset.v + ' · ' + b.dataset.s : q.type === 'mc' && b.dataset.v.length > 1 ? b.dataset.v.replace(': ', ' · ') : b.dataset.v); }));
+  const tf = $('#tf'); if (tf) tf.onsubmit = (e) => { e.preventDefault(); const v = $('#ta').value.trim().replace(/\s+/g, ' '); if (!v) { $('#err').textContent = 'Type an answer first.'; return; } send(q, v, v); };
+  const x = $('#x321'); if (x) x.onsubmit = (e) => {
+    e.preventDefault();
+    const lines = E321.map(([n]) => n + ': ' + [...x.querySelectorAll(`[data-g="${n}"]`)].map((i) => i.value.replace(/\|/g, '/').trim().replace(/\s+/g, ' ')).filter(Boolean).join(' | '));
+    if (lines.every((l) => l.length <= 3)) { $('#err').textContent = 'Write at least one thing first.'; return; }
+    send(q, lines.join('\n'), 'exit ticket');
+  };
+  const ch = $('#change'); if (ch) ch.onclick = () => { const all = sentAll(); const was = all['q' + q.n]; delete all['q' + q.n]; all['_' + q.n] = was; ls.set(sentKey(), all); shownKey = ''; draw(); const ta = $('#ta'); if (ta && was) ta.value = was.answer; };
+  if (padMode) {
+    $('#pn').onchange = (e) => { pad.n = +e.target.value; state = padState(); draw(); };
+    $('#pt').onchange = (e) => { pad.type = e.target.value; state = padState(); draw(); };
+    if ($('#po')) $('#po').onchange = (e) => { pad.opts = +e.target.value; state = padState(); draw(); };
+  }
+}
+
+function start() {
+  if (!BACKEND) { app.innerHTML = '<div class="wait"><p>This poll is not set up yet. Tell your teacher.</p></div>'; return; }
+  if (!student || !String(student.email || '').endsWith('@' + DOMAIN)) return signIn();
+  if (!code) return askCode();
+  shownKey = ''; state = null; draw(); tick();
+}
+start();
+</script>
+</body>
+</html>

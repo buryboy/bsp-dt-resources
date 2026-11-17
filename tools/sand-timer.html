@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Visual timer · BSP D&amp;T tools</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E⏳%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+html, body { height: 100%; }
+body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.tk-top { flex: none; }
+#stage { flex: 1; min-height: 0; position: relative; cursor: pointer; }
+#cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#nums { flex: none; text-align: center; font-weight: 600; font-size: clamp(22px, 4vh, 40px); min-height: 1.5em; color: var(--muted); font-variant-numeric: tabular-nums; }
+#nums.off { visibility: hidden; }
+body.done #nums { visibility: visible; color: var(--green); font-weight: 700; font-size: clamp(30px, 6vh, 64px); }
+#controls { flex: none; padding: 6px 14px 12px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+.btn.on { background: var(--ink); color: var(--bg); box-shadow: none; }
+.btn.big { font-size: 22px; padding: 10px 28px; min-width: 170px; }
+.btn.preset { min-width: 48px; padding: 10px 12px; }
+.lab { font-weight: 600; color: var(--muted); }
+#mins { width: 84px; min-height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); padding: 6px 8px; font-weight: 600; text-align: center; }
+label.tog { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+label.tog input { width: 20px; height: 20px; accent-color: var(--ink2); }
+.help { font-size: 14px; color: var(--muted); text-align: center; }
+.help kbd { font: inherit; font-weight: 600; border: 1.5px solid var(--line); border-radius: 6px; padding: 0 5px; background: var(--card); }
+.tk-hide-idle { transition: opacity .3s; }
+@media (max-height: 640px) { .help { display: none; } }
+</style>
+</head>
+<body>
+<main id="stage" title="Click to start / pause"><canvas id="cv" role="img" aria-label="Picture timer"></canvas></main>
+<div id="nums" role="timer"></div>
+<div id="controls">
+  <div class="row">
+    <span class="row" id="styles">
+      <button class="btn" data-style="sand">Sand glass</button>
+      <button class="btn" data-style="pie">Pie disc</button>
+      <button class="btn" data-style="bucket">Bucket</button>
+      <button class="btn" data-style="candle">Candle</button>
+    </span>
+    <span class="lab">Minutes</span>
+    <span class="row" id="presets"></span>
+    <input id="mins" type="number" min="0.5" max="180" step="0.5" aria-label="Minutes" title="Any number of minutes (0.5 to 180)">
+  </div>
+  <div class="row">
+    <button class="btn go big" id="startBtn">▶ Start</button>
+    <button class="btn" id="resetBtn" title="Reset (R)">↺ Reset</button>
+    <label class="btn tog"><input type="checkbox" id="numT"> Show numbers</label>
+    <label class="btn tog"><input type="checkbox" id="snd"> Gentle end sound</label>
+  </div>
+  <div class="help"><kbd>Space</kbd> start / pause · <kbd>R</kbd> reset · <kbd>N</kbd> numbers on / off · <kbd>1</kbd>–<kbd>4</kbd> picture · <kbd>F</kbd> full screen</div>
+</div>
+<script src="kit/tools.js"></script>
+<script>
+'use strict';
+TK.top('Visual timer');
+const $ = (s) => document.querySelector(s);
+const PRESETS = [1, 2, 3, 5, 10, 15, 20, 30], STYLE_KEYS = ['sand', 'pie', 'bucket', 'candle'];
+const S = Object.assign({ style: 'sand', dur: 300, state: 'idle', endAt: 0, left: 300000, numbers: false, sound: true }, TK.store('sandTimer', {}));
+const save = () => TK.save('sandTimer', S);
+if (S.state === 'run' && S.endAt <= Date.now()) { S.state = Date.now() - S.endAt < 3600e3 ? 'done' : 'idle'; S.left = S.state === 'done' ? 0 : S.dur * 1000; }
+if (!STYLE_KEYS.includes(S.style)) S.style = 'sand';
+
+// ---------- gentle chime (own WebAudio so it can be softer and longer than the kit beeps) ----------
+let ac = null;
+function chime() {
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume && ac.resume();
+    const t = ac.currentTime + 0.05;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      const o = ac.createOscillator(), g = ac.createGain(), at = t + i * 0.38; o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.14, at + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, at + 2.4);
+      o.connect(g).connect(ac.destination); o.start(at); o.stop(at + 2.5);
+    });
+  } catch (e) {}
+}
+
+// ---------- state ----------
+const leftMs = () => (S.state === 'run' ? Math.max(0, S.endAt - Date.now()) : S.state === 'done' ? 0 : S.left);
+function setDur(sec) { sec = Math.max(10, Math.min(180 * 60, Math.round(sec))); S.dur = sec; S.left = sec * 1000; S.state = 'idle'; save(); ui(); }
+function start() { if (S.state === 'done' || S.left <= 0) S.left = S.dur * 1000; S.endAt = Date.now() + S.left; S.state = 'run'; if (S.sound) { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume && ac.resume(); } catch (e) {} } save(); ui(); }
+function pause() { if (S.state !== 'run') return; S.left = leftMs(); S.state = 'pause'; save(); ui(); }
+function reset() { S.state = 'idle'; S.left = S.dur * 1000; save(); ui(); }
+function toggle() { if (S.state === 'run') pause(); else if (S.state === 'done') reset(); else start(); }
+function check() { if (S.state === 'run' && S.endAt <= Date.now()) { S.state = 'done'; S.left = 0; save(); if (S.sound) chime(); ui(); } }
+const pad = (n) => String(n).padStart(2, '0');
+const fmt = (sec) => { const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60; return h ? h + ':' + pad(m) + ':' + pad(s) : m + ':' + pad(s); };
+function ui() {
+  document.body.classList.toggle('done', S.state === 'done');
+  const sb = $('#startBtn'), txt = S.state === 'run' ? '⏸ Pause' : S.state === 'pause' ? '▶ Resume' : S.state === 'done' ? '↺ Again' : '▶ Start';
+  sb.textContent = txt; sb.classList.toggle('go', S.state !== 'run'); sb.classList.toggle('blue', S.state === 'run');
+  document.querySelectorAll('#styles .btn').forEach((b) => b.classList.toggle('on', b.dataset.style === S.style));
+  document.querySelectorAll('.preset').forEach((p) => p.classList.toggle('on', +p.dataset.min * 60 === S.dur));
+  if (document.activeElement !== $('#mins')) $('#mins').value = +(S.dur / 60).toFixed(2);
+  $('#nums').classList.toggle('off', !S.numbers); $('#numT').checked = S.numbers; $('#snd').checked = S.sound;
+  [$('#controls'), document.querySelector('.tk-top')].forEach((e) => e.classList.toggle('tk-hide-idle', S.state === 'run'));
+  nums();
+}
+let lastNums = '';
+function nums() {
+  const sec = Math.ceil(leftMs() / 1000);
+  const t = S.state === 'done' ? 'All done ✓' : fmt(sec) + (S.state === 'pause' ? ' · paused' : S.state === 'idle' ? ' · ready' : ' left');
+  if (t !== lastNums) { lastNums = t; $('#nums').textContent = t; }
+}
+
+// ---------- drawing ----------
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function resize() { const r = $('#stage').getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio || 1); W = r.width; H = r.height; cv.width = Math.max(1, Math.round(W * DPR)); cv.height = Math.max(1, Math.round(H * DPR)); }
+new ResizeObserver(resize).observe($('#stage')); resize();
+const pal = () => (document.body.classList.contains('dark')
+  ? { ink: '#f3f5ff', soft: '#2e3766', face: '#1b2140', muted: '#a3abd0', glass: 'rgba(160,190,255,0.10)', wood: '#b07a48', woodD: '#7d5230', sand: '#f0bf5a', sandD: '#c9932e', water: '#4db4ff', waterD: '#2d86d6', metal: '#4a5588', metalD: '#343d6b', pie: '#ff5a4d', wax: '#f3e9d2', waxD: '#d9cba8', brass: '#d0a13a' }
+  : { ink: '#1e2e96', soft: '#dfe3f3', face: '#ffffff', muted: '#6b7290', glass: 'rgba(120,160,255,0.12)', wood: '#b07a48', woodD: '#7d5230', sand: '#eeb64a', sandD: '#c58a22', water: '#48aef8', waterD: '#2380d8', metal: '#cdd6ea', metalD: '#aab6d6', pie: '#e2483d', wax: '#fbf3df', waxD: '#e6d8b4', brass: '#d0a13a' });
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+// sand glass: half-width of a chamber at t (0 = neck, 1 = cap), and a table of area so the sand level is true to the time left
+const hw = (t) => 13 + 150 * Math.pow(Math.sin(Math.min(1, Math.max(0, t)) * Math.PI / 2), 1.25);
+const AN = 400, AT = [0]; for (let i = 1; i <= AN; i++) AT[i] = AT[i - 1] + (hw((i - 0.5) / AN)) / AN;
+const areaTo = (t) => { const x = Math.min(1, Math.max(0, t)) * AN, i = Math.floor(x); return i >= AN ? AT[AN] : AT[i] + (AT[i + 1] - AT[i]) * (x - i); };
+function tFor(a) { let lo = 0, hi = 1; for (let k = 0; k < 24; k++) { const m = (lo + hi) / 2; if (areaTo(m) < a) lo = m; else hi = m; } return (lo + hi) / 2; }
+const SAND_FILL = areaTo(0.8), HG = 250;
+function glassPath() { ctx.beginPath(); for (let i = 0; i <= 80; i++) { const y = -HG + (i / 80) * 2 * HG; ctx[i ? 'lineTo' : 'moveTo'](hw(Math.abs(y) / HG), y); } for (let i = 80; i >= 0; i--) { const y = -HG + (i / 80) * 2 * HG; ctx.lineTo(-hw(Math.abs(y) / HG), y); } ctx.closePath(); }
+function drawSand(p, t, c, moving) {
+  const tTop = tFor((1 - p) * SAND_FILL), yTop = -HG * tTop;            // top sand surface
+  const tBot = tFor(AT[AN] - p * SAND_FILL), yBot = HG * tBot;          // bottom sand surface (measured up from the cap)
+  const flowing = p > 0 && p < 1, mound = flowing ? 16 * Math.min(1, p * 10) + 4 : 5 * Math.min(1, p * 10);
+  const peakY = yBot - mound * 0.6;
+  glassPath(); ctx.fillStyle = c.glass; ctx.fill();
+  ctx.save(); glassPath(); ctx.clip();
+  const g1 = ctx.createLinearGradient(-170, 0, 170, 0); g1.addColorStop(0, c.sandD); g1.addColorStop(0.45, c.sand); g1.addColorStop(1, c.sandD);
+  ctx.fillStyle = g1;
+  if (p < 1) { // top sand, with a dip where it drains
+    const dip = flowing ? Math.min(22, tTop * 60) : 0, w = 210;
+    ctx.beginPath(); ctx.moveTo(-w, yTop - dip * 0.4); ctx.quadraticCurveTo(0, yTop + dip * 1.6, w, yTop - dip * 0.4); ctx.lineTo(w, 4); ctx.lineTo(-w, 4); ctx.closePath(); ctx.fill();
+  }
+  if (p > 0) { // bottom pile
+    const w = 210;
+    ctx.beginPath(); ctx.moveTo(-w, yBot + mound * 0.5); ctx.quadraticCurveTo(0, yBot - mound * 1.7, w, yBot + mound * 0.5); ctx.lineTo(w, HG + 4); ctx.lineTo(-w, HG + 4); ctx.closePath(); ctx.fill();
+  }
+  if (flowing) { // the falling stream and grains
+    ctx.fillStyle = c.sand; ctx.fillRect(-3.5, -6, 7, peakY + 10);
+    ctx.fillStyle = c.sandD;
+    const tt = moving ? t : 0;
+    for (let i = 0; i < 16; i++) { const ph = (tt * 1.4 + i / 16) % 1, y = ph * ph * peakY, x = Math.sin(i * 12.9898) * 3; ctx.beginPath(); ctx.arc(x, y, 2.4, 0, 7); ctx.fill(); }
+    if (moving) for (let i = 0; i < 10; i++) { const ph = (tt * 2 + i / 10) % 1, dir = i % 2 ? 1 : -1, x = dir * ph * (18 + (i % 3) * 8), y = peakY - Math.sin(ph * Math.PI) * (10 + (i % 4) * 4) + ph * 10; ctx.beginPath(); ctx.arc(x, y, 2.2, 0, 7); ctx.fill(); }
+  }
+  ctx.restore();
+  glassPath(); ctx.lineWidth = 7; ctx.strokeStyle = c.ink; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 6; ctx.lineCap = 'round'; // glass highlights
+  ctx.beginPath(); for (let i = 0; i <= 20; i++) { const y = -HG * 0.88 + i * (HG * 0.5 / 20); ctx[i ? 'lineTo' : 'moveTo'](-hw(Math.abs(y) / HG) + 16, y); } ctx.stroke();
+  ctx.beginPath(); for (let i = 0; i <= 20; i++) { const y = HG * 0.45 + i * (HG * 0.43 / 20); ctx[i ? 'lineTo' : 'moveTo'](-hw(Math.abs(y) / HG) + 16, y); } ctx.stroke(); ctx.restore();
+  for (const y of [-HG - 34, HG]) { rr(-200, y, 400, 34, 12); ctx.fillStyle = c.wood; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = c.ink; ctx.stroke(); ctx.fillStyle = c.woodD; ctx.fillRect(-180, y + 22, 360, 5); }
+}
+function drawPie(p, t, c) {
+  const R = 270;
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fillStyle = c.face; ctx.fill(); ctx.lineWidth = 10; ctx.strokeStyle = c.ink; ctx.stroke();
+  const a0 = -Math.PI / 2 + p * Math.PI * 2, a1 = Math.PI * 1.5;
+  if (p < 1) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 214, a0, a1); ctx.closePath(); ctx.fillStyle = c.pie; ctx.fill(); }
+  ctx.strokeStyle = c.ink; ctx.lineCap = 'round';
+  for (let i = 0; i < 60; i++) { const a = (i / 60) * Math.PI * 2, big = i % 5 === 0; ctx.lineWidth = big ? 7 : 3; ctx.globalAlpha = big ? 1 : 0.55; ctx.beginPath(); ctx.moveTo(Math.cos(a) * (big ? 228 : 240), Math.sin(a) * (big ? 228 : 240)); ctx.lineTo(Math.cos(a) * 254, Math.sin(a) * 254); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+  ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a0) * 214, Math.sin(a0) * 214); ctx.stroke(); // the hand
+  ctx.beginPath(); ctx.arc(0, 0, 24, 0, 7); ctx.fillStyle = c.ink; ctx.fill(); ctx.beginPath(); ctx.arc(0, 0, 9, 0, 7); ctx.fillStyle = c.face; ctx.fill();
+}
+function drawBucket(p, t, c, moving) {
+  const top = -100, bot = 262, HB = bot - top, wB = 140, wT = 195, maxH = HB - 26;
+  const half = (h) => wB + (wT - wB) * (h / HB), k = (wT - wB) / (2 * HB), area = (h) => 2 * (wB * h + k * h * h);
+  const target = p * area(maxH), h = (-wB + Math.sqrt(wB * wB + 2 * k * target)) / (2 * k), ySurf = bot - h;
+  const flowing = moving && p < 1;
+  // handle behind
+  ctx.lineWidth = 8; ctx.strokeStyle = c.ink; ctx.beginPath(); ctx.ellipse(0, top - 2, wT - 6, 64, 0, Math.PI, Math.PI * 2); ctx.stroke();
+  // tap and pipe
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = c.ink; ctx.lineWidth = 40; ctx.beginPath(); ctx.moveTo(300, -256); ctx.lineTo(0, -256); ctx.lineTo(0, -222); ctx.stroke();
+  ctx.strokeStyle = c.metal; ctx.lineWidth = 26; ctx.beginPath(); ctx.moveTo(300, -256); ctx.lineTo(0, -256); ctx.lineTo(0, -222); ctx.stroke();
+  ctx.strokeStyle = c.ink; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(150, -276); ctx.lineTo(150, -296); ctx.moveTo(118, -298); ctx.lineTo(182, -298); ctx.stroke();
+  // bucket body
+  const body = () => { ctx.beginPath(); ctx.moveTo(-wT, top); ctx.lineTo(wT, top); ctx.lineTo(wB, bot - 14); ctx.quadraticCurveTo(wB - 2, bot, wB - 16, bot); ctx.lineTo(-wB + 16, bot); ctx.quadraticCurveTo(-wB + 2, bot, -wB, bot - 14); ctx.closePath(); };
+  body(); const gm = ctx.createLinearGradient(-wT, 0, wT, 0); gm.addColorStop(0, c.metalD); gm.addColorStop(0.35, c.metal); gm.addColorStop(1, c.metalD); ctx.fillStyle = gm; ctx.fill();
+  ctx.save(); body(); ctx.clip();
+  if (p > 0) {
+    ctx.beginPath(); ctx.moveTo(-wT - 10, bot + 10); ctx.lineTo(-wT - 10, ySurf);
+    for (let x = -wT - 10; x <= wT + 10; x += 10) ctx.lineTo(x, ySurf + (moving ? Math.sin(x / 34 + t * 3) * 3.5 + Math.sin(x / 17 - t * 4.3) * 1.5 : 0));
+    ctx.lineTo(wT + 10, bot + 10); ctx.closePath();
+    const gw = ctx.createLinearGradient(0, ySurf, 0, bot); gw.addColorStop(0, c.water); gw.addColorStop(1, c.waterD); ctx.fillStyle = gw; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 4; ctx.beginPath(); for (let x = -wT; x <= wT; x += 10) { const y = ySurf + (moving ? Math.sin(x / 34 + t * 3) * 3.5 + Math.sin(x / 17 - t * 4.3) * 1.5 : 0) + 3; ctx[x === -wT ? 'moveTo' : 'lineTo'](x, y); } ctx.stroke();
+  }
+  ctx.restore();
+  if (flowing) { // water falling from the tap
+    const wob = Math.sin(t * 9) * 1.2;
+    ctx.fillStyle = c.water; ctx.beginPath(); ctx.moveTo(-8, -222); ctx.lineTo(8, -222); ctx.lineTo(6 + wob, ySurf + 4); ctx.lineTo(-6 + wob, ySurf + 4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(-3, -222, 2.5, ySurf + 222);
+    ctx.fillStyle = c.water; for (let i = 0; i < 8; i++) { const ph = (t * 1.8 + i / 8) % 1, dir = i % 2 ? 1 : -1; ctx.beginPath(); ctx.arc(dir * ph * (22 + (i % 3) * 9), ySurf - Math.sin(ph * Math.PI) * (16 + (i % 4) * 5), 3.2 * (1 - ph * 0.5), 0, 7); ctx.fill(); }
+  } else if (p < 1) { ctx.fillStyle = c.water; ctx.beginPath(); ctx.arc(0, -206, 6, 0, 7); ctx.fill(); }
+  body(); ctx.lineWidth = 8; ctx.strokeStyle = c.ink; ctx.stroke();
+  for (const f of [0.3, 0.66]) { const y = top + HB * f, w = half(HB - HB * f); ctx.lineWidth = 4; ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.moveTo(-w, y); ctx.lineTo(w, y); ctx.stroke(); ctx.globalAlpha = 1; }
+  rr(-wT - 10, top - 12, (wT + 10) * 2, 24, 12); ctx.fillStyle = c.metal; ctx.fill(); ctx.lineWidth = 7; ctx.stroke();
+}
+function drawCandle(p, t, c, moving) {
+  const base = 262, full = 400, stub = 34, hgt = stub + (full - stub) * (1 - p), top = base - hgt, w = 62;
+  // holder
+  ctx.lineWidth = 8; ctx.strokeStyle = c.ink; ctx.beginPath(); ctx.arc(196, base + 6, 26, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(0, base + 14, 178, 32, 0, 0, 7); ctx.fillStyle = c.brass; ctx.fill(); ctx.lineWidth = 7; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(0, base + 6, 120, 18, 0, 0, 7); ctx.fillStyle = 'rgba(0,0,0,0.14)'; ctx.fill();
+  // faint marks showing where the candle started, so the amount gone is visible
+  ctx.save(); ctx.setLineDash([10, 12]); ctx.lineWidth = 4; ctx.strokeStyle = c.muted; ctx.globalAlpha = 0.5; ctx.strokeRect(-w, base - full, w * 2, full); ctx.restore();
+  // candle body
+  rr(-w, top, w * 2, hgt + 4, 14); const gc = ctx.createLinearGradient(-w, 0, w, 0); gc.addColorStop(0, c.waxD); gc.addColorStop(0.4, c.wax); gc.addColorStop(1, c.waxD); ctx.fillStyle = gc; ctx.fill(); ctx.lineWidth = 7; ctx.strokeStyle = c.ink; ctx.stroke();
+  // drips
+  ctx.fillStyle = c.wax; ctx.lineWidth = 5;
+  for (const [dx, len, dw] of [[-40, 46, 15], [22, 70, 17], [46, 30, 12]]) { const L = Math.min(len, hgt - 20); if (L < 12) continue; rr(dx - dw / 2, top + 4, dw, L, dw / 2); ctx.fill(); ctx.stroke(); }
+  ctx.beginPath(); ctx.ellipse(0, top + 5, w - 4, 11, 0, 0, 7); ctx.fillStyle = c.wax; ctx.fill(); ctx.lineWidth = 5; ctx.stroke();
+  // wick
+  ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#3a2a1a'; ctx.beginPath(); ctx.moveTo(0, top + 4); ctx.lineTo(2, top - 18); ctx.stroke();
+  if (p < 1) { // flame
+    const sway = moving ? Math.sin(t * 6.1) * 5 + Math.sin(t * 13.7) * 2.5 : 0, sc = moving ? 1 + Math.sin(t * 9.3) * 0.06 : 1, fy = top - 14;
+    const glow = ctx.createRadialGradient(0, fy - 40, 6, 0, fy - 40, 100); glow.addColorStop(0, 'rgba(255,190,60,0.42)'); glow.addColorStop(1, 'rgba(255,190,60,0)'); ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, fy - 40, 100, 0, 7); ctx.fill();
+    const flame = (hh, ww, col) => { ctx.beginPath(); ctx.moveTo(0, fy + 6); ctx.bezierCurveTo(-ww, fy - hh * 0.15, -ww * 0.75, fy - hh * 0.6, sway, fy - hh * sc); ctx.bezierCurveTo(ww * 0.75, fy - hh * 0.6, ww, fy - hh * 0.15, 0, fy + 6); ctx.fillStyle = col; ctx.fill(); };
+    flame(84, 32, '#ff8a1e'); flame(58, 21, '#ffd23a'); flame(31, 10, '#fff6d0');
+  } else { // just gone out: a wisp of smoke
+    ctx.strokeStyle = c.muted; ctx.lineWidth = 5; ctx.globalAlpha = 0.6; ctx.beginPath();
+    for (let i = 0; i <= 30; i++) { const y = top - 22 - i * 4.5; ctx[i ? 'lineTo' : 'moveTo'](Math.sin(i / 4 + t * 1.5) * (3 + i * 0.5), y); } ctx.stroke(); ctx.globalAlpha = 1;
+  }
+}
+const DRAW = { sand: drawSand, pie: drawPie, bucket: drawBucket, candle: drawCandle };
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(ms) {
+  check();
+  const p = Math.max(0, Math.min(1, 1 - leftMs() / (S.dur * 1000)));
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, W, H);
+  const s = Math.min(W / 680, H / 640); // every picture is drawn in a 680 × 640 box around the centre
+  ctx.translate(W / 2, H / 2 + 8 * s); ctx.scale(s, s);
+  ctx.save(); (DRAW[S.style] || drawSand)(p, ms / 1000, pal(), S.state === 'run' && !reduce); ctx.restore();
+  nums();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+setInterval(check, 500); // still finishes (and chimes) when the tab is in the background
+
+// ---------- wiring ----------
+$('#presets').innerHTML = PRESETS.map((m) => `<button class="btn preset" data-min="${m}" title="${m} minute${m > 1 ? 's' : ''}">${m}</button>`).join('');
+$('#presets').onclick = (e) => { const b = e.target.closest('.preset'); if (b) setDur(+b.dataset.min * 60); };
+$('#styles').onclick = (e) => { const b = e.target.closest('[data-style]'); if (b) { S.style = b.dataset.style; save(); ui(); } };
+$('#mins').onchange = (e) => { const v = parseFloat(e.target.value); if (isFinite(v) && v > 0) setDur(v * 60); e.target.blur(); ui(); };
+$('#mins').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === 'Escape') e.target.blur(); });
+$('#startBtn').onclick = () => (S.state === 'done' ? start() : toggle());
+$('#resetBtn').onclick = reset;
+$('#numT').onchange = (e) => { S.numbers = e.target.checked; save(); ui(); };
+$('#snd').onchange = (e) => { S.sound = e.target.checked; save(); if (S.sound) chime(); };
+$('#stage').onclick = toggle;
+document.addEventListener('click', (e) => { const t = e.target.closest('button, label.tog'); if (t && e.detail > 0) { t.blur(); const i = t.querySelector && t.querySelector('input'); i && i.blur(); } });
+addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const a = document.activeElement, tag = a && a.tagName;
+  if (tag === 'INPUT' && a.type !== 'checkbox' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const k = e.key;
+  if (k === ' ' || k === 'Spacebar') { if (tag === 'BUTTON' || tag === 'INPUT') return; e.preventDefault(); toggle(); }
+  else if (k === 'r' || k === 'R') reset();
+  else if (k === 'n' || k === 'N') { S.numbers = !S.numbers; save(); ui(); }
+  else if (k === 'f' || k === 'F') { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (err) {} }
+  else if (/^[1-4]$/.test(k)) { S.style = STYLE_KEYS[+k - 1]; save(); ui(); }
+});
+TK.idle([$('#controls'), document.querySelector('.tk-top')], 3500);
+ui();
+</script>
+</body>
+</html>

@@ -9,6 +9,7 @@ window.WORKBOOKS = {
     { folder: 'metals-alloys', lesson: 'metals-alloys-y10', title: 'Metals & alloys', spec: 'AQA GCSE D&T 3.1.6 · metals and alloys' },
     { folder: 'polymers', lesson: 'polymers-y10', title: 'Polymers', spec: 'AQA GCSE D&T 3.1.6 · thermoforming and thermosetting polymers' },
     { folder: 'papers-boards', lesson: 'papers-boards-y10', title: 'Papers & boards', spec: 'AQA GCSE D&T 3.1.6 · papers and boards' },
+    { folder: 'textiles', lesson: 'textiles-y10', title: 'Textiles', spec: 'AQA GCSE D&T 3.1.6 · textiles: fibres, blends and fabric construction' },
     { folder: 'nea-practice', lesson: 'nea-practice-y10', title: 'NEA practice run (locked draft)', spec: 'AQA GCSE D&T 8552 NEA · sections A–F', hidden: true },
     { folder: 'nea-alevel', lesson: 'nea-practice-alevel', title: 'A level NEA practice (locked draft)', spec: 'Pearson Edexcel 9DT0/02 · grids 1–11', hidden: true },
   ],

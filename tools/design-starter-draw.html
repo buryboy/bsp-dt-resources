@@ -7,140 +7,126 @@
 <link rel="stylesheet" href="kit/tools.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Patrick+Hand&display=swap">
 <style>
-:root { --paper: #f6efdc; --sheet: #fffdf6; --pencil: #3b3a36; --soft: #77736a; --tape: rgba(238, 219, 150, .82); --live: #e8590c; --hand: 'Patrick Hand', 'Bradley Hand', 'Chalkboard SE', 'Segoe Print', 'Comic Sans MS', cursive; --head: 'Gloria Hallelujah', 'Bradley Hand', 'Chalkboard SE', 'Segoe Print', 'Comic Sans MS', cursive; }
+:root { --paper: #f6efdc; --sheet: #fffdf6; --pencil: #3b3a36; --soft: #77736a; --line: #8d877a; --live: #e8590c; --hand: 'Patrick Hand', 'Bradley Hand', 'Chalkboard SE', 'Segoe Print', 'Comic Sans MS', cursive; --head: 'Gloria Hallelujah', 'Bradley Hand', 'Chalkboard SE', 'Segoe Print', 'Comic Sans MS', cursive; }
 [hidden] { display: none !important; }
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
-body { background: #5b4a3a; color: var(--pencil); font-family: var(--hand); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
-body.dark { background: #1d1a17; }
-#book { position: fixed; inset: 0; background-color: var(--paper); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .28  0 0 0 0 .15  0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E"); }
-#spiral { position: absolute; left: 0; top: 0; bottom: 0; width: 26px; z-index: 6; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='32'%3E%3Ccircle cx='17' cy='16' r='4.6' fill='%23463b30'/%3E%3Cpath d='M17 16C10 6 -4 8 -3 19' fill='none' stroke='%23767b84' stroke-width='4.2' stroke-linecap='round'/%3E%3Cpath d='M16 14C10 7 0 8 -2 15' fill='none' stroke='%23e3e6ea' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") repeat-y left top; }
-#top { position: absolute; left: 26px; right: 0; top: 0; display: flex; align-items: center; gap: 10px; padding: calc(8px + env(safe-area-inset-top)) 10px 6px 10px; z-index: 5; }
-#thumb { flex: none; position: relative; width: 132px; height: 100px; padding: 5px 5px 14px; background: #fff; border: 0; box-shadow: 0 2px 7px rgba(60, 40, 10, .4); transform: rotate(-2.5deg); cursor: zoom-in; margin: 2px 6px 2px 4px; }
+body { background: var(--paper); color: var(--pencil); font-family: var(--hand); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+/* the drawing boxes are the page: one slim toolbar on top, a thin status line underneath, everything else is boxes */
+#book { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--paper); padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#top { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 0 1px; padding: 0 3px; min-height: 42px; border-bottom: 1.5px solid var(--line); }
+#tools, #tools .grp { display: contents; }
+#thumb { flex: none; width: 46px; height: 40px; padding: 2px; margin-right: 2px; background: #fff; border: 1.5px solid var(--pencil); border-radius: 4px; cursor: zoom-in; }
 #thumb img { width: 100%; height: 100%; object-fit: cover; display: block; background: #e9e4d6; pointer-events: none; }
-#thumb::before { content: ''; position: absolute; left: 50%; top: -9px; width: 54px; height: 20px; margin-left: -27px; background: var(--tape); transform: rotate(3deg); box-shadow: 0 1px 2px rgba(0, 0, 0, .15); }
-#thumb .mag { position: absolute; right: 2px; bottom: -3px; font-size: 12px; color: var(--soft); }
 #thumb.none { display: none; }
-#tools { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 5px 6px; }
-#tools .grp { display: flex; align-items: center; gap: 5px; padding: 3px 5px; border-radius: 14px; }
-#tools .sep { width: 2px; height: 34px; background: repeating-linear-gradient(var(--soft) 0 4px, transparent 4px 8px); opacity: .5; }
-.sw { width: 44px; height: 44px; border-radius: 50%; border: 0; background: none; padding: 0; cursor: pointer; display: grid; place-items: center; }
-.sw i { width: 32px; height: 32px; border-radius: 50% 46% 52% 48%; background: var(--c); box-shadow: 0 0 0 2px rgba(255, 255, 255, .9), 0 1px 3px rgba(0, 0, 0, .4); }
-.sw.on i { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--pencil); transform: scale(.86); }
-.tb { width: 48px; height: 46px; border: 2px solid transparent; border-radius: 12px; background: none; padding: 0; cursor: pointer; display: grid; place-items: center; color: var(--pencil); }
-.tb svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.tb.on { background: var(--sheet); border-color: var(--pencil); border-radius: 14px 11px 13px 10px; box-shadow: 2px 3px 0 rgba(59, 58, 54, .25); }
+#tools .sep { width: 1.5px; height: 24px; margin: 0 3px; background: var(--line); opacity: .55; flex: none; }
+.sw { flex: none; width: 34px; height: 42px; border: 0; background: none; padding: 0; cursor: pointer; display: grid; place-items: center; }
+.sw i { width: 25px; height: 25px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .9), 0 0 0 2.5px rgba(59, 58, 54, .35); }
+.sw.on i { box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px var(--pencil); transform: scale(.82); }
+.tb { flex: none; width: 40px; height: 42px; border: 0; background: none; padding: 0; cursor: pointer; display: grid; place-items: center; color: var(--pencil); position: relative; }
+.tb svg { width: 27px; height: 27px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; position: relative; }
+.tb.on::before { content: ''; position: absolute; inset: 4px 2px; background: var(--sheet); border: 2px solid var(--pencil); border-radius: 9px; }
 .tb[disabled] { opacity: .3; }
-#nameL { display: flex; align-items: center; gap: 6px; background: #fff4ad; padding: 3px 10px; box-shadow: 0 1px 4px rgba(0, 0, 0, .25); transform: rotate(-.8deg); font-family: var(--head); font-size: 14px; }
-#nameL input { font-family: var(--hand); font-size: 20px; color: var(--pencil); border: 0; border-bottom: 2px solid var(--pencil); background: transparent; width: 150px; min-height: 40px; padding: 2px 4px; -webkit-user-select: text; user-select: text; }
+#modesw { flex: none; display: flex; align-items: center; border: 2px solid var(--pencil); border-radius: 10px; background: var(--sheet); padding: 1px; margin: 0 2px; cursor: pointer; font-family: var(--hand); font-size: 16px; height: 36px; color: var(--pencil); }
+#modesw span { padding: 3px 7px; border-radius: 7px; white-space: nowrap; line-height: 1.3; }
+#modesw span.on { background: var(--pencil); color: #fff; }
+#modesw em { font-style: normal; }
+@media (max-width: 700px) { #modesw em { display: none; } }
+body.ana #tools .draw { display: none; }
+#nameL { flex: 0 1 132px; min-width: 84px; display: flex; align-items: center; height: 36px; margin: 0 3px; }
+#nameL input { font-family: var(--hand); font-size: 17px; color: var(--pencil); border: 0; border-bottom: 2px solid var(--pencil); background: transparent; width: 100%; height: 32px; padding: 0 3px; border-radius: 0; -webkit-user-select: text; user-select: text; }
 #nameL input:focus { outline: none; border-bottom-color: var(--live); }
-#col { position: fixed; right: calc(10px + env(safe-area-inset-right)); bottom: calc(112px + env(safe-area-inset-bottom)); z-index: 31; background: #fff4ad; padding: 10px 16px; font-family: var(--head); font-size: 19px; box-shadow: 0 3px 10px rgba(0, 0, 0, .35); transform: rotate(-1.5deg); display: flex; align-items: center; gap: 10px; max-width: min(92vw, 520px); }
-#col.ok { background: #d3f9d8; } #col.bad { background: #ffe3e3; }
-#col button { font-family: var(--hand); font-size: 20px; background: var(--pencil); color: #fff; border: 0; border-radius: 14px 11px 13px 10px; padding: 6px 16px; min-height: 44px; cursor: pointer; }
-#needname { position: fixed; inset: 0; z-index: 32; background: rgba(40, 32, 22, .6); display: flex; align-items: center; justify-content: center; padding: 20px; }
-#needname form { background: #fff4ad; padding: 26px 30px; text-align: center; box-shadow: 0 6px 22px rgba(0, 0, 0, .4); transform: rotate(-1.5deg); max-width: 560px; width: 100%; }
-#needname h1 { font-family: var(--head); font-weight: 400; font-size: clamp(34px, 7vw, 56px); margin: 0 0 4px; }
-#needname p { font-size: 20px; margin: 4px 0 10px; color: var(--soft); }
-#needname input { width: 100%; font-family: var(--hand); font-size: 32px; text-align: center; border: 0; border-bottom: 3px solid var(--pencil); background: transparent; padding: 6px; margin-bottom: 14px; color: var(--pencil); -webkit-user-select: text; user-select: text; }
-#needname button { font-family: var(--hand); font-size: 26px; background: var(--live); color: #fff; border: 0; border-radius: 16px 13px 15px 12px; padding: 10px 30px; min-height: 54px; cursor: pointer; }
-#title { font-family: var(--head); font-size: 20px; margin-left: 8px; white-space: nowrap; }
-#stage { position: absolute; left: 26px; right: 0; bottom: 0; top: 120px; }
-.pg { position: absolute; background: var(--sheet); box-shadow: 0 2px 8px rgba(70, 50, 20, .35); transition: opacity .3s, filter .3s; touch-action: none; }
-.pg::before, .pg::after { content: ''; position: absolute; top: -9px; width: 56px; height: 20px; background: var(--tape); box-shadow: 0 1px 2px rgba(0, 0, 0, .14); z-index: 3; pointer-events: none; }
-.pg::before { left: -16px; transform: rotate(-38deg); }
-.pg::after { right: -16px; transform: rotate(38deg); }
+#save { flex: none; margin-left: auto; font-family: var(--hand); font-size: 18px; background: var(--live); color: #fff; border: 0; border-radius: 10px; padding: 0 14px; height: 36px; cursor: pointer; white-space: nowrap; }
+#stage { flex: 1; min-height: 0; position: relative; margin: 4px; }
+.pg { position: absolute; background: var(--sheet); outline: 1.5px solid var(--line); outline-offset: -1.5px; overflow: hidden; touch-action: none; }
 .pg canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .pg .live { z-index: 2; pointer-events: none; }
-.pg .num { position: absolute; left: 8px; bottom: 2px; font-family: var(--head); font-size: 20px; color: var(--soft); pointer-events: none; z-index: 2; opacity: .8; }
-.pg .lock { position: absolute; right: 6px; bottom: 6px; width: 30px; height: 30px; border-radius: 50%; background: rgba(59, 58, 54, .85); display: grid; place-items: center; z-index: 2; pointer-events: none; }
-.pg .lock svg { width: 17px; height: 17px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; }
-.pg .say { position: absolute; left: 50%; top: 5px; transform: translateX(-50%) rotate(-.6deg); max-width: 88%; background: rgba(255, 244, 173, .93); padding: 2px 12px; font-size: 19px; line-height: 1.15; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); z-index: 2; pointer-events: none; display: none; }
-.pg.frozen { opacity: .62; filter: saturate(.6); }
-.pg.frozen.todo { opacity: .45; background: #ebe5d3; }
-.pg.active { outline: 4px solid var(--live); outline-offset: 2px; box-shadow: 0 0 0 9px rgba(232, 89, 12, .2), 0 4px 16px rgba(70, 50, 20, .45); z-index: 2; cursor: crosshair; }
+.pg img.ph { position: absolute; object-fit: contain; pointer-events: none; display: block; }
+.pg .num { position: absolute; left: 5px; bottom: 1px; font-family: var(--head); font-size: 14px; color: var(--soft); pointer-events: none; z-index: 2; }
+.pg .lock { position: absolute; right: 4px; bottom: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(59, 58, 54, .7); display: grid; place-items: center; z-index: 2; pointer-events: none; }
+.pg .lock svg { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; }
+.pg .say { position: absolute; left: 0; right: 0; top: 0; padding: 1px 8px; background: rgba(255, 244, 173, .9); font-size: 15px; line-height: 1.25; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 2; pointer-events: none; display: none; }
+.pg.frozen { background: #f1ebdb; }
+.pg.frozen canvas, .pg.frozen img.ph { opacity: .6; }
+.pg.frozen.todo { background: #e9e2cf; }
+.pg.active { outline: 3px solid var(--live); outline-offset: -3px; z-index: 1; cursor: crosshair; }
 .pg.active .lock { display: none; }
 .pg.active .say.has { display: block; }
-.pg.active .num { color: var(--live); opacity: 1; }
-.pg img.ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; display: block; }
-.pg .cap { position: absolute; inset: 0; z-index: 3; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 30px 8px 8px; }
+.pg.active .num { color: var(--live); left: 7px; bottom: 3px; }
+.pg .cap { position: absolute; inset: 0; z-index: 3; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 22px 6px 6px; }
 body.ana .pg.capok .cap { display: flex; }
-body.ana .pg.capok { opacity: 1; filter: none; background: var(--sheet); }
+body.ana .pg.capok { background: var(--sheet); }
+body.ana .pg.capok canvas, body.ana .pg.capok img.ph { opacity: 1; }
 body.ana .pg.capok .lock { display: none; }
 body.ana .pg.active { cursor: default; }
-.cap .capt { font-family: var(--head); font-size: clamp(15px, 2.2vw, 26px); line-height: 1.2; background: rgba(255, 253, 246, .85); padding: 0 8px; }
-.cap .capbtn { font-family: var(--hand); font-size: clamp(22px, 3.2vw, 40px); background: var(--live); color: #fff; border: 0; border-radius: 18px 14px 17px 13px; padding: 10px 24px; min-height: 56px; box-shadow: 3px 4px 0 rgba(59, 58, 54, .35); cursor: pointer; }
-.cap.got { justify-content: flex-end; align-items: flex-end; padding: 8px; }
+.cap .capt { font-family: var(--head); font-size: clamp(13px, 1.4vw + 8px, 24px); line-height: 1.2; background: rgba(255, 253, 246, .85); padding: 0 6px; }
+.cap .capbtn { font-family: var(--hand); font-size: clamp(18px, 1.6vw + 12px, 34px); background: var(--live); color: #fff; border: 0; border-radius: 12px; padding: 6px 16px; min-height: 46px; cursor: pointer; }
+.cap.got { justify-content: flex-end; align-items: flex-end; padding: 4px; }
 .cap.got .capt { display: none; }
-.cap.got .capbtn { font-size: 19px; min-height: 44px; padding: 6px 14px; background: var(--pencil); }
-#modesw { display: flex; align-items: center; gap: 0; border: 2px solid var(--pencil); border-radius: 15px 12px 14px 11px; background: var(--sheet); padding: 2px; cursor: pointer; font-family: var(--hand); font-size: 18px; min-height: 46px; box-shadow: 2px 3px 0 rgba(59, 58, 54, .25); color: var(--pencil); }
-#modesw span { padding: 6px 10px; border-radius: 11px 9px 10px 8px; white-space: nowrap; }
-#modesw span.on { background: var(--pencil); color: #fff; }
-body.ana #tools .draw { display: none; }
+.cap.got .capbtn { font-size: 17px; min-height: 44px; padding: 4px 12px; background: rgba(59, 58, 54, .88); }
 body.zoom .pg:not(.active) { display: none; }
-body.zoom .pg.active { outline-width: 3px; box-shadow: 0 4px 16px rgba(70, 50, 20, .45); }
-#timer { position: fixed; left: calc(8px + env(safe-area-inset-left)); bottom: calc(8px + env(safe-area-inset-bottom)); width: 104px; height: 104px; z-index: 30; transform: rotate(-4deg); filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); pointer-events: none; }
-#timer svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-#timer .t { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; padding-top: 4px; }
-#tdig { font-size: 32px; font-weight: 700; color: #1c1b19; letter-spacing: -.5px; }
-#tdig span { display: inline-block; width: .56em; text-align: center; }
-#tdig span.c { width: .28em; }
-#tsub { font-size: 14px; color: var(--soft); margin-top: 3px; }
-#timer.hot #tdig { color: #c92a2a; }
-#timer.hot { animation: wig .5s infinite alternate; }
-@keyframes wig { from { transform: rotate(-7deg) scale(1.04); } to { transform: rotate(-1deg) scale(1.04); } }
-#foot { position: absolute; left: 126px; right: 12px; bottom: calc(8px + env(safe-area-inset-bottom)); height: 92px; display: flex; align-items: center; gap: 12px; z-index: 4; pointer-events: none; }
-#msg { flex: 1; font-family: var(--head); font-size: clamp(17px, 2.6vw, 25px); line-height: 1.25; }
-#msg small { display: block; font-family: var(--hand); font-size: 17px; color: var(--soft); }
-#save { pointer-events: auto; font-family: var(--hand); font-size: 24px; background: var(--live); color: #fff; border: 0; border-radius: 16px 13px 15px 12px; padding: 10px 20px; min-height: 54px; box-shadow: 3px 4px 0 rgba(59, 58, 54, .35); cursor: pointer; }
-body.zoom #foot.side { display: none; }
-#cover { position: absolute; left: 26px; right: 0; top: 0; bottom: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 20px; }
-#cover .sheet { background: var(--sheet); max-width: 560px; width: 100%; padding: 30px 28px; box-shadow: 0 3px 12px rgba(70, 50, 20, .4); position: relative; transform: rotate(-1deg); text-align: center; }
-#cover .sheet::before, #cover .sheet::after { content: ''; position: absolute; top: -10px; width: 70px; height: 24px; background: var(--tape); }
-#cover .sheet::before { left: -20px; transform: rotate(-35deg); } #cover .sheet::after { right: -20px; transform: rotate(35deg); }
-#cover h1 { font-family: var(--head); font-size: 30px; margin: 0 0 8px; font-weight: 400; }
-#cover p { font-size: 21px; margin: 8px 0; color: var(--soft); }
-#cover .doodle { width: 120px; height: 120px; margin: 0 auto 6px; display: block; }
+#foot { flex: none; height: 36px; display: flex; align-items: center; padding: 0 6px 2px 124px; overflow: hidden; }
+#msg { flex: 1; min-width: 0; font-family: var(--head); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#msg small { font-family: var(--hand); font-size: 15px; color: var(--soft); margin-left: 10px; }
+body.zoom #foot, body.short #foot { display: none; }
+#timer { position: fixed; left: calc(5px + env(safe-area-inset-left)); bottom: calc(4px + env(safe-area-inset-bottom)); height: 30px; min-width: 108px; padding: 0 9px; z-index: 30; display: flex; align-items: center; gap: 7px; background: #fff; border: 2px solid var(--pencil); border-radius: 15px; overflow: hidden; pointer-events: none; line-height: 1; }
+body.zoom #timer, body.short #timer { opacity: .92; left: calc(8px + env(safe-area-inset-left)); bottom: calc(8px + env(safe-area-inset-bottom)); }
+#tfill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: rgba(232, 89, 12, .28); }
+#tdig { position: relative; font-size: 23px; font-weight: 700; color: #1c1b19; }
+#tdig span { display: inline-block; width: .56em; text-align: center; } #tdig span.c { width: .28em; }
+#tsub { position: relative; font-size: 14px; color: var(--pencil); white-space: nowrap; }
+#timer.hot { border-color: #c92a2a; } #timer.hot #tdig { color: #c92a2a; } #timer.hot #tfill { background: rgba(201, 42, 42, .3); }
+#cover { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--paper); }
+#cover .sheet { background: var(--sheet); max-width: 560px; width: 100%; padding: 26px 22px; border: 1.5px solid var(--line); text-align: center; }
+#cover h1 { font-family: var(--head); font-size: clamp(22px, 5vw, 30px); margin: 0 0 8px; font-weight: 400; }
+#cover p { font-size: 20px; margin: 8px 0; color: var(--soft); }
+#cover .doodle { width: 110px; height: 110px; margin: 0 auto 6px; display: block; }
 #cover .doodle .p { animation: scrib 2.4s ease-in-out infinite; transform-origin: 60px 60px; }
 @keyframes scrib { 50% { transform: translate(14px, -6px) rotate(8deg); } }
 #cover input { width: 100%; font-family: var(--hand); font-size: 34px; text-align: center; letter-spacing: .3em; text-transform: uppercase; border: 0; border-bottom: 3px solid var(--pencil); background: transparent; padding: 8px; margin: 10px 0; -webkit-user-select: text; user-select: text; }
-#cover .go, dialog .go { font-family: var(--hand); font-size: 24px; background: var(--pencil); color: #fff; border: 0; border-radius: 16px 13px 15px 12px; padding: 10px 26px; min-height: 52px; cursor: pointer; }
+#cover .go, dialog .go { font-family: var(--hand); font-size: 22px; background: var(--pencil); color: #fff; border: 0; border-radius: 12px; padding: 8px 22px; min-height: 48px; cursor: pointer; }
 #cover .err { color: #c92a2a; min-height: 1.3em; font-size: 18px; }
 #cover .lnk { background: none; border: 0; font-family: var(--hand); font-size: 18px; text-decoration: underline; color: var(--soft); min-height: 44px; cursor: pointer; }
 #pens { position: fixed; inset: 0; z-index: 25; background: rgba(40, 32, 22, .55); display: none; align-items: center; justify-content: center; }
-#pens div { background: #fff4ad; padding: 26px 46px; font-family: var(--head); font-size: clamp(40px, 9vw, 84px); transform: rotate(-3deg); box-shadow: 0 6px 22px rgba(0, 0, 0, .4); text-align: center; line-height: 1.2; }
-#pens small { display: block; font-family: var(--hand); font-size: 24px; color: var(--soft); }
+#pens div { background: #fff4ad; padding: 20px 36px; font-family: var(--head); font-size: clamp(34px, 8vw, 84px); box-shadow: 0 6px 22px rgba(0, 0, 0, .4); text-align: center; line-height: 1.2; }
+#pens small { display: block; font-family: var(--hand); font-size: 22px; color: var(--soft); }
 body.paused #pens { display: flex; }
-#big { position: fixed; inset: 0; z-index: 28; background: rgba(40, 32, 22, .82); display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px 20px 20px 130px; cursor: zoom-out; }
+#big { position: fixed; inset: 0; z-index: 28; background: rgba(40, 32, 22, .85); display: none; flex-direction: column; align-items: center; justify-content: center; padding: 10px 10px 44px; cursor: zoom-out; }
 #big.open { display: flex; }
-#big img { max-width: 100%; max-height: calc(100% - 40px); background: #fff; padding: 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, .5); }
-#big span { color: #fff; font-size: 16px; margin-top: 8px; text-align: center; }
-#toast { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%) rotate(-3deg); background: #fff4ad; font-family: var(--head); font-size: 44px; padding: 14px 36px; box-shadow: 0 6px 20px rgba(0, 0, 0, .35); z-index: 27; opacity: 0; pointer-events: none; transition: opacity .25s; text-align: center; }
+#big img { max-width: 100%; max-height: calc(100% - 30px); background: #fff; padding: 5px; }
+#big span { color: #fff; font-size: 15px; margin-top: 6px; text-align: center; }
+#toast { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); background: #fff4ad; font-family: var(--head); font-size: clamp(24px, 5vw, 44px); padding: 10px 28px; box-shadow: 0 6px 20px rgba(0, 0, 0, .35); z-index: 27; opacity: 0; pointer-events: none; transition: opacity .25s; text-align: center; white-space: nowrap; }
 #toast.show { opacity: 1; }
-dialog { border: 0; background: var(--sheet); color: var(--pencil); font-family: var(--hand); padding: 20px; max-width: min(94vw, 760px); width: 100%; max-height: 94vh; box-shadow: 0 8px 40px rgba(0, 0, 0, .5); }
+dialog { border: 0; background: var(--sheet); color: var(--pencil); font-family: var(--hand); padding: 16px; max-width: min(96vw, 760px); width: 100%; max-height: 96vh; box-shadow: 0 8px 40px rgba(0, 0, 0, .5); }
 dialog::backdrop { background: rgba(40, 32, 22, .7); }
-dialog h2 { font-family: var(--head); font-weight: 400; margin: 0 0 8px; font-size: 26px; }
-dialog img { display: block; max-width: 100%; max-height: 52vh; margin: 10px auto; box-shadow: 0 2px 10px rgba(0, 0, 0, .3); -webkit-touch-callout: default; }
+dialog h2 { font-family: var(--head); font-weight: 400; margin: 0 0 6px; font-size: clamp(19px, 4vw, 26px); }
+dialog img { display: block; max-width: 100%; max-height: 50vh; margin: 8px auto; box-shadow: 0 2px 10px rgba(0, 0, 0, .3); -webkit-touch-callout: default; }
 dialog input { font-family: var(--hand); font-size: 22px; border: 0; border-bottom: 2px solid var(--pencil); background: transparent; padding: 6px; width: min(100%, 340px); -webkit-user-select: text; user-select: text; }
-dialog .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; margin-top: 10px; }
-dialog .ghost { font-family: var(--hand); font-size: 22px; background: none; border: 2px solid var(--pencil); border-radius: 14px; padding: 8px 20px; min-height: 52px; cursor: pointer; color: var(--pencil); }
-dialog p { margin: 6px 0; font-size: 17px; color: var(--soft); text-align: center; }
+dialog .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center; margin-top: 8px; }
+dialog .ghost { font-family: var(--hand); font-size: 20px; background: none; border: 2px solid var(--pencil); border-radius: 12px; padding: 6px 16px; min-height: 48px; cursor: pointer; color: var(--pencil); }
+dialog p { margin: 6px 0; font-size: 16px; color: var(--soft); text-align: center; }
+#col { position: fixed; right: calc(8px + env(safe-area-inset-right)); bottom: calc(44px + env(safe-area-inset-bottom)); z-index: 31; background: #fff4ad; padding: 8px 14px; font-family: var(--head); font-size: 17px; box-shadow: 0 3px 10px rgba(0, 0, 0, .35); display: flex; align-items: center; gap: 10px; max-width: min(94vw, 520px); }
+#col.ok { background: #d3f9d8; } #col.bad { background: #ffe3e3; }
+#col button { font-family: var(--hand); font-size: 19px; background: var(--pencil); color: #fff; border: 0; border-radius: 10px; padding: 6px 14px; min-height: 44px; cursor: pointer; }
+#needname { position: fixed; inset: 0; z-index: 32; background: rgba(40, 32, 22, .6); display: flex; align-items: center; justify-content: center; padding: 14px; }
+#needname form { background: #fff4ad; padding: 20px 22px; text-align: center; box-shadow: 0 6px 22px rgba(0, 0, 0, .4); max-width: 560px; width: 100%; }
+#needname h1 { font-family: var(--head); font-weight: 400; font-size: clamp(28px, 7vw, 56px); margin: 0 0 4px; }
+#needname p { font-size: 19px; margin: 4px 0 8px; color: var(--soft); }
+#needname input { width: 100%; font-family: var(--hand); font-size: 30px; text-align: center; border: 0; border-bottom: 3px solid var(--pencil); background: transparent; padding: 6px; margin-bottom: 12px; color: var(--pencil); -webkit-user-select: text; user-select: text; }
+#needname button { font-family: var(--hand); font-size: 24px; background: var(--live); color: #fff; border: 0; border-radius: 12px; padding: 8px 26px; min-height: 50px; cursor: pointer; }
 </style>
 </head>
 <body>
 <div id="book">
-  <div id="spiral"></div>
   <div id="top">
-    <button id="thumb" class="none" aria-label="Starter picture: tap to enlarge"><img id="thumbimg" alt="Starter picture"><span class="mag">tap to enlarge</span></button>
+    <button id="thumb" class="none" aria-label="Starter picture: tap to enlarge" title="Tap to enlarge"><img id="thumbimg" alt="Starter picture"></button>
     <div id="tools"></div>
+    <button id="save" hidden>Save / share</button>
   </div>
   <div id="stage"></div>
-  <div id="foot"><div id="msg"></div><button id="save" hidden>Save / share</button></div>
+  <div id="foot"><div id="msg"></div></div>
   <div id="cover" hidden></div>
 </div>
-<div id="timer" hidden>
-  <svg viewBox="0 0 104 104"><defs><filter id="wob"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter></defs>
-    <circle cx="52" cy="54" r="46" fill="#fff"/><g filter="url(#wob)" fill="none" stroke-linecap="round"><path d="M22 14l-9-7M82 14l9-7M45 7h14" stroke="#3b3a36" stroke-width="4"/><circle cx="52" cy="54" r="41" stroke="#3b3a36" stroke-width="3.5"/><circle id="tarc" cx="52" cy="54" r="34.5" stroke="#e8590c" stroke-width="6" stroke-dasharray="216.8" stroke-dashoffset="0" transform="rotate(-90 52 54)" opacity=".85"/></g></svg>
-  <div class="t"><div id="tdig"></div><div id="tsub"></div></div>
-</div>
+<div id="timer" hidden><i id="tfill"></i><b id="tdig"></b><span id="tsub"></span></div>
 <input type="file" id="cam" accept="image/*" capture="environment" hidden>
 <div id="pens"><div>Pens down!<small>Paused by your teacher</small></div></div>
 <div id="big"><img id="bigimg" alt="Starter picture"><span id="bigcap"></span></div>
@@ -150,7 +136,7 @@ dialog p { margin: 6px 0; font-size: 17px; color: var(--soft); text-align: cente
 <dialog id="d-save"><h2>Save your design starter</h2>
   <div class="row"><label for="nm">Your name:</label><input id="nm" maxlength="40" autocomplete="off" placeholder="write your name"></div>
   <img id="outimg" alt="Your finished sheet">
-  <p id="savenote">Your name and drawings stay on this iPad unless your teacher collects the sheets. Save the image, then upload it to Showbie.</p>
+  <p id="savenote">Your name and drawings stay on this device unless your teacher collects the sheets. Save the image, then upload it to Showbie.</p>
   <div class="row"><button class="go" id="doshare">Save / share (e.g. to Showbie)</button><button class="ghost" id="dodown">Download</button><button class="ghost" id="doclose">Close</button></div>
 </dialog>
 <script src="../workbooks.js"></script>
@@ -255,7 +241,7 @@ function setPhoto(i, blob) {
   if (blob) photos[i] = { blob, url: URL.createObjectURL(blob) };
   const pg = pages[i]; if (!pg) return;
   let im = $('img.ph', pg.el);
-  if (!blob) { if (im) im.remove(); } else { if (!im) { im = document.createElement('img'); im.className = 'ph'; im.alt = 'Photo of your drawing'; pg.el.insertBefore(im, pg.el.firstChild); } im.src = photos[i].url; }
+  if (!blob) { if (im) im.remove(); } else { if (!im) { im = document.createElement('img'); im.className = 'ph'; im.alt = 'Photo of your drawing'; pg.el.insertBefore(im, pg.el.firstChild); } im.src = photos[i].url; posPhoto(i); }
   const cap = $('.cap', pg.el); cap.classList.toggle('got', !!blob); $('.capbtn', cap).textContent = blob ? '📷 Retake' : '📷 Capture';
 }
 async function loadPhotos() {
@@ -306,7 +292,15 @@ function paint(x, o, k, from) {                            // draw one stroke (o
   }
   x.restore();
 }
-function redraw(i) { const p = pages[i]; if (!p) return; p.ctx.clearRect(0, 0, p.ink.width, p.ink.height); const k = p.ink.width / LW; strokes(i).forEach((o) => paint(p.ctx, o, k)); }
+// Boxes are whatever shape fits the screen. Strokes are kept in "page units" around a 2000×1500 reference page in the middle of the box;
+// when the box changes shape (zoom, rotation, another device) the page and anything drawn beyond it is fitted back in, so nothing is lost.
+function extent(i) { let hx = LW / 2, hy = LH / 2; strokes(i).forEach((o) => { const m = o.w; o.p.forEach((q) => { hx = Math.max(hx, Math.abs(q[0] - LW / 2) + m); hy = Math.max(hy, Math.abs(q[1] - LH / 2) + m); }); }); return [hx, hy]; }
+function fitView(i, w, h) { const e = extent(i), k = Math.min(w / (2 * e[0]), h / (2 * e[1])); return { k, ox: w / 2 - k * LW / 2, oy: h / 2 - k * LH / 2 }; }
+let DPR = 1;
+const setT = (x, p) => x.setTransform(DPR * p.k, 0, 0, DPR * p.k, DPR * p.ox, DPR * p.oy);
+const wipe = (x, c) => { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); x.restore(); };
+function redraw(i) { const p = pages[i]; if (!p) return; wipe(p.ctx, p.ink); setT(p.ctx, p); strokes(i).forEach((o) => paint(p.ctx, o, 1)); }
+function posPhoto(i) { const p = pages[i], im = p && $('img.ph', p.el); if (im) { im.style.left = p.ox + 'px'; im.style.top = p.oy + 'px'; im.style.width = p.k * LW + 'px'; im.style.height = p.k * LH + 'px'; } }
 
 // ---------- layout ----------
 function build(n) {
@@ -314,7 +308,7 @@ function build(n) {
   for (let i = 0; i < n; i++) {
     const el = document.createElement('div'); el.className = 'pg frozen todo'; el.dataset.i = i;
     el.innerHTML = `<canvas class="ink"></canvas><span class="num">${i + 1}</span><span class="say"></span><span class="lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><div class="cap"><span class="capt"></span><button class="capbtn" type="button">📷 Capture</button></div>`;
-    stage.appendChild(el); const ink = $('canvas', el); pages.push({ el, ink, ctx: ink.getContext('2d'), w: 0 });
+    stage.appendChild(el); const ink = $('canvas', el); pages.push({ el, ink, ctx: ink.getContext('2d'), k: 1, ox: 0, oy: 0 });
     $('.capbtn', el).onclick = () => { if (!capOK(i)) return; capFor = i; $('#cam').click(); };
     el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   }
@@ -322,41 +316,38 @@ function build(n) {
 }
 function layout(force) {
   const n = pages.length; if (!n) return;
-  const topH = $('#top').offsetHeight; stage.style.top = topH + 'px';
-  const W = stage.clientWidth, H = innerHeight - topH, FOOT = 104, act = phase().box;
-  const key = [W, H, n, zoomed, act].join(); if (key === layoutKey && !force) return; layoutKey = key;
-  const DPR = Math.min(2, window.devicePixelRatio || 1);
-  const place = (p, x, y, w) => {
-    p.el.style.left = x + 'px'; p.el.style.top = y + 'px'; p.el.style.width = w + 'px'; p.el.style.height = w * 0.75 + 'px';
-    const bw = Math.round(w * DPR); if (bw !== p.ink.width) { p.ink.width = bw; p.ink.height = Math.round(bw * 0.75); p.w = w; redraw(pages.indexOf(p)); }
+  document.body.classList.toggle('short', innerHeight < 560);
+  const W = stage.clientWidth, H = stage.clientHeight, act = phase().box, G = 5;
+  const key = [W, H, n, zoomed, act, window.devicePixelRatio].join(); if (key === layoutKey && !force) return; layoutKey = key;
+  DPR = Math.min(3, window.devicePixelRatio || 1);                     // sharp on phones (2.6–3) as well as iPads (2)
+  const place = (p, i, x, y, w, h) => {
+    const st = p.el.style; st.left = x + 'px'; st.top = y + 'px'; st.width = w + 'px'; st.height = h + 'px';
+    const bw = Math.round(w * DPR), bh = Math.round(h * DPR), v = fitView(i, w, h);
+    if (bw !== p.ink.width || bh !== p.ink.height || v.k !== p.k || v.ox !== p.ox || v.oy !== p.oy) { p.ink.width = bw; p.ink.height = bh; Object.assign(p, v); redraw(i); posPhoto(i); }
   };
-  const foot = $('#foot'); foot.classList.remove('side');
-  if (zoomed && pages[act]) {
-    let h = H - 20, w = h * 4 / 3, x, y = 10;
-    if (W - w - 20 >= 118) { x = W - w - 10; foot.classList.add('side'); }                // room for the timer beside the page
-    else { w = Math.min(W - 20, (H - FOOT - 16) * 4 / 3); h = w * 0.75; x = (W - w) / 2; y = Math.max(10, (H - FOOT - h) / 2); }
-    place(pages[act], x, y, w);
-  } else {
+  if (zoomed && pages[act]) place(pages[act], act, 0, 0, W, H);        // the live box takes the whole screen under the toolbar
+  else {
+    // pick the rows × columns that give the biggest useful boxes for this screen shape; a short last row is stretched to fill its row
     let best = null;
-    for (let c = 1; c <= n; c++) { const r = Math.ceil(n / c), g = 20, w = Math.min((W - 28 - g * (c - 1)) / c, (H - FOOT - 24 - g * (r - 1)) / r * 4 / 3); if (!best || w > best.w + 1) best = { c, r, w, g }; }
-    const { c, r, w, g } = best, h = w * 0.75, x0 = (W - (c * w + (c - 1) * g)) / 2, y0 = Math.max(12, (H - FOOT - (r * h + (r - 1) * g)) / 2);
-    pages.forEach((p, i) => { const last = Math.floor(i / c) === r - 1 ? n - (r - 1) * c : c, shift = (c - last) * (w + g) / 2; place(p, x0 + shift + (i % c) * (w + g), y0 + Math.floor(i / c) * (h + g), w); });
+    for (let c = 1; c <= n; c++) { const r = Math.ceil(n / c), w = (W - G * (c - 1)) / c, h = (H - G * (r - 1)) / r, sc = Math.min(w, h * 1.7) * Math.min(h, w * 1.7) * (n % c ? 0.97 : 1); if (!best || sc > best.sc) best = { c, r, h, sc }; }
+    const { c, r, h } = best;
+    pages.forEach((p, i) => { const row = Math.floor(i / c), m = row === r - 1 ? n - (r - 1) * c : c, w = (W - G * (m - 1)) / m; place(p, i, (i % c) * (w + G), row * (h + G), w, h); });
   }
-  const a = pages[act]; if (a) { if (liveC.parentNode !== a.el) a.el.appendChild(liveC); liveC.width = a.ink.width; liveC.height = a.ink.height; }
+  const a = pages[act]; if (a) { if (liveC.parentNode !== a.el) a.el.appendChild(liveC); if (liveC.width !== a.ink.width || liveC.height !== a.ink.height) { liveC.width = a.ink.width; liveC.height = a.ink.height; } setT(liveX, a); }
 }
-addEventListener('resize', () => layout()); addEventListener('orientationchange', () => setTimeout(layout, 300));
+addEventListener('resize', () => { if (cur) up(); layout(); }); addEventListener('orientationchange', () => setTimeout(layout, 300));
 
 // ---------- pointer drawing ----------
 let cur = null, pid = null, penSeen = 0, pend = null;
 const canDraw = (i) => { const p = phase(); return !ana && p.ph === 'run' && p.box === i; };
-function pt(e, el) { const r = el.getBoundingClientRect(); const c = (v, m) => Math.max(-20, Math.min(m + 20, Math.round(v))); return [c((e.clientX - r.left) / r.width * LW, LW), c((e.clientY - r.top) / r.height * LH, LH)]; }
+function pt(e, el) { const r = el.getBoundingClientRect(), p = pages[el.dataset.i | 0]; return [Math.round((e.clientX - r.left - p.ox) / p.k), Math.round((e.clientY - r.top - p.oy) / p.k)]; }
 function begin(e, el, i) {
   const b = BRUSH[brush], usePr = b.t === 'pen' && !lineOn && e.pointerType === 'pen' && e.pressure > 0, p = pt(e, el);
   if (usePr) p.push(Math.round(e.pressure * 100) / 100);
   cur = { i, o: { t: b.t, c: colour, w: b.w, p: [p] }, pr: usePr, drawn: 1 };
   if (lineOn && b.t !== 'er') cur.o.ln = 1;
-  if (b.t === 'er') paint(pages[i].ctx, cur.o, pages[i].ink.width / LW);
-  else paint(liveX, cur.o, liveC.width / LW);
+  if (b.t === 'er') paint(pages[i].ctx, cur.o, 1);
+  else paint(liveX, cur.o, 1);
 }
 function down(e) {
   const i = +e.currentTarget.dataset.i;
@@ -372,15 +363,15 @@ function move(e) {
   if (pend) { if (Math.hypot(e.clientX - pend.x, e.clientY - pend.y) < 8) return; begin(pend.e, el, pend.i); pend = null; }
   if (!cur) return;
   if (!canDraw(cur.i)) return up(e);
-  const o = cur.o, k = liveC.width / LW, evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-  if (o.ln) { o.p[1] = pt(e, el); liveX.clearRect(0, 0, liveC.width, liveC.height); paint(liveX, o, k); return; }
+  const o = cur.o, k = 1, evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  if (o.ln) { o.p[1] = pt(e, el); wipe(liveX, liveC); paint(liveX, o, k); return; }
   for (const ev of (evs.length ? evs : [e])) {
     const p = pt(ev, el), l = o.p[o.p.length - 1];
     if (Math.hypot(p[0] - l[0], p[1] - l[1]) < 4) continue;
     if (cur.pr) p.push(Math.round((ev.pressure || 0.5) * 100) / 100);
     o.p.push(p);
   }
-  if (o.t === 'mk') { liveX.clearRect(0, 0, liveC.width, liveC.height); paint(liveX, o, k); }
+  if (o.t === 'mk') { wipe(liveX, liveC); paint(liveX, o, k); }
   else if (o.p.length > cur.drawn) { paint(o.t === 'er' ? pages[cur.i].ctx : liveX, o, k, cur.drawn); cur.drawn = o.p.length; }
 }
 function up(e) {
@@ -389,10 +380,10 @@ function up(e) {
   if (pend) { pend = null; setZoom(true); return; }
   if (!cur) return;
   const p = pages[cur.i], o = cur.o; cur = null;
-  liveX.clearRect(0, 0, liveC.width, liveC.height);
+  wipe(liveX, liveC);
   if (o.ln && o.p.length < 2) return;
   strokes(p.el.dataset.i | 0).push(o);
-  if (o.t === 'er') redraw(p.el.dataset.i | 0); else paint(p.ctx, o, p.ink.width / LW);
+  if (o.t === 'er') redraw(p.el.dataset.i | 0); else paint(p.ctx, o, 1);
   persist(); syncTools();
 }
 function undo() { const b = phase().box; if (!canDraw(b) || !strokes(b).length) return; strokes(b).pop(); redraw(b); persist(); syncTools(); }
@@ -407,9 +398,11 @@ function drawTools() {
   if (!brushes.includes(brush)) brush = brushes[0] || 'thin';
   if (!t.line) lineOn = false;
   const tb = (id, tip) => `<button class="tb" data-t="${id}" title="${tip}" aria-label="${tip}"><svg viewBox="0 0 32 32">${ICON[id]}</svg></button>`;
-  $('#tools').innerHTML = `<button id="modesw" role="switch" aria-checked="${ana}" aria-label="Digital or analogue" title="Draw on the iPad, or on paper and photograph it"><span class="${ana ? '' : 'on'}">✏️ Digital</span><span class="${ana ? 'on' : ''}">📷 Analogue</span></button><span class="sep"></span><div class="grp draw" id="g-col">${cols.map((c) => `<button class="sw" data-c="${esc(c)}" style="--c:${esc(c)}" aria-label="Colour"><i></i></button>`).join('')}</div><span class="sep"></span>
-    <div class="grp draw">${brushes.map((b) => tb(b, BRUSH[b].name)).join('')}${t.line ? tb('line', 'Straight line') : ''}</div><span class="sep draw"></span>
-    <label id="nameL">Name<input id="myname" maxlength="40" autocomplete="off" placeholder="your name" value="${esc(ls.get('name', ''))}"></label><div class="grp">${t.undo ? '<span class="draw">' + tb('undo', 'Undo') + '</span>' : ''}${tb('zoom', 'Bigger / smaller')}</div>`;
+  $('#tools').innerHTML = `<button id="modesw" role="switch" aria-checked="${ana}" aria-label="Digital or analogue" title="Draw on the screen, or on paper and photograph it"><span class="${ana ? '' : 'on'}">✏️<em> Digital</em></span><span class="${ana ? 'on' : ''}">📷<em> Analogue</em></span></button>
+    <span class="grp draw">${cols.map((c) => `<button class="sw draw" data-c="${esc(c)}" style="--c:${esc(c)}" aria-label="Colour"><i></i></button>`).join('')}<span class="sep draw"></span>
+    ${brushes.map((b) => tb(b, BRUSH[b].name)).join('')}${t.line ? tb('line', 'Straight line') : ''}${t.undo ? tb('undo', 'Undo') : ''}</span>
+    ${tb('zoom', 'Bigger / smaller')}<label id="nameL"><input id="myname" maxlength="40" autocomplete="off" placeholder="your name" aria-label="Your name" value="${esc(ls.get('name', ''))}"></label>`;
+  document.querySelectorAll('#tools .grp .tb').forEach((b) => b.classList.add('draw'));
   document.body.classList.toggle('ana', ana);
   syncTools(); layout(true);
 }
@@ -462,12 +455,12 @@ function apply() {                                          // called after ever
   if (asking) return;
   const p = phase(), s = state;
   if (p.ph === 'wait') {
-    $('#timer').hidden = true; document.body.classList.remove('paused', 'zoom'); zoomed = false; $('#top').style.visibility = 'hidden'; stage.style.visibility = 'hidden'; $('#foot').style.visibility = 'hidden';
+    $('#timer').hidden = true; document.body.classList.remove('paused', 'zoom'); zoomed = false; 
     cover(DOODLE + `<h1>Waiting for your teacher…</h1><p>${!gotOnce && fails >= 2 ? 'Looking for the board: check the internet connection.' : 'Your sketchbook page will open when the starter goes live.'}</p><p>Code <b>${esc(code)}</b> · <button class="lnk" id="chg">wrong code?</button></p>`);
     const c = $('#chg'); if (c) c.onclick = () => askCode();
     collectCheck(); lastPhase = 'wait'; return;
   }
-  cover(null); $('#top').style.visibility = stage.style.visibility = $('#foot').style.visibility = ''; $('#timer').hidden = false;
+  cover(null); $('#timer').hidden = false;
   // a new run from the teacher starts a clean set of pages
   if (s.run && store.run !== s.run && (p.ph === 'lead' || p.ph === 'run' || p.ph === 'hold' || p.ph === 'paused')) { store = { run: s.run, boxes: [] }; persist(); clearPhotos(); pages.forEach((_, i) => redraw(i)); }
   if (pages.length !== p.n) { build(p.n); layoutKey = ''; }
@@ -495,18 +488,18 @@ function apply() {                                          // called after ever
   layout(); syncTools();
   // timer sticker
   const T = $('#timer'), frac = p.ph === 'run' || p.ph === 'hold' || p.ph === 'paused' ? p.left / p.dur : p.ph === 'done' ? 0 : 1;
-  $('#tarc').style.strokeDashoffset = String(216.8 * (1 - frac));
+  $('#tfill').style.width = Math.round(frac * 1000) / 10 + '%';
   $('#tdig').innerHTML = p.ph === 'done' ? '<span style="width:auto">✓</span>' : digits(p.ph === 'lead' ? String(Math.ceil(p.left / 1000)) : fmt(p.ph === 'idle' ? p.dur : p.left));
-  $('#tsub').textContent = p.ph === 'lead' ? 'ready…' : p.ph === 'paused' ? 'paused' : p.ph === 'done' ? 'done' : p.ph === 'idle' ? 'per box' : 'box ' + (box + 1) + '/' + p.n;
+  $('#tsub').textContent = p.ph === 'lead' ? 'ready…' : p.ph === 'paused' ? 'paused' : p.ph === 'done' ? 'done' : p.ph === 'idle' ? 'per box' : (box + 1) + ' of ' + p.n;
   T.classList.toggle('hot', p.ph === 'run' && p.left <= 10000);
   const pr = (s.prompts && s.prompts[box]) || '', offl = fails >= 3 ? '<small>No connection to the board: still counting on this iPad.</small>' : '';
   const m = p.ph === 'idle' ? (hasInk() && !mine ? 'Your last pages are still here.' : 'Get ready!') + '<small>Look at the picture. Your teacher will start the timer.</small>'
     : p.ph === 'lead' ? 'Starting in ' + Math.ceil(p.left / 1000) + '…'
     : p.ph === 'paused' ? 'Pens down'
     : p.ph === 'done' ? 'Finished!<small>Save your page, then upload it to Showbie.</small>'
-    : 'Box ' + (box + 1) + ' of ' + p.n + (pr ? ': ' + esc(pr) : ': draw!') + (ana ? '<small>Draw on paper, then press Capture to photograph it.</small>' : zoomed ? '' : '<small>Tap the glowing box to make it big.</small>') + offl;
+    : 'Box ' + (box + 1) + ' of ' + p.n + (pr ? ': ' + esc(pr) : ': draw!') + (ana ? '<small>Draw on paper, then press Capture.</small>' : zoomed ? '' : '<small>Tap the orange box to make it big.</small>') + offl;
   if ($('#msg').dataset.k !== m) { $('#msg').dataset.k = m; $('#msg').innerHTML = m; }
-  $('#save').hidden = !((p.ph === 'done' || p.ph === 'idle') && hasInk());
+  { const sv = !((p.ph === 'done' || p.ph === 'idle') && hasInk()); if ($('#save').hidden !== sv) { $('#save').hidden = sv; layoutKey = ''; layout(); } }
   if (s.collect !== lastCollect) { lastCollect = s.collect; colState = ''; }
   collectCheck();
 }
@@ -545,8 +538,10 @@ async function compose(maxSide) {
     x.font = '36px ' + HAND; if (pr) { if (each) wrap(x, pr, lx, cy + 130, cx + cw - lx, 40, 2); else x.fillText(pr, lx + 230, cy + 48, cw - 240); }
     if (each && list[i] && list[i].c) { x.font = '22px ' + HAND; x.fillStyle = '#77736a'; x.fillText(ims[i] ? list[i].c : '(picture not added) ' + list[i].c, lx, cy + 222, cx + cw - lx); }
     x.fillStyle = '#fffdf6'; x.shadowColor = 'rgba(0,0,0,.28)'; x.shadowBlur = 14; x.fillRect(cx, cy + hh, cw, ch); x.shadowBlur = 0;
-    const ph = pages[i] && photos[i] && $('img.ph', pages[i].el); if (ph && ph.naturalWidth) { const k = Math.min(cw / ph.naturalWidth, ch / ph.naturalHeight), w = ph.naturalWidth * k, h = ph.naturalHeight * k; x.drawImage(ph, cx + (cw - w) / 2, cy + hh + (ch - h) / 2, w, h); }
-    const t = document.createElement('canvas'); t.width = Math.round(cw); t.height = Math.round(ch); const tc = t.getContext('2d'); strokes(i).forEach((o) => paint(tc, o, t.width / LW)); x.drawImage(t, cx, cy + hh);
+    const e = extent(i), k = Math.min(cw / (2 * e[0]), ch / (2 * e[1])), ox = cw / 2 - k * LW / 2, oy = ch / 2 - k * LH / 2;
+    const t = document.createElement('canvas'); t.width = Math.round(cw); t.height = Math.round(ch); const tc = t.getContext('2d');
+    const ph = pages[i] && photos[i] && $('img.ph', pages[i].el); if (ph && ph.naturalWidth) { const f = Math.min(k * LW / ph.naturalWidth, k * LH / ph.naturalHeight), w = ph.naturalWidth * f, h = ph.naturalHeight * f; tc.drawImage(ph, ox + (k * LW - w) / 2, oy + (k * LH - h) / 2, w, h); }
+    tc.setTransform(k, 0, 0, k, ox, oy); strokes(i).forEach((o) => paint(tc, o, 1)); x.drawImage(t, cx, cy + hh);
     x.strokeStyle = '#b9b09a'; x.lineWidth = 2; x.strokeRect(cx, cy + hh, cw, ch);
   }
   if (!maxSide || Math.max(W, H) <= maxSide) return c;

@@ -32,6 +32,8 @@ function doPost(e) {
   if (d && d.a === 'email') return sendResultEmail(d);
   if (d && d.a === 'img') return saveImage(d);
   if (d && d.a === 'imgdel') return deleteImage(d);
+  if (d && d.a && String(d.a).indexOf('ds') === 0) return designStarterPost(d);
+  if (d && d.a && String(d.a).indexOf('cv') === 0) return coverPost(d);
   // several saves in one request (a device catching up after being offline or slow)
   if (d && d.a === 'batch' && Array.isArray(d.list)) {
     const lock = LockService.getScriptLock(); if (!lock.tryLock(25000)) return json({ ok: false, error: 'busy' });
@@ -103,6 +105,8 @@ function doGet(e) {
       return json({ ok: true, done: done, quiz: qn ? { submitted: true, score: qs, max: qn } : null, items: p.full ? items : undefined });
     }
     if (p.a === 'img') return getImage(p);
+    if (p.a === 'dscount') return designStarterCount(p);
+    if (p.a === 'cvinfo' || p.a === 'cvcount') return coverGet(p);
     const pin = PROPS.getProperty('PIN') || '';
     if (!pin || String(p.pin || '') !== pin) return json({ ok: false, error: 'Wrong PIN' });
     const ss = book(), lesson = p.lesson || '';
@@ -169,3 +173,131 @@ function deleteImage(d) {
 }
 // Run once from the editor after updating, to grant the Google Drive permission for photos.
 function authoriseDrive() { Logger.log(DriveApp.getRootFolder().getName()); }
+
+// ---------------- Design starter: collect every student's final sheet, email them to the teacher as ONE email, then delete ----------------
+// Teacher (PIN) opens collection for a session code -> iPads upload their sheet (only while open) -> teacher presses send:
+// one email (split only if attachments would be too big) goes to the script owner's address, and the uploads are trashed.
+function dsCode(x) { return String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); }
+function dsFolder(code, create) {
+  const sub = (parent, name) => { const it = parent.getFoldersByName(name); return it.hasNext() ? it.next() : (create ? parent.createFolder(name) : null); };
+  let root = null, id = PROPS.getProperty('DS_FOLDER');
+  if (id) try { root = DriveApp.getFolderById(id); } catch (e) { root = null; }
+  if (!root) { if (!create) return null; root = DriveApp.createFolder('Design starter uploads (temporary)'); PROPS.setProperty('DS_FOLDER', root.getId()); }
+  return sub(root, code);
+}
+function dsTeacher(d) { const pin = PROPS.getProperty('PIN') || ''; return !!pin && String(d.pin || '') === pin; }
+function designStarterPost(d) {
+  const code = dsCode(d.session); if (!code) return json({ ok: false, error: 'no session' });
+  const cache = CacheService.getScriptCache();
+  if (d.a === 'dsopen') { if (!dsTeacher(d)) return json({ ok: false, error: 'Wrong PIN' }); cache.put('ds-open-' + code, '1', 3600); return json({ ok: true }); }
+  if (d.a === 'dsup') {
+    if (cache.get('ds-open-' + code) !== '1') return json({ ok: false, error: 'not collecting' });
+    const m = String(d.data || '').match(/^data:(image\/(jpeg|png));base64,(.*)$/);
+    if (!m || String(d.data).length > 6e6) return json({ ok: false, error: 'bad image' });
+    const name = String(d.name || 'No name').replace(/[\\/:*?"<>|]/g, ' ').trim().slice(0, 60) || 'No name';
+    const dev = String(d.device || '').replace(/[^a-z0-9]/gi, '').slice(0, 16);
+    const folder = dsFolder(code, true);
+    const old = folder.getFilesByName(name + ' ' + dev + '.' + (m[2] === 'jpeg' ? 'jpg' : 'png')); while (old.hasNext()) old.next().setTrashed(true); // re-send replaces
+    if (folder.getFiles().hasNext()) { let n = 0; const it = folder.getFiles(); while (it.hasNext()) { it.next(); if (++n > 80) return json({ ok: false, error: 'too many' }); } }
+    folder.createFile(Utilities.newBlob(Utilities.base64Decode(m[3]), m[1], name + ' ' + dev + '.' + (m[2] === 'jpeg' ? 'jpg' : 'png'))).setDescription(name);
+    return json({ ok: true });
+  }
+  if (d.a === 'dssend') {
+    if (!dsTeacher(d)) return json({ ok: false, error: 'Wrong PIN' });
+    cache.remove('ds-open-' + code);
+    const folder = dsFolder(code, false); if (!folder) return json({ ok: true, sent: 0 });
+    const files = []; const it = folder.getFiles(); while (it.hasNext()) files.push(it.next());
+    if (!files.length) { folder.setTrashed(true); return json({ ok: true, sent: 0 }); }
+    files.sort((a, b) => a.getName().localeCompare(b.getName()));
+    const to = Session.getEffectiveUser().getEmail(), when = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'd MMM yyyy HH:mm');
+    const title = String(d.title || 'Design starter').slice(0, 80);
+    const groups = []; let cur = [], size = 0;
+    files.forEach((f) => { const b = f.getBlob(), n = b.getBytes().length; if (cur.length && size + n > 18e6) { groups.push(cur); cur = []; size = 0; } cur.push(b); size += n; });
+    if (cur.length) groups.push(cur);
+    groups.forEach((g, i) => MailApp.sendEmail({ to: to, name: 'D&T design starter',
+      subject: title + ' · ' + when + ' · ' + files.length + ' sheets' + (groups.length > 1 ? ' (part ' + (i + 1) + ' of ' + groups.length + ')' : ''),
+      htmlBody: '<p>' + g.length + ' design starter sheet' + (g.length === 1 ? '' : 's') + ' (session ' + code + '):</p><ul>' + g.map((b) => '<li>' + b.getName().replace(/</g, '&lt;') + '</li>').join('') + '</ul>',
+      attachments: g }));
+    folder.setTrashed(true);
+    return json({ ok: true, sent: files.length, emails: groups.length });
+  }
+  return json({ ok: false, error: 'unknown' });
+}
+function designStarterCount(p) {
+  if (!dsTeacher(p)) return json({ ok: false, error: 'Wrong PIN' });
+  const folder = dsFolder(dsCode(p.session), false), names = [];
+  if (folder) { const it = folder.getFiles(); while (it.hasNext()) names.push(it.next().getDescription()); }
+  return json({ ok: true, open: CacheService.getScriptCache().get('ds-open-' + dsCode(p.session)) === '1', names: names.sort() });
+}
+
+// ---------------- Substitute teacher (cover work): students photograph their work, the absent teacher gets it by email ----------------
+// The cover teacher's board needs the COVER CODE (script property COVER_CODE, set from the board with the dashboard PIN).
+// Session details are held in the script cache for 4 hours; photos sit in a temporary Drive folder until sent, then are trashed.
+function cvSession(x) { return String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); }
+function cvCoverOK(d) { const c = PROPS.getProperty('COVER_CODE') || ''; return !!c && String(d.cover || '').trim().toLowerCase() === c.toLowerCase(); }
+function cvInfo(code) { try { return JSON.parse(CacheService.getScriptCache().get('cv-' + code) || 'null'); } catch (e) { return null; } }
+function cvFolder(code, create) {
+  const sub = (parent, name) => { const it = parent.getFoldersByName(name); return it.hasNext() ? it.next() : (create ? parent.createFolder(name) : null); };
+  let root = null, id = PROPS.getProperty('CV_FOLDER');
+  if (id) try { root = DriveApp.getFolderById(id); } catch (e) { root = null; }
+  if (!root) { if (!create) return null; root = DriveApp.createFolder('Cover work uploads (temporary)'); PROPS.setProperty('CV_FOLDER', root.getId()); }
+  return sub(root, code);
+}
+function cvList(code) {
+  const folder = cvFolder(code, false), by = {};
+  if (folder) { const it = folder.getFiles(); while (it.hasNext()) { const f = it.next(); let m = {}; try { m = JSON.parse(f.getDescription() || '{}'); } catch (e) {} const k = (m.name || '?') + '|' + (m.device || ''); (by[k] = by[k] || { name: m.name || '?', files: [] }).files.push(f); } }
+  return Object.keys(by).map((k) => by[k]).sort((a, b) => a.name.localeCompare(b.name));
+}
+function coverPost(d) {
+  if (d.a === 'cvsetcode') { const pin = PROPS.getProperty('PIN') || ''; if (!pin || String(d.pin || '') !== pin) return json({ ok: false, error: 'Wrong PIN' }); const c = String(d.newCode || '').trim(); if (c.length < 4) return json({ ok: false, error: 'Code too short' }); PROPS.setProperty('COVER_CODE', c); return json({ ok: true }); }
+  if (d.a === 'cvcheck') return json({ ok: cvCoverOK(d) });
+  const code = cvSession(d.session); if (!code) return json({ ok: false, error: 'no session' });
+  const cache = CacheService.getScriptCache();
+  if (d.a === 'cvopen') {
+    if (!cvCoverOK(d)) return json({ ok: false, error: 'Wrong cover code' });
+    const to = String(d.teacher || '').trim().toLowerCase();
+    if (!/^[a-z0-9._%+-]+@britishschool\.fr$/.test(to)) return json({ ok: false, error: 'Teacher email must end @britishschool.fr' });
+    const info = { teacher: to, cls: String(d.cls || '').slice(0, 40), subject: String(d.subject || '').slice(0, 60), expected: Math.max(0, Math.min(60, Number(d.expected) || 0)), open: true, at: Date.now() };
+    cache.put('cv-' + code, JSON.stringify(info), 14400); return json({ ok: true });
+  }
+  if (d.a === 'cvup') {
+    const info = cvInfo(code); if (!info || !info.open) return json({ ok: false, error: 'not open' });
+    const m = String(d.data || '').match(/^data:(image\/(jpeg|png));base64,(.*)$/);
+    if (!m || String(d.data).length > 6e6) return json({ ok: false, error: 'bad image' });
+    const name = String(d.name || '').replace(/[\\/:*?"<>|]/g, ' ').trim().slice(0, 60); if (!name) return json({ ok: false, error: 'no name' });
+    const dev = String(d.device || '').replace(/[^a-z0-9]/gi, '').slice(0, 16), page = Math.max(1, Math.min(20, Number(d.page) || 1));
+    const folder = cvFolder(code, true);
+    let n = 0; const all = folder.getFiles(); while (all.hasNext()) { all.next(); if (++n > 400) return json({ ok: false, error: 'too many' }); }
+    const fname = name + ' ' + dev + ' p' + page + '.' + (m[2] === 'jpeg' ? 'jpg' : 'png');
+    const old = folder.getFilesByName(fname); while (old.hasNext()) old.next().setTrashed(true);
+    folder.createFile(Utilities.newBlob(Utilities.base64Decode(m[3]), m[1], fname)).setDescription(JSON.stringify({ name: name, device: dev, page: page }));
+    return json({ ok: true });
+  }
+  if (d.a === 'cvsend') {
+    if (!cvCoverOK(d)) return json({ ok: false, error: 'Wrong cover code' });
+    const info = cvInfo(code); if (!info) return json({ ok: false, error: 'session expired' });
+    info.open = false; cache.put('cv-' + code, JSON.stringify(info), 14400);
+    const people = cvList(code); if (!people.length) return json({ ok: true, sent: 0 });
+    const when = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'EEE d MMM yyyy HH:mm');
+    const head = [info.cls, info.subject].filter(String).join(' ') || 'Class';
+    const note = String(d.note || '').slice(0, 3000).replace(/</g, '&lt;').replace(/\n/g, '<br>');
+    const groups = []; let cur = [], size = 0, names = [];
+    people.forEach((p) => p.files.sort((a, b) => a.getName().localeCompare(b.getName())).forEach((f) => { const b = f.getBlob(); b.setName(p.name + ' - ' + f.getName().replace(/^.* (p\d+\.\w+)$/, '$1')); const n = b.getBytes().length; if (cur.length && size + n > 18e6) { groups.push(cur); cur = []; size = 0; } cur.push(b); size += n; }));
+    if (cur.length) groups.push(cur);
+    const list = '<ul>' + people.map((p) => '<li>' + p.name.replace(/</g, '&lt;') + ' (' + p.files.length + ' photo' + (p.files.length === 1 ? '' : 's') + ')</li>').join('') + '</ul>';
+    groups.forEach((g, i) => MailApp.sendEmail({ to: info.teacher, name: 'Cover work', replyTo: info.teacher,
+      subject: head + ': cover work · ' + when + (groups.length > 1 ? ' (part ' + (i + 1) + ' of ' + groups.length + ')' : ''),
+      htmlBody: '<p>Work handed in during your covered lesson: <b>' + people.length + '</b> student' + (people.length === 1 ? '' : 's') + (info.expected ? ' of ' + info.expected + ' expected' : '') + '.</p>' + (note ? '<p><b>Note from the cover teacher:</b><br>' + note + '</p>' : '') + list + (groups.length > 1 ? '<p>This is part ' + (i + 1) + ' of ' + groups.length + ' (the photos were too big for one email).</p>' : ''),
+      attachments: g }));
+    const folder = cvFolder(code, false); if (folder) folder.setTrashed(true);
+    cache.remove('cv-' + code);
+    return json({ ok: true, sent: people.length, emails: groups.length, to: info.teacher });
+  }
+  return json({ ok: false, error: 'unknown' });
+}
+function coverGet(p) {
+  const code = cvSession(p.session), info = cvInfo(code);
+  if (p.a === 'cvinfo') return json({ ok: true, open: !!(info && info.open), cls: info ? info.cls : '', subject: info ? info.subject : '' });
+  if (!cvCoverOK(p)) return json({ ok: false, error: 'Wrong cover code' });
+  return json({ ok: true, open: !!(info && info.open), expected: info ? info.expected : 0, people: cvList(code).map((x) => ({ name: x.name, photos: x.files.length })) });
+}

@@ -18,7 +18,7 @@
   function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
   function mount() {
     var g = document.createElement('div'); g.id = 'bsp-gate';
-    g.innerHTML = '<form autocomplete="off"><div class="t">THE BRITISH SCHOOL OF PARIS</div><h1>Design &amp; Technology</h1><p>Enter the password to open this page.</p>' +
+    g.innerHTML = '<form autocomplete="off"><div class="t">THE BRITISH SCHOOL OF PARIS</div><h1>Class resources</h1><p>Enter the password your teacher gave you.</p>' +
       '<input type="password" placeholder="Password" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Password"><button type="submit">Open</button><div class="e"></div></form>';
     document.body.appendChild(g);
     var f = g.querySelector('form'), pw = g.querySelector('input'), err = g.querySelector('.e');

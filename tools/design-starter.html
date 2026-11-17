@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="../gate.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design starter · BSP D&amp;T tools</title>
+<link rel="stylesheet" href="kit/tools.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Patrick+Hand&display=swap">
+<style>
+:root { --paper: #f6efdc; --sheet: #fffdf6; --pencil: #3b3a36; --soft: #77736a; --tape: rgba(238, 219, 150, .85); --live: #e8590c; --hand: 'Patrick Hand', 'Bradley Hand', 'Chalkboard SE', 'Segoe Print', 'Comic Sans MS', cursive; --head: 'Gloria Hallelujah', 'Bradley Hand', 'Chalkboard SE', 'Segoe Print', 'Comic Sans MS', cursive; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; overflow: hidden; background: #5b4a3a; }
+body.dark { background: #1d1a17; }
+.tk-top { color: #fff; flex: none; } .tk-top a.home { color: #e6dccb; } .tk-top .btn { color: #1e2e96; } body.dark .tk-top .btn { color: var(--ink); }
+#book { flex: 1; min-height: 0; margin: 0 12px 10px; position: relative; color: var(--pencil); font-family: var(--hand); border-radius: 6px 14px 14px 6px; box-shadow: 0 4px 18px rgba(0, 0, 0, .4); display: grid; grid-template-columns: minmax(0, 1fr) 330px 372px; gap: 18px; padding: 16px 16px 12px 50px;
+  background-color: var(--paper); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .28  0 0 0 0 .15  0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E"); }
+body.nosetup #book { grid-template-columns: minmax(0, 1fr) clamp(380px, 38vw, 640px); }
+body.nosetup #setup { display: none; }
+#spiral { position: absolute; left: -8px; top: 6px; bottom: 6px; width: 40px; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='36'%3E%3Ccircle cx='30' cy='18' r='5.5' fill='%23463b30'/%3E%3Cpath d='M30 18C22 4 2 6 3 22' fill='none' stroke='%23767b84' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M28 15C21 6 7 7 4 17' fill='none' stroke='%23e3e6ea' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") repeat-y left top; }
+h2 { font-family: var(--head); font-weight: 400; font-size: 19px; margin: 12px 0 4px; line-height: 1.2; } h2:first-child { margin-top: 0; }
+/* picture */
+#pic { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; }
+#photo { position: relative; flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; padding: 14px 6px 2px; }
+#frame { position: relative; max-width: 100%; max-height: 100%; background: #fff; padding: 10px 10px 12px; box-shadow: 0 3px 12px rgba(60, 40, 10, .45); transform: rotate(-1.2deg); display: flex; min-height: 0; }
+#frame::before, #frame::after { content: ''; position: absolute; top: -11px; width: 84px; height: 26px; background: var(--tape); box-shadow: 0 1px 2px rgba(0, 0, 0, .15); z-index: 2; }
+#frame::before { left: -26px; transform: rotate(-36deg); } #frame::after { right: -26px; transform: rotate(36deg); }
+#pimg { display: block; max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; background: #e9e4d6; }
+#pnone { width: min(100%, 520px); padding: 40px 24px; text-align: center; font-size: 22px; color: var(--soft); }
+#badge { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%) rotate(1deg); z-index: 3; font-family: var(--head); font-size: 15px; padding: 3px 14px; white-space: nowrap; background: #fff4ad; box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
+#badge.live { background: #2f9e44; color: #fff; }
+#credit { font-size: 14px; color: var(--soft); margin-top: 10px; min-height: 18px; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#credit a { color: inherit; }
+#picbar { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; justify-content: center; max-width: 100%; }
+body.running.nosetup #picbar { display: none; }
+#strip { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+#strip button { position: relative; width: 62px; height: 48px; padding: 3px; background: #fff; border: 0; box-shadow: 0 1px 4px rgba(0, 0, 0, .35); cursor: pointer; }
+#strip button img { width: 100%; height: 100%; object-fit: cover; display: block; background: #e9e4d6; }
+#strip button b { position: absolute; left: -5px; top: -7px; width: 22px; height: 22px; border-radius: 50%; background: var(--pencil); color: #fff; font-size: 14px; display: grid; place-items: center; font-family: var(--hand); }
+#strip button.sel { outline: 3px solid var(--live); outline-offset: 2px; }
+#strip button.now b { background: var(--live); }
+.sk { font-family: var(--hand); font-size: 19px; color: var(--pencil); background: var(--sheet); border: 2px solid var(--pencil); border-radius: 15px 11px 14px 10px; padding: 5px 14px; min-height: 44px; cursor: pointer; box-shadow: 2px 3px 0 rgba(59, 58, 54, .25); }
+.sk:active { transform: translate(1px, 2px); box-shadow: 1px 1px 0 rgba(59, 58, 54, .25); }
+.sk[disabled] { opacity: .4; pointer-events: none; }
+.sk.go { background: #2f9e44; border-color: #1f6f30; color: #fff; } .sk.live { background: var(--live); border-color: #a33d06; color: #fff; } .sk.big { font-size: 24px; padding: 8px 20px; min-height: 52px; }
+.sk.pulse { animation: pulse 1.2s infinite; } @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(232, 89, 12, .3); } }
+/* middle: clock, controls, join */
+#mid { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#clock { position: relative; flex: none; width: min(100%, 31vh, 300px); aspect-ratio: 1; transform: rotate(-3deg); filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .35)); }
+body.nosetup #clock { width: min(100%, calc(100vh - 500px), 560px); min-width: 200px; }
+#clock svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#clock .t { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; padding-top: 4%; container-type: inline-size; }
+#dig { font-size: 31cqw; font-weight: 700; color: #1c1b19; }
+#dig span { display: inline-block; width: .56em; text-align: center; } #dig span.c { width: .28em; }
+#sub { font-size: 9.5cqw; color: var(--soft); margin-top: 1cqw; }
+#clock.hot #dig { color: #c92a2a; } #clock.hot { animation: wig .5s infinite alternate; }
+@keyframes wig { from { transform: rotate(-6deg) scale(1.03); } to { transform: rotate(0deg) scale(1.03); } }
+#pips { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; }
+#pips i { width: 34px; height: 34px; border-radius: 52% 46% 50% 48%; border: 2.5px solid var(--pencil); display: grid; place-items: center; font-style: normal; font-size: 20px; background: var(--sheet); }
+#pips i.done { background: var(--pencil); color: #fff; opacity: .55; } #pips i.now { background: var(--live); border-color: #a33d06; color: #fff; transform: scale(1.22); box-shadow: 0 0 0 5px rgba(232, 89, 12, .25); }
+body.nosetup #pips i { width: 46px; height: 46px; font-size: 27px; }
+#say { font-family: var(--head); font-size: clamp(18px, 2.2vw, 34px); text-align: center; line-height: 1.25; min-height: 1.2em; max-width: 100%; overflow-wrap: anywhere; }
+body:not(.nosetup) #say { font-size: 18px; }
+#ctl { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+#join { margin-top: auto; display: flex; align-items: center; gap: 12px; background: var(--sheet); padding: 8px 12px; box-shadow: 0 2px 7px rgba(60, 40, 10, .35); transform: rotate(.8deg); position: relative; max-width: 100%; }
+#join::before { content: ''; position: absolute; left: 50%; top: -10px; width: 70px; height: 22px; margin-left: -35px; background: var(--tape); transform: rotate(-2deg); }
+#qr { width: min(112px, 14vh); height: min(112px, 14vh); flex: none; cursor: zoom-in; background: #fff; border: 0; padding: 0; } #qr svg { width: 100%; height: 100%; display: block; }
+body.nosetup #qr { width: min(150px, 17vh); height: min(150px, 17vh); }
+#join .jt { min-width: 0; font-size: 16px; line-height: 1.25; } #join .jt b { display: block; font-family: var(--head); font-size: 30px; letter-spacing: .12em; font-weight: 400; } #join a { color: var(--pencil); overflow-wrap: anywhere; font-size: 14px; }
+/* set-up */
+#setup { min-width: 0; min-height: 0; overflow-y: auto; background: var(--sheet); padding: 12px 14px; box-shadow: 0 2px 8px rgba(60, 40, 10, .35); font-size: 17px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-family: var(--hand); font-size: 17px; color: var(--pencil); background: transparent; border: 2px dashed #b9b09a; border-radius: 14px 10px 13px 9px; padding: 3px 10px; min-height: 40px; cursor: pointer; }
+.chip.on { border: 2px solid var(--pencil); background: #fff4ad; }
+.chip[disabled] { opacity: .45; pointer-events: none; }
+.step { display: inline-flex; align-items: center; gap: 6px; } .step b { min-width: 74px; text-align: center; font-size: 22px; font-weight: 400; } .step .sk { min-width: 44px; padding: 2px 8px; font-size: 24px; }
+.two { display: flex; gap: 14px; flex-wrap: wrap; }
+.swt { width: 40px; height: 40px; border-radius: 50%; border: 0; background: none; padding: 0; cursor: pointer; display: grid; place-items: center; }
+.swt i { width: 30px; height: 30px; border-radius: 50% 46% 52% 48%; background: var(--c); opacity: .22; box-shadow: 0 0 0 2px #fff, 0 1px 3px rgba(0, 0, 0, .4); }
+.swt.on i { opacity: 1; box-shadow: 0 0 0 2px #fff, 0 0 0 5px var(--pencil); }
+#setup input[type=text], #setup input[type=url] { width: 100%; font-family: var(--hand); font-size: 17px; color: var(--pencil); border: 0; border-bottom: 2px solid #b9b09a; background: transparent; padding: 5px 4px; min-height: 38px; }
+#setup input:focus { outline: none; border-bottom-color: var(--live); }
+.own { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+.pr { display: flex; align-items: center; gap: 6px; } .pr span { flex: none; width: 22px; font-family: var(--head); font-size: 15px; color: var(--soft); }
+#picmsg { color: #c92a2a; font-size: 16px; min-height: 0; margin-top: 4px; }
+.note { font-size: 14px; color: var(--soft); margin-top: 10px; line-height: 1.3; }
+#status { font-size: 14px; color: var(--soft); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; min-height: 18px; flex: none; }
+#status.bad { color: #c92a2a; }
+#collect { margin-top: auto; background: #fff4ad; padding: 10px 14px; box-shadow: 0 2px 7px rgba(60, 40, 10, .35); transform: rotate(-.6deg); width: 100%; font-size: 17px; min-height: 0; display: flex; flex-direction: column; }
+#collect h3 { font-family: var(--head); font-weight: 400; font-size: 21px; margin: 0; }
+#collect .names { font-size: 15px; color: var(--soft); overflow-y: auto; min-height: 0; max-height: 84px; line-height: 1.25; margin: 2px 0 6px; }
+#collect .row { display: flex; gap: 8px; flex-wrap: wrap; }
+body.collecting #join { display: none; }
+#d-pin { border: 0; background: var(--sheet); color: var(--pencil); font-family: var(--hand); padding: 22px; width: min(440px, 94vw); box-shadow: 0 8px 40px rgba(0, 0, 0, .5); font-size: 18px; }
+#d-pin::backdrop { background: rgba(40, 32, 22, .7); }
+#d-pin h2 { font-size: 24px; margin: 0 0 6px; }
+#d-pin input { width: 100%; font-size: 24px; font-family: var(--hand); border: 0; border-bottom: 3px solid var(--pencil); background: transparent; padding: 6px; margin: 10px 0 4px; color: var(--pencil); }
+#d-pin .err { color: #c92a2a; min-height: 1.3em; } #d-pin .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+#bigqr { border: 0; border-radius: 20px; padding: 20px; background: #fff; width: min(90vh, 90vw); } #bigqr::backdrop { background: rgba(0, 0, 0, .75); } #bigqr svg { width: 100%; display: block; }
+@media (max-width: 1100px) { html, body { height: auto; } body { overflow: auto; display: block; } #book, body.nosetup #book { grid-template-columns: minmax(0, 1fr) 300px; } #setup { grid-column: 1 / -1; overflow: visible; } #photo { min-height: 300px; } #pimg { max-height: 60vh; } #join { margin-top: 12px; } #clock, body.nosetup #clock { width: min(100%, 300px); } }
+@media (max-width: 700px) { #book, body.nosetup #book { grid-template-columns: minmax(0, 1fr); } #photo { min-height: 240px; } }
+</style>
+</head>
+<body>
+<div id="book">
+  <div id="spiral"></div>
+  <section id="pic">
+    <div id="photo"><div id="frame"><img id="pimg" alt="Starter picture" hidden><div id="pnone">Choosing a picture…</div><span id="badge"></span></div></div>
+    <div id="credit"></div>
+    <div id="picbar">
+      <button class="sk" id="p-back" title="Previous picture (←)" aria-label="Previous picture">◀</button>
+      <button class="sk" id="p-next" title="Next picture (→)">Next picture ▶</button>
+      <div id="strip"></div>
+    </div>
+    <div id="status"></div>
+  </section>
+  <section id="mid">
+    <div id="clock"><svg viewBox="0 0 104 104"><defs><filter id="wob"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></defs>
+      <circle cx="52" cy="54" r="46" fill="#fff"/><g filter="url(#wob)" fill="none" stroke-linecap="round"><path d="M22 14l-9-7M82 14l9-7M45 7h14" stroke="#3b3a36" stroke-width="3.5"/><circle cx="52" cy="54" r="41" stroke="#3b3a36" stroke-width="3"/><circle id="arc" cx="52" cy="54" r="35" stroke="#e8590c" stroke-width="5" stroke-dasharray="219.9" stroke-dashoffset="0" transform="rotate(-90 52 54)" opacity=".85"/></g></svg>
+      <div class="t"><div id="dig"></div><div id="sub"></div></div></div>
+    <div id="pips"></div>
+    <div id="say"></div>
+    <div id="ctl">
+      <button class="sk live big" id="c-live" title="Show the picture and settings on the iPads (G)">Go live</button>
+      <button class="sk go big" id="c-start" title="Space">▶ Start</button>
+      <button class="sk" id="c-skip" title="End this box now (N)">Next box ⏭</button>
+      <button class="sk" id="c-reset">■ Stop / reset</button>
+      <button class="sk" id="c-collect" title="Ask every iPad to send its finished sheet, then email them to yourself in one email">📥 Collect sheets</button>
+    </div>
+    <div id="collect" hidden><h3 id="col-h"></h3><div class="names" id="col-names"></div><div class="row"><button class="sk live" id="col-send">✉ Email them to me</button><button class="sk" id="col-close">Close</button></div></div>
+    <div id="join"><button id="qr" aria-label="Enlarge the QR code"></button><div class="jt">Join on your iPad<b id="code"></b><a id="link" target="_blank" rel="noopener"></a></div></div>
+  </section>
+  <section id="setup">
+    <h2>Picture</h2>
+    <div class="chips" id="s-mode"><button class="chip" data-m="same">Same picture for every box</button><button class="chip" data-m="each">New picture each box</button></div>
+    <div class="chips" id="s-cats" style="margin-top:6px"></div>
+    <div class="own"><input type="url" id="own" placeholder="…or paste my own picture link" aria-label="Paste my own picture link" maxlength="600"><button class="sk" id="own-go">Use</button></div>
+    <div id="picmsg"></div>
+    <div class="two"><div><h2>Boxes</h2><span class="step"><button class="sk" id="n-dn" aria-label="Fewer boxes">−</button><b id="n-val"></b><button class="sk" id="n-up" aria-label="More boxes">+</button></span></div>
+      <div><h2>Time per box</h2><span class="step"><button class="sk" id="m-dn" aria-label="Less time">−</button><b id="m-val"></b><button class="sk" id="m-up" aria-label="More time">+</button></span></div></div>
+    <div class="note" id="total" style="margin-top:2px"></div>
+    <h2>Colours allowed</h2><div class="chips" id="s-cols"></div>
+    <h2>Tools allowed</h2><div class="chips" id="s-tools"></div>
+    <h2>Instruction for each box <small style="font-family:var(--hand);color:var(--soft)">(optional)</small></h2><div id="s-prompts"></div>
+    <div class="note">Pictures are random “Quality” and “Featured” photos from Wikimedia Commons. You see each one here first: iPads only get it when you press <b>Go live</b> / <b>Update iPads</b>. iPads only read this board's picture, timer and tool settings from the D&amp;T results sheet; drawings and photos stay on each iPad. Nothing is sent by students unless you press <b>Collect sheets</b>: then each iPad sends its finished sheet with the name typed on it to the school Google account, which emails them all to you in one email and deletes its copy.</div>
+    <div class="note"><b>Space</b> start / pause · <b>N</b> next box · <b>G</b> go live · <b>← →</b> pictures · <b>S</b> set-up · <b>M</b> mute</div>
+  </section>
+</div>
+<dialog id="bigqr"></dialog>
+<dialog id="d-pin"><form method="dialog" id="pinform"><h2>Teacher PIN</h2><div>Collecting the sheets needs the results-sheet PIN (the same one as the dashboard). It is kept only until this tab is closed.</div>
+  <input type="password" id="pin" autocomplete="off" inputmode="numeric" aria-label="Teacher PIN"><div class="err" id="pinerr"></div>
+  <div class="row"><button class="sk" type="button" id="pincancel">Cancel</button><button class="sk go" type="submit">Continue</button></div></form></dialog>
+<script src="kit/tools.js"></script>
+<script src="../workbooks.js"></script>
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const slot = TK.top('Design starter');
+slot.innerHTML = '<button class="btn" id="t-setup" title="Show / hide the set-up panel (S)">✎ Set-up</button><button class="btn" id="t-mute" title="Sound on / off (M)"></button><button class="btn" id="t-new" title="Start again with a new code">↻ New session</button>';
+
+// ---------- config ----------
+const params = new URLSearchParams(location.search);
+const BACKEND_OVERRIDE = params.get('backend') || '';                  // testing only
+const BACKEND = BACKEND_OVERRIDE || (window.WORKBOOKS && WORKBOOKS.backend) || '';
+const COMMONS = params.get('commons') /* testing only */ || 'https://commons.wikimedia.org/w/api.php';
+const BOARD = { name: 'Design starter board', email: 'board@design-starter.local', cls: '' };   // the board publishes its state as this pseudo-student (as the quick poll does)
+const LEAD = 6000, HOLD = 3000;                                          // "get ready" time after Start / Resume, so every iPad has the update before the clock runs
+const MINS = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+const COLS = [['#111111', 'Black'], ['#6b6b6b', 'Grey'], ['#d33a2c', 'Red'], ['#f08a1c', 'Orange'], ['#f2c81a', 'Yellow'], ['#2ba24c', 'Green'], ['#2b6fd1', 'Blue'], ['#8a3fc4', 'Purple'], ['#8a5a2b', 'Brown']];
+const TOOLS = [['thin', 'Thin pen'], ['med', 'Medium pen'], ['thick', 'Thick pen'], ['marker', 'Marker'], ['line', 'Straight line'], ['eraser', 'Eraser'], ['undo', 'Undo']];
+// Picture subjects: one search word is picked at random each time. Chosen to be things, not people.
+const CATS = [
+  ['build', 'Buildings', ['lighthouse', 'windmill', 'bridge', 'castle', 'cathedral', 'skyscraper', 'pagoda', 'staircase', 'dome', '"water tower"', 'facade', 'pavilion']],
+  ['plant', 'Plants & flowers', ['flower', 'blossom', 'leaf', 'fern', 'cactus', 'succulent', 'orchid', 'tulip', 'sunflower', 'thistle', 'lily', 'tree']],
+  ['natural', 'Natural forms', ['seashell', '"seed pod"', 'seedhead', 'crystal', 'mineral', 'fossil', 'beetle', 'butterfly', 'dragonfly', 'feather', '"pine cone"', 'coral', 'mushroom', 'snail']],
+  ['object', 'Objects & products', ['chair', 'lamp', 'teapot', 'clock', 'camera', 'typewriter', 'telephone', 'kettle', 'shoe', 'vase', 'radio', 'lantern', '"sewing machine"', 'violin']],
+  ['machine', 'Machines, vehicles & tools', ['locomotive', 'bicycle', 'tractor', '"steam engine"', 'motorcycle', 'aircraft', 'helicopter', 'tram', 'excavator', 'gears', 'sailboat', 'automobile', 'crane', 'pliers']],
+  ['land', 'Landscapes & scenes', ['landscape', 'mountain', 'waterfall', 'coast', 'canyon', 'lake', 'desert', 'glacier', 'valley', 'harbour']],
+  ['animal', 'Animals', ['bird', 'owl', 'fox', 'elephant', 'lizard', 'frog', 'fish', 'horse', 'tiger', 'giraffe', 'tortoise', 'squirrel']],
+];
+const NEG = '-portrait -people -person -man -woman -child -girl -boy -nude -crowd';
+const BLOCK = /\b(people|persons?|portraits?|m[ae]n|wom[ae]n|girls?|boys?|child(ren)?|bab(y|ies)|nudes?|naked|selfies?|brides?|weddings?|soldiers?|war|corpses?|dead|skulls?|skeletons?|funerals?|cemeter(y|ies)|graves?|weapons?|guns?|rifles?|protest(s|ers)?|politicians?|actors?|actress(es)?|singers?|musicians?|dancers?|players?|athletes?|models?|tourists?|workers?|farmers?|monks?|priests?|kings?|queens?|presidents?|born|births|deaths)\b/i;
+const newCode = () => { const a = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s = ''; const r = crypto.getRandomValues(new Uint8Array(4)); for (let i = 0; i < 4; i++) s += a[r[i] % a.length]; return s; };
+
+// ---------- state ----------
+const cfg = Object.assign({ mins: 2, n: 6, mode: 'same', cats: { build: 1, plant: 1, natural: 1, object: 1, machine: 1 }, cols: ['#111111', '#6b6b6b', '#d33a2c', '#2b6fd1'], tools: { thin: 1, med: 1, thick: 1, eraser: 1, undo: 1 }, prompts: [], mute: false }, TK.store('dstart.cfg', {}));
+cfg.n = Math.min(9, Math.max(1, cfg.n | 0 || 6)); if (!MINS.includes(cfg.mins)) cfg.mins = 2; if (!Array.isArray(cfg.prompts)) cfg.prompts = [];
+const fresh = () => ({ code: newCode(), made: Date.now(), live: false, st: 'idle', run: '', t0: 0, dur: 120000, pe: 0, ra: 0, te: 0, L: null, slots: [], sel: 0, collect: 0, colOpen: false });
+let S = TK.store('dstart.session', null);
+if (!S || !S.code || !Array.isArray(S.slots) || Date.now() - (S.made || 0) > 12 * 3600e3) S = fresh();
+let off = 0, setupPref = null, lastBox = -9, lastPh = '';
+const saveCfg = () => TK.save('dstart.cfg', cfg);
+const persist = () => TK.save('dstart.session', S);
+const now = () => Date.now() + off;
+const lesson = () => 'dstart-' + S.code;
+const need = () => (cfg.mode === 'each' ? cfg.n : 1);
+const slotPic = (i) => { const s = S.slots[i]; return (s && s.hist[s.i]) || null; };
+const draft = () => ({ n: cfg.n, mode: cfg.mode, pics: Array.from({ length: need() }, (_, i) => slotPic(i)).filter(Boolean).map((p) => ({ u: p.u, c: p.c })), prompts: Array.from({ length: cfg.n }, (_, i) => (cfg.prompts[i] || '').trim()) });
+const dirty = () => S.live && JSON.stringify(draft()) !== JSON.stringify(S.L);
+const active = () => S.st === 'run' || S.st === 'paused';
+
+function phase() {
+  const n = (S.L && S.L.n) || cfg.n, dur = active() || S.st === 'done' ? S.dur : cfg.mins * 60000;
+  if (S.st === 'idle') return { ph: 'idle', box: -1, n, dur };
+  if (S.st === 'done') return { ph: 'done', box: n, n, dur };
+  const hold = S.st === 'run' && S.ra && now() < S.ra, e = S.st === 'paused' || hold ? S.pe : now() - S.t0;
+  if (e >= n * dur) return { ph: 'done', box: n, n, dur, e };
+  if (S.st === 'paused') return { ph: 'paused', box: e < 0 ? -1 : Math.floor(e / dur), left: e < 0 ? dur : dur - (e % dur), n, dur, e };
+  if (e < 0) return { ph: 'lead', box: -1, left: -e, n, dur, e };
+  return { ph: hold ? 'hold' : 'run', box: Math.floor(e / dur), left: dur - (e % dur), n, dur, e };
+}
+
+// ---------- backend ----------
+async function post(body) { const r = await fetch(BACKEND, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain;charset=utf-8' } }); return r.json(); }
+let pubT = null, pubTries = 0, sentPics = '', syncOK = null;
+function publish(soon) { clearTimeout(pubT); pubT = setTimeout(doPublish, soon ? 0 : 300); }
+async function doPublish(asLesson, waitOnly) {
+  if (!BACKEND) return setStatus('No results backend is set up, so iPads cannot follow this board.', true);
+  const t = Date.now(), L = S.L, live = S.live && L && !waitOnly;
+  const state = live ? { v: 1, st: S.st, run: S.run, t0: S.t0, dur: S.dur, pe: S.pe, ra: S.ra, te: S.te, n: L.n, mode: L.mode, prompts: L.prompts, cols: cfg.cols, tools: cfg.tools, collect: S.collect || 0, t } : { v: 1, st: 'wait', t };
+  const item = (id, label, val) => ({ id, label, type: 'state', answer: JSON.stringify(val), correct: null, first: null, score: null, max: null, attempts: 1, mis: '', at: t, last: t });
+  const items = [item('state', 'Design starter state', state)];
+  const pj = live ? JSON.stringify(L.pics) : '';
+  if (live && pj !== sentPics) items.push(item('pics', 'Design starter pictures', { list: L.pics }));
+  try {
+    const j = await post({ v: 1, lesson: asLesson || lesson(), event: 'ping', session: S.code, student: BOARD, page: { id: 'board', title: 'Design starter', n: 0 }, seconds: 0, visits: 1, items, unanswered: [], ts: t });
+    if (!j || j.ok === false) throw new Error((j && j.error) || 'not saved');
+    if (asLesson) return;
+    pubTries = 0; if (live) sentPics = pj;
+    setStatus(live ? 'iPads updated ' + new Date().toLocaleTimeString() : 'Not live yet: iPads show “Waiting for your teacher”.');
+    if (syncOK === null) checkSync();
+  } catch (e) { if (!asLesson && ++pubTries < 8) pubT = setTimeout(doPublish, 1500 * pubTries); setStatus('Could not reach the results sheet: trying again…', true); }
+}
+async function checkSync() {                                // can iPads read it back? (needs the backend's a=progress&full=1)
+  try { const j = await (await fetch(BACKEND + (BACKEND.includes('?') ? '&' : '?') + 'a=progress&full=1&lesson=' + encodeURIComponent(lesson()) + '&email=' + encodeURIComponent(BOARD.email), { cache: 'no-store' })).json(); syncOK = !!(j && j.items && j.items.state); if (!syncOK) setStatus('The results backend is an older version: iPads cannot follow this board until it is updated.', true); } catch (e) {}
+}
+async function clockOffset() {
+  let best = null;
+  for (let i = 0; i < 3; i++) { try { const a = Date.now(), j = await (await fetch(BACKEND + (BACKEND.includes('?') ? '&' : '?') + 'a=ping', { cache: 'no-store' })).json(), b = Date.now(); if (j && j.now && (!best || b - a < best.rtt)) best = { rtt: b - a, o: j.now - (a + b) / 2 }; } catch (e) {} }
+  if (!active()) off = best && Math.abs(best.o) > Math.max(2000, best.rtt) ? Math.round(best.o) : 0;   // only correct a clock that is clearly wrong
+}
+function setStatus(t, bad) { const el = $('#status'); el.textContent = t; el.classList.toggle('bad', !!bad); }
+
+// ---------- pictures from Wikimedia Commons ----------
+let pool = [], seen = new Set(), busy = false;
+const text = (html) => { const d = new DOMParser().parseFromString(String(html || ''), 'text/html'); return (d.body.textContent || '').replace(/\s+/g, ' ').trim(); };
+function toPic(pg) {
+  const ii = pg.imageinfo && pg.imageinfo[0]; if (!ii || !ii.thumburl) return null;
+  const m = ii.extmetadata || {}, v = (k) => (m[k] && m[k].value) || '';
+  const artist = text(v('Artist')).slice(0, 50) || 'see Commons page', lic = text(v('LicenseShortName')).slice(0, 24);
+  return { u: ii.thumburl, p: ii.descriptionurl || '', c: ('Photo: ' + artist + (lic ? ' · ' + lic : '') + ' · Wikimedia Commons').slice(0, 110), w: ii.width, h: ii.height, mime: ii.mime, words: [pg.title, text(v('Categories').replace(/\|/g, ' , ')), text(v('ImageDescription')), text(v('ObjectName'))].join(' , ') };
+}
+async function commons(q) {
+  const u = new URLSearchParams(Object.assign({ action: 'query', format: 'json', formatversion: '2', origin: '*', prop: 'imageinfo', iiprop: 'url|size|mime|extmetadata', iiurlwidth: '1280', iiextmetadatafilter: 'LicenseShortName|Artist|Categories|ImageDescription|ObjectName', iiextmetadatalanguage: 'en' }, q));
+  const r = await fetch(COMMONS + (COMMONS.includes('?') ? '&' : '?') + u, { cache: 'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json(); if (j.error) throw new Error(j.error.info || j.error.code || 'API error');
+  const pages = (j.query && j.query.pages) || []; return Array.isArray(pages) ? pages : Object.values(pages);
+}
+async function refill() {
+  const on = CATS.filter((c) => cfg.cats[c[0]]); const cat = TK.pick(on.length ? on : CATS), word = TK.pick(cat[2]);
+  const search = { generator: 'search', gsrnamespace: '6', gsrlimit: '40', gsrsearch: 'incategory:Quality_images|Featured_pictures_on_Wikimedia_Commons filetype:bitmap ' + word + ' ' + NEG };
+  let pages;
+  try { pages = await commons(Object.assign({ gsrsort: 'random' }, search)); }
+  catch (e) { pages = await commons(Object.assign({ gsroffset: String(20 * Math.floor(Math.random() * 6)) }, search)); }   // if the random order is refused, take a random slice instead
+  if (!pages.length) pages = await commons(search);
+  const ok = pages.map(toPic).filter((p) => p && p.mime === 'image/jpeg' && p.w >= 1000 && p.w / p.h > 0.55 && p.w / p.h < 2.4 && !BLOCK.test(p.words) && !seen.has(p.u));
+  pool = pool.concat(TK.shuffle(ok).map((p) => ({ u: p.u, p: p.p, c: p.c })));
+}
+const preload = (u, cors) => new Promise((res) => { const im = new Image(); if (cors) im.crossOrigin = 'anonymous'; im.onload = () => res(im.naturalWidth > 0); im.onerror = () => res(false); im.src = u; });
+async function randomPic() {
+  for (let tries = 0; tries < 4; tries++) {
+    if (!pool.length) await refill();
+    while (pool.length) { const p = pool.shift(); if (seen.has(p.u)) continue; if (await preload(p.u)) { seen.add(p.u); return p; } }
+  }
+  throw new Error('no pictures found');
+}
+function picMsg(t) { $('#picmsg').textContent = t || ''; if (t && document.body.classList.contains('nosetup')) setStatus(t, true); }
+async function nextInto(i) {                               // put a new random picture in slot i (seen only on this screen until Go live)
+  const s = (S.slots[i] = S.slots[i] || { hist: [], i: -1 });
+  try { const p = await randomPic(); s.hist.push(p); if (s.hist.length > 8) s.hist.shift(); s.i = s.hist.length - 1; picMsg(''); return true; }
+  catch (e) { picMsg('Could not get pictures from Wikimedia Commons (no internet, or it is blocked here). Paste your own picture link instead.'); return false; }
+}
+async function fillSlots() {
+  if (busy) return; busy = true;
+  S.slots.length = Math.min(S.slots.length, 9); if (S.sel >= need()) S.sel = 0;
+  for (let i = 0; i < need(); i++) if (!slotPic(i)) { render(); if (!(await nextInto(i))) break; }
+  busy = false; persist(); render();
+}
+async function useOwn() {
+  const raw = $('#own').value.trim(); if (!raw) return;
+  let u; try { u = new URL(raw); } catch (e) { return picMsg('That does not look like a link. It should start with https://'); }
+  if (!/^https?:$/.test(u.protocol)) return picMsg('The link should start with https://');
+  if (u.protocol === 'http:' && location.protocol === 'https:') return picMsg('That link starts with http:// so iPads will refuse it. Use an https:// link.');
+  picMsg('Checking the picture…'); let pic = null;
+  const m = /(?:wikimedia|wikipedia)\.org$/.test(u.hostname) && decodeURIComponent(u.pathname + u.hash).match(/(File:[^?#]+)/);
+  if (m) { try { const p = (await commons({ titles: m[1].replace(/_/g, ' ') })).map(toPic).filter(Boolean)[0]; if (p) pic = { u: p.u, p: p.p, c: p.c }; } catch (e) {} if (!pic) return picMsg('Could not read that Commons page. Paste the link to the picture itself (it usually ends in .jpg or .png).'); }
+  else if (await preload(u.href, true)) pic = { u: u.href, p: u.href, c: 'Picture: ' + u.hostname };
+  else if (await preload(u.href)) { pic = { u: u.href, p: u.href, c: 'Picture: ' + u.hostname }; var warn = 'This picture will show on the iPads, but its website does not allow it to be copied into the students’ saved image.'; }
+  else return picMsg('That link did not load as a picture. Paste the link to the picture itself (it usually ends in .jpg or .png).');
+  if (pic.u.length > 480) return picMsg('That link is too long to send to the iPads. Try a shorter link to the same picture.');
+  const s = (S.slots[S.sel] = S.slots[S.sel] || { hist: [], i: -1 }); s.hist.push(pic); if (s.hist.length > 8) s.hist.shift(); s.i = s.hist.length - 1;
+  $('#own').value = ''; picMsg(warn || ''); persist(); render();
+}
+
+// ---------- QR ----------
+function qrSVG(text) {
+  if (!window.qrcode) return '<div style="color:#555;padding:10px;font-size:13px">QR code unavailable: use the link.</div>';
+  const q = qrcode(0, 'M'); q.addData(text); q.make(); const n = q.getModuleCount(); let d = '';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (q.isDark(y, x)) d += `M${x} ${y}h1v1h-1z`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ${n + 4} ${n + 4}" shape-rendering="crispEdges" role="img" aria-label="QR code to join"><rect x="-2" y="-2" width="${n + 4}" height="${n + 4}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+function joinURL() { const u = new URL('design-starter-draw.html', location.href); u.search = ''; u.hash = ''; u.searchParams.set('s', S.code); if (BACKEND_OVERRIDE) u.searchParams.set('backend', BACKEND_OVERRIDE); return u.href; }
+function drawJoin() {
+  const url = joinURL(); $('#qr').innerHTML = qrSVG(url); const a = $('#link'); a.href = url; const sh = new URL(url); a.textContent = (sh.host + sh.pathname).replace(/^www\./, '') + '?s=' + S.code; $('#code').textContent = S.code;
+  if (['localhost', '127.0.0.1', ''].includes(location.hostname) && !BACKEND_OVERRIDE) setStatus('This page is open from this computer only, so iPads cannot reach the link. Open the tool from the D&T resources site.', true);
+}
+$('#qr').onclick = () => { const d = $('#bigqr'); d.innerHTML = qrSVG(joinURL()); d.showModal(); };
+$('#bigqr').onclick = () => $('#bigqr').close();
+
+// ---------- controls ----------
+function goLive() { S.L = draft(); S.live = true; persist(); publish(true); render(); }
+function start() {
+  if (active()) return;
+  goLive();
+  S.run = 'r' + Date.now().toString(36); S.dur = cfg.mins * 60000; S.t0 = now() + LEAD; S.pe = 0; S.ra = 0; S.te = 0; S.st = 'run';
+  persist(); publish(true); render();
+}
+function pauseResume() {
+  const p = phase();
+  if (S.st === 'run') { S.pe = p.e; S.st = 'paused'; S.ra = 0; }
+  else if (S.st === 'paused') { S.ra = now() + HOLD; S.t0 = S.ra - S.pe; S.st = 'run'; }
+  else return start();
+  persist(); publish(true); render();
+}
+function skip() {
+  if (!active()) return; const p = phase(), e = p.e < 0 ? 0 : (p.box + 1) * p.dur;
+  if (S.st === 'run') { S.t0 = now() - e; S.ra = 0; } else S.pe = e;
+  persist(); publish(true); tick();
+}
+let resetArm = 0;
+function reset() {
+  if (active() && Date.now() - resetArm > 3000) { resetArm = Date.now(); $('#c-reset').textContent = 'Sure? Press again'; setTimeout(render, 3100); return; }
+  resetArm = 0; S.st = 'idle'; S.pe = 0; S.ra = 0; persist(); publish(true); render();
+}
+function finish() { S.st = 'done'; S.te = now(); persist(); publish(true); if (!cfg.mute) TK.beep('tada'); render(); }
+async function newSession() {
+  if (active() && !confirm('Start a new session? The iPads will need the new code.')) return;
+  const old = lesson(); if (S.live) doPublish(old, true);
+  clearTimeout(colT); S = fresh(); sentPics = ''; syncOK = null; persist(); drawJoin(); publish(true); render(); renderCollect(); fillSlots();
+}
+$('#c-live').onclick = goLive; $('#c-start').onclick = pauseResume; $('#c-skip').onclick = skip; $('#c-reset').onclick = reset; $('#t-new').onclick = newSession;
+$('#t-setup').onclick = () => { setupPref = document.body.classList.contains('nosetup'); render(); };
+$('#t-mute').onclick = () => { cfg.mute = !cfg.mute; saveCfg(); render(); };
+$('#p-next').onclick = async () => { const s = S.slots[S.sel]; if (s && s.i < s.hist.length - 1) s.i++; else { if (busy) return; busy = true; $('#p-next').disabled = true; await nextInto(S.sel); busy = false; } persist(); render(); };
+$('#p-back').onclick = () => { const s = S.slots[S.sel]; if (s && s.i > 0) { s.i--; persist(); render(); } };
+$('#strip').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S.sel = +b.dataset.i; persist(); render(); };
+$('#own-go').onclick = useOwn; $('#own').onkeydown = (e) => { if (e.key === 'Enter') useOwn(); };
+$('#s-mode').onclick = (e) => { const b = e.target.closest('button'); if (!b || active()) return; cfg.mode = b.dataset.m; S.sel = 0; saveCfg(); render(); fillSlots(); };
+$('#s-cats').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; const k = b.dataset.k; if (cfg.cats[k] && CATS.filter((c) => cfg.cats[c[0]]).length < 2) return; cfg.cats[k] = cfg.cats[k] ? 0 : 1; pool = []; saveCfg(); render(); };
+$('#s-cols').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; const c = b.dataset.c, i = cfg.cols.indexOf(c); if (i >= 0) { if (cfg.cols.length < 2) return; cfg.cols.splice(i, 1); } else cfg.cols = COLS.map((x) => x[0]).filter((x) => x === c || cfg.cols.includes(x)); saveCfg(); render(); if (S.live) publish(); };
+$('#s-tools').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; const k = b.dataset.k; if (cfg.tools[k] && ['thin', 'med', 'thick', 'marker'].includes(k) && ['thin', 'med', 'thick', 'marker'].filter((x) => cfg.tools[x]).length < 2) return; cfg.tools[k] = cfg.tools[k] ? 0 : 1; saveCfg(); render(); if (S.live) publish(); };
+const stepN = (d) => { if (active()) return; cfg.n = Math.min(9, Math.max(1, cfg.n + d)); saveCfg(); render(); fillSlots(); };
+const stepM = (d) => { if (active()) return; cfg.mins = MINS[Math.min(MINS.length - 1, Math.max(0, MINS.indexOf(cfg.mins) + d))]; saveCfg(); render(); };
+$('#n-dn').onclick = () => stepN(-1); $('#n-up').onclick = () => stepN(1); $('#m-dn').onclick = () => stepM(-1); $('#m-up').onclick = () => stepM(1);
+$('#s-prompts').oninput = (e) => { const i = +e.target.dataset.i; cfg.prompts[i] = e.target.value.slice(0, 60); saveCfg(); renderLive(); };
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea, select') || e.ctrlKey || e.metaKey || e.altKey || $('#bigqr').open || $('#d-pin').open) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); pauseResume(); } else if (k === 'n') skip(); else if (k === 'g') goLive(); else if (k === 's') $('#t-setup').click(); else if (k === 'm') $('#t-mute').click();
+  else if (k === 'arrowright') $('#p-next').click(); else if (k === 'arrowleft') $('#p-back').click();
+});
+
+// ---------- collect the finished sheets (teacher PIN, kept in sessionStorage only, as in the quick poll) ----------
+let pin = ''; try { pin = sessionStorage.getItem('bsp-dstart.pin') || ''; } catch (e) {}
+let afterPin = null, colT = null, colNames = [], colNote = '';
+function askPin(msg, then) {
+  if (then) afterPin = then; const d = $('#d-pin'); $('#pinerr').textContent = msg || ''; if (d.open) return;
+  $('#pin').value = ''; d.showModal(); $('#pin').focus();
+}
+$('#pinform').onsubmit = (e) => {
+  e.preventDefault(); const v = $('#pin').value.trim(); if (!v) { $('#pinerr').textContent = 'Type the PIN.'; return; }
+  pin = v; try { sessionStorage.setItem('bsp-dstart.pin', v); } catch (x) {}   // sessionStorage only: gone when the tab closes
+  $('#d-pin').close(); const f = afterPin; afterPin = null; if (f) f();
+};
+$('#pincancel').onclick = () => { afterPin = null; $('#d-pin').close(); };
+const badPin = (j) => j && j.ok === false && /pin/i.test(j.error || '');
+function forgetPin(then) { pin = ''; try { sessionStorage.removeItem('bsp-dstart.pin'); } catch (e) {} askPin('That PIN was not accepted. Try again.', then); }
+async function collect() {
+  if (!BACKEND) return; if (!pin) return askPin('', collect);
+  if (!S.live) goLive();
+  colNote = 'Asking the iPads…'; S.colOpen = true; colNames = []; renderCollect();
+  try {
+    const j = await post({ a: 'dsopen', pin, session: S.code });
+    if (badPin(j)) { S.colOpen = false; renderCollect(); return forgetPin(collect); }
+    if (!j || !j.ok) throw new Error((j && j.error) || 'error');
+    S.collect = Date.now(); colNote = ''; persist(); publish(true); renderCollect(); pollCount();
+  } catch (e) { colNote = 'Could not start collecting (' + (e.message || 'no connection') + '). Close and try again.'; renderCollect(); }
+}
+async function pollCount() {
+  clearTimeout(colT); if (!S.colOpen || !S.collect || !pin) return;
+  if (!document.hidden) {
+    try {
+      const j = await (await fetch(BACKEND + (BACKEND.includes('?') ? '&' : '?') + 'a=dscount&pin=' + encodeURIComponent(pin) + '&session=' + encodeURIComponent(S.code), { cache: 'no-store' })).json();
+      if (badPin(j)) return forgetPin(pollCount);
+      if (j && j.ok) { colNames = j.names || []; renderCollect(); }
+    } catch (e) {}
+  }
+  colT = setTimeout(pollCount, 4000);
+}
+async function emailThem() {
+  if (!pin) return askPin('', emailThem);
+  $('#col-send').disabled = true; colNote = 'Sending the email…'; renderCollect();
+  try {
+    const j = await post({ a: 'dssend', pin, session: S.code, title: 'Design starter ' + S.code });
+    if (badPin(j)) { colNote = ''; renderCollect(); return forgetPin(emailThem); }
+    if (!j || !j.ok) throw new Error((j && j.error) || 'error');
+    clearTimeout(colT); S.collect = 0; persist(); publish(true); colNames = [];
+    colNote = j.sent ? 'Sent ' + j.sent + (j.sent === 1 ? ' sheet' : ' sheets') + ' to your school email' + (j.emails > 1 ? ' (in ' + j.emails + ' emails, because of their size).' : '.') : 'No sheets had arrived, so no email was sent.';
+  } catch (e) { colNote = 'The email was not sent (' + (e.message || 'no connection') + '). Try again.'; }
+  renderCollect();
+}
+function renderCollect() {
+  document.body.classList.toggle('collecting', !!S.colOpen); $('#collect').hidden = !S.colOpen; if (!S.colOpen) return;
+  $('#col-h').textContent = S.collect ? 'Received: ' + colNames.length : 'Collect sheets';
+  $('#col-names').textContent = colNote || (colNames.length ? colNames.join(', ') : 'Waiting for the iPads to send their sheets… (students must type their name)');
+  $('#col-send').disabled = !S.collect || !colNames.length; $('#col-send').hidden = !S.collect;
+}
+$('#c-collect').onclick = collect; $('#col-send').onclick = emailThem;
+$('#col-close').onclick = () => { S.colOpen = false; clearTimeout(colT); persist(); renderCollect(); };
+
+// ---------- drawing the board ----------
+const fmt = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const digits = (t) => [...t].map((c) => `<span class="${c === ':' ? 'c' : ''}">${c}</span>`).join('');
+const minsText = (m) => (m < 1 ? '30 sec' : m + ' min');
+let promptKey = '';
+function render() {
+  const run = active();
+  document.body.classList.toggle('running', run);
+  document.body.classList.toggle('nosetup', setupPref == null ? run : !setupPref);
+  $('#t-mute').textContent = cfg.mute ? '🔇 Muted' : '🔊 Sound';
+  $('#s-mode').querySelectorAll('button').forEach((b) => { b.classList.toggle('on', b.dataset.m === cfg.mode); b.disabled = run; });
+  $('#s-cats').innerHTML = CATS.map((c) => `<button class="chip${cfg.cats[c[0]] ? ' on' : ''}" data-k="${c[0]}" aria-pressed="${!!cfg.cats[c[0]]}">${esc(c[1])}</button>`).join('');
+  $('#s-cols').innerHTML = COLS.map((c) => `<button class="swt${cfg.cols.includes(c[0]) ? ' on' : ''}" data-c="${c[0]}" style="--c:${c[0]}" title="${c[1]}" aria-label="${c[1]}" aria-pressed="${cfg.cols.includes(c[0])}"><i></i></button>`).join('');
+  $('#s-tools').innerHTML = TOOLS.map((t) => `<button class="chip${cfg.tools[t[0]] ? ' on' : ''}" data-k="${t[0]}" aria-pressed="${!!cfg.tools[t[0]]}">${t[1]}</button>`).join('');
+  $('#n-val').textContent = cfg.n + (cfg.n === 1 ? ' box' : ' boxes'); $('#m-val').textContent = minsText(cfg.mins);
+  ['n-dn', 'n-up', 'm-dn', 'm-up'].forEach((id) => ($('#' + id).disabled = run));
+  $('#total').textContent = 'Whole activity: ' + (cfg.n * cfg.mins) + ' min' + (run ? ' (boxes and time are fixed while the timer is running)' : '');
+  const pk = cfg.n + '';
+  if (pk !== promptKey) { promptKey = pk; $('#s-prompts').innerHTML = Array.from({ length: cfg.n }, (_, i) => `<label class="pr"><span>${i + 1}</span><input type="text" data-i="${i}" maxlength="60" placeholder="${i === 0 ? 'e.g. copy the shape' : i === 1 ? 'e.g. turn it into a lamp' : ''}" value="${esc(cfg.prompts[i] || '')}" aria-label="Instruction for box ${i + 1}"></label>`).join(''); }
+  renderLive();
+}
+function renderLive() {                                     // the parts that change with the picture queue and the timer state
+  const p = phase(), run = active(), d = dirty(), prev = !S.live || d || !run;
+  const liveIdx = S.L && S.L.mode === 'each' ? Math.max(0, Math.min(p.box, S.L.n - 1)) : 0;
+  const pic = prev ? slotPic(S.sel) : (S.L.pics[liveIdx % Math.max(1, S.L.pics.length)] || null);
+  const im = $('#pimg'); if (pic) { if (im.getAttribute('src') !== pic.u) im.src = pic.u; im.hidden = false; $('#pnone').hidden = true; } else { im.hidden = true; im.removeAttribute('src'); $('#pnone').hidden = false; $('#pnone').textContent = busy ? 'Choosing a picture…' : 'No picture yet. Press “Next picture”, or paste your own link in Set-up.'; }
+  const full = pic && (slotPic(S.sel) && slotPic(S.sel).u === pic.u ? slotPic(S.sel) : pic);
+  $('#credit').innerHTML = pic ? (full.p && /^https:/.test(full.p) ? `<a href="${esc(full.p)}" target="_blank" rel="noopener">${esc(pic.c || '')}</a>` : esc(pic.c || '')) : '';
+  const b = $('#badge'); b.className = !S.live || d ? '' : 'live';
+  b.textContent = !S.live ? 'Preview: only on this screen. iPads are waiting' : d ? 'Preview: not on the iPads yet' : cfg.mode === 'each' && !run ? 'Live on iPads · picture for box ' + (S.sel + 1) : 'Live on iPads';
+  b.hidden = !pic && S.live && !d;
+  const s = S.slots[S.sel]; $('#p-back').disabled = !(s && s.i > 0); $('#p-next').disabled = busy;
+  $('#strip').innerHTML = need() > 1 ? Array.from({ length: need() }, (_, i) => { const q = slotPic(i); return `<button data-i="${i}" class="${i === S.sel ? 'sel' : ''}${run && i === p.box ? ' now' : ''}" title="Picture for box ${i + 1}" aria-label="Picture for box ${i + 1}"><b>${i + 1}</b>${q ? `<img src="${esc(q.u)}" alt="">` : ''}</button>`; }).join('') : '';
+  const lv = $('#c-live'); lv.hidden = S.live && !d; lv.textContent = S.live ? 'Update iPads' : 'Go live'; lv.classList.toggle('pulse', !S.live || d);
+  const st = $('#c-start'); st.textContent = S.st === 'run' ? '❚❚ Pause' : S.st === 'paused' ? '▶ Resume' : S.st === 'done' ? '▶ Start again' : '▶ Start'; st.classList.toggle('go', S.st !== 'run');
+  $('#c-skip').disabled = !run; const rs = $('#c-reset'); rs.disabled = S.st === 'idle'; if (!resetArm || Date.now() - resetArm > 3000) rs.textContent = '■ Stop / reset';
+  $('#pips').innerHTML = Array.from({ length: p.n }, (_, i) => `<i class="${i < p.box ? 'done' : i === p.box && run ? 'now' : ''}">${i < p.box ? '✓' : i + 1}</i>`).join('');
+  const prm = (run && S.L ? S.L.prompts : cfg.prompts.map((x) => (x || '').trim()));
+  $('#say').textContent = p.ph === 'lead' ? 'Get ready…' : p.ph === 'paused' ? 'Pens down!' : p.ph === 'done' ? 'Finished! Save your page and upload it to Showbie.' : run && p.box >= 0 ? 'Box ' + (p.box + 1) + (prm[p.box] ? ': ' + prm[p.box] : ' of ' + p.n) : !S.live ? '' : 'iPads are ready. Press Start.';
+  const frac = run ? (p.ph === 'lead' ? 1 : p.left / p.dur) : p.ph === 'done' ? 0 : 1;
+  $('#arc').style.strokeDashoffset = String(219.9 * (1 - frac));
+  $('#dig').innerHTML = p.ph === 'done' ? '<span style="width:auto">✓</span>' : digits(p.ph === 'lead' ? String(Math.ceil(p.left / 1000)) : fmt(p.ph === 'idle' ? p.dur : p.left));
+  $('#sub').textContent = p.ph === 'lead' ? 'get ready' : p.ph === 'paused' ? 'paused' : p.ph === 'hold' ? 'resuming…' : p.ph === 'done' ? 'all done' : p.ph === 'idle' ? 'per box' : 'box ' + (p.box + 1) + ' of ' + p.n;
+  $('#clock').classList.toggle('hot', p.ph === 'run' && p.left <= 10000);
+}
+function tick() {
+  const p = phase();
+  if (active() && p.ph === 'done') { lastPh = 'done'; lastBox = p.n; return finish(); }
+  if (p.ph === 'run' && (p.box !== lastBox || lastPh === 'lead') && lastPh && !cfg.mute) TK.beep('ding');
+  lastBox = p.box; lastPh = p.ph;
+  renderLive();
+}
+
+// ---------- start ----------
+(function loadQR() { const s = document.createElement('script'); s.src = 'vendor/qrcode-generator.js'; s.onload = s.onerror = drawJoin; document.head.appendChild(s); })();
+drawJoin(); render(); renderCollect(); if (S.colOpen && S.collect && pin) pollCount(); setInterval(tick, 250);
+if (BACKEND) clockOffset().then(() => publish(true)); else setStatus('No results backend is set up, so iPads cannot follow this board.', true);
+setInterval(() => { if (BACKEND && !document.hidden) publish(); }, 120000);   // re-send now and then, in case a save was lost
+fillSlots();
+window.__ds = { S: () => S, cfg, phase };   // for testing
+</script>
+</body>
+</html>

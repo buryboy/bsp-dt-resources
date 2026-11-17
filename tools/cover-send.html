@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="../gate.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hand in your work · BSP</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); }
+#head { width: 100%; max-width: 760px; display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+#head b { font-size: 22px; font-weight: 600; }
+#head .cls { margin-left: auto; font-weight: 600; background: var(--card); box-shadow: 0 0 0 2px var(--line) inset; border-radius: 999px; padding: 5px 16px; font-size: 18px; overflow-wrap: anywhere; }
+main { width: 100%; max-width: 760px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+.card { padding: 18px; }
+h1 { font-size: clamp(26px, 5vw, 38px); margin: 0 0 6px; line-height: 1.15; font-weight: 600; }
+h2 { font-size: 22px; margin: 0 0 4px; font-weight: 600; }
+p { margin: 6px 0; font-size: 18px; line-height: 1.35; }
+label.f { display: block; font-weight: 600; font-size: 20px; margin: 0 0 6px; }
+input[type=text] { width: 100%; border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--card); font-size: 22px; min-height: 56px; }
+input:focus, button:focus-visible, .add:focus-within { outline: 3px solid var(--ink2); outline-offset: 1px; }
+.err { color: var(--red); font-weight: 600; font-size: 18px; }
+.err:empty { display: none; }
+.adds { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.add { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; min-height: 112px; border-radius: 18px; padding: 14px 10px; font-size: 21px; font-weight: 600; cursor: pointer; background: var(--ink2); color: #fff; box-shadow: 0 4px 0 #18237a; line-height: 1.15; }
+.add.alt { background: var(--card); color: var(--ink); box-shadow: 0 3px 0 var(--line), 0 0 0 2px var(--line) inset; }
+.add .ic { font-size: 38px; line-height: 1; }
+.add input, .vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+.add.off { opacity: .45; pointer-events: none; }
+.pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.pg { background: var(--card); border-radius: 16px; box-shadow: 0 0 0 2px var(--line) inset; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+.pg .im { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #e9ecf7; }
+.pg .im img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pg .im span { position: absolute; left: 6px; top: 6px; background: var(--ink2); color: #fff; font-weight: 700; border-radius: 999px; padding: 2px 12px; font-size: 16px; }
+.pg .bt { display: grid; grid-template-columns: 44px 44px 1fr 1fr; gap: 6px; }
+.pg .bt button { min-height: 44px; padding: 4px 6px; font-size: 15px; border-radius: 10px; }
+.pg .bt button:disabled { opacity: .35; }
+.pg .bt .del { color: var(--red); }
+.count { font-weight: 600; font-size: 18px; }
+.big { width: 100%; font-size: 25px; padding: 18px; min-height: 70px; border-radius: 18px; }
+.big:disabled { opacity: .45; }
+.sendbar { position: sticky; bottom: 0; padding: 10px 0 calc(4px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--bg) 30%); margin-top: auto; }
+.center { margin: auto; text-align: center; padding: 20px 8px; width: 100%; }
+.center .ic { font-size: 84px; line-height: 1; }
+.bar { height: 26px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 18px 0 10px; }
+.bar i { display: block; height: 100%; width: 0; background: var(--green); border-radius: 999px; transition: width .4s; }
+.doneBox { background: var(--green); color: #fff; border-radius: 26px; padding: 34px 18px; box-shadow: 0 6px 0 #1a7a33; }
+.doneBox .tick { font-size: clamp(110px, 26vw, 200px); line-height: 1; animation: pop .45s cubic-bezier(.2, 1.6, .4, 1); }
+.doneBox h1 { font-size: clamp(40px, 9vw, 72px); font-weight: 700; margin: 6px 0; }
+.doneBox p { font-size: 24px; margin: 4px 0; overflow-wrap: anywhere; }
+@keyframes pop { from { transform: scale(.3); opacity: 0; } }
+.link { background: none; border: 0; color: var(--ink2); text-decoration: underline; cursor: pointer; min-height: 48px; font-weight: 600; font-size: 18px; }
+.spin { display: inline-block; width: 1em; height: 1em; border: .16em solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -.12em; margin-right: .4em; }
+@keyframes sp { to { transform: rotate(360deg); } }
+#codein { text-transform: uppercase; letter-spacing: .3em; text-align: center; font-size: 32px; font-weight: 700; }
+footer { max-width: 760px; font-size: 13px; color: var(--muted); text-align: center; margin-top: 14px; line-height: 1.4; }
+@media (max-width: 480px) { .adds { grid-template-columns: 1fr; } .add { min-height: 88px; } .pages { grid-template-columns: 1fr 1fr; } .pg .bt { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div id="head"><b>Hand in your work</b><span class="cls" id="hcls" hidden></span></div>
+<main id="app"></main>
+<footer>Your photos wait in a temporary school folder, are emailed to your teacher with your name, then deleted from that folder.</footer>
+<script src="../workbooks.js"></script>
+<script>
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ls = { get(k, d) { try { const v = localStorage.getItem('bsp-cover.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('bsp-cover.' + k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { localStorage.removeItem('bsp-cover.' + k); } catch (e) {} } };
+const params = new URLSearchParams(location.search);
+const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const BACKEND = (LOCAL && params.get('backend')) /* testing on this computer only */ || (window.WORKBOOKS && WORKBOOKS.backend) || '';
+const MAX_PAGES = 10, LONG = 2000, QUALITY = 0.82, TARGET = 2.0e6 /* data-URL characters ≈ 1.5 MB */, HARD = 5.6e6;
+const app = $('#app');
+
+let code = (params.get('s') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+let device = ls.get('device', '');
+if (!/^[a-z0-9]{12}$/.test(device)) { const A = 'abcdefghijklmnopqrstuvwxyz0123456789', r = new Uint32Array(12); crypto.getRandomValues(r); device = Array.from(r, (x) => A[x % A.length]).join(''); ls.set('device', device); }
+let name = ls.get('name', '');
+let pages = [];            // unsent pages, in order: { id, data }
+let info = { cls: '', subject: '' };
+let working = 0, errMsg = '', sendState = null;
+const sentKey = () => 'sent.' + code;
+const sentBefore = () => Math.max(0, Math.min(MAX_PAGES, ls.get(sentKey(), 0) | 0));   // pages this iPad already handed in for this lesson
+const room = () => MAX_PAGES - sentBefore() - pages.length;
+
+// ---------- photos kept on this iPad until sent (IndexedDB) ----------
+let dbp = null;
+function db() {
+  if (dbp) return dbp;
+  dbp = new Promise((res) => {
+    try {
+      const rq = indexedDB.open('bsp-cover', 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('pages', { keyPath: 'id' });
+      rq.onsuccess = () => res(rq.result); rq.onerror = () => res(null); rq.onblocked = () => res(null);
+    } catch (e) { res(null); }
+  });
+  return dbp;
+}
+async function tx(mode, fn) {
+  const d = await db(); if (!d) return null;
+  return new Promise((res) => { try { const t = d.transaction('pages', mode), out = fn(t.objectStore('pages')); t.oncomplete = () => res(out && out.result); t.onerror = t.onabort = () => res(null); } catch (e) { res(null); } });
+}
+const saveOrder = () => ls.set('order.' + code, pages.map((p) => p.id));
+async function loadPages() {
+  const all = (await tx('readonly', (s) => s.getAll())) || [];
+  const stale = all.filter((r) => r.s !== code);                      // another lesson's leftovers: remove
+  if (stale.length) await tx('readwrite', (s) => { stale.forEach((r) => s.delete(r.id)); });
+  const order = ls.get('order.' + code, []);
+  const pos = (id) => { const i = order.indexOf(id); return i < 0 ? 1e9 : i; };
+  pages = all.filter((r) => r.s === code && r.data).sort((a, b) => pos(a.id) - pos(b.id) || (a.id < b.id ? -1 : 1)).map((r) => ({ id: r.id, data: r.data }));
+}
+const putPage = (p) => tx('readwrite', (s) => { s.put({ id: p.id, s: code, data: p.data }); });
+const delPage = (id) => tx('readwrite', (s) => { s.delete(id); });
+async function clearPages() { const ids = pages.map((p) => p.id); pages = []; ls.del('order.' + code); await tx('readwrite', (s) => { ids.forEach((id) => s.delete(id)); }); }
+
+// ---------- make each photo small enough to send but still readable ----------
+function loadImage(file) {
+  return new Promise((res, rej) => { const u = URL.createObjectURL(file), im = new Image(); im.onload = () => { res(im); setTimeout(() => URL.revokeObjectURL(u), 1000); }; im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('decode')); }; im.src = u; });
+}
+async function shrink(file) {
+  const im = await loadImage(file), w0 = im.naturalWidth, h0 = im.naturalHeight;
+  if (!w0 || !h0) throw new Error('decode');
+  let out = '';
+  for (const [long, q] of [[LONG, QUALITY], [LONG, 0.7], [1600, 0.7], [1280, 0.6]]) {
+    const k = Math.min(1, long / Math.max(w0, h0)), c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w0 * k)); c.height = Math.max(1, Math.round(h0 * k));
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+    out = c.toDataURL('image/jpeg', q); c.width = c.height = 0;
+    if (out.length <= TARGET) break;
+  }
+  if (!/^data:image\/jpeg;base64,/.test(out) || out.length > HARD) throw new Error('size');
+  return out;
+}
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+async function addFiles(files, replaceId) {
+  files = Array.from(files || []).filter((f) => !f.type || f.type.startsWith('image/'));
+  if (!files.length) return;
+  errMsg = ''; let skipped = 0, bad = 0;
+  working++; render();
+  for (const f of files) {
+    if (!replaceId && room() <= 0) { skipped++; continue; }
+    try {
+      const data = await shrink(f);
+      if (replaceId) { const p = pages.find((x) => x.id === replaceId); if (p) { p.data = data; await putPage(p); } break; }
+      const p = { id: newId(), data }; pages.push(p); await putPage(p); saveOrder();
+    } catch (e) { bad++; }
+  }
+  working--;
+  if (bad) errMsg = bad === 1 ? 'That picture could not be read. Try taking the photo again.' : bad + ' pictures could not be read. Try again.';
+  else if (skipped) errMsg = `You can hand in ${MAX_PAGES} pages at most. ${skipped} not added.`;
+  render();
+  if (!bad && !replaceId) { const l = app.querySelector('.pg:last-child'); if (l && l.scrollIntoView) l.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+// ---------- server ----------
+async function getInfo() {
+  const r = await fetch(BACKEND + (BACKEND.includes('?') ? '&' : '?') + 'a=cvinfo&session=' + encodeURIComponent(code), { cache: 'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+async function upload(page, data) {
+  const ac = new AbortController(), to = setTimeout(() => ac.abort(), 90000);
+  try {
+    const r = await fetch(BACKEND, { method: 'POST', body: JSON.stringify({ a: 'cvup', session: code, name, device, page, data }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, signal: ac.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(to); }
+}
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---------- screens ----------
+function setHead() { const t = [info.cls, info.subject].filter(Boolean).join(' · '); $('#hcls').hidden = !t; $('#hcls').textContent = t; }
+function message(icon, title, text, btn, fn) {
+  app.innerHTML = `<div class="center card"><div class="ic">${icon}</div><h1>${esc(title)}</h1><p>${esc(text)}</p>${btn ? `<button class="btn blue big" id="mb" style="margin-top:16px">${esc(btn)}</button>` : ''}</div>`;
+  if (btn) $('#mb').onclick = fn;
+}
+function askCode(msg) {
+  app.innerHTML = `<form class="card" id="f"><h1>Type the code on the board</h1><input id="codein" type="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="12" placeholder="·····" aria-label="Code"><div class="err" style="margin-top:8px">${esc(msg || '')}</div><button class="btn go big" type="submit" style="margin-top:14px">Continue</button></form>`;
+  $('#f').onsubmit = (e) => { e.preventDefault(); const v = $('#codein').value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (v.length < 4) { $('.err').textContent = 'Type the code shown on the board.'; return; } code = v; const u = new URL(location.href); u.searchParams.set('s', code); history.replaceState(null, '', u); start(); };
+  $('#codein').focus();
+}
+async function start() {
+  if (!BACKEND) { message('⚠️', 'Not set up', 'This page is missing its server address. Tell your teacher.'); return; }
+  if (!code) { askCode(); return; }
+  app.innerHTML = '<div class="center"><p><span class="spin"></span>Opening…</p></div>';
+  let j;
+  try { j = await getInfo(); } catch (e) { message('📶', 'No connection', 'This iPad could not reach the internet. Check the Wi-Fi, then try again.', 'Try again', start); return; }
+  if (!j || !j.ok || !j.open) { info = { cls: '', subject: '' }; setHead(); closed(); return; }
+  info = { cls: j.cls || '', subject: j.subject || '' }; setHead();
+  await loadPages();
+  if (!pages.length && sentBefore() > 0) done(sentBefore()); else render();
+}
+function closed() {
+  app.innerHTML = `<div class="center card"><div class="ic">🔒</div><h1>This hand-in isn't open</h1><p>Ask the teacher in the room. If they start a new one, scan the new code on the board.</p><button class="btn blue big" id="mb" style="margin-top:16px">Try again</button><div><button class="link" id="oc">Type a different code</button></div></div>`;
+  $('#mb').onclick = start; $('#oc').onclick = () => askCode();
+}
+
+function render() {
+  if (sendState) return;
+  const sb = sentBefore(), n = pages.length, left = room(), keepName = $('#nm') ? $('#nm').value : name, hadFocus = document.activeElement && document.activeElement.id === 'nm';
+  app.innerHTML = `
+    <div class="card"><label class="f" for="nm">Your name</label><input id="nm" type="text" autocomplete="name" autocapitalize="words" maxlength="60" placeholder="First name and surname" value="${esc(keepName)}"><div class="err" id="nerr" style="margin-top:6px"></div></div>
+    <div class="card"><h2>${sb ? 'Add the pages you forgot' : 'Add every page you did today'}</h2>
+      <p class="muted" style="margin:0 0 12px">${sb ? `You already handed in ${sb} page${sb === 1 ? '' : 's'}. ` : ''}Hold the iPad flat above the page so all the writing is in the picture.</p>
+      <div class="adds">
+        <label class="add${left <= 0 || working ? ' off' : ''}"><span class="ic">📷</span>Take a photo<input id="cam" type="file" accept="image/*" capture="environment"></label>
+        <label class="add alt${left <= 0 || working ? ' off' : ''}"><span class="ic">🖼</span>Upload a screenshot / photo<input id="lib" type="file" accept="image/*" multiple></label>
+      </div>
+      <input class="vh" id="re" type="file" accept="image/*" aria-hidden="true" tabindex="-1">
+      <p class="count" id="count" style="margin-top:12px">${working ? '<span class="spin"></span>Getting your picture ready…' : n ? `${n} page${n === 1 ? '' : 's'} ready to send${left <= 0 ? ' (that is the most you can send)' : ''}` : 'No pages yet.'}</p>
+      <div class="err" id="perr">${esc(errMsg)}</div>
+    </div>
+    ${n ? `<div class="pages">${pages.map((p, i) => `<div class="pg" data-id="${p.id}"><div class="im"><img alt="Page ${sb + i + 1}" src="${p.data}"><span>Page ${sb + i + 1}</span></div>
+      <div class="bt"><button class="btn" data-a="up" aria-label="Move page ${sb + i + 1} earlier" ${i === 0 ? 'disabled' : ''}>◀</button><button class="btn" data-a="down" aria-label="Move page ${sb + i + 1} later" ${i === n - 1 ? 'disabled' : ''}>▶</button><button class="btn" data-a="re">Retake</button><button class="btn del" data-a="del">Delete</button></div></div>`).join('')}</div>` : ''}
+    <div class="sendbar"><button class="btn go big" id="send" ${n && !working ? '' : 'disabled'}>Send to my teacher${n ? ` (${n} page${n === 1 ? '' : 's'})` : ''}</button></div>`;
+  const nm = $('#nm');
+  nm.oninput = () => { name = nm.value.trim().replace(/\s+/g, ' '); ls.set('name', name); $('#nerr').textContent = ''; };
+  if (hadFocus) { nm.focus(); try { nm.setSelectionRange(nm.value.length, nm.value.length); } catch (e) {} }
+  $('#cam').onchange = (e) => { const f = e.target.files; addFiles(f); };
+  $('#lib').onchange = (e) => { const f = e.target.files; addFiles(f); };
+  let reId = null;
+  $('#re').onchange = (e) => { const f = e.target.files; if (reId) addFiles([f[0]].filter(Boolean), reId); };
+  app.querySelectorAll('.pg button').forEach((b) => b.onclick = async () => {
+    const id = b.closest('.pg').dataset.id, i = pages.findIndex((p) => p.id === id), a = b.dataset.a; if (i < 0) return;
+    errMsg = '';
+    if (a === 're') { reId = id; $('#re').click(); return; }
+    if (a === 'del') { pages.splice(i, 1); delPage(id); }
+    if (a === 'up' && i > 0) [pages[i - 1], pages[i]] = [pages[i], pages[i - 1]];
+    if (a === 'down' && i < pages.length - 1) [pages[i + 1], pages[i]] = [pages[i], pages[i + 1]];
+    saveOrder(); render();
+  });
+  $('#send').onclick = () => {
+    name = nm.value.trim().replace(/\s+/g, ' '); ls.set('name', name);
+    if (name.length < 2) { $('#nerr').textContent = 'Type your name first.'; nm.focus(); nm.scrollIntoView({ block: 'center' }); return; }
+    send();
+  };
+}
+
+// ---------- send ----------
+async function send() {
+  if (sendState) return;
+  const base = sentBefore(), total = pages.length;
+  sendState = { done: 0 };
+  const draw = (msg, fail) => {
+    app.innerHTML = `<div class="center card"><h1>${fail ? 'Not sent yet' : 'Sending…'}</h1><p id="smsg">${esc(msg)}</p><div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${sendState.done}"><i style="width:${Math.round(100 * sendState.done / total)}%"></i></div><p class="muted">${sendState.done} of ${total} sent. ${fail ? 'Your photos are safe on this iPad.' : 'Keep this page open.'}</p>${fail ? '<button class="btn go big" id="again" style="margin-top:14px">Try again</button><div><button class="link" id="back">Go back to my pages</button></div>' : ''}</div>`;
+    if (fail) { $('#again').onclick = run; $('#back').onclick = () => { sendState = null; render(); }; }
+  };
+  async function run() {
+    for (let i = sendState.done; i < total; i++) {
+      draw(`Sending page ${i + 1} of ${total}`);
+      let ok = false, why = '';
+      for (let t = 0; t < 3 && !ok; t++) {
+        if (t) { draw(`Sending page ${i + 1} of ${total} (trying again)`); await wait(1500 * t); }
+        try {
+          const j = await upload(base + i + 1, pages[i].data);
+          if (j && j.ok) ok = true;
+          else { why = (j && j.error) || 'server'; if (why === 'not open' || why === 'bad image' || why === 'too many' || why === 'no name') break; }
+        } catch (e) { why = 'net'; }
+      }
+      if (!ok) {
+        if (why === 'not open') { sendState = null; app.innerHTML = `<div class="center card"><div class="ic">🔒</div><h1>The hand-in has closed</h1><p>${sendState0(i, total)} Tell the teacher in the room now. Your photos are still on this iPad.</p><button class="btn blue big" id="mb" style="margin-top:16px">Go back to my pages</button></div>`; $('#mb').onclick = () => render(); return; }
+        draw(why === 'bad image' ? `Page ${i + 1} could not be sent. Go back, press Retake on that page, then send again.` : why === 'too many' ? 'The hand-in is full. Tell the teacher in the room.' : `Page ${i + 1} did not go through. Check the Wi-Fi, then press Try again.`, true);
+        return;
+      }
+      sendState.done = i + 1; draw(`Sending page ${Math.min(i + 2, total)} of ${total}`);
+    }
+    ls.set(sentKey(), base + total);
+    await clearPages(); sendState = null; done(base + total);
+  }
+  run();
+}
+function sendState0(i, total) { return i ? `Only ${i} of your ${total} pages were sent.` : 'Your pages were not sent.'; }
+function done(n) {
+  app.innerHTML = `<div class="center"><div class="doneBox"><div class="tick">✓</div><h1>Handed in</h1><p><b>${n} page${n === 1 ? '' : 's'}</b> sent to your teacher</p><p>${esc(name)}</p></div>
+    <p style="margin-top:18px">Show this screen if the teacher asks.</p>${n < MAX_PAGES ? '<button class="link" id="more">I forgot a page</button>' : ''}</div>`;
+  if ($('#more')) $('#more').onclick = () => render();
+  window.scrollTo(0, 0);
+}
+start();
+</script>
+</body>
+</html>

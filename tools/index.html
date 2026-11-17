@@ -50,7 +50,7 @@ footer a { color: inherit; }
     <button class="btn" id="theme" title="Light / dark">◐</button>
   </div>
   <p class="sub">Tools for the board, the teacher's laptop and iPads. Pick one to open it.</p>
-  <p class="private">🔒 These tools run on this computer. Class lists and settings stay on this computer. Only Quick poll sends anything: students’ answers go to your own results sheet, like the workbooks.</p>
+  <p class="private">🔒 These tools run on this computer. Class lists and settings stay on this computer. Only Quick poll, Design starter and Substitute teacher send anything: students’ answers go to your own results sheet, like the workbooks.</p>
   <div id="groups"></div>
   <p class="none" id="none">No tool matches that. Try another word.</p>
   <footer>Mr Porter · BSP Design &amp; Technology · <a href="../">Back to the D&amp;T hub</a></footer>
@@ -83,10 +83,12 @@ const GROUPS = [
     ['poll.html', '🙋', 'Quick poll', 'Ask the class a question and show the votes as a chart.'],
     ['whiteboard.html', '🖍️', 'Whiteboard', 'A blank board to draw and write on, with pens and grids.'],
     ['visualiser.html', '📷', 'Visualiser', 'Show practical work or a demonstration under the camera.'],
+    ['cover.html', '📥', 'Substitute teacher', 'Cover lessons: students photograph their work and it is emailed to the absent teacher, with a live hand-in tally.'],
   ]],
   ['D&T', 'linear-gradient(135deg,#d9d2e9,#cfe8b0)', [
     ['maths.html', '📐', 'Units & maths', 'Worked steps for D&T maths: units, area, costs, scale, gears, moments, tolerances and charts.'],
     ['brief-generator.html', '🎰', 'Design brief generator', 'Spin up a random design brief: a product, a user, a context and a constraint.'],
+    ['design-starter.html', '✏️', 'Design starter', 'A starter picture and timed sketch boxes on every iPad, run from the board; collect everyone’s sheets in one email.'],
   ]],
 ];
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');

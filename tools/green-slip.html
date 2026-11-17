@@ -296,6 +296,7 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
   <div class="row"><label class="l" for="code">Staff code</label><input type="password" id="code" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"></div>
   <div class="btns"><button type="submit" class="b g" id="codego">Continue</button></div>
   <div class="msg" id="codemsg"></div>
+  <p style="margin-top:12px;font-size:13px"><a href="#" id="gatesettings">Setting it up? Settings (Mr Porter)</a></p>
 </form></div>
 
 <div class="ov" id="settings"><div class="dlg">
@@ -621,6 +622,7 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
   // ---------- settings (dashboard PIN) ----------
   const setMsg = (t, ok) => { const m = $('#setmsg'); m.textContent = t; m.classList.toggle('ok', !!ok); };
   $('#opensettings').onclick = () => { $('#settings').classList.add('on'); setMsg(''); $('#newto').value = lget('to', ''); setTimeout(() => $('#pin').focus(), 50); };
+  $('#gatesettings').onclick = (e) => { e.preventDefault(); $('#opensettings').click(); };
   $('#closesettings').onclick = () => { $('#settings').classList.remove('on'); $('#pin').value = ''; $('#newcode').value = ''; };
   $('#settings').addEventListener('click', (e) => { if (e.target === $('#settings')) $('#closesettings').click(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#settings').classList.contains('on')) $('#closesettings').click(); });

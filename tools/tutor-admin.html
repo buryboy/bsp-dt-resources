@@ -41,6 +41,17 @@ input:focus, textarea:focus, button:focus-visible, a:focus-visible, select:focus
 details > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; color: var(--muted); }
 .dlg { position: fixed; inset: 0; z-index: 60; background: #0a1024b0; display: grid; place-items: center; padding: 16px; } .dlg .box { background: var(--card); border-radius: 16px; padding: 22px; max-width: 520px; width: 100%; } .dlg h3 { font: 600 24px var(--serif); margin: 0 0 8px; } .dlg p { margin: 0 0 14px; color: var(--muted); line-height: 1.4; }
 .spin { display: inline-block; width: 1em; height: 1em; border: .16em solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -.12em; margin-right: .4em; } @keyframes sp { to { transform: rotate(360deg); } }
+.seg { display: inline-flex; flex-wrap: wrap; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1.5px var(--line) inset; } .seg button { border: 0; background: var(--card); padding: 9px 14px; font-weight: 600; font-size: 15.5px; cursor: pointer; min-height: 46px; color: var(--ink); flex: 1 0 auto; } .seg button.on { background: var(--ink2); color: #fff; } body.dark .seg button.on { color: #0e1422; }
+.tg { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+.tt { border: 2px solid var(--line); border-radius: 12px; background: var(--card); padding: 0 0 8px; cursor: pointer; overflow: hidden; color: var(--ink); text-align: center; } .tt.on { border-color: var(--ink2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink2) 30%, transparent); } .tt b { display: block; font-size: 14px; font-weight: 600; padding: 6px 6px 0; line-height: 1.2; }
+.mini { display: block; position: relative; height: 74px; background: var(--bg); overflow: hidden; border-bottom: 1px solid var(--line); }
+.cal { display: grid; gap: 6px; } .ce { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; } .ce.offd { background: color-mix(in srgb, var(--soft) 55%, transparent); } .ce.offd b { color: var(--muted); }
+.ck { display: flex; gap: 10px; align-items: center; margin: 0; cursor: pointer; min-height: 44px; font-weight: 400; } .ck input[type=checkbox] { width: 24px; height: 24px; flex: none; accent-color: var(--ink2); } .ck b { font-weight: 600; } .ck small { display: block; color: var(--muted); font-size: 13px; } .ck input[type=text] { min-height: 38px; padding: 4px 8px; font-size: 15px; }
+.cd { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; } .cd input, .cd select { width: auto; min-height: 40px; padding: 4px 8px; font-size: 15px; } .cd .dmi { width: 70px; text-align: center; } .cd select { max-width: 170px; } .cd .st { font-size: 13.5px; }
+.pk { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; margin-top: 8px; } .pk button { border: 3px solid transparent; border-radius: 10px; padding: 0; overflow: hidden; cursor: pointer; background: var(--soft); aspect-ratio: 4 / 3; } .pk button.on { border-color: var(--ink2); } .pk img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ipv { position: relative; height: 150px; border-radius: 12px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); margin-top: 12px; display: grid; place-items: center; } .ipv .im { position: absolute; inset: -12px; background-size: cover; background-position: center; } .ipv .pan { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 18px; text-align: center; } .ipv .pan b { display: block; font: 600 18px var(--serif); } .ipv .pan span { color: var(--muted); font-size: 13.5px; }
+.hint { color: var(--muted); font-size: 14.5px; margin: 10px 0 0; }
+@media (max-width: 560px) { .ce { grid-template-columns: 1fr; } .cd { justify-content: flex-start; padding-left: 34px; } .tg { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 footer { font-size: 13px; color: var(--muted); text-align: center; padding: 0 16px 14px; line-height: 1.4; }
 </style>
 </head>
@@ -50,6 +61,7 @@ footer { font-size: 13px; color: var(--muted); text-align: center; padding: 0 16
 <script src="kit/tools.js"></script>
 <script src="../workbooks.js"></script>
 <script src="tutor-console-content.js"></script>
+<script src="tutor-console-themes.js"></script>
 <script>
 'use strict';
 TK.top('Tutor admin');
@@ -123,8 +135,8 @@ async function reload(day) {
 async function start() {
   app.innerHTML = '<p class="lead" style="text-align:center;margin-top:8vh"><span class="spin"></span>Loading…</p>';
   try { if (!(await reload())) return; } catch (e) { app.innerHTML = `<div class="narrow card" style="box-shadow:none;border:1px solid var(--line)"><h2>Could not load</h2><p class="lead">${NET}</p><button class="btn blue" id="again">Try again</button></div>`; $('#again').onclick = start; return; }
-  app.innerHTML = `<section class="card links" id="top"></section><section class="card" id="sBanner"></section><section class="card" id="sNotices"></section><section class="card" id="sEvents"></section><section class="card" id="sScores"></section><section class="card" id="sHouses"></section><section class="card" id="sMore"></section>`;
-  drawTop(); drawBanner(); drawNotices(); drawEvents(); drawScores(); drawHouses(); drawMore();
+  app.innerHTML = `<section class="card links" id="top"></section><section class="card" id="sBanner"></section><section class="card" id="sNotices"></section><section class="card" id="sEvents"></section><section class="card" id="sScores"></section><section class="card" id="sHouses"></section><section class="card" id="sTheme"></section><section class="card" id="sMore"></section>`;
+  drawTop(); drawBanner(); drawNotices(); drawEvents(); drawScores(); drawHouses(); drawTheme(); drawMore();
 }
 async function refresh(parts) { try { if (!(await reload())) return; } catch (e) { return; } (parts || []).forEach((f) => f()); }
 function drawTop() {
@@ -239,6 +251,100 @@ function drawHouses() {
     if (new Set(names).size !== names.length) { st.className = 'st err'; st.textContent = 'Two houses have the same name.'; return; }
     if (await act($('#hsv'), st, { a: 'tchouses', houses: houseDraft })) { houseDraft = null; editRound = null; await refresh([drawScores]); drawHouses(); $('#hst').className = 'st ok'; $('#hst').textContent = 'Saved ✓'; }
   };
+}
+
+// ---------- background (themes) ----------
+const COMMONS = (LOCAL && params.get('commons')) /* testing only */ || 'https://commons.wikimedia.org/w/api.php';
+let TH = null, minis = [], miniIO = null, picks = [], pickMsg = '';
+const themeDefaults = (t) => Object.assign({ mode: 'plain', themeId: 'snow', until: '', intensity: 'subtle', customUrl: '', attribution: '', strength: 25, blur: true }, JSON.parse(JSON.stringify(t || {})), { calendar: Object.assign({ set: {}, custom: [] }, JSON.parse(JSON.stringify((t && t.calendar) || {}))) });
+const dm = (md) => (/^\d{2}-\d{2}$/.test(md || '') ? md.slice(3) + '/' + md.slice(0, 2) : '');             // 'MM-DD' -> 'DD/MM'
+const md = (v) => { const m = /^\s*(\d{1,2})\s*[\/.\- ]\s*(\d{1,2})\s*$/.exec(v || ''); if (!m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12) return ''; return pad(+m[2]) + '-' + pad(+m[1]); };
+function stopMinis() { minis.forEach((m) => m.stop()); minis = []; if (miniIO) miniIO.disconnect(); miniIO = null; }
+function miniPreviews(root) {   // small live previews, running only while they are on screen
+  const live = new Map();
+  const on = (el) => { if (live.has(el)) return; const m = TCT.mount(el, el.dataset.th, { mini: true, intensity: 'normal' }); live.set(el, m); minis.push(m); };
+  const off = (el) => { const m = live.get(el); if (m) { m.stop(); live.delete(el); minis = minis.filter((x) => x !== m); } };
+  if (!window.IntersectionObserver) { root.querySelectorAll('.mini').forEach(on); return; }
+  miniIO = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? on(e.target) : off(e.target))), { rootMargin: '60px' });
+  root.querySelectorAll('.mini').forEach((el) => miniIO.observe(el));
+}
+async function commonsSearch(q) {
+  const u = new URLSearchParams({ action: 'query', format: 'json', formatversion: '2', origin: '*', prop: 'imageinfo', iiprop: 'url|size|mime|extmetadata', iiurlwidth: '1280', iiextmetadatafilter: 'LicenseShortName|Artist', iiextmetadatalanguage: 'en', generator: 'search', gsrnamespace: '6', gsrlimit: '18', gsrsearch: 'filetype:bitmap ' + q });
+  const r = await fetch(COMMONS + (COMMONS.includes('?') ? '&' : '?') + u, { cache: 'no-store' }); if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json(); if (j.error) throw new Error(j.error.info || 'API error');
+  const pages = (j.query && j.query.pages) || [], text = (h) => { const d = new DOMParser().parseFromString('<p>' + String(h || '') + '</p>', 'text/html'); return (d.body.textContent || '').replace(/\s+/g, ' ').trim(); };
+  return (Array.isArray(pages) ? pages : Object.values(pages)).map((pg) => { const ii = pg.imageinfo && pg.imageinfo[0]; if (!ii || !TCT.okUrl(ii.thumburl) || ii.width < 600) return null; const m = ii.extmetadata || {}, v = (k) => (m[k] && m[k].value) || '', artist = text(v('Artist')).slice(0, 50) || 'see Commons page', lic = text(v('LicenseShortName')).slice(0, 24); return { u: ii.thumburl, s: ii.thumburl.replace(/\/\d+px-/, '/330px-'), c: ('Photo: ' + artist + (lic ? ' · ' + lic : '') + ' · Wikimedia Commons').slice(0, 140) }; }).filter(Boolean);
+}
+function drawTheme() {
+  if (!TH) TH = themeDefaults(S.theme);
+  stopMinis();
+  const year = +S.today.slice(0, 4), saved = TCT.resolve(S.theme, S.today), nm = (r) => (r.kind === 'plain' ? 'Plain' : r.kind === 'image' ? 'a picture' : TCT.byId[r.id].name + (r.label && r.label !== TCT.byId[r.id].name ? ' (' + r.label + ')' : ''));
+  const seg = (name, cur, opts) => `<div class="seg" role="group" data-seg="${name}">${opts.map((o) => `<button type="button" data-v="${o[0]}" class="${cur === o[0] ? 'on' : ''}" aria-pressed="${cur === o[0]}">${o[1]}</button>`).join('')}</div>`;
+  let body = '';
+  if (TH.mode === 'theme') {
+    body = `<div class="tg">${TCT.THEMES.filter((t) => t.id !== 'plain').map((t) => `<button type="button" class="tt${TH.themeId === t.id ? ' on' : ''}" data-id="${t.id}" aria-pressed="${TH.themeId === t.id}"><span class="mini" data-th="${t.id}"></span><b>${esc(t.name)}</b></button>`).join('')}</div>
+      <div class="r"><div style="max-width:220px"><label for="thu">Show until <small>(optional)</small></label><input id="thu" type="date" value="${esc(TH.until)}"></div></div>`;
+  } else if (TH.mode === 'auto') {
+    const list = TCT.entries(TH, year), opt = (cur) => TCT.THEMES.filter((t) => t.id !== 'plain').map((t) => `<option value="${t.id}" ${t.id === cur ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
+    const nextOf = (e) => { let r = TCT.entries(TH, year).find((x) => x.id === e.id).range; if (r && r[1] < S.today) r = TCT.entries(TH, year + 1).find((x) => x.id === e.id).range; return r; };
+    body = `<p class="lead">On these days the board changes by itself, and goes back to Plain afterwards. Tick the ones you want; change a date by typing it (day/month).</p><div class="cal">${list.map((e) => {
+      const r = e.calc ? nextOf(e) : null;
+      const dates = e.own != null ? `<input type="date" data-of="${e.own}" value="${esc(e.from)}" aria-label="From"><input type="date" data-ot="${e.own}" value="${esc(e.to)}" aria-label="To"><select data-oth="${e.own}" aria-label="Theme">${opt(e.theme)}</select><button type="button" class="btn sm" data-ox="${e.own}" aria-label="Remove this entry">×</button>`
+        : e.calc ? `<span class="st">worked out each year: ${esc(r[0] === r[1] ? nice(r[0], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : nice(r[0], { day: 'numeric', month: 'short' }) + ' to ' + nice(r[1], { day: 'numeric', month: 'short', year: 'numeric' }))}</span>`
+        : e.manual ? `<input type="date" data-mf="${e.id}" value="${esc(e.from)}" aria-label="From"><input type="date" data-mt="${e.id}" value="${esc(e.to)}" aria-label="To"><span class="st${e.from ? '' : ' dirty'}">set the dates each year</span>`
+        : `<input type="text" inputmode="numeric" class="dmi" data-ff="${e.id}" value="${esc(dm(e.from))}" aria-label="From (day/month)" placeholder="dd/mm"><span class="st">to</span><input type="text" inputmode="numeric" class="dmi" data-ft="${e.id}" value="${esc(dm(e.to))}" aria-label="To (day/month)" placeholder="dd/mm">`;
+      return `<div class="ce${e.on ? '' : ' offd'}"><label class="ck"><input type="checkbox" data-on="${esc(e.id)}" ${e.on ? 'checked' : ''}><span>${e.own != null ? `<input type="text" maxlength="40" data-ol="${e.own}" value="${esc(e.label)}" aria-label="Name of this entry">` : `<b>${esc(e.label)}</b>`}<small>${e.own != null ? 'your own entry' : TCT.byId[e.theme].name === e.label ? '' : 'shows: ' + esc(TCT.byId[e.theme].name)}${e.note ? ' ' + esc(e.note) : ''}</small></span></label><div class="cd">${dates}</div></div>`; }).join('')}</div>
+      <div class="acts"><button type="button" class="btn" id="tadd">+ Add your own entry</button></div>`;
+  } else if (TH.mode === 'image') {
+    body = `<p class="lead">A picture shown softly behind the panels. Only its web address and credit are saved. Choose something calm: the notices must stay easy to read.</p>
+      <form id="tsf" class="r" autocomplete="off"><div style="flex:3;min-width:200px"><label for="tq">Search Wikimedia Commons</label><input id="tq" type="text" maxlength="80" placeholder="e.g. Paris skyline, autumn forest, snow mountains"></div><div class="fix"><button class="btn" type="submit" id="tsb">Search</button></div></form>
+      <div class="st${pickMsg ? '' : ''}" id="tsm" style="margin-top:6px">${esc(pickMsg)}</div><div class="pk" id="tpk">${picks.map((p, i) => `<button type="button" data-p="${i}" class="${p.u === TH.customUrl ? 'on' : ''}" title="${esc(p.c)}"><img src="${esc(p.s)}" alt="" loading="lazy"></button>`).join('')}</div>
+      <label for="turl">Or paste the address of a picture or GIF <small>(it must start with https://)</small></label><input id="turl" type="text" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="600" value="${esc(TH.customUrl)}" placeholder="https://…">
+      <label for="tatt">Credit shown small in the corner <small>(optional)</small></label><input id="tatt" type="text" maxlength="200" value="${esc(TH.attribution)}">
+      <div class="r"><div style="flex:2;min-width:200px"><label for="tstr">Strength: <span id="tsv">${Math.round(TH.strength)}</span>%</label><input id="tstr" type="range" min="5" max="60" step="1" value="${Math.round(TH.strength)}" style="width:100%;min-height:44px"></div>
+        <div class="fix"><label class="ck" style="margin:0 0 10px"><input type="checkbox" id="tbl" ${TH.blur ? 'checked' : ''}><span><b>Blur the picture</b></span></label></div><div style="max-width:200px"><label for="thu">Show until <small>(optional)</small></label><input id="thu" type="date" value="${esc(TH.until)}"></div></div>
+      <div class="ipv" id="ipv"><div class="im"></div><div class="pan"><b>Notices</b><span>How readable the panels stay</span></div></div>`;
+  } else body = '<p class="lead" style="margin:6px 0 0">Plain: the board looks as it always has.</p>';
+  $('#sTheme').innerHTML = `<h2>Background</h2><p class="lead">A quiet background behind the panels of the board, for special days. It never covers the notices, there is no sound, and the quiz and activity screens stay plain.</p>
+    ${seg('mode', TH.mode, [['plain', 'Plain'], ['theme', 'Choose a theme'], ['auto', 'Automatic'], ['image', 'From the internet']])}
+    ${TH.mode === 'theme' || TH.mode === 'auto' ? `<div class="r" style="align-items:center;margin-top:8px"><span class="st fix">How noticeable</span>${seg('intensity', TH.intensity, [['subtle', 'Subtle'], ['normal', 'Normal']])}</div>` : ''}
+    ${body}
+    <div class="acts"><button class="btn blue" id="tsave">Save background</button><button class="btn" id="tprev">Preview on the console ↗</button><button class="btn" id="toff">Turn off now</button><span class="st" id="thst"></span></div>
+    <p class="hint" id="tnow"></p>`;
+  const tnow = () => { const n2 = TCT.resolve(TH, S.today); $('#tnow').innerHTML = 'On the boards now: <b>' + esc(nm(saved)) + '</b>' + (JSON.stringify(n2) !== JSON.stringify(saved) ? ' · after saving: <b>' + esc(nm(n2)) + '</b>' : '') + (TH.mode === 'auto' ? ' · today is ' + esc(nice(S.today)) : ''); };
+  tnow();
+  const root = $('#sTheme'), changed = () => { say('#thst', 'dirty', 'Not saved yet'); tnow(); };
+  function say(sel, cls, t) { const el = $(sel); if (el) { el.className = 'st ' + cls; el.textContent = t; } }
+  root.querySelectorAll('[data-seg] button').forEach((b) => b.onclick = () => { TH[b.parentNode.dataset.seg] = b.dataset.v; drawTheme(); changed(); });
+  root.querySelectorAll('.tt').forEach((b) => b.onclick = () => { TH.themeId = b.dataset.id; root.querySelectorAll('.tt').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); changed(); });
+  if ($('#thu')) $('#thu').onchange = () => { TH.until = $('#thu').value; changed(); };
+  miniPreviews(root);
+  // calendar
+  const setOf = (id) => (TH.calendar.set[id] = TH.calendar.set[id] || {});
+  root.querySelectorAll('[data-on]').forEach((c) => c.onchange = () => { const id = c.dataset.on; if (/^own\d+$/.test(id)) TH.calendar.custom[+id.slice(3)].on = c.checked; else setOf(id).on = c.checked; drawTheme(); changed(); });
+  root.querySelectorAll('[data-ff],[data-ft]').forEach((i) => i.onchange = () => { const id = i.dataset.ff || i.dataset.ft, v = md(i.value); if (!v) { i.style.borderColor = 'var(--bad)'; say('#thst', 'err', 'Type the date as day/month, for example 5/11.'); return; } const o = setOf(id), e = TCT.entries(TH, year).find((x) => x.id === id); o.from = i.dataset.ff ? v : e.from; o.to = i.dataset.ft ? v : (i.dataset.ff && e.from === e.to ? v : e.to); drawTheme(); changed(); });
+  root.querySelectorAll('[data-mf],[data-mt]').forEach((i) => i.onchange = () => { const id = i.dataset.mf || i.dataset.mt, o = setOf(id); if (i.dataset.mf) { o.from = i.value; if (!o.to || o.to < o.from) o.to = i.value; } else o.to = i.value; if (o.from && typeof o.on !== 'boolean') o.on = true; drawTheme(); changed(); });
+  root.querySelectorAll('[data-of]').forEach((i) => i.onchange = () => { const c = TH.calendar.custom[+i.dataset.of]; c.from = i.value; if (!c.to || c.to < c.from) c.to = i.value; drawTheme(); changed(); });
+  root.querySelectorAll('[data-ot]').forEach((i) => i.onchange = () => { TH.calendar.custom[+i.dataset.ot].to = i.value; drawTheme(); changed(); });
+  root.querySelectorAll('[data-oth]').forEach((i) => i.onchange = () => { TH.calendar.custom[+i.dataset.oth].theme = i.value; drawTheme(); changed(); });
+  root.querySelectorAll('[data-ol]').forEach((i) => i.onchange = () => { TH.calendar.custom[+i.dataset.ol].label = i.value.trim(); changed(); });
+  root.querySelectorAll('[data-ox]').forEach((b) => b.onclick = () => { TH.calendar.custom.splice(+b.dataset.ox, 1); drawTheme(); changed(); });
+  if ($('#tadd')) $('#tadd').onclick = () => { TH.calendar.custom.push({ label: 'My own entry', theme: 'confetti', from: S.today, to: S.today, on: true }); drawTheme(); changed(); const r = root.querySelectorAll('[data-ol]'); r[r.length - 1].focus(); r[r.length - 1].select(); };
+  // picture
+  const ipv = () => { const b = $('#ipv .im'); if (!b) return; const ok = TCT.okUrl(TH.customUrl); b.style.backgroundImage = ok ? 'url("' + TH.customUrl + '")' : 'none'; b.style.opacity = String(TH.strength / 100); b.style.filter = TH.blur ? 'blur(6px)' : 'none'; };
+  if (TH.mode === 'image') {
+    ipv();
+    $('#tsf').onsubmit = async (e) => { e.preventDefault(); const q = $('#tq').value.trim(); if (!q) return; busy($('#tsb'), true, 'Searching…'); try { picks = await commonsSearch(q); pickMsg = picks.length ? 'Tap a picture to use it.' : 'Nothing found for that. Try other words.'; } catch (x) { picks = []; pickMsg = 'Could not search Wikimedia Commons just now. You can still paste a picture address below.'; } const keep = q; drawTheme(); $('#tq').value = keep; };
+    root.querySelectorAll('#tpk button').forEach((b) => b.onclick = () => { const p = picks[+b.dataset.p]; TH.customUrl = p.u; TH.attribution = p.c; const q = $('#tq').value; drawTheme(); $('#tq').value = q; changed(); });
+    $('#turl').onchange = () => { const v = $('#turl').value.trim(); if (v && !TCT.okUrl(v)) { say('#thst', 'err', 'That address cannot be used: it must start with https:// and have no spaces or quotes.'); return; } if (v !== TH.customUrl) { TH.customUrl = v; if (!picks.some((p) => p.u === v)) { TH.attribution = ''; $('#tatt').value = ''; } } ipv(); changed(); };
+    $('#tatt').onchange = () => { TH.attribution = $('#tatt').value.trim(); changed(); };
+    $('#tstr').oninput = () => { TH.strength = +$('#tstr').value; $('#tsv').textContent = TH.strength; ipv(); changed(); };
+    $('#tbl').onchange = () => { TH.blur = $('#tbl').checked; ipv(); changed(); };
+  }
+  const ready = () => { if (TH.mode === 'image' && !TCT.okUrl(TH.customUrl)) { say('#thst', 'err', 'Choose a picture or paste its address first.'); return false; } return true; };
+  $('#tsave').onclick = async () => { if (!ready()) return; const j = await act($('#tsave'), $('#thst'), { a: 'tctheme', theme: TH }); if (j) { S.theme = j.theme; TH = themeDefaults(j.theme); drawTheme(); say('#thst', 'ok', 'Saved ✓ The boards pick it up within a few minutes.'); } };
+  $('#tprev').onclick = () => { if (!ready()) return; const u = withBackend('tutor-console.html?theme=' + encodeURIComponent(JSON.stringify(TH))); window.__lastPreview = u; window.open(u, '_blank', 'noopener'); };
+  $('#toff').onclick = async () => { const keep = Object.assign({}, TH, { mode: 'plain' }); const j = await act($('#toff'), $('#thst'), { a: 'tctheme', theme: keep }); if (j) { S.theme = j.theme; TH = themeDefaults(j.theme); drawTheme(); say('#thst', 'ok', 'Background turned off ✓'); } };
 }
 
 // ---------- PIN + automatic notices ----------

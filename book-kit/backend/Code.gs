@@ -479,6 +479,9 @@ function gsGroup(ticks) { // ["Courage: Determination", "Courage: Honesty", "Hum
 //   tcscore {pin, date, points: {house: n}, was}    set one house-quiz round for all houses (was = old date when moving a round)
 //   tcscoredel {pin, date} / tcnewterm {pin, name}  delete a round / start a new term (old rounds stay in the sheet, archived)
 //   tcsetpin {pin, newPin}                          change the admin PIN (4 to 8 digits)
+//   tctheme {pin, theme}                            the background behind the board: {mode: 'plain'|'theme'|'auto'|'image', themeId, until,
+//                                                   intensity: 'subtle'|'normal', customUrl, attribution, strength, blur, calendar: {set: {id: {on, from, to}}, custom: [...]}}
+//                                                   stored in TC_THEME and sent with tcget; the board works out which theme applies on the day (Europe/Paris)
 // The Wednesday quiz (tools/house-quiz-admin.html writes it, forms answer it live on the board before the closing time):
 //   admin (PIN):  tcquizlist {pin}   tcquizget {pin, date}   tcresults {pin, date}   tcgroups {pin, groups: [{label, house}], close: 'HH:MM', scale: [4, 3, 2, 1]}
 //                 tcquizimg {pin, date, data: 'data:image/jpeg;base64,…'} -> {id}     tcquizsave {pin, date, was, title, questions: [{q, options[], correct, img}]}     tcquizdel {pin, date}
@@ -494,7 +497,7 @@ function gsGroup(ticks) { // ["Courage: Determination", "Courage: Honesty", "Hum
 //   House score = the average of its groups' scores; 5 minutes after closing it is added to HouseScores as that date's round (see tcAutoPost).
 // Data: a Google Sheet "Tutor console" created on first use (script property TC_SHEET_ID) with tabs
 //   Notices(date, text, updatedAt)  Events(id, date, time, title, detail)  Houses(name, colour, order)  HouseScores(id, date, house, points, term, avg)
-// Settings in script properties: TC_PIN, TC_BANNER (JSON), TC_TERM (JSON), TC_VER (last change), TC_PUSH_KEY (see below).
+// Settings in script properties: TC_PIN, TC_BANNER (JSON), TC_THEME (JSON), TC_TERM (JSON), TC_VER (last change), TC_PUSH_KEY (see below).
 //
 // Posting the notices automatically (for example from Teams with Power Automate):
 //   tcpush {key, text, day, html}  — no PIN; guarded by the script property TC_PUSH_KEY. While TC_PUSH_KEY is not set, tcpush is OFF.
@@ -532,6 +535,16 @@ function tcRows(name) {
 function tcDelRows(name, rows) { const sh = tcSheet(name); rows.map((r) => r._row).sort((a, b) => b - a).forEach((n) => sh.deleteRow(n)); }
 function tcBust() { PROPS.setProperty('TC_VER', String(Math.max(Date.now(), (Number(PROPS.getProperty('TC_VER')) || 0) + 1))); } // a new version = new cache keys
 function tcBannerRaw() { let b = null; try { b = JSON.parse(PROPS.getProperty('TC_BANNER') || 'null'); } catch (e) { b = null; } return b && b.text ? { text: String(b.text), until: tcDay(b.until) } : null; }
+function tcTheme() { let t = null; try { t = JSON.parse(PROPS.getProperty('TC_THEME') || 'null'); } catch (e) { t = null; } return t && typeof t === 'object' && t.mode ? t : { mode: 'plain' }; }
+function tcThemeClean(t) { // only known fields, and only an https picture address, are kept
+  t = t && typeof t === 'object' ? t : {};
+  const o = { mode: ['plain', 'theme', 'auto', 'image'].indexOf(t.mode) >= 0 ? t.mode : 'plain', themeId: tcT(t.themeId, 30).replace(/[^a-z0-9-]/g, ''), until: tcDay(t.until), intensity: t.intensity === 'normal' ? 'normal' : 'subtle',
+    customUrl: /^https:\/\/[^\s"'()<>\\]{4,600}$/.test(String(t.customUrl || '')) ? String(t.customUrl) : '', attribution: tcT(t.attribution, 200), strength: Math.max(5, Math.min(60, Number(t.strength) || 25)), blur: t.blur !== false };
+  const cal = t.calendar && typeof t.calendar === 'object' ? t.calendar : {}, set = {}, d = (x) => (/^(\d{4}-)?\d{2}-\d{2}$/.test(String(x || '')) ? String(x) : '');
+  Object.keys(cal.set && typeof cal.set === 'object' ? cal.set : {}).slice(0, 60).forEach((k) => { const v = cal.set[k] || {}, e = {}; if (typeof v.on === 'boolean') e.on = v.on; if (d(v.from)) e.from = d(v.from); if (d(v.to)) e.to = d(v.to); if (/^[a-z0-9]{1,20}$/.test(k)) set[k] = e; });
+  o.calendar = { set: set, custom: (Array.isArray(cal.custom) ? cal.custom : []).slice(0, 30).map((c) => ({ label: tcT(c && c.label, 40), theme: tcT(c && c.theme, 30).replace(/[^a-z0-9-]/g, ''), from: tcDay(c && c.from), to: tcDay(c && c.to), on: !(c && c.on === false) })).filter((c) => c.from && c.theme) };
+  return o;
+}
 function tcTerm() { let t = null; try { t = JSON.parse(PROPS.getProperty('TC_TERM') || 'null'); } catch (e) { t = null; } return t && t.name ? { name: String(t.name), started: tcDay(t.started) } : { name: 'Current term', started: '' }; }
 function tcHouses() {
   const rows = tcRows('Houses').filter((r) => String(r.name).trim()).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
@@ -552,7 +565,7 @@ function tcScores(houses) { // the current term's rounds, oldest first, and the 
 function tcPublic(day) {
   const b = tcBannerRaw(), houses = tcHouses();
   return { ok: true, at: Date.now(), today: tcToday(), day: day, banner: b && (!b.until || b.until >= day) ? b : null, notices: tcNotice(day),
-    events: tcEvents().filter((e) => e.date >= day).slice(0, 40), houses: houses, scores: tcScores(houses), quiz: tcQuizBrief(day), updatedAt: Number(PROPS.getProperty('TC_VER')) || 0 };
+    events: tcEvents().filter((e) => e.date >= day).slice(0, 40), houses: houses, scores: tcScores(houses), quiz: tcQuizBrief(day), theme: tcTheme(), updatedAt: Number(PROPS.getProperty('TC_VER')) || 0 };
 }
 function tcGet(p) {
   const day = tcDay(p.day) || tcToday(), cache = CacheService.getScriptCache(), key = 'tc-' + (PROPS.getProperty('TC_VER') || '0') + '-' + day;
@@ -565,7 +578,7 @@ function tcAdminState(d) {
   const today = tcToday(), day = tcDay(d.day) || today, houses = tcHouses(), term = tcTerm(), old = {};
   tcRows('HouseScores').forEach((r) => { const t = String(r.term); if (t !== term.name) (old[t] = old[t] || {})[r.date] = 1; });
   return { ok: true, today: today, day: day, banner: tcBannerRaw(), notices: tcNotice(day), noticeDays: tcRows('Notices').filter((r) => r.date >= today && String(r.text).trim()).map((r) => r.date).sort(),
-    events: tcEvents(), houses: houses, scores: tcScores(houses), archived: Object.keys(old).map((t) => ({ term: t, rounds: Object.keys(old[t]).length })), pushOn: !!PROPS.getProperty('TC_PUSH_KEY') };
+    events: tcEvents(), houses: houses, scores: tcScores(houses), theme: tcTheme(), archived: Object.keys(old).map((t) => ({ term: t, rounds: Object.keys(old[t]).length })), pushOn: !!PROPS.getProperty('TC_PUSH_KEY') };
 }
 function tcSetNotice(day, text) {
   const sh = tcSheet('Notices'), rows = tcRows('Notices').filter((r) => r.date === day);
@@ -614,6 +627,7 @@ function tutorPost(d) {
 }
 function tcWrite(d) {
   if (d.a === 'tcsetpin') { const n = String(d.newPin == null ? '' : d.newPin).trim(); if (!/^\d{4,8}$/.test(n)) return { ok: false, error: 'The PIN must be 4 to 8 digits' }; PROPS.setProperty('TC_PIN', n); return { ok: true }; }
+  if (d.a === 'tctheme') { const js = JSON.stringify(tcThemeClean(d.theme)); if (js.length > 8500) return { ok: false, error: 'Too many calendar entries' }; PROPS.setProperty('TC_THEME', js); return { ok: true, theme: JSON.parse(js) }; }
   if (d.a === 'tcbanner') {
     const text = tcT(d.text, 300).replace(/\s*\n\s*/g, ' '), until = tcDay(d.until);
     if (text) PROPS.setProperty('TC_BANNER', JSON.stringify({ text: text, until: until })); else PROPS.deleteProperty('TC_BANNER');

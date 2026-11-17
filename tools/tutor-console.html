@@ -20,6 +20,11 @@ body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; dis
 .btn.go { background: var(--good); box-shadow: none; color: #fff; } body.dark .btn.go { color: #0e1422; }
 .btn:focus-visible, .tile:focus-visible, .opt:focus-visible, .key:focus-visible, .dot:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .btn[disabled] { opacity: .45; cursor: default; }
+/* the background (themes) sits behind the panels only; activities and the quiz cover it with a plain screen */
+#bgfx { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; } #bgfx .img { position: absolute; inset: -30px; background-size: cover; background-position: center; }
+#bgattr { position: fixed; right: 20px; bottom: 0; z-index: 2; font-size: 10px; line-height: 14px; color: var(--muted); max-width: 70vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.tk-top, #app { position: relative; z-index: 1; }
+body[data-deco] .hd { padding-top: 18px; }   /* room for bunting or fairy lights above the date, so they never run through the text */
 #app { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px 18px 14px; }
 /* header */
 .hd { display: flex; align-items: center; gap: 20px; flex: none; }
@@ -166,6 +171,7 @@ body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; dis
 </style>
 </head>
 <body>
+<div id="bgfx" aria-hidden="true"></div><div id="bgattr" hidden></div>
 <div id="app">
   <div class="prev" id="prev" hidden></div>
   <header class="hd">
@@ -193,6 +199,7 @@ body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; dis
 <script src="kit/tools.js"></script>
 <script src="../workbooks.js"></script>
 <script src="tutor-console-content.js"></script>
+<script src="tutor-console-themes.js"></script>
 <script>
 'use strict';
 const slot = TK.top('Tutor console');
@@ -203,6 +210,7 @@ const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const TEST_BACKEND = LOCAL ? params.get('backend') : null;             // testing on this computer only
 const BACKEND = TEST_BACKEND || (window.WORKBOOKS && WORKBOOKS.backend) || '';
 const PREVIEW = /^\d{4}-\d{2}-\d{2}$/.test(params.get('day') || '') ? params.get('day') : '';   // admin preview of another day
+const PREVIEW_THEME = (() => { try { const t = params.get('theme'); return t ? JSON.parse(t) : null; } catch (e) { return null; } })();   // admin "Preview" of a background, not saved
 let clockOffset = 0;                                                    // testing only: a pretend device clock
 if (LOCAL && params.get('clock')) { const t = new Date(params.get('clock')).getTime(); if (!isNaN(t)) clockOffset = t - Date.now(); }
 const now = () => Date.now() + clockOffset;
@@ -231,7 +239,7 @@ async function post(body) {
 function drawDate() {
   const d = dateOf(DAY);
   $('#date').innerHTML = '<small>The British School of Paris · Tutor time</small>' + esc(d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }));
-  $('#prev').hidden = !PREVIEW; if (PREVIEW) $('#prev').textContent = 'Preview: this is how the board will look on ' + d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  $('#prev').hidden = !PREVIEW && !PREVIEW_THEME; if (PREVIEW || PREVIEW_THEME) $('#prev').textContent = PREVIEW ? 'Preview: this is how the board will look on ' + d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Preview of the background: it is not saved until you press Save in tutor admin';
 }
 function closeAt() { const q = data && data.quiz; if (!q || q.date !== DAY) return 0; const m = /^(\d{2}):(\d{2})$/.exec(q.closes || '09:00'), d = dateOf(DAY); d.setHours(+m[1], +m[2], 0, 0); return d.getTime(); }
 const quizClosed = () => { const c = closeAt(); return !!c && now() >= c; };
@@ -240,12 +248,25 @@ function tick() {
   const t = hhmm(now()), u = urgency(), q = data && data.quiz && data.quiz.date === DAY ? data.quiz : null;
   document.querySelectorAll('.clockbox').forEach((b) => { b.className = 'clockbox' + (u ? ' ' + u : ''); b.querySelector('.t').textContent = t; b.querySelector('.c').textContent = q ? (u === 'shut' ? 'Quiz closed at ' : 'Quiz closes at ') + niceTime(q.closes) : ''; });
   if (!PREVIEW && today() !== DAY) { DAY = today(); drawDate(); drawTiles(); load(); }
-  QZ.onTick();
+  applyTheme(); QZ.onTick();
 }
 function drawBanner() {
   const b = data && data.banner, box = $('#banner'); box.hidden = !(b && b.text); if (box.hidden) return;
   const mq = $('#mq'), sp = $('#mqt'); mq.classList.remove('run'); sp.textContent = b.text;
   requestAnimationFrame(() => { if (sp.scrollWidth > mq.clientWidth + 2 && !matchMedia('(prefers-reduced-motion: reduce)').matches) { mq.style.setProperty('--mqd', Math.max(12, Math.round((sp.scrollWidth + 70) / 80)) + 's'); sp.innerHTML = '<em>' + esc(b.text) + '</em><em aria-hidden="true">' + esc(b.text) + '</em>'; mq.classList.add('run'); } });   // a long banner scrolls round and round
+}
+
+// ---------- the background behind the panels (set in tutor admin; which theme applies today is worked out here, by the date in Paris) ----------
+let bg = null, bgKey = '';
+function applyTheme() {
+  const th = PREVIEW_THEME || (data && data.theme) || null, r = TCT.resolve(th, PREVIEW || TCT.parisDay(now())), key = JSON.stringify(r);
+  if (key === bgKey) return; bgKey = key;
+  const host = $('#bgfx'), at = $('#bgattr'); if (bg) bg.stop(); bg = null; host.textContent = ''; at.hidden = true; document.body.dataset.bg = r.id; if (r.kind === 'theme' && /^(bunting|lights)$/.test(TCT.byId[r.id].deco || '')) document.body.dataset.deco = '1'; else delete document.body.dataset.deco;
+  if (r.kind === 'theme') bg = TCT.mount(host, r.id, { intensity: r.intensity, paused: () => !$('#act').hidden, band: () => { const b = $('.hd').getBoundingClientRect(); return { top: b.top - 6, bottom: b.bottom + 4 }; } });
+  else if (r.kind === 'image') {   // a soft, dimmed picture: only its address is stored
+    const d = document.createElement('div'); d.className = 'img'; d.style.backgroundImage = 'url("' + r.url + '")'; d.style.opacity = String(r.strength / 100); if (r.blur) d.style.filter = 'blur(14px)'; host.appendChild(d);
+    if (r.attribution) { at.textContent = r.attribution; at.hidden = false; }
+  }
 }
 
 // ---------- notices ----------
@@ -583,7 +604,8 @@ const QZ = (() => {
   return { live, onData, onTick, open: openIn, state: S };
 })();
 
-if (LOCAL) window.__tc = { setNow(iso) { clockOffset = new Date(iso).getTime() - Date.now(); tick(); }, QZ: QZ.state, otdBad: OTD_BAD };
+if (LOCAL) window.__tc = { setNow(iso) { clockOffset = new Date(iso).getTime() - Date.now(); tick(); }, QZ: QZ.state, otdBad: OTD_BAD, bg: () => bg, bgKey: () => bgKey };
+document.querySelector('.tk-theme').addEventListener('click', () => { if (bg && bg.repaint) bg.repaint(); });
 drawDate(); drawTiles(); drawEvents(); tick(); setInterval(tick, 1000);
 if (BACKEND) load(); else { fails = 1; load(); }
 </script>

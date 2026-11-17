@@ -562,6 +562,7 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
       let v = val(f); if (f.type === 'date') v = niceDate(v);
       if (f.send) d[f.send] = v; else if (v) d.other.push([f.label, v]);
     });
+    const now = new Date(); d.other.unshift(['Time sent', String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0')]);
     return d;
   }
   function showErr(t) { $('#errtext').textContent = t; $('#err').classList.toggle('on', !!t); $('.sendrow').classList.toggle('haserr', !!t); if (t) $('#err').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }

@@ -308,7 +308,7 @@ async function load() {
   loading = false;
 }
 const rf = document.createElement('button'); rf.className = 'btn'; rf.textContent = '↻ Refresh'; rf.title = 'Fetch the latest notices'; rf.onclick = load; slot.appendChild(rf);
-setInterval(() => { if (!document.hidden) load(); }, 5 * 60 * 1000);
+setInterval(() => { if (!document.hidden) setTimeout(load, Math.random() * 30000); }, 5 * 60 * 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastOK > 60000) load(); });
 
 // ---------- activities ----------
@@ -529,14 +529,17 @@ const QZ = (() => {
   }
   async function submit(auto) {
     if (S.busy) return false; S.busy = true; S.err = ''; if (!auto) draw();
-    let ok = false;
-    for (let t = 0; t < (auto ? 4 : 1) && !ok; t++) {
+    let ok = false; const nap = (ms) => new Promise((r) => setTimeout(r, ms));
+    if (auto) await nap(Math.random() * 15000);   // spread the 9:00 rush: ~25 boards must not all hit the server in the same second
+    for (let t = 0; t < (auto ? 8 : 4) && !ok; t++) {
       try {
         const j = await post({ a: 'tcsubmit', date: S.date, group: S.group, answers: S.answers });
         if (j && j.ok) { S.token = j.token; S.submitted = true; S.dirty = false; ok = true; }
+        else if (j && j.error === 'busy') { S.err = 'The server is busy, trying again…'; await nap(2000 + Math.random() * 4000); }
         else { S.err = j && j.error === 'locked' ? 'The answers have already been shown for this group, so they can no longer be changed.' : j && j.error === 'closed' ? 'The quiz is closed.' : 'Could not submit: ' + ((j && j.error) || 'unknown error') + '.'; break; }
-      } catch (e) { S.err = 'Could not reach the server. Check the internet and try again.'; if (auto) await new Promise((r) => setTimeout(r, 4000)); }
+      } catch (e) { S.err = 'Could not reach the server. Check the internet and try again.'; await nap(3000 + Math.random() * 4000); }
     }
+    if (!ok && /trying again/.test(S.err)) S.err = 'The server is busy. Press Submit again in a moment.';
     S.busy = false; if (S.el && current && current.id === 'house') draw(); return ok;
   }
   async function loadAnswers() {
@@ -546,7 +549,7 @@ const QZ = (() => {
       const j = await get(q);
       if (j && j.ok) { S.correct = j.correct; S.result = j.result || null; S.rank = j.houses || null; S.final = !!j.final; if (S.el && current && current.id === 'house') draw(); if (S.final && !S._reloaded) { S._reloaded = true; load(); } }
     } catch (e) {}
-    if (quizClosed() && (!S.correct || (!S.final && now() < (S.pollUntil || now() + 1)))) S.poll = setTimeout(loadAnswers, S.correct ? 20000 : 12000);   // keep the house ranking live until the server has the final result
+    if (quizClosed() && (!S.correct || (!S.final && now() < (S.pollUntil || now() + 1)))) S.poll = setTimeout(loadAnswers, (S.correct ? 20000 : 12000) + Math.random() * 6000);   // keep the house ranking live until the server has the final result
   }
   const L = (k) => 'ABCDEF'[k];
   function resultsHtml() {

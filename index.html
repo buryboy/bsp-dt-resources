@@ -36,8 +36,40 @@ h1{font:700 46px Fredoka,sans-serif;color:var(--forest);margin:10px 0 6px;line-h
 .col .meta{font-size:12px;margin-bottom:4px}
 footer{margin-top:30px;font-size:14px;color:#55695d}
 </style>
+<style id="gate-css">
+html.locked body>*:not(#gate){display:none!important}
+#gate{display:none;position:fixed;inset:0;align-items:center;justify-content:center;padding:20px}
+html.locked #gate{display:flex}
+#gate form{background:var(--cream);border:3px solid var(--line);border-radius:26px;box-shadow:0 8px 0 #d9c7a3,0 14px 24px #0002;padding:28px 26px;max-width:380px;width:100%;text-align:center}
+#gate h1{font-size:30px;margin:0 0 6px}#gate p{margin:0 0 16px;color:#3d5246}
+#gate input{width:100%;font:600 20px Nunito,sans-serif;padding:12px 14px;border:3px solid var(--line);border-radius:14px;text-align:center}
+#gate button{margin-top:12px;width:100%;font:700 20px Fredoka,sans-serif;padding:12px;border:0;border-radius:14px;background:var(--forest);color:#fff;cursor:pointer}
+#gate .err{color:#b21c26;font-weight:700;min-height:22px;margin-top:10px}
+</style>
+<script>
+// Simple password screen for this hub page only (remembered on this device once entered).
+(function () { try { if (localStorage.getItem('bsp-hub-ok') === 'e6148a925a1d24ea') return; } catch (e) {} document.documentElement.classList.add('locked'); })();
+</script>
 </head>
 <body>
+<div id="gate"><form autocomplete="off"><h1>BSP Design &amp; Technology</h1><p>Enter the password to open the resources.</p>
+<input type="password" id="gate-pw" placeholder="Password" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Password"><button type="submit">Open</button><div class="err" id="gate-err"></div></form></div>
+<script>
+(function () {
+  const H = 'e6148a925a1d24ea191e7960eda136d22716d869639e501911e607e36f1e346d';
+  const f = document.querySelector('#gate form'), pw = document.getElementById('gate-pw'), err = document.getElementById('gate-err');
+  if (document.documentElement.classList.contains('locked')) setTimeout(() => pw.focus(), 50);
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v = pw.value.trim().toLowerCase().replace(/\s+/g, '');
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v));
+    const hex = Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+    if (hex === H) { try { localStorage.setItem('bsp-hub-ok', H.slice(0, 16)); } catch (x) {} document.documentElement.classList.remove('locked'); }
+    else { err.textContent = 'That password is not right.'; pw.select(); }
+  });
+})();
+</script>
+
 <div class="wrap">
   <span class="tag">THE BRITISH SCHOOL OF PARIS · DESIGN &amp; TECHNOLOGY</span>
   <h1>Design &amp; Technology</h1>

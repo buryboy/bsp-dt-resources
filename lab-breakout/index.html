@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../gate.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lab Breakout · BSP D&amp;T</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: one page, three modes picked by the URL hash. Chooser, Board (four locks + final vault puzzle), Station A-D (team task screens). */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E6EAF0; --ink:#151D28; --muted:#566275; --line:#CAD2DE;
+  --accent:#23508F; --accent-ink:#FFFFFF; --good:#1D8A4A; --good-bg:#DDF2E4; --bad:#C0392B; --bad-bg:#FBE3DF; --warn:#9A6A00;
+  --sa:#2478B3; --sb:#B96A12; --sc:#7449B0; --sd:#BE3F66;
+  --font-d:"Space Grotesk","Segoe UI",system-ui,sans-serif; --font-b:"Inter","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F151D; --surface:#18212D; --surface-2:#223042; --ink:#E8EEF6; --muted:#9DABBF; --line:#33455B;
+  --accent:#7FB0F0; --accent-ink:#0F151D; --good:#4CC57E; --good-bg:#17382A; --bad:#EE7B6D; --bad-bg:#40201C; --warn:#E3B341;
+  --sa:#5BA6DC; --sb:#E09A47; --sc:#A585DE; --sd:#E57C9C; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0F151D; --surface:#18212D; --surface-2:#223042; --ink:#E8EEF6; --muted:#9DABBF; --line:#33455B;
+  --accent:#7FB0F0; --accent-ink:#0F151D; --good:#4CC57E; --good-bg:#17382A; --bad:#EE7B6D; --bad-bg:#40201C; --warn:#E3B341;
+  --sa:#5BA6DC; --sb:#E09A47; --sc:#A585DE; --sd:#E57C9C; color-scheme:dark;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:18px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px}
+h1,h2,h3{font-family:var(--font-d);margin:0;text-wrap:balance;line-height:1.15}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1500px;margin:0 auto}
+.top{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.brand{font-family:var(--font-d);font-weight:700;font-size:1.5rem}
+.big{font-family:var(--font-d);font-weight:700;font-size:clamp(1.6rem,3vw,2.8rem);line-height:1.15;text-wrap:balance;margin:4px 0 14px}
+.eyebrow{font-size:.85rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.lead{font-size:clamp(1.05rem,1.5vw,1.3rem);color:var(--muted);max-width:62ch;margin:0 0 18px}
+.btn{min-height:56px;padding:10px 24px;border-radius:14px;border:2px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:1.1rem}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.panel{background:var(--surface);border:2px solid var(--line);border-radius:20px;padding:clamp(16px,2.5vw,32px)}
+.choose{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px}
+.choose a{display:block;text-decoration:none;color:var(--ink);padding:22px;border-radius:16px;border:3px solid var(--line);background:var(--surface-2);font-family:var(--font-d);font-weight:700;font-size:1.5rem}
+.choose a small{display:block;font-family:var(--font-b);font-weight:400;font-size:1rem;color:var(--muted);margin-top:4px}
+/* board */
+.clock{font-family:var(--font-d);font-weight:700;font-size:clamp(2rem,4vw,3.4rem);font-variant-numeric:tabular-nums;padding:4px 18px;border-radius:14px;background:var(--surface);border:2px solid var(--line)}
+.clock.low{color:var(--bad);border-color:var(--bad)}
+.locks{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.lock{text-align:left;padding:16px;border-radius:18px;border:4px solid currentColor;background:var(--surface);min-width:0;display:flex;flex-direction:column;gap:6px}
+.lock h3{font-size:1.6rem;color:var(--ink)}
+.lock .tp{color:var(--muted);font-size:1rem}
+.lock .st{font-family:var(--font-d);font-weight:700;font-size:1.3rem}
+.lock.sel{box-shadow:0 0 0 6px color-mix(in srgb,currentColor 30%,transparent)}
+.lock.open{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.la{color:var(--sa)}.lb{color:var(--sb)}.lc{color:var(--sc)}.ld{color:var(--sd)}
+.entry{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:18px;align-items:start}
+.display{font-family:var(--font-d);font-weight:700;font-size:3rem;letter-spacing:.35em;text-align:center;padding:10px;border-radius:14px;background:var(--surface-2);min-height:78px;font-variant-numeric:tabular-nums}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.pad button{min-height:72px;border-radius:14px;border:2px solid var(--line);background:var(--surface);font-family:var(--font-d);font-weight:700;font-size:1.8rem}
+.pad button.go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:1.2rem}
+.msg{padding:14px 18px;border-radius:14px;background:var(--surface-2);font-size:1.15rem;min-height:3.4em}
+.msg.good{background:var(--good-bg);border:2px solid var(--good)}
+.msg.bad{background:var(--bad-bg);border:2px solid var(--bad)}
+.vault{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-bottom:14px}
+.slot{min-height:120px;padding:12px;border-radius:14px;border:3px dashed var(--line);background:var(--surface-2);display:flex;flex-direction:column;gap:8px;text-align:left;min-width:0}
+.slot b{font-size:1.05rem}
+.slot.full{border-style:solid;border-color:var(--good);background:var(--good-bg)}
+.tray{display:flex;flex-wrap:wrap;gap:10px;padding:14px;border-radius:14px;background:var(--surface-2);min-height:72px}
+.chip{padding:10px 18px;min-height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-weight:700;font-size:1.15rem;touch-action:none;user-select:none;cursor:grab}
+.chip.sel{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip.placed{background:var(--good);color:#fff;border-color:var(--good);cursor:default}
+.chip.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.ghost-chip{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.win{text-align:center;padding:30px}
+.win .big{font-size:clamp(2.2rem,6vw,5rem)}
+/* station */
+.sbar{height:12px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin:8px 0 18px}
+.sbar i{display:block;height:100%;background:currentColor}
+.roles{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.roles span{padding:6px 14px;border-radius:99px;background:var(--surface-2);font-weight:600;font-size:.95rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.item{display:block;width:100%;text-align:left;padding:12px 16px;border-radius:12px;border:2px solid var(--line);background:var(--surface);margin-bottom:10px;font-size:1.1rem;min-height:56px}
+.item.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+.item.done{background:var(--good-bg);border-color:var(--good);cursor:default}
+.item.shake{animation:shake .4s}
+.item.dim{opacity:.4}
+.orow{display:flex;gap:10px;align-items:stretch;margin-bottom:10px}
+.orow .item{margin:0;flex:1}
+.orow .mv{display:flex;flex-direction:column;gap:4px}
+.orow .mv button{width:52px;flex:1;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-size:1.1rem;min-height:26px}
+.bk{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.bkt{min-height:150px;padding:12px;border-radius:14px;border:3px dashed var(--line);background:var(--surface-2);text-align:left;display:flex;flex-direction:column;gap:6px}
+.bkt h3{font-size:1.15rem}
+.bkt .item{margin:0;min-height:44px;padding:8px 12px;font-size:1rem}
+.codebox{text-align:center;padding:18px;border-radius:16px;background:var(--good-bg);border:3px solid var(--good);margin-bottom:16px}
+.codebox .d{font-family:var(--font-d);font-weight:700;font-size:clamp(3rem,9vw,6rem);letter-spacing:.3em}
+.teach{margin-top:20px;padding:14px 18px;border:2px dashed var(--line);border-radius:14px}
+.teach code{font-family:var(--font-d);font-weight:700}
+@media (max-width:820px){.locks{grid-template-columns:1fr 1fr}.entry,.two{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.item.shake,.chip.shake{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+(function(){
+"use strict";
+/* ================= CONTENT (AQA 8552 3.1.6.2 material properties, 3.2.8 annealing) ================= */
+var STATIONS={
+ a:{n:"A",name:"Physical properties",topic:"Absorbency, density, fusibility",code:[4,1,7],tasks:[
+  {t:"match",title:"Match the term",intro:"Tap a term, then tap its meaning.",hint:"Density is about how heavy something is for its size.",
+   pairs:[["Absorbency","How much moisture a material soaks up"],["Density","How much mass there is in a given volume"],["Fusibility","How easily a material melts so it can be joined"]]},
+  {t:"order",title:"Rank by density",intro:"Put these in order from LEAST dense (top) to MOST dense (bottom). Use the arrows.",hint:"Think of what floats, what is a light metal, and what is a heavy metal.",
+   items:["Balsa","Oak","Acrylic (PMMA)","Aluminium","Mild steel","Copper"]},
+  {t:"quiz",title:"Which property?",hint:"Read what the product needs to do, then match it to the property.",
+   questions:[
+    {q:"A boat hull must not soak up water. What is needed?",o:["High absorbency","Low absorbency","High fusibility"],a:1,w:"Low absorbency means good resistance to moisture."},
+    {q:"An aircraft panel must be light for its size. What is needed?",o:["Low density","High density","High fusibility"],a:0,w:"Low density gives a low mass for the same volume. Aluminium is used rather than steel."},
+    {q:"Solder must melt easily so it can join two copper pipes. Which property is this?",o:["Density","Absorbency","Fusibility"],a:2,w:"Solder has high fusibility: it melts at a low temperature."}]}
+ ]},
+ b:{n:"B",name:"Conductivity and strength",topic:"Electrical conductivity, thermal conductivity, strength",code:[8,2,6],tasks:[
+  {t:"match",title:"Match the term",intro:"Tap a term, then tap its meaning.",hint:"One of these is about electricity, one about heat, one about force.",
+   pairs:[["Electrical conductivity","How easily electric current flows through a material"],["Thermal conductivity","How easily heat flows through a material"],["Strength","Ability to withstand a force without breaking or deforming"]]},
+  {t:"bucket",title:"Conductor or insulator?",intro:"Sort each material by how well it conducts electricity. Tap a material, then tap a box.",hint:"Metals conduct. Plastics, rubber and dry wood do not.",
+   buckets:[{k:"c",l:"Good electrical conductor"},{k:"i",l:"Electrical insulator"}],
+   items:[["Copper","c"],["Aluminium","c"],["Mild steel","c"],["PVC","i"],["Dry wood","i"],["Rubber","i"]]},
+  {t:"quiz",title:"Which property?",hint:"Ask: should heat pass through easily here, or be stopped?",
+   questions:[
+    {q:"The base of a saucepan should heat food quickly. What is needed?",o:["Low thermal conductivity","High thermal conductivity","High elasticity"],a:1,w:"High thermal conductivity moves heat from the hob to the food. Copper and aluminium are used."},
+    {q:"The handle of a saucepan should stay cool. Which material suits best?",o:["Copper","Aluminium","Nylon"],a:2,w:"Nylon is a polymer and a poor thermal conductor, so the handle stays cool."},
+    {q:"A crane cable must support a heavy load without snapping. Which property matters most?",o:["Absorbency","Strength","Fusibility"],a:1,w:"Strength is the ability to withstand a force without failing."}]}
+ ]},
+ c:{n:"C",name:"Hardness, toughness, elasticity",topic:"Working properties",code:[3,5,9],tasks:[
+  {t:"match",title:"Match the term",intro:"Tap a term, then tap its meaning.",hint:"Hardness is about scratches. Toughness is about impacts.",
+   pairs:[["Hardness","Resistance to scratching, wear and denting"],["Toughness","Ability to absorb a sudden impact without cracking"],["Elasticity","Ability to return to the original shape after being stretched or bent"]]},
+  {t:"bucket",title:"Which property does it need?",intro:"Sort each situation under the property it needs most. Tap a situation, then tap a box.",hint:"Scratch or wear = hardness. Crash or shock = toughness. Springs back = elasticity.",
+   buckets:[{k:"h",l:"Hardness"},{k:"t",l:"Toughness"},{k:"e",l:"Elasticity"}],
+   items:[["A drill bit that must not wear down","h"],["A file that cuts other metals","h"],["A cycle helmet in a crash","t"],["A hammer head hitting a nail","t"],["A trampoline spring","e"],["An elastic band","e"]]},
+  {t:"quiz",title:"Choose the material",hint:"Match the property to the job.",
+   questions:[
+    {q:"A cutting tool must stay sharp when cutting steel. Which property is most important?",o:["Elasticity","Hardness","Absorbency"],a:1,w:"High speed steel is very hard, so the cutting edge resists wear."},
+    {q:"A safety helmet shell must not shatter on impact. Which property?",o:["Toughness","Density","Fusibility"],a:0,w:"Tough materials absorb impact energy without cracking."},
+    {q:"A bungee cord must stretch, then go back. Which property?",o:["Malleability","Hardness","Elasticity"],a:2,w:"Elastic materials return to their original shape."}]}
+ ]},
+ d:{n:"D",name:"Malleability, ductility, annealing",topic:"Shaping metals",code:[6,7,2],tasks:[
+  {t:"match",title:"Match the term",intro:"Tap a term, then tap its meaning.",hint:"One is about hammering, one about pulling, one about heating.",
+   pairs:[["Malleability","Can be hammered, rolled or pressed into shape without cracking"],["Ductility","Can be stretched or drawn into a wire without breaking"],["Annealing","Heating then cooling a metal to soften it and make it more malleable"]]},
+  {t:"order",title:"Annealing in order",intro:"Put the steps in the correct order, first step at the top. Use the arrows.",hint:"Heat first. Think about what must happen before cooling.",
+   items:["Heat the metal to the correct temperature","Hold it at that temperature so the heat soaks through","Let it cool (slowly for steel)","The metal is now softer and more malleable"]},
+  {t:"quiz",title:"Which property or process?",hint:"Hammered = malleable. Pulled into wire = ductile. Softening = annealing.",
+   questions:[
+    {q:"A flat copper sheet is hammered into a bowl without cracking. Which property?",o:["Ductility","Malleability","Toughness"],a:1,w:"Malleable metals can be hammered or pressed into shape."},
+    {q:"Copper is pulled through a die to make wire. Which property?",o:["Ductility","Absorbency","Hardness"],a:0,w:"Ductile metals can be drawn out into wire."},
+    {q:"A piece of metal has become hard and brittle from being worked. What softens it again?",o:["Galvanising","Annealing","Anodising"],a:1,w:"Annealing softens the metal and improves its malleability."}]}
+ ]}
+};
+var ORDER=["a","b","c","d"];
+var VAULT=[
+ ["Crane cable that lifts a heavy load","Strength"],
+ ["Chisel blade that must hold a sharp edge","Hardness"],
+ ["Safety helmet shell","Toughness"],
+ ["Trampoline spring","Elasticity"],
+ ["Base of a cooking pan","Thermal conductivity"],
+ ["Core of a mains cable","Electrical conductivity"],
+ ["Copper sheet hammered into a bowl","Malleability"],
+ ["Steel rod drawn into a guitar string","Ductility"],
+ ["Solder that melts to join pipes","Fusibility"],
+ ["Rain jacket fabric","Absorbency (resistance to moisture)"],
+ ["Aircraft body panel that must be light","Density (low)"]
+];
+var LIMIT=35*60;
+
+/* ================= helpers ================= */
+var app=document.getElementById("app");
+function $(s,r){return (r||document).querySelector(s)}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function fmt(s){s=Math.max(0,s);var m=Math.floor(s/60),r=s%60;return m+":"+(r<10?"0":"")+r}
+var tick=null;function stopTick(){if(tick){clearInterval(tick);tick=null}}
+
+/* ================= access: student (no password) and teacher (PIN) ================= */
+/* To change the teacher PIN: put the SHA-256 of the new PIN in TPIN. Not real security: it keeps students off the board and the codes. */
+var TPIN="9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0", TKEY="bsp-lab.t";
+function isT(){try{return sessionStorage.getItem(TKEY)==="1"}catch(e){return false}}
+function hex(buf){return Array.prototype.map.call(new Uint8Array(buf),function(b){return ("0"+b.toString(16)).slice(-2)}).join("")}
+function sha(v){return crypto.subtle.digest("SHA-256",new TextEncoder().encode(v)).then(hex)}
+
+/* ================= router ================= */
+function route(){
+  stopTick();
+  var h=(location.hash||"").replace("#","");
+  if(h==="board")return isT()?board():askPin("board");
+  if(h==="teacher")return isT()?tmenu():askPin("teacher");
+  if(h==="student")return picker();
+  if(h.indexOf("station-")===0&&STATIONS[h.slice(8)])return station(h.slice(8));
+  roles();
+}
+window.addEventListener("hashchange",route);
+
+function shell(inner){return '<div class="top"><div class="brand">Lab Breakout</div><div class="row"><a href="../">All resources</a></div></div>'+inner}
+function roles(){
+  app.onclick=null;
+  app.innerHTML=shell('<div class="panel"><div class="eyebrow">AQA 8552 Material properties</div><h1 class="big">Who is using this computer?</h1>'+
+  '<div class="choose"><a href="#student" style="border-color:var(--accent)">I am a student<small>No password. Pick your team station.</small></a>'+
+  '<a href="#teacher" style="border-color:var(--sb)">I am the teacher<small>PIN needed. Board, codes and print sheets.</small></a></div></div>');
+}
+function picker(){
+  app.onclick=null;
+  app.innerHTML=shell('<div class="panel"><div class="eyebrow">Students</div><h1 class="big">Which station is your team on?</h1><p class="lead">Your teacher will tell you. Sit with your team and share one computer.</p><div class="choose">'+
+  ORDER.map(function(k){var s=STATIONS[k];return '<a href="#station-'+k+'" style="border-color:var(--s'+k+')">Station '+s.n+'<small>'+esc(s.name)+'</small></a>'}).join("")+'</div>'+
+  '<div class="row" style="margin-top:20px">'+(isT()?'<a href="#teacher">Back to the teacher page</a>':'<a href="#">Back</a>')+'</div></div>');
+}
+function askPin(next){
+  app.onclick=null;
+  app.innerHTML=shell('<div class="panel" style="max-width:520px"><div class="eyebrow">Teacher</div><h1 class="big">Enter the teacher PIN</h1>'+
+  '<form id="pf" autocomplete="off"><input id="pn" type="password" inputmode="numeric" maxlength="12" autocomplete="off" aria-label="Teacher PIN" style="width:100%;font:700 1.6rem var(--font-d);padding:12px;border-radius:12px;border:3px solid var(--line);background:var(--surface);color:var(--ink);text-align:center">'+
+  '<div class="msg bad" id="pe" style="margin-top:12px;visibility:hidden">That PIN is not right.</div><div class="row" style="margin-top:14px"><button class="btn" type="submit">Open</button><a href="#">Back</a></div></form></div>');
+  var pn=$("#pn");setTimeout(function(){pn.focus()},50);
+  $("#pf").addEventListener("submit",function(e){
+    e.preventDefault();
+    sha(pn.value.trim()).then(function(h){
+      if(h===TPIN){try{sessionStorage.setItem(TKEY,"1")}catch(x){}if(location.hash==="#"+next)route();else location.hash="#"+next}
+      else{$("#pe").style.visibility="visible";pn.select()}
+    });
+  });
+}
+function tmenu(){
+  app.onclick=function(e){
+    var el=e.target.closest("[data-a]");if(!el)return;
+    if(el.dataset.a==="out"){try{sessionStorage.removeItem(TKEY)}catch(x){}location.hash="#";route()}
+    if(el.dataset.a==="clear"){
+      try{["a","b","c","d"].forEach(function(k){localStorage.removeItem("labStation"+k)});localStorage.removeItem("labBoard")}catch(x){}
+      el.textContent="Done. This computer is reset.";
+    }
+  };
+  app.innerHTML=shell('<div class="panel"><div class="eyebrow">Teacher</div><h1 class="big">Lab Breakout</h1><p class="lead">Open the board on the whiteboard. Open one station on each team computer, or tell students to choose "I am a student".</p>'+
+  '<div class="choose"><a href="#board" style="border-color:var(--accent)">The Board<small>Whiteboard: clock, locks and final vault</small></a>'+
+  '<a href="#student" style="border-color:var(--sb)">Student page<small>See what students see</small></a>'+
+  '<a href="team-sheets.pdf" target="_blank" rel="noopener" style="border-color:var(--sc)">Team sheets (PDF)<small>One printable answer sheet per team station</small></a></div>'+
+  '<div class="choose">'+ORDER.map(function(k){var s=STATIONS[k];return '<a href="#station-'+k+'" style="border-color:var(--s'+k+')">Station '+s.n+'<small>'+esc(s.name)+'</small></a>'}).join("")+'</div>'+
+  '<div class="teach"><b>Codes:</b> '+ORDER.map(function(k){return 'Station '+STATIONS[k].n+': <code>'+STATIONS[k].code.join("")+'</code>'}).join(" &nbsp;&middot;&nbsp; ")+'</div>'+
+  '<div class="row" style="margin-top:18px"><button class="btn ghost" data-a="clear">Reset lab progress on this computer</button><button class="btn ghost" data-a="out">Log out</button></div></div>');
+}
+
+/* ================= STATION ================= */
+function station(k){
+  var st=STATIONS[k],key="labStation"+k;
+  var P=lsGet(key)||{done:0,hints:0};
+  var cur={sel:null,matched:{},placed:{},order:null,q:0,fb:"",shake:null,wrongQ:{},showHint:false,got:false};
+  function save(){lsSet(key,P)}
+  function head(){
+    return '<div class="top"><div class="brand" style="color:var(--s'+k+')">Station '+st.n+' &middot; '+esc(st.name)+'</div><div class="row"><a href="'+(isT()?'#teacher':'#student')+'">Menu</a><button class="btn ghost" data-a="reset">Restart station</button></div></div>';
+  }
+  function draw(){
+    if(P.done>=3){
+      app.innerHTML=head()+'<div class="panel"><div class="eyebrow">Station complete</div><h1 class="big">Your code</h1><div class="codebox"><div class="d">'+st.code.join(" ")+'</div></div>'+
+      '<p class="lead">Checker: carry this code to the board and type it into the Station '+st.n+' lock. Hints used: '+P.hints+'.</p></div>';
+      return;
+    }
+    var i=P.done,task=st.tasks[i];
+    var h=head()+'<div class="panel" style="color:var(--s'+k+')"><div class="eyebrow">Task '+(i+1)+' of 3</div><div class="sbar"><i style="width:'+(i/3*100)+'%"></i></div>'+
+    '<div style="color:var(--ink)"><h1 class="big">'+esc(task.title)+'</h1>'+
+    '<div class="roles"><span>Driver: mouse</span><span>Reader: reads aloud</span><span>Checker: agrees every answer</span>'+(i>0?'<span>Swap roles clockwise</span>':'')+'</div>';
+    if(cur.got){
+      h+='<div class="codebox"><div class="eyebrow">Digit '+(i+1)+' of 3</div><div class="d">'+st.code[i]+'</div></div><p class="lead">Write it down. Swap roles, then carry on.</p><button class="btn" data-a="next">'+(i<2?'Next task':'Show full code')+'</button>';
+    }else{
+      if(task.intro)h+='<p class="lead">'+esc(task.intro)+'</p>';
+      h+=body(task);
+      h+='<div class="msg'+(cur.fb.charAt(0)==="+"?' good':cur.fb.charAt(0)==="-"?' bad':'')+'" style="margin-top:14px" aria-live="polite">'+esc(cur.fb.replace(/^[+-]/,""))+'</div>';
+      h+='<div class="row" style="margin-top:14px"><button class="btn ghost" data-a="hint">Need a hint?</button></div>';
+      if(cur.showHint)h+='<div class="msg" style="margin-top:10px">Hint: '+esc(task.hint)+'</div>';
+    }
+    app.innerHTML=h+'</div></div>';
+  }
+  function body(task){
+    var h="";
+    if(task.t==="match"){
+      if(!cur.defs)cur.defs=shuffle(task.pairs.map(function(p,x){return x}));
+      h+='<div class="two"><div>'+task.pairs.map(function(p,x){var d=cur.matched[x];return '<button class="item'+(d?' done':'')+(cur.sel===x?' sel':'')+(cur.shake==="t"+x?' shake':'')+'" data-a="mt" data-x="'+x+'">'+esc(p[0])+'</button>'}).join("")+'</div><div>'+
+      cur.defs.map(function(x){var d=cur.matched[x];return '<button class="item'+(d?' done':'')+(cur.shake==="d"+x?' shake':'')+'" data-a="md" data-x="'+x+'">'+esc(task.pairs[x][1])+'</button>'}).join("")+'</div></div>';
+    }else if(task.t==="order"){
+      if(!cur.order)cur.order=shuffle(task.items);
+      h+=cur.order.map(function(it,x){return '<div class="orow"><div class="mv"><button data-a="up" data-x="'+x+'" aria-label="Move up">&#9650;</button><button data-a="dn" data-x="'+x+'" aria-label="Move down">&#9660;</button></div><div class="item">'+esc(it)+'</div></div>'}).join("")+'<button class="btn" data-a="check">Check order</button>';
+    }else if(task.t==="bucket"){
+      var left=task.items.map(function(it,x){return x}).filter(function(x){return !cur.placed[x]});
+      h+='<div class="bk">'+task.buckets.map(function(b){return '<button class="bkt" data-a="bk" data-b="'+b.k+'"><h3>'+esc(b.l)+'</h3>'+task.items.map(function(it,x){return (cur.placed[x]&&it[1]===b.k)?'<div class="item done">'+esc(it[0])+'</div>':''}).join("")+'</button>'}).join("")+'</div>';
+      h+=left.map(function(x){return '<button class="item'+(cur.sel===x?' sel':'')+(cur.shake==="i"+x?' shake':'')+'" data-a="bi" data-x="'+x+'">'+esc(task.items[x][0])+'</button>'}).join("");
+    }else if(task.t==="quiz"){
+      var q=task.questions[cur.q];
+      h+='<div class="eyebrow">Question '+(cur.q+1)+' of '+task.questions.length+'</div><h2 style="font-size:clamp(1.3rem,2.4vw,1.9rem);margin:6px 0 14px">'+esc(q.q)+'</h2>'+
+      q.o.map(function(o,x){var w=cur.wrongQ[cur.q+"-"+x],ok=cur.fb.charAt(0)==="+"&&x===q.a;return '<button class="item'+(ok?' done':'')+(w?' dim':'')+'" data-a="qa" data-x="'+x+'"'+(w?' disabled':'')+'>'+esc(o)+'</button>'}).join("");
+      if(cur.fb.charAt(0)==="+")h+='<button class="btn" data-a="qn">'+(cur.q<task.questions.length-1?'Next question':'Finish task')+'</button>';
+    }
+    return h;
+  }
+  function complete(){cur.got=true;cur.fb="";P.done=P.done;draw()}
+  function fin(){P.done++;save();cur={sel:null,matched:{},placed:{},order:null,q:0,fb:"",shake:null,wrongQ:{},showHint:false,got:false};draw()}
+  app.onclick=function(e){
+    var el=e.target.closest("[data-a]");if(!el)return;
+    var a=el.dataset.a,x=+el.dataset.x,task=st.tasks[P.done];
+    if(a==="reset"){P={done:0,hints:0};save();cur={sel:null,matched:{},placed:{},order:null,q:0,fb:"",shake:null,wrongQ:{},showHint:false,got:false};draw();return}
+    if(a==="hint"){if(!cur.showHint){P.hints++;save()}cur.showHint=true;draw();return}
+    if(a==="next"){fin();return}
+    cur.shake=null;
+    if(a==="mt"){if(!cur.matched[x])cur.sel=x;cur.fb="";draw();return}
+    if(a==="md"){
+      if(cur.sel===null){cur.fb="Tap a term on the left first.";draw();return}
+      if(cur.sel===x){cur.matched[x]=true;cur.sel=null;cur.fb="+Correct.";
+        if(Object.keys(cur.matched).length===task.pairs.length){cur.got=true;cur.fb=""}}
+      else{cur.shake="d"+x;cur.fb="-Not that one. Read it again together."}
+      draw();return;
+    }
+    if(a==="up"||a==="dn"){var j=a==="up"?x-1:x+1;if(j<0||j>=cur.order.length)return;var t=cur.order[x];cur.order[x]=cur.order[j];cur.order[j]=t;cur.fb="";draw();return}
+    if(a==="check"){
+      var n=0;cur.order.forEach(function(it,i){if(it===task.items[i])n++});
+      if(n===task.items.length){cur.got=true;cur.fb=""}else cur.fb="-"+n+" of "+task.items.length+" are in the right place. Keep going.";
+      draw();return;
+    }
+    if(a==="bi"){cur.sel=(cur.sel===x)?null:x;cur.fb="";draw();return}
+    if(a==="bk"){
+      if(cur.sel===null){cur.fb="Tap an item first.";draw();return}
+      var it=task.items[cur.sel];
+      if(it[1]===el.dataset.b){cur.placed[cur.sel]=true;cur.sel=null;cur.fb="+Correct.";
+        if(Object.keys(cur.placed).length===task.items.length){cur.got=true;cur.fb=""}}
+      else{cur.shake="i"+cur.sel;cur.fb="-Not that box. Talk it through."}
+      draw();return;
+    }
+    if(a==="qa"){
+      var q=task.questions[cur.q];
+      if(cur.fb.charAt(0)==="+")return;
+      if(x===q.a){cur.fb="+"+q.w}else{cur.wrongQ[cur.q+"-"+x]=true;cur.fb="-Not quite. Try another."}
+      draw();return;
+    }
+    if(a==="qn"){
+      if(cur.q<task.questions.length-1){cur.q++;cur.fb="";cur.wrongQ={};draw()}else{cur.got=true;cur.fb="";draw()}
+      return;
+    }
+  };
+  draw();
+}
+
+/* ================= BOARD ================= */
+function board(){
+  var B=lsGet("labBoard")||{open:{},placed:{},start:0,wrong:0,done:null};
+  var sel=null,entry="",fb="Pick a lock, then type the three-digit code from that station.",fbc="",lockUntil=0,wrongCodes=0,teacher=false,shake=null,drag=null;
+  function save(){lsSet("labBoard",B)}
+  function openCount(){return ORDER.filter(function(k){return B.open[k]}).length}
+  function allOpen(){return openCount()===4}
+  function elapsed(){return B.start?Math.floor((Date.now()-B.start)/1000):0}
+  function draw(){
+    var rem=LIMIT-elapsed();
+    var h='<div class="top"><div class="brand">Lab Breakout</div><div class="row"><div class="clock'+(B.start&&!B.done&&rem<=300?' low':'')+'" id="clock">'+(B.done?fmt(B.done):B.start?fmt(rem):fmt(LIMIT))+'</div>'+
+      (B.start?'':'<button class="btn" data-a="start">Start the clock</button>')+'<a href="#teacher">Menu</a><button class="btn ghost" data-a="teacher">Codes</button></div></div>';
+    h+='<div class="locks">'+ORDER.map(function(k){var s=STATIONS[k],o=B.open[k];
+      return '<button class="lock l'+k+(o?' open':'')+(sel===k?' sel':'')+'" data-a="lock" data-k="'+k+'"'+(o?' disabled':'')+'><h3>Station '+s.n+'</h3><div class="tp">'+esc(s.name)+'</div><div class="st">'+(o?'UNLOCKED':'LOCKED')+'</div></button>'}).join("")+'</div>';
+    if(!allOpen()){
+      h+='<div class="panel"><div class="entry"><div><div class="display" id="disp">'+(entry||"&nbsp;")+'</div><div class="pad">'+
+        [1,2,3,4,5,6,7,8,9].map(function(n){return '<button data-a="num" data-n="'+n+'">'+n+'</button>'}).join("")+
+        '<button data-a="clr">Clear</button><button data-a="num" data-n="0">0</button><button class="go" data-a="go">Unlock</button></div></div>'+
+        '<div><div class="eyebrow">'+openCount()+' of 4 locks open</div><h1 class="big">Get every team’s code to open the vault</h1><div class="msg '+fbc+'" id="fb" aria-live="polite">'+esc(fb)+'</div>'+
+        '<p class="lead" style="margin-top:14px">Teams work at their computers. When a team has all three digits, the Checker walks to the board and enters the code here. Wrong codes lock the keypad for a few seconds.</p></div></div></div>';
+    }else if(B.done){
+      h+='<div class="panel win"><div class="eyebrow">Lab saved</div><div class="big">Vault open in '+fmt(B.done)+'</div><p class="lead" style="margin:0 auto 16px">Wrong placements on the board: '+B.wrong+'. Talk through the ones that caught people out.</p><button class="btn ghost" data-a="reset">Reset the board</button></div>';
+    }else{
+      var placedN=Object.keys(B.placed).length;
+      h+='<div class="panel"><div class="eyebrow">Final vault &middot; '+placedN+' of '+VAULT.length+'</div><h1 class="big">Give every product the property it depends on</h1><p class="lead">Drag a property onto a product, or tap a property then tap a product. Take turns: one person from each team at the board at a time. Each property is used once.</p><div class="vault">'+
+      VAULT.map(function(v,i){var p=B.placed[i];return '<div class="slot'+(p?' full':'')+'" data-slot="'+i+'"><b>'+esc(v[0])+'</b>'+(p?'<span class="chip placed">'+esc(v[1])+'</span>':'<span class="eyebrow">Drop here</span>')+'</div>'}).join("")+'</div>'+
+      '<div class="tray" id="tray">'+VAULT.map(function(v,i){return B.placed[i]?'':'<div class="chip'+(sel==="c"+i?' sel':'')+(shake==="c"+i?' shake':'')+'" data-chip="'+i+'">'+esc(v[1])+'</div>'}).join("")+'</div></div>';
+    }
+    if(teacher)h+='<div class="teach"><b>Teacher codes:</b> '+ORDER.map(function(k){return 'Station '+STATIONS[k].n+': <code>'+STATIONS[k].code.join("")+'</code>'}).join(" &nbsp;&middot;&nbsp; ")+
+      ' <button class="btn ghost" style="min-height:40px;margin-left:10px" data-a="skip">Open all locks</button></div>';
+    app.innerHTML=h;
+    startTick();
+  }
+  function startTick(){
+    stopTick();
+    if(!B.start||B.done)return;
+    tick=setInterval(function(){var c=$("#clock");if(!c)return;var r=LIMIT-elapsed();c.textContent=fmt(r);c.classList.toggle("low",r<=300)},1000);
+  }
+  function setFb(t,c){fb=t;fbc=c||"";var f=$("#fb");if(f){f.textContent=t;f.className="msg "+(c||"")}}
+  function tryCode(){
+    if(Date.now()<lockUntil){setFb("Keypad locked. Wait "+Math.ceil((lockUntil-Date.now())/1000)+" seconds.","bad");return}
+    if(!sel){setFb("Tap a lock first.","bad");return}
+    var code=STATIONS[sel].code.join("");
+    if(entry===code){B.open[sel]=true;setFb("","");fb="Station "+STATIONS[sel].n+" unlocked.";sel=null;entry="";save();draw()}
+    else{wrongCodes++;entry="";var d=$("#disp");if(d)d.innerHTML="&nbsp;";
+      if(wrongCodes%3===0){lockUntil=Date.now()+20000;setFb("Three wrong codes. Keypad locked for 20 seconds. Check with your team.","bad")}
+      else setFb("Wrong code. Check the digits with the team.","bad")}
+  }
+  function place(chipI,slotI){
+    if(chipI===slotI){B.placed[slotI]=true;sel=null;shake=null;save();
+      if(Object.keys(B.placed).length===VAULT.length){B.done=elapsed()||1;save()}
+      draw();
+    }else{B.wrong++;shake="c"+chipI;sel=null;save();draw()}
+  }
+  app.onclick=function(e){
+    var el=e.target.closest("[data-a]"),sl=e.target.closest("[data-slot]");
+    if(el){
+      var a=el.dataset.a;
+      if(a==="start"){B.start=Date.now();save();draw();return}
+      if(a==="teacher"){teacher=!teacher;draw();return}
+      if(a==="lock"){sel=el.dataset.k;entry="";setFb("Enter the code for Station "+STATIONS[sel].n+".","");draw();return}
+      if(a==="num"){if(entry.length<3){entry+=el.dataset.n;var d=$("#disp");if(d)d.textContent=entry}return}
+      if(a==="clr"){entry="";var d2=$("#disp");if(d2)d2.innerHTML="&nbsp;";return}
+      if(a==="go"){tryCode();return}
+      if(a==="skip"){ORDER.forEach(function(k){B.open[k]=true});save();draw();return}
+      if(a==="reset"){B={open:{},placed:{},start:0,wrong:0,done:null};save();sel=null;entry="";fb="Pick a lock, then type the three-digit code from that station.";draw();return}
+    }
+    if(sl&&sel&&sel.charAt(0)==="c"){place(+sel.slice(1),+sl.dataset.slot)}
+  };
+  /* drag with pointer events, falls back to tap-select */
+  app.onpointerdown=function(e){
+    var c=e.target.closest("[data-chip]");if(!c||B.done)return;
+    var id=+c.dataset.chip,sx=e.clientX,sy=e.clientY,moved=false,ghost=null;
+    function mv(ev){
+      if(!moved&&Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy)>8){moved=true;ghost=c.cloneNode(true);ghost.className="chip ghost-chip";document.body.appendChild(ghost);c.style.opacity=".35"}
+      if(ghost){ghost.style.left=ev.clientX+"px";ghost.style.top=ev.clientY+"px"}
+    }
+    function up(ev){
+      document.removeEventListener("pointermove",mv);document.removeEventListener("pointerup",up);document.removeEventListener("pointercancel",up);
+      if(ghost)ghost.remove();c.style.opacity="";
+      if(!moved){sel=(sel==="c"+id)?null:"c"+id;draw();return}
+      var t=document.elementFromPoint(ev.clientX,ev.clientY),s=t&&t.closest("[data-slot]");
+      if(s&&!B.placed[+s.dataset.slot])place(id,+s.dataset.slot);
+    }
+    document.addEventListener("pointermove",mv);document.addEventListener("pointerup",up);document.addEventListener("pointercancel",up);
+    e.preventDefault();
+  };
+  draw();
+}
+route();
+})();
+</script>
+</body>
+</html>

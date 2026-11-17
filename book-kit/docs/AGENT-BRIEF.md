@@ -19,3 +19,6 @@ You are building pages of an interactive iPad exercise-book workbook for Year 10
    - Engaging for 14-year-olds: things to poke, drag, test and discover; short text.
 6. Test with `python3 book-kit/tools/shot.py /tmp/<dir> --book <folder> --pages <n,…>` in both sizes plus your own scripted Playwright taps/drags (block the backend URL in your own scripts); look at the screenshots; zero console errors.
 7. Final report, brief: what each page does; every fact shown; activity ids/labels/max; all answers/accepted solutions; anything beyond CONTENT.md; best screenshot paths; known issues. For final-quiz.js list the 20 questions with answers.
+
+
+**Site password:** every HTML page must load the site password screen as the first thing in `<head>`: `<script src="../gate.js"></script>` (or `gate.js` at the repo root). It is skipped automatically on localhost, so local testing is unaffected.

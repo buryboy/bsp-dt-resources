@@ -52,3 +52,6 @@ python3 book-kit/tools/shot.py /tmp/x --book <folder> --pages 3 --script "docume
 - `Book.saveNow()`: send the current page to the backend now (event `save`), for pages where students write for a long time.
 - `BOOK_CONFIG.hideScores`: the finish page shows boxes filled instead of a score.
 - `window.__NOGATE = 1`: set by the test tools to skip a workbook's own password lock.
+
+
+**Site password:** every HTML page must load the site password screen as the first thing in `<head>`: `<script src="../gate.js"></script>` (or `gate.js` at the repo root). It is skipped automatically on localhost, so local testing is unaffected.

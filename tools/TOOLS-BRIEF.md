@@ -10,3 +10,6 @@ Repo root: /home/claude/bsp-dt-resources. Tools live in `tools/` as **one self-c
 6. Test with Playwright + /usr/bin/google-chrome headless at 1366×768 and 1920×1080 (and 820×1180 where an iPad use makes sense): load, use every control, check zero console errors, look at screenshots. Serve the repo root with `python3 -m http.server` from /home/claude/bsp-dt-resources.
 7. Edit only the files your brief names. Do not edit `tools/kit/*`, `index.html`, `tools/index.html` or other builders' tools (if you need a kit change, say so in your report instead).
 8. Report briefly: what each tool does, its controls and shortcuts, anything stored, screenshot paths, known issues.
+
+
+**Site password:** every HTML page must load the site password screen as the first thing in `<head>`: `<script src="../gate.js"></script>` (or `gate.js` at the repo root). It is skipped automatically on localhost, so local testing is unaffected.

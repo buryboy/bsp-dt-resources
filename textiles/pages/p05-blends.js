@@ -406,7 +406,8 @@
 
     notes = ui.box(`<div class="tx5-nb">
       <p>A <span class="key">blend</span> = two or more different <b>fibres</b> mixed together <b>before spinning</b> into <b>one yarn</b>. (The mixer made blends.)</p>
-      <p>A <span class="key">mixture</span> = different <b>yarns</b> used in one fabric: for example cotton yarns down the fabric (the warp) and polyester yarns across it (the weft).</p>
+      <p>A <span class="key">mixture</span> = different <b>yarns</b> used in one fabric: for example cotton yarns down the fabric and polyester yarns across it.</p>
+      <p class="small">On a woven fabric, the <b>warp</b> yarns run <b>lengthways</b>, along the length of the fabric, and the <b>weft</b> yarns run <b>across</b> it, from side to side, over and under the warp. So in that example the cotton is the warp and the polyester is the weft. You will weave with them on page 6.</p>
       <p><b>Why?</b> To combine the good properties of each fibre and reduce the bad ones, to improve how the fabric looks and feels, and to reduce cost.</p>
       <div class="tx5-cards"></div></div>`, { tag: 'Notes' });
     cards();

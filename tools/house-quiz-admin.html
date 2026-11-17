@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="../gate.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wednesday quiz admin · BSP</title>
+<link rel="stylesheet" href="kit/tools.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #f3f1ea; --card: #ffffff; --ink: #14213d; --ink2: #24408e; --line: #dad6ca; --muted: #5b6377; --gold: #a97a1f; --soft: #eef1f8; --good: #1f8a4c; --bad: #c0392b; --warn: #c98a00; --serif: 'Source Serif 4', Georgia, serif; }
+body.dark { --bg: #0e1422; --card: #171f33; --ink: #eef1f8; --ink2: #9db4ff; --line: #2a3554; --muted: #a2abc2; --gold: #e3b860; --soft: #1e2942; --good: #4cc27d; --bad: #ff7b6b; --warn: #f0b83a; }
+[hidden] { display: none !important; }
+body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; min-height: 100vh; }
+.tk-top { border-bottom: 1px solid var(--line); padding: 6px 14px; } .tk-top h1 { font: 600 17px Inter, sans-serif; }
+.btn { box-shadow: 0 0 0 1.5px var(--line) inset; border-radius: 10px; font-weight: 600; } .btn.blue { background: var(--ink2); color: #fff; box-shadow: none; } .btn.go { background: var(--good); color: #fff; box-shadow: none; } .btn.stop { background: var(--bad); color: #fff; box-shadow: none; }
+body.dark .btn.blue, body.dark .btn.go, body.dark .btn.stop { color: #0e1422; }
+.btn.sm { min-height: 40px; padding: 6px 11px; font-size: 15px; } .btn[disabled] { opacity: .45; }
+main { max-width: 980px; margin: 0 auto; padding: 14px 14px 110px; display: grid; gap: 14px; }
+.narrow { max-width: 460px; margin: 6vh auto 0; }
+.card { padding: 16px; box-shadow: none; border: 1px solid var(--line); border-radius: 14px; min-width: 0; }
+h2 { font: 600 23px var(--serif); margin: 0 0 4px; } h3 { font: 600 19px var(--serif); margin: 14px 0 6px; } p.lead { color: var(--muted); margin: 0 0 10px; font-size: 15.5px; line-height: 1.4; }
+label { display: block; font-weight: 600; font-size: 15px; margin: 10px 0 4px; } label small { font-weight: 400; color: var(--muted); }
+input[type=text], input[type=password], input[type=date], input[type=time], textarea, select { width: 100%; border: 1.5px solid var(--line); border-radius: 10px; padding: 9px 11px; background: var(--card); font-size: 17px; min-height: 46px; }
+textarea { resize: vertical; line-height: 1.35; min-height: 64px; }
+input:focus, textarea:focus, button:focus-visible, select:focus, a:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
+.r { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; } .r > div { flex: 1; min-width: 140px; } .r > .fix { flex: none; min-width: 0; }
+.acts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; } .st { font-size: 15px; font-weight: 600; color: var(--muted); } .st.ok { color: var(--good); } .st.err { color: var(--bad); } .st.dirty { color: var(--warn); }
+.tabs { display: flex; gap: 6px; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 6px 0; } .tabs button { flex: 1; border: 0; border-radius: 10px; min-height: 48px; font-weight: 700; font-size: 16px; background: var(--card); box-shadow: 0 0 0 1.5px var(--line) inset; cursor: pointer; color: var(--ink); } .tabs button.on { background: var(--ink); color: var(--bg); box-shadow: none; }
+.q { border: 1.5px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 12px; background: var(--card); } .q.flag { border-color: var(--warn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 25%, transparent); }
+.qh { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; } .qh b { font: 700 20px var(--serif); margin-right: auto; } .qh .btn { min-width: 44px; padding: 6px 10px; min-height: 42px; }
+.flagmsg { color: var(--warn); font-weight: 700; font-size: 14.5px; margin: 0 0 6px; }
+.o { display: grid; grid-template-columns: 50px minmax(0, 1fr) 44px; gap: 6px; margin-top: 6px; align-items: center; }
+.o .L { height: 46px; border-radius: 10px; border: 2px solid var(--line); background: var(--card); font-weight: 800; font-size: 18px; cursor: pointer; color: var(--muted); } .o .L.on { background: var(--good); border-color: var(--good); color: #fff; }
+.o .X { height: 46px; border: 0; background: none; font-size: 22px; color: var(--muted); cursor: pointer; border-radius: 10px; }
+.pic { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; } .pic img { max-height: 110px; max-width: 180px; border-radius: 8px; border: 1px solid var(--line); display: block; } .pic input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; } .pic label.btn { margin: 0; display: inline-flex; align-items: center; cursor: pointer; }
+.hint { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.save { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 10px; align-items: center; justify-content: center; z-index: 10; flex-wrap: wrap; } .save .btn { min-height: 52px; font-size: 18px; padding: 10px 26px; }
+.bar { display: grid; grid-template-columns: 34px minmax(0, 1fr) 118px; gap: 10px; align-items: center; margin: 10px 0; } .bar .p { font: 700 20px var(--serif); text-align: center; color: var(--muted); } .bar .n { font-weight: 700; font-size: 16px; margin-bottom: 4px; overflow-wrap: anywhere; } .bar .tr { background: var(--soft); border-radius: 7px; height: 18px; overflow: hidden; } .bar .f { height: 100%; border-radius: 7px; } .bar .v { text-align: right; font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; } .bar .v small { display: block; font-weight: 500; color: var(--muted); font-size: 12.5px; line-height: 1.25; }
+.pq { display: grid; grid-template-columns: minmax(0, 1fr) 120px 52px; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 15.5px; } .pq small { color: var(--muted); display: block; } .pq .tr { background: var(--soft); height: 14px; border-radius: 7px; overflow: hidden; } .pq .f { height: 100%; background: var(--ink2); } .pq b { text-align: right; }
+.gr { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 44px; gap: 6px; margin-top: 6px; }
+.dlg { position: fixed; inset: 0; z-index: 60; background: #0a1024b0; display: grid; place-items: center; padding: 16px; } .dlg .box { background: var(--card); border-radius: 16px; padding: 22px; max-width: 520px; width: 100%; } .dlg h3 { font: 600 24px var(--serif); margin: 0 0 8px; } .dlg p { margin: 0 0 14px; color: var(--muted); line-height: 1.4; }
+.spin { display: inline-block; width: 1em; height: 1em; border: .16em solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -.12em; margin-right: .4em; } @keyframes sp { to { transform: rotate(360deg); } }
+@media (max-width: 480px) { .qh .btn { min-width: 40px; padding: 6px 8px; } .pq { grid-template-columns: minmax(0, 1fr) 70px 46px; }  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="kit/tools.js"></script>
+<script src="../workbooks.js"></script>
+<script src="tutor-console-content.js"></script>
+<script>
+'use strict';
+TK.top('Quiz admin');
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = TC.esc;
+const params = new URLSearchParams(location.search);
+const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const TEST_BACKEND = LOCAL ? params.get('backend') : null;             // testing on this computer only
+const BACKEND = TEST_BACKEND || (window.WORKBOOKS && WORKBOOKS.backend) || '';
+const app = $('#app');
+const ss = { get(k) { try { return sessionStorage.getItem('bsp-tutor.' + k) || ''; } catch (e) { return ''; } }, set(k, v) { try { sessionStorage.setItem('bsp-tutor.' + k, v); } catch (e) {} }, del(k) { try { sessionStorage.removeItem('bsp-tutor.' + k); } catch (e) {} } };
+let pin = ss.get('pin');                    // the same PIN as tutor admin: kept for this browser tab only
+let L = null, tab = 'quiz', Q = null, dirty = false, resDate = '', R = null, G = null;
+const imgCache = {};
+const NET = 'Could not reach the server. Check the internet and try again.';
+const pad = (n) => String(n).padStart(2, '0');
+const isoOf = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const dateOf = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(NaN); };
+const nice = (iso, o) => { const d = dateOf(iso); return isNaN(d) ? String(iso || '') : d.toLocaleDateString('en-GB', o || { weekday: 'short', day: 'numeric', month: 'short' }); };
+const nextWed = (iso) => { const d = dateOf(iso); d.setDate(d.getDate() + ((3 - d.getDay() + 7) % 7)); return isoOf(d); };
+const LET = 'ABCDEF', fmtN = (x) => (Math.round(Number(x) * 100) / 100).toString();
+const withBackend = (href) => href + (TEST_BACKEND ? (href.includes('?') ? '&' : '?') + 'backend=' + encodeURIComponent(TEST_BACKEND) : '');
+
+async function post(body) {
+  const ac = new AbortController(), to = setTimeout(() => ac.abort(), 90000);
+  try { const r = await fetch(BACKEND, { method: 'POST', body: JSON.stringify(Object.assign({ pin }, body)), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, signal: ac.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(); if (j && j.error === 'Wrong PIN' && body.a !== 'tccheck') { pin = ''; ss.del('pin'); stepPin('Please type the PIN again.'); } return j; }
+  finally { clearTimeout(to); }
+}
+async function get(q) { const r = await fetch(BACKEND + (BACKEND.includes('?') ? '&' : '?') + new URLSearchParams(q), { cache: 'no-store' }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.json(); }
+const busy = (btn, on, txt) => { if (!btn) return; if (on) { btn.dataset.t = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + esc(txt || 'Saving…'); } else { btn.disabled = false; if (btn.dataset.t) btn.innerHTML = btn.dataset.t; } };
+const say = (el, cls, t) => { if (el) { el.className = 'st ' + cls; el.textContent = t; } };
+function confirmBox(title, text, yes, fn, danger) {
+  const d = document.createElement('div'); d.className = 'dlg';
+  d.innerHTML = `<div class="box" role="alertdialog" aria-modal="true"><h3>${esc(title)}</h3><p>${esc(text)}</p><div class="acts"><button class="btn" id="dno">Go back</button><button class="btn ${danger ? 'stop' : 'blue'}" id="dyes">${esc(yes)}</button></div></div>`;
+  document.body.appendChild(d); $('#dno', d).onclick = () => d.remove(); $('#dyes', d).onclick = () => { d.remove(); fn(); }; $('#dno', d).focus();
+  d.addEventListener('keydown', (e) => { if (e.key === 'Escape') d.remove(); });
+}
+
+/* ---------- pasted questions -> [{ q, options, correct, flag }] ----------
+   1. Question?        Q1: Question?       Question on its own line
+   A) option   a. option   (a) option   A - option        (a * or "(correct)" marks the right one)
+   Answer: B   Ans: b   Correct: B   Correct answer: (b)   Answer: the option's text */
+function parseQuiz(text) {
+  const out = []; let cur = null;
+  const QRE = /^(?:Q(?:uestion)?\s*)?(\d{1,3})\s*[.):\-]\s*(.+)$/i, QRE2 = /^Q(?:uestion)?\s*\d{0,3}\s*[:.)\-]\s*(.+)$/i;
+  const ORE = /^(?:\(([A-Fa-f])\)|\[([A-Fa-f])\]|([A-Fa-f])\s*[.):\-])\s+(.+)$/;
+  const ARE = /^(?:the\s+)?(?:correct\s+answer|answer|ans|correct|key)\b\.?\s*(?:is\b)?\s*[:=\-]?\s*[\[(]?([A-Fa-f])[\])]?(?:\s*[.):\-]\s+.*)?\.?$/i, ARE2 = /^(?:the\s+)?(?:correct\s+answer|answer|ans|correct)\b\.?\s*(?:is\b)?\s*[:=\-]\s*(.+)$/i;
+  const start = (t) => { cur = { q: t.trim(), options: [], correct: -1 }; out.push(cur); };
+  String(text || '').replace(/\r\n?/g, '\n').replace(/[ \t]/g, ' ').split('\n').forEach((raw) => {
+    const l = raw.trim(); if (!l) return;
+    let m;
+    if (cur && (m = ARE.exec(l))) { const k = LET.indexOf(m[1].toUpperCase()); if (k < cur.options.length) cur.correct = k; return; }
+    if (cur && cur.options.length && (m = ARE2.exec(l))) { const t = m[1].trim().toLowerCase().replace(/[.]$/, ''), k = cur.options.findIndex((o) => o.toLowerCase().replace(/[.]$/, '') === t); if (k >= 0) cur.correct = k; return; }
+    if (cur && (m = ORE.exec(l))) {
+      const letter = (m[1] || m[2] || m[3]).toUpperCase();
+      if (LET.indexOf(letter) === cur.options.length) {
+        let t = m[4].trim(), right = false;
+        if (/^\*\s*/.test(t) || /\s*\*$/.test(t) || /\s*\((?:correct|answer)\)$/i.test(t) || /\s*[✓✔]$/.test(t)) { right = true; t = t.replace(/^\*\s*/, '').replace(/\s*\*$/, '').replace(/\s*\((?:correct|answer)\)$/i, '').replace(/\s*[✓✔]$/, '').trim(); }
+        cur.options.push(t); if (right) cur.correct = cur.options.length - 1; return;
+      }
+    }
+    if ((m = QRE.exec(l))) { start(m[2]); return; }
+    if ((m = QRE2.exec(l))) { start(m[1]); return; }
+    if (!cur || cur.options.length) start(l); else cur.q += ' ' + l;
+  });
+  out.forEach((q) => { q.options = q.options.slice(0, 6); q.flag = q.options.length < 2 ? 'Fewer than two options were found: add them.' : q.correct < 0 ? 'No answer line was found: tap the letter of the correct answer.' : ''; while (q.options.length < 2) q.options.push(''); });
+  return out;
+}
+window.parseQuiz = parseQuiz;
+
+// ---------- PIN ----------
+function stepPin(msg) {
+  app.innerHTML = `<form class="narrow card" id="f" autocomplete="off"><h2>Wednesday quiz admin</h2><p class="lead">Write the house quiz, set who answers it and see the results. Same PIN as tutor admin.</p>
+    <label for="pn">Admin PIN</label><input id="pn" type="password" inputmode="numeric" maxlength="12" autocomplete="off">
+    <div class="st err" id="err" style="min-height:1.4em;margin-top:8px">${esc(msg || '')}</div><button class="btn blue" type="submit" style="width:100%;min-height:54px;font-size:19px;margin-top:6px">Continue</button></form>`;
+  $('#pn').focus();
+  $('#f').onsubmit = async (e) => {
+    e.preventDefault(); const v = $('#pn').value.trim(), b = $('#f button');
+    if (!v) { $('#err').textContent = 'Type the PIN first.'; return; }
+    busy(b, true, 'Checking…'); pin = v;
+    try { const j = await post({ a: 'tccheck' }); if (j && j.ok) { ss.set('pin', v); start(); return; } pin = ''; $('#err').textContent = j && /Too many/.test(j.error || '') ? j.error : 'That PIN is not right.'; $('#pn').select(); }
+    catch (x) { pin = ''; $('#err').textContent = NET; }
+    busy(b, false);
+  };
+}
+async function loadList() { const j = await post({ a: 'tcquizlist' }); if (!j || !j.ok) throw new Error('bad'); L = j; return j; }
+async function start() {
+  app.innerHTML = '<p class="lead" style="text-align:center;margin-top:8vh"><span class="spin"></span>Loading…</p>';
+  try { await loadList(); } catch (e) { if (!pin) return; app.innerHTML = `<div class="narrow card"><h2>Could not load</h2><p class="lead">${NET}</p><button class="btn blue" id="again">Try again</button></div>`; $('#again').onclick = start; return; }
+  if (!Q) { const d = nextWed(L.today); if (L.quizzes.some((q) => q.date === d)) { await openQuiz(d, true); } else newQuiz(d); }
+  draw();
+}
+function newQuiz(date) { Q = { date, was: '', title: 'House quiz', questions: [blank()] }; dirty = false; }
+const blank = () => ({ q: '', options: ['', '', '', ''], correct: -1, img: '', imgData: '', flag: '' });
+async function openQuiz(date, quiet) {
+  const j = await post({ a: 'tcquizget', date });
+  if (j && j.ok && j.quiz) { Q = { date: j.quiz.date, was: j.quiz.date, title: j.quiz.title, questions: j.quiz.questions.map((x) => ({ q: x.q, options: x.options.slice(), correct: x.correct, img: x.img || '', imgData: '', flag: '' })) }; dirty = false; }
+  else if (!quiet) throw new Error('not found');
+}
+function draw() {
+  app.innerHTML = `<div class="tabs" role="tablist"><button data-t="quiz" class="${tab === 'quiz' ? 'on' : ''}">Quiz</button><button data-t="results" class="${tab === 'results' ? 'on' : ''}">Results</button><button data-t="settings" class="${tab === 'settings' ? 'on' : ''}">Settings</button></div><div id="body" style="display:grid;gap:14px"></div>`;
+  app.querySelectorAll('.tabs button').forEach((b) => b.onclick = async () => { if (tab === 'quiz') pull(); tab = b.dataset.t; try { await loadList(); } catch (e) {} if (pin) { draw(); scrollTo(0, 0); } });
+  document.querySelectorAll('.save').forEach((x) => x.remove());
+  if (tab === 'quiz') drawQuiz(); else if (tab === 'results') drawResults(); else drawSettings();
+}
+
+// ---------- the quiz editor ----------
+function pull() { // read the form back into Q
+  if (!$('#qd')) return;
+  Q.date = $('#qd').value || Q.date; Q.title = $('#qt').value.trim();
+  document.querySelectorAll('.q').forEach((box, i) => { const q = Q.questions[i]; if (!q) return; q.q = $('textarea', box).value.trim(); box.querySelectorAll('.o input').forEach((inp, k) => (q.options[k] = inp.value.trim())); });
+}
+const touch = () => { dirty = true; const s = $('#sst'); if (s) say(s, 'dirty', 'Not saved yet'); };
+function drawQuiz() {
+  const body = $('#body'), ex = L.quizzes.find((q) => q.date === Q.was);
+  body.innerHTML = `<section class="card"><h2>${Q.was ? 'Edit the quiz' : 'New quiz'}</h2><p class="lead">The quiz appears on every board on its date and closes at ${esc(L.close)}. Questions are always multiple choice.</p>
+    <div class="r"><div class="fix" style="width:190px"><label for="qd">Quiz date</label><input id="qd" type="date" value="${esc(Q.date)}"></div><div style="flex:2;min-width:200px"><label for="qt">Title</label><input id="qt" type="text" maxlength="80" value="${esc(Q.title)}"></div></div>
+    <div class="hint" id="qwhen"></div>
+    <div class="r" style="margin-top:6px"><div><label for="qo">Open another quiz</label><select id="qo"><option value="">${L.quizzes.length ? 'Choose a quiz…' : 'No saved quizzes yet'}</option>${L.quizzes.map((q) => `<option value="${esc(q.date)}">${esc(nice(q.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }))} · ${esc(q.title)} (${q.n} questions${q.subs ? ', ' + q.subs + ' answered' : ''})</option>`).join('')}</select></div><div class="fix"><button class="btn" id="qn">+ New quiz</button></div></div>
+    ${ex && ex.subs ? `<p class="hint" style="color:var(--warn);font-weight:600">${ex.subs} group(s) have already answered this quiz. If you change the questions, their answers are marked against the new version.</p>` : ''}</section>
+    <section class="card"><h2>Questions</h2><div id="qs"></div>
+      <div class="acts"><button class="btn blue" id="qa">+ Add a question</button></div>
+      <details style="margin-top:14px" id="pd"><summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">Paste questions</summary>
+        <p class="lead">Paste a whole quiz. Each question starts on its own line, then the options (A, B, C…) and an answer line. Then check the questions above before saving.</p>
+        <textarea id="pt" style="min-height:180px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px" placeholder="1. Which planet is known as the Red Planet?&#10;A) Venus&#10;B) Mars&#10;C) Jupiter&#10;D) Saturn&#10;Answer: B"></textarea>
+        <div class="acts"><button class="btn blue" id="pa">Add these questions</button><span class="st" id="pst"></span></div></details></section>`;
+  const bar = document.createElement('div'); bar.className = 'save';
+  bar.innerHTML = `<span class="st${dirty ? ' dirty' : ''}" id="sst">${dirty ? 'Not saved yet' : Q.was ? 'Saved' : ''}</span><button class="btn go" id="sv">Save quiz</button>${Q.was ? '<button class="btn" id="dl" style="color:var(--bad)">Delete quiz</button>' : ''}`;
+  document.body.appendChild(bar);
+  const when = () => { const d = $('#qd').value, other = d !== Q.was && L.quizzes.some((q) => q.date === d); $('#qwhen').innerHTML = esc(nice(d, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + (dateOf(d).getDay() !== 3 ? ' · <b style="color:var(--warn)">not a Wednesday</b>' : '') + (other ? ' · <b style="color:var(--bad)">there is already a quiz on this date</b>' : ''); };
+  when(); $('#qd').onchange = () => { when(); touch(); }; $('#qt').oninput = touch;
+  drawQs();
+  $('#qa').onclick = () => { pull(); Q.questions.push(blank()); touch(); drawQs(); const boxes = document.querySelectorAll('.q'); boxes[boxes.length - 1].querySelector('textarea').focus(); };
+  const leave = (fn) => { pull(); if (dirty) confirmBox('Leave without saving?', 'This quiz has changes that are not saved.', 'Leave', fn, true); else fn(); };
+  $('#qo').onchange = () => { const d = $('#qo').value; if (!d) return; leave(async () => { try { await openQuiz(d); draw(); } catch (e) { say($('#sst'), 'err', NET); } }); $('#qo').value = ''; };
+  $('#qn').onclick = () => leave(() => { let d = nextWed(L.today); while (L.quizzes.some((q) => q.date === d)) { const x = dateOf(d); x.setDate(x.getDate() + 7); d = isoOf(x); } newQuiz(d); draw(); });
+  $('#pa').onclick = () => {
+    const got = parseQuiz($('#pt').value); if (!got.length) { say($('#pst'), 'err', 'No questions were found in that text.'); return; }
+    pull(); if (Q.questions.length === 1 && !Q.questions[0].q && Q.questions[0].options.every((o) => !o) && !Q.questions[0].img && !Q.questions[0].imgData) Q.questions = [];
+    got.forEach((g) => Q.questions.push({ q: g.q, options: g.options, correct: g.correct, img: '', imgData: '', flag: g.flag }));
+    const bad = got.filter((g) => g.flag).length; $('#pt').value = ''; touch(); drawQs();
+    say($('#pst'), bad ? 'dirty' : 'ok', 'Added ' + got.length + (got.length === 1 ? ' question' : ' questions') + (bad ? ': ' + bad + ' need checking (marked in amber above).' : '. Check them above, then save.'));
+    const first = document.querySelector('.q.flag') || document.querySelectorAll('.q')[Q.questions.length - got.length]; if (first) first.scrollIntoView({ block: 'center' });
+  };
+  $('#sv').onclick = save;
+  if ($('#dl')) $('#dl').onclick = () => confirmBox('Delete this quiz?', 'The quiz of ' + nice(Q.was) + ', its pictures and any answers already sent for it will be deleted.', 'Delete', async () => { busy($('#dl'), true, 'Deleting…'); try { const j = await post({ a: 'tcquizdel', date: Q.was }); if (j && j.ok) { await loadList(); newQuiz(nextWed(L.today)); draw(); return; } say($('#sst'), 'err', (j && j.error) || 'Could not delete.'); } catch (e) { say($('#sst'), 'err', NET); } busy($('#dl'), false); }, true);
+}
+function drawQs() {
+  $('#qs').innerHTML = Q.questions.map((q, i) => `<div class="q${q.flag ? ' flag' : ''}" data-i="${i}"><div class="qh"><b>Q${i + 1}</b><button class="btn sm" data-a="up" ${i ? '' : 'disabled'} aria-label="Move up" title="Move up">↑</button><button class="btn sm" data-a="down" ${i < Q.questions.length - 1 ? '' : 'disabled'} aria-label="Move down" title="Move down">↓</button><button class="btn sm" data-a="dup">Duplicate</button><button class="btn sm" data-a="del" style="color:var(--bad)">Delete</button></div>
+    ${q.flag ? `<p class="flagmsg">⚠ ${esc(q.flag)}</p>` : ''}<textarea maxlength="600" placeholder="The question" aria-label="Question ${i + 1}">${esc(q.q)}</textarea>
+    ${q.options.map((o, k) => `<div class="o"><button class="L${q.correct === k ? ' on' : ''}" data-k="${k}" aria-pressed="${q.correct === k}" title="Tap to mark ${LET[k]} as the correct answer">${LET[k]}${q.correct === k ? ' ✓' : ''}</button><input type="text" maxlength="200" value="${esc(o)}" placeholder="Option ${LET[k]}" aria-label="Option ${LET[k]}"><button class="X" data-x="${k}" ${q.options.length <= 2 ? 'disabled style="opacity:.3"' : ''} aria-label="Remove option ${LET[k]}">×</button></div>`).join('')}
+    <div class="pic">${q.options.length < 6 ? '<button class="btn sm" data-a="opt">+ Option</button>' : ''}${q.imgData || q.img ? `<img alt="Picture for question ${i + 1}" data-img="${esc(q.img)}" src="${q.imgData || imgCache[q.img] || ''}"><button class="btn sm" data-a="nopic">Remove picture</button>` : `<label class="btn sm">📷 Take photo<input type="file" accept="image/*" capture="environment"></label><label class="btn sm">🖼 Choose picture<input type="file" accept="image/*"></label>`}<span class="st"></span></div>
+    <div class="hint">Tap a letter to mark the correct answer${q.correct >= 0 ? '' : ' <b style="color:var(--warn)">(none marked yet)</b>'}.</div></div>`).join('');
+  document.querySelectorAll('.q').forEach((box) => {
+    const i = +box.dataset.i, q = Q.questions[i];
+    box.querySelectorAll('textarea, .o input').forEach((x) => (x.oninput = touch));
+    box.querySelectorAll('.L').forEach((b) => b.onclick = () => { pull(); q.correct = +b.dataset.k; if (q.options.filter(Boolean).length >= 2) q.flag = ''; touch(); drawQs(); });
+    box.querySelectorAll('.X').forEach((b) => b.onclick = () => { pull(); const k = +b.dataset.x; q.options.splice(k, 1); q.correct = q.correct === k ? -1 : q.correct > k ? q.correct - 1 : q.correct; touch(); drawQs(); });
+    box.querySelectorAll('[data-a]').forEach((b) => b.onclick = () => {
+      pull(); const a = b.dataset.a, qs = Q.questions;
+      if (a === 'up' && i) [qs[i - 1], qs[i]] = [qs[i], qs[i - 1]];
+      else if (a === 'down' && i < qs.length - 1) [qs[i + 1], qs[i]] = [qs[i], qs[i + 1]];
+      else if (a === 'dup') qs.splice(i + 1, 0, JSON.parse(JSON.stringify(q)));
+      else if (a === 'del') { const rm = () => { qs.splice(i, 1); if (!qs.length) qs.push(blank()); touch(); drawQs(); }; if (q.q || q.options.some(Boolean)) { confirmBox('Delete question ' + (i + 1) + '?', q.q || '(no text)', 'Delete', rm, true); return; } rm(); return; }
+      else if (a === 'opt') q.options.push('');
+      else if (a === 'nopic') { q.img = ''; q.imgData = ''; }
+      touch(); drawQs();
+    });
+    box.querySelectorAll('input[type=file]').forEach((inp) => inp.onchange = async () => { const f = inp.files && inp.files[0], st = box.querySelector('.pic .st'); if (!f) return; pull(); say(st, '', 'Preparing the picture…'); try { q.imgData = await shrink(f); q.img = ''; touch(); drawQs(); } catch (e) { say(st, 'err', 'That file could not be used as a picture.'); } });
+    const im = box.querySelector('img[data-img]'); if (im && q.img && !q.imgData && !imgCache[q.img]) get({ a: 'tcimg', id: q.img }).then((j) => { if (j && j.ok) { imgCache[q.img] = j.data; im.src = j.data; } }).catch(() => {});
+  });
+}
+// downscale to at most 1280 px on the long side, JPEG quality 0.75
+function shrink(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => { try { const k = Math.min(1, 1280 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * k)); c.height = Math.max(1, Math.round(im.naturalHeight * k)); const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.75)); } catch (e) { rej(e); } };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('not an image')); };
+    im.src = url;
+  });
+}
+async function save() {
+  pull(); const st = $('#sst'), btn = $('#sv');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(Q.date)) { say(st, 'err', 'Pick the quiz date.'); return; }
+  let badI = -1;
+  Q.questions.forEach((q, i) => { q.options = q.options.map((o) => o.trim()); const filled = q.options.filter(Boolean).length; q.flag = !q.q && !q.img && !q.imgData ? 'Type the question.' : filled < 2 || filled !== q.options.length ? 'Fill in every option (at least two), or remove the empty ones with ×.' : q.correct < 0 || q.correct >= q.options.length ? 'Tap the letter of the correct answer.' : ''; if (q.flag && badI < 0) badI = i; });
+  if (badI >= 0) { drawQs(); say(st, 'err', 'Question ' + (badI + 1) + ' needs attention.'); document.querySelectorAll('.q')[badI].scrollIntoView({ block: 'center' }); return; }
+  busy(btn, true, 'Saving…');
+  try {
+    for (let i = 0; i < Q.questions.length; i++) { const q = Q.questions[i]; if (q.imgData && !q.img) { btn.innerHTML = '<span class="spin"></span>Sending picture ' + (i + 1) + '…'; const j = await post({ a: 'tcquizimg', date: Q.date, data: q.imgData }); if (!j || !j.ok) { busy(btn, false); say(st, 'err', 'Picture for question ' + (i + 1) + ': ' + ((j && j.error) || 'could not be saved') + '.'); return; } q.img = j.id; imgCache[j.id] = q.imgData; q.imgData = ''; } }
+    const j = await post({ a: 'tcquizsave', date: Q.date, was: Q.was || '', title: Q.title, questions: Q.questions.map((q) => ({ q: q.q, options: q.options, correct: q.correct, img: q.img })) });
+    if (j && j.ok) { Q.was = Q.date; dirty = false; await loadList(); draw(); say($('#sst'), 'ok', 'Saved ✓ · ' + j.n + (j.n === 1 ? ' question' : ' questions') + ' for ' + nice(Q.date)); return; }
+    say(st, 'err', j && j.error === 'busy' ? 'The server is busy. Try again in a moment.' : (j && j.error) || 'Could not save.');
+  } catch (e) { say(st, 'err', NET); }
+  busy(btn, false);
+}
+addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+// ---------- results ----------
+function bars(rows, max) { return rows.map((r) => `<div class="bar"><div class="p">${r.pos || '–'}</div><div><div class="n">${esc(r.name)}</div><div class="tr"><div class="f" style="width:${max > 0 && r.value > 0 ? Math.max(2, (r.value / max) * 100) : 0}%;background:${esc(r.colour)}"></div></div></div><div class="v">${esc(r.big)}<small>${esc(r.note || '')}</small></div></div>`).join(''); }
+async function drawResults() {
+  const body = $('#body');
+  if (!L.quizzes.length) { body.innerHTML = '<section class="card"><h2>Results</h2><p class="lead">No quiz has been saved yet.</p></section>'; return; }
+  if (!resDate || !L.quizzes.some((q) => q.date === resDate)) { const past = L.quizzes.filter((q) => q.date <= L.today); resDate = (past[0] || L.quizzes[L.quizzes.length - 1]).date; }
+  body.innerHTML = `<section class="card"><h2>Results</h2><div class="r"><div><label for="rd">Quiz</label><select id="rd">${L.quizzes.map((q) => `<option value="${esc(q.date)}" ${q.date === resDate ? 'selected' : ''}>${esc(nice(q.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }))} · ${esc(q.title)}</option>`).join('')}</select></div><div class="fix"><button class="btn" id="rr">↻ Refresh</button></div><div class="fix"><button class="btn blue" id="rc">Copy results</button></div></div><div class="st" id="rst" style="margin-top:8px"><span class="spin"></span>Loading…</div></section><div id="rb" style="display:grid;gap:14px"></div>`;
+  $('#rd').onchange = () => { resDate = $('#rd').value; drawResults(); }; $('#rr').onclick = drawResults;
+  try { R = await post({ a: 'tcresults', date: resDate }); } catch (e) { say($('#rst'), 'err', NET); return; }
+  if (!R || !R.ok) { if (pin) say($('#rst'), 'err', (R && R.error) || 'Could not load.'); return; }
+  const qs = R.quiz.questions, n = qs.length, subs = R.subs.slice().sort((a, b) => b.score - a.score || (a.group < b.group ? -1 : 1)), colour = (g) => { const x = R.groups.find((y) => y.label === g), h = x && R.houses.find((y) => y.name === x.house); return h ? h.colour : '#667085'; }, houseOf = (g) => { const x = R.groups.find((y) => y.label === g); return x ? x.house : ''; };
+  subs.forEach((s, i) => (s.pos = i && subs[i - 1].score === s.score ? subs[i - 1].pos : i + 1));
+  const missing = R.groups.filter((g) => !subs.some((s) => s.group === g.label));
+  say($('#rst'), '', (R.closed ? 'Closed at ' + R.close : 'Open until ' + R.close) + ' · ' + subs.length + ' of ' + R.groups.length + ' groups have answered' + (R.posted ? ' · house points added to the standings' : R.closed ? ' · house points are added to the standings 5 minutes after closing' : ''));
+  $('#rb').innerHTML = `<section class="card"><h2>House ranking</h2><p class="lead">A house's score is the average of its groups' scores, so a house with more rooms is not favoured. Points by position: ${esc((L.scale || []).join(', '))}.</p>
+      ${bars(R.rank.map((x) => ({ pos: x.pos, name: x.house, colour: x.colour, value: x.avg || 0, big: x.avg == null ? '–' : fmtN(x.avg) + ' / ' + n, note: x.avg == null ? 'no answers' : 'average of ' + x.n + (x.n === 1 ? ' group' : ' groups') + ' · ' + fmtN(x.points) + (x.points === 1 ? ' pt' : ' pts') })), n)}</section>
+    <section class="card"><h2>Group ranking</h2>${subs.length ? bars(subs.map((s) => ({ pos: s.pos, name: s.group, colour: colour(s.group), value: s.score, big: s.score + ' / ' + s.max, note: houseOf(s.group) !== s.group ? houseOf(s.group) : '' })), n) : '<p class="lead">No answers yet.</p>'}
+      ${missing.length ? `<p class="hint">Not answered: ${missing.map((g) => esc(g.label)).join(', ')}</p>` : ''}</section>
+    <section class="card"><h2>Question by question</h2><p class="lead">The share of groups that chose the right answer.</p>${qs.map((q, i) => { const got = subs.filter((s) => s.answers[i] === q.correct).length, pc = subs.length ? Math.round((got / subs.length) * 100) : 0; return `<div class="pq"><div>${i + 1}. ${esc(q.q)}<small>Answer: ${LET[q.correct]}. ${esc(q.options[q.correct] || '')}</small></div><div class="tr"><div class="f" style="width:${pc}%"></div></div><b>${subs.length ? pc + '%' : '–'}</b></div>`; }).join('')}</section>`;
+  $('#rc').onclick = async () => {
+    const rows = [['Quiz', R.quiz.title, resDate], [], ['House', 'Position', 'Average score', 'Groups answered', 'Points']].concat(R.rank.map((x) => [x.house, x.pos || '', x.avg == null ? '' : x.avg, x.n, x.points]), [[], ['Group', 'House', 'Position', 'Score', 'Out of'].concat(qs.map((_, i) => 'Q' + (i + 1)))],
+      subs.map((s) => [s.group, houseOf(s.group), s.pos, s.score, s.max].concat(s.answers.map((a) => (a == null ? '' : LET[a])))), [['Correct answer', '', '', '', ''].concat(qs.map((q) => LET[q.correct]))], [['% correct', '', '', '', ''].concat(qs.map((q, i) => (subs.length ? Math.round((subs.filter((s) => s.answers[i] === q.correct).length / subs.length) * 100) : '')))]);
+    const tsv = rows.map((r) => r.map((c) => String(c).replace(/[\t\n]/g, ' ')).join('\t')).join('\n'); window.__lastCopy = tsv; let ok = false;
+    try { await navigator.clipboard.writeText(tsv); ok = true; } catch (e) { try { const t = document.createElement('textarea'); t.value = tsv; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); ok = document.execCommand('copy'); t.remove(); } catch (x) {} }
+    const b = $('#rc'), o = b.textContent; b.textContent = ok ? 'Copied ✓ (paste into Excel)' : 'Could not copy'; setTimeout(() => { b.textContent = o; }, 1800);
+  };
+}
+
+// ---------- settings ----------
+function drawSettings() {
+  if (!G) G = { groups: L.groups.map((g) => ({ label: g.label, house: g.house })), close: L.close, scale: L.customScale ? L.scale.join(', ') : '' };
+  const body = $('#body'), def = L.houses.map((_, i) => L.houses.length - i).join(', ');
+  body.innerHTML = `<section class="card"><h2>Quiz groups</h2><p class="lead">On Wednesdays students sit in their houses, so each room is a house group. The board asks “Which house group?” and shows these as buttons in the house colours. If a house is split across rooms, add one group per room (for example “${esc(L.houses[0].name)} · Room 12”): the house's score is the average of its groups.</p>
+      <div id="gl">${G.groups.map((g, i) => `<div class="gr"><input type="text" maxlength="60" value="${esc(g.label)}" data-l="${i}" aria-label="Group ${i + 1} name"><select data-h="${i}" aria-label="House of group ${i + 1}">${L.houses.map((h) => `<option ${h.name === g.house ? 'selected' : ''}>${esc(h.name)}</option>`).join('')}</select><button class="btn sm" data-x="${i}" ${G.groups.length <= 1 ? 'disabled' : ''} aria-label="Remove group">×</button></div>`).join('')}</div>
+      <div class="acts"><button class="btn" id="ga">+ Add a group</button><button class="btn" id="gd">One group per house</button></div>
+      <p class="hint">House names and colours are set in <a href="${esc(withBackend('tutor-admin.html'))}">tutor admin</a>.</p></section>
+    <section class="card"><h2>Closing time and points</h2><div class="r"><div style="max-width:200px"><label for="gc">The quiz closes at</label><input id="gc" type="time" value="${esc(G.close)}"></div>
+      <div><label for="gs">House points by position <small>(1st, 2nd, 3rd…; leave empty for ${esc(def)})</small></label><input id="gs" type="text" inputmode="numeric" value="${esc(G.scale)}" placeholder="${esc(def)}"></div></div>
+      <p class="hint">After closing, the boards show the answers and each group's score. Five minutes later the house ranking is added to the house standings as that day's round, with these points (tied houses share the higher points). You can change or delete that round in tutor admin.</p>
+      <div class="acts"><button class="btn blue" id="gsv">Save settings</button><span class="st" id="gst"></span></div></section>`;
+  const pullG = () => { body.querySelectorAll('[data-l]').forEach((x) => (G.groups[+x.dataset.l].label = x.value.trim())); body.querySelectorAll('[data-h]').forEach((x) => (G.groups[+x.dataset.h].house = x.value)); G.close = $('#gc').value; G.scale = $('#gs').value; };
+  $('#ga').onclick = () => { pullG(); const h = L.houses[G.groups.length % L.houses.length].name; G.groups.push({ label: h + ' · Room ', house: h }); drawSettings(); const ins = body.querySelectorAll('[data-l]'); ins[ins.length - 1].focus(); };
+  $('#gd').onclick = () => { pullG(); G.groups = L.houses.map((h) => ({ label: h.name, house: h.name })); drawSettings(); };
+  body.querySelectorAll('[data-x]').forEach((b) => b.onclick = () => { pullG(); G.groups.splice(+b.dataset.x, 1); drawSettings(); });
+  $('#gsv').onclick = async () => {
+    pullG(); const st = $('#gst'), labels = G.groups.map((g) => g.label.toLowerCase());
+    if (G.groups.some((g) => !g.label)) { say(st, 'err', 'Every group needs a name.'); return; }
+    if (new Set(labels).size !== labels.length) { say(st, 'err', 'Two groups have the same name.'); return; }
+    if (!/^\d{2}:\d{2}$/.test(G.close)) { say(st, 'err', 'Pick the closing time.'); return; }
+    const parts = G.scale.trim() ? G.scale.split(/[\s,;]+/).filter(Boolean) : [], scale = parts.map(Number);
+    if (scale.some((x) => isNaN(x) || x < 0)) { say(st, 'err', 'The points must be numbers, for example 4, 3, 2, 1.'); return; }
+    busy($('#gsv'), true);
+    try { const j = await post({ a: 'tcgroups', groups: G.groups, close: G.close, scale }); if (j && j.ok) { await loadList(); G = null; drawSettings(); say($('#gst'), 'ok', 'Saved ✓'); return; } say(st, 'err', (j && j.error) || 'Could not save.'); } catch (e) { say(st, 'err', NET); }
+    busy($('#gsv'), false);
+  };
+}
+
+if (!BACKEND) app.innerHTML = '<div class="narrow card"><h2>Not set up</h2><p class="lead">The server address is missing (workbooks.js).</p></div>';
+else if (pin) start();
+else stepPin();
+</script>
+</body>
+</html>

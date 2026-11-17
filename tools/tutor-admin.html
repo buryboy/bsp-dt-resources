@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="../gate.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tutor admin · BSP</title>
+<link rel="stylesheet" href="kit/tools.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #f3f1ea; --card: #ffffff; --ink: #14213d; --ink2: #24408e; --line: #dad6ca; --muted: #5b6377; --gold: #a97a1f; --soft: #eef1f8; --good: #1f8a4c; --bad: #c0392b; --warn: #c98a00; --serif: 'Source Serif 4', Georgia, serif; }
+body.dark { --bg: #0e1422; --card: #171f33; --ink: #eef1f8; --ink2: #9db4ff; --line: #2a3554; --muted: #a2abc2; --gold: #e3b860; --soft: #1e2942; --good: #4cc27d; --bad: #ff7b6b; --warn: #f0b83a; }
+[hidden] { display: none !important; }
+body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; min-height: 100vh; }
+.tk-top { border-bottom: 1px solid var(--line); padding: 6px 14px; } .tk-top h1 { font: 600 17px Inter, sans-serif; }
+.btn { box-shadow: 0 0 0 1.5px var(--line) inset; border-radius: 10px; font-weight: 600; } .btn.blue { background: var(--ink2); color: #fff; box-shadow: none; } .btn.go { background: var(--good); color: #fff; box-shadow: none; } .btn.stop { background: var(--bad); color: #fff; box-shadow: none; }
+body.dark .btn.blue, body.dark .btn.go, body.dark .btn.stop { color: #0e1422; }
+.btn.sm { min-height: 40px; padding: 6px 12px; font-size: 15px; } .btn[disabled] { opacity: .5; }
+main { max-width: 1180px; margin: 0 auto; padding: 14px 14px 40px; display: grid; gap: 16px; }
+.narrow { max-width: 460px; margin: 6vh auto 0; }
+section.card { padding: 18px; box-shadow: none; border: 1px solid var(--line); border-radius: 14px; min-width: 0; }
+h2 { font: 600 24px var(--serif); margin: 0 0 4px; } p.lead { color: var(--muted); margin: 0 0 12px; font-size: 15.5px; line-height: 1.4; }
+label { display: block; font-weight: 600; font-size: 15px; margin: 10px 0 4px; } label small { font-weight: 400; color: var(--muted); }
+input[type=text], input[type=password], input[type=number], input[type=date], input[type=time], textarea, select { width: 100%; border: 1.5px solid var(--line); border-radius: 10px; padding: 9px 11px; background: var(--card); font-size: 17px; min-height: 46px; }
+textarea { min-height: 300px; resize: vertical; line-height: 1.4; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 15.5px; }
+input:focus, textarea:focus, button:focus-visible, a:focus-visible, select:focus { outline: 3px solid var(--gold); outline-offset: 1px; }
+.r { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; } .r > div { flex: 1; min-width: 140px; } .r > .fix { flex: none; min-width: 0; }
+.acts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; } .st { font-size: 15px; font-weight: 600; color: var(--muted); } .st.ok { color: var(--good); } .st.err { color: var(--bad); } .st.dirty { color: var(--warn); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; } @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+.tb { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.pv { border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 16px; background: var(--bg); min-height: 300px; max-height: 560px; overflow: auto; }
+.md { font-size: 18px; line-height: 1.4; overflow-wrap: anywhere; } .md h2 { font: 700 1.3em/1.15 var(--serif); margin: .7em 0 .25em; } .md h3 { font: 700 1.1em/1.2 var(--serif); margin: .7em 0 .2em; color: var(--ink2); } .md h4 { font-size: 1em; margin: .6em 0 .2em; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.md > :first-child { margin-top: .2em; } .md p { margin: .45em 0; } .md ul, .md ol { margin: .35em 0; padding-left: 1.25em; } .md li { margin: .2em 0; } .md li::marker { color: var(--gold); font-weight: 700; } .md hr { border: 0; border-top: 2px solid var(--line); } .md mark { background: color-mix(in srgb, var(--warn) 38%, transparent); color: inherit; } .md a { color: var(--ink2); }
+.list { display: grid; gap: 8px; margin-top: 12px; }
+.evr { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; } .evr .d { font-weight: 700; } .evr .d small { display: block; font-weight: 500; color: var(--muted); } .evr .t { font-weight: 600; overflow-wrap: anywhere; } .evr .t small { display: block; font-weight: 400; color: var(--muted); } .evr .b { display: flex; gap: 6px; }
+@media (max-width: 560px) { .evr { grid-template-columns: 1fr auto; } .evr .d { grid-column: 1 / -1; } .evr .d small { display: inline; margin-left: 8px; } }
+.hr { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-bottom: 8px; } .hr input[type=color] { width: 56px; height: 46px; padding: 2px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--card); }
+.pts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 4px; } .pts label { margin: 0 0 4px; display: flex; align-items: center; gap: 8px; } .sw { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+.tw { overflow-x: auto; margin-top: 12px; } table { border-collapse: collapse; width: 100%; font-size: 16px; } th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; } th:first-child, td:first-child { text-align: left; } th { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); } tfoot td { font-weight: 700; border-top: 2px solid var(--ink); border-bottom: 0; font-size: 18px; } td small { color: var(--muted); display: block; font-size: 12.5px; }
+.note { background: color-mix(in srgb, var(--warn) 18%, transparent); border-radius: 10px; padding: 8px 12px; font-size: 15px; margin-top: 10px; }
+.links { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; } .links a { text-decoration: none; display: inline-flex; align-items: center; }
+details > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; color: var(--muted); }
+.dlg { position: fixed; inset: 0; z-index: 60; background: #0a1024b0; display: grid; place-items: center; padding: 16px; } .dlg .box { background: var(--card); border-radius: 16px; padding: 22px; max-width: 520px; width: 100%; } .dlg h3 { font: 600 24px var(--serif); margin: 0 0 8px; } .dlg p { margin: 0 0 14px; color: var(--muted); line-height: 1.4; }
+.spin { display: inline-block; width: 1em; height: 1em; border: .16em solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -.12em; margin-right: .4em; } @keyframes sp { to { transform: rotate(360deg); } }
+footer { font-size: 13px; color: var(--muted); text-align: center; padding: 0 16px 14px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<footer>Notices, events and house points are saved in the school's Google sheet “Tutor console”. Nothing about students is stored.</footer>
+<script src="kit/tools.js"></script>
+<script src="../workbooks.js"></script>
+<script src="tutor-console-content.js"></script>
+<script>
+'use strict';
+TK.top('Tutor admin');
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = TC.esc;
+const params = new URLSearchParams(location.search);
+const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const TEST_BACKEND = LOCAL ? params.get('backend') : null;             // testing on this computer only
+const BACKEND = TEST_BACKEND || (window.WORKBOOKS && WORKBOOKS.backend) || '';
+const app = $('#app');
+const ss = { get(k) { try { return sessionStorage.getItem('bsp-tutor.' + k) || ''; } catch (e) { return ''; } }, set(k, v) { try { sessionStorage.setItem('bsp-tutor.' + k, v); } catch (e) {} }, del(k) { try { sessionStorage.removeItem('bsp-tutor.' + k); } catch (e) {} } };
+let pin = ss.get('pin');                    // the admin PIN: kept for this browser tab only
+let S = null, noticeDay = '', dirty = false, editEv = null, editRound = null, houseDraft = null;
+const NET = 'Could not reach the server. Check the internet and try again.';
+const pad = (n) => String(n).padStart(2, '0');
+const isoOf = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const dateOf = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(NaN); };
+const nice = (iso, o) => { const d = dateOf(iso); return isNaN(d) ? String(iso || '') : d.toLocaleDateString('en-GB', o || { weekday: 'short', day: 'numeric', month: 'short' }); };
+const addDays = (iso, n) => { const d = dateOf(iso); d.setDate(d.getDate() + n); return isoOf(d); };
+const lastWed = (iso) => { const d = dateOf(iso); d.setDate(d.getDate() - ((d.getDay() + 4) % 7)); return isoOf(d); };
+const hhmm = (ms) => { const d = new Date(Number(ms)); return isNaN(d) ? '' : pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const withBackend = (href) => href + (TEST_BACKEND ? (href.includes('?') ? '&' : '?') + 'backend=' + encodeURIComponent(TEST_BACKEND) : '');
+
+async function post(body) {
+  const ac = new AbortController(), to = setTimeout(() => ac.abort(), 45000);
+  try { const r = await fetch(BACKEND, { method: 'POST', body: JSON.stringify(Object.assign({ pin }, body)), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, signal: ac.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.json(); }
+  finally { clearTimeout(to); }
+}
+const busy = (btn, on, txt) => { if (!btn) return; if (on) { btn.dataset.t = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + esc(txt || 'Saving…'); } else { btn.disabled = false; if (btn.dataset.t) btn.innerHTML = btn.dataset.t; } };
+function confirmBox(title, text, yes, fn, danger) {
+  const d = document.createElement('div'); d.className = 'dlg';
+  d.innerHTML = `<div class="box" role="alertdialog" aria-modal="true"><h3>${esc(title)}</h3><p>${esc(text)}</p><div class="acts"><button class="btn" id="dno">Go back</button><button class="btn ${danger ? 'stop' : 'blue'}" id="dyes">${esc(yes)}</button></div></div>`;
+  document.body.appendChild(d); $('#dno', d).onclick = () => d.remove(); $('#dyes', d).onclick = () => { d.remove(); fn(); }; $('#dno', d).focus();
+  d.addEventListener('keydown', (e) => { if (e.key === 'Escape') d.remove(); });
+}
+// run one admin action; shows the result in the section's status line
+async function act(btn, stEl, body, okText) {
+  busy(btn, true); if (stEl) { stEl.className = 'st'; stEl.textContent = ''; }
+  try {
+    const j = await post(body);
+    if (j && j.ok) { busy(btn, false); if (stEl) { stEl.className = 'st ok'; stEl.textContent = okText || 'Saved ✓'; } return j; }
+    if (j && j.error === 'Wrong PIN') { pin = ''; ss.del('pin'); stepPin('The PIN has changed. Please type it again.'); return null; }
+    if (stEl) { stEl.className = 'st err'; stEl.textContent = j && j.error === 'busy' ? 'The server is busy. Try again in a moment.' : (j && j.error) || 'Could not save.'; }
+  } catch (e) { if (stEl) { stEl.className = 'st err'; stEl.textContent = NET; } }
+  busy(btn, false); return null;
+}
+
+// ---------- PIN ----------
+function stepPin(msg) {
+  app.innerHTML = `<form class="narrow card" id="f" autocomplete="off" style="border:1px solid var(--line);box-shadow:none"><h2>Tutor admin</h2><p class="lead">Set the banner, the day's notices, upcoming events and the house quiz points for the tutor console.</p>
+    <label for="pn">Admin PIN</label><input id="pn" type="password" inputmode="numeric" maxlength="12" autocomplete="off">
+    <div class="st err" id="err" style="min-height:1.4em;margin-top:8px">${esc(msg || '')}</div><button class="btn blue" type="submit" style="width:100%;min-height:54px;font-size:19px;margin-top:6px">Continue</button></form>`;
+  $('#pn').focus();
+  $('#f').onsubmit = async (e) => {
+    e.preventDefault(); const v = $('#pn').value.trim(), b = $('#f button');
+    if (!v) { $('#err').textContent = 'Type the PIN first.'; return; }
+    busy(b, true, 'Checking…'); pin = v;
+    try { const j = await post({ a: 'tccheck' }); if (j && j.ok) { ss.set('pin', v); start(); return; } pin = ''; $('#err').textContent = j && /Too many/.test(j.error || '') ? j.error : 'That PIN is not right.'; $('#pn').select(); }
+    catch (x) { pin = ''; $('#err').textContent = NET; }
+    busy(b, false);
+  };
+}
+
+// ---------- loading ----------
+async function reload(day) {
+  const j = await post({ a: 'tcload', day: day || noticeDay || '' });
+  if (j && j.error === 'Wrong PIN') { pin = ''; ss.del('pin'); stepPin('Please type the PIN again.'); return false; }
+  if (!j || !j.ok) throw new Error((j && j.error) || 'bad');
+  S = j; noticeDay = j.day; return true;
+}
+async function start() {
+  app.innerHTML = '<p class="lead" style="text-align:center;margin-top:8vh"><span class="spin"></span>Loading…</p>';
+  try { if (!(await reload())) return; } catch (e) { app.innerHTML = `<div class="narrow card" style="box-shadow:none;border:1px solid var(--line)"><h2>Could not load</h2><p class="lead">${NET}</p><button class="btn blue" id="again">Try again</button></div>`; $('#again').onclick = start; return; }
+  app.innerHTML = `<section class="card links" id="top"></section><section class="card" id="sBanner"></section><section class="card" id="sNotices"></section><section class="card" id="sEvents"></section><section class="card" id="sScores"></section><section class="card" id="sHouses"></section><section class="card" id="sMore"></section>`;
+  drawTop(); drawBanner(); drawNotices(); drawEvents(); drawScores(); drawHouses(); drawMore();
+}
+async function refresh(parts) { try { if (!(await reload())) return; } catch (e) { return; } (parts || []).forEach((f) => f()); }
+function drawTop() {
+  $('#top').innerHTML = `<a class="btn blue" id="pvw" target="_blank" rel="noopener" href="#">Preview the console ↗</a><a class="btn" href="${esc(withBackend('house-quiz-admin.html'))}">Wednesday quiz admin →</a><span class="st" style="margin-left:auto">Today is ${esc(nice(S.today, { weekday: 'long', day: 'numeric', month: 'long' }))}</span>`;
+  setPreviewLink();
+}
+function setPreviewLink() { const a = $('#pvw'); if (a) a.href = withBackend('tutor-console.html' + (noticeDay && noticeDay !== S.today ? '?day=' + noticeDay : '')); }
+
+// ---------- banner ----------
+function drawBanner() {
+  const b = S.banner || { text: '', until: '' }, expired = b.text && b.until && b.until < S.today;
+  $('#sBanner').innerHTML = `<h2>Banner line</h2><p class="lead">One line across the top of every board, for something urgent or coming up. Leave it empty to hide it.</p>
+    <div class="r"><div style="flex:3;min-width:220px"><label for="bt">Banner text</label><input id="bt" type="text" maxlength="300" value="${esc(b.text)}" placeholder="e.g. Fire drill at 10:20 today: line up on the field"></div>
+    <div><label for="bu">Show until <small>(optional)</small></label><input id="bu" type="date" value="${esc(b.until)}"></div></div>
+    <div class="acts"><button class="btn blue" id="bs">Save banner</button><button class="btn" id="bc">Clear</button><span class="st${expired ? ' dirty' : ''}" id="bst">${b.text ? (expired ? 'Not showing: it ended on ' + esc(nice(b.until)) : 'Showing now' + (b.until ? ' until ' + esc(nice(b.until)) : '')) : 'No banner'}</span></div>`;
+  $('#bs').onclick = async () => { if (await act($('#bs'), $('#bst'), { a: 'tcbanner', text: $('#bt').value.replace(/\s+/g, ' ').trim(), until: $('#bu').value })) refresh([drawBanner]); };
+  $('#bc').onclick = async () => { if (await act($('#bc'), $('#bst'), { a: 'tcbanner', text: '', until: '' }, 'Cleared ✓')) refresh([drawBanner]); };
+}
+
+// ---------- notices ----------
+function drawNotices() {
+  const n = S.notices, prepared = (S.noticeDays || []).filter((d) => d !== noticeDay);
+  dirty = false;
+  $('#sNotices').innerHTML = `<h2>Notices</h2><p class="lead">What tutors read out. Paste from Teams or a PDF: line breaks are kept and • or - lines become bullets. Use <b># Heading</b>, <b>**bold**</b> and <b>- bullets</b>.</p>
+    <div class="r"><div class="fix" style="width:190px"><label for="nd">Notices for</label><input id="nd" type="date" value="${esc(noticeDay)}"></div><div class="fix"><button class="btn sm" id="nt">Today</button> <button class="btn sm" id="nm">Tomorrow</button></div>
+      <div class="st" style="align-self:center">${esc(nice(noticeDay, { weekday: 'long', day: 'numeric', month: 'long' }))}${noticeDay === S.today ? ' (today)' : noticeDay < S.today ? ' (in the past)' : ''}${prepared.length ? ' · also prepared: ' + prepared.map((d) => esc(nice(d))).join(', ') : ''}</div></div>
+    <div class="two" style="margin-top:8px"><div><label for="nx">Text</label><div class="tb"><button class="btn sm" data-f="h" title="Make the line a heading"># Heading</button><button class="btn sm" data-f="b" title="Bold"><b>B</b> Bold</button><button class="btn sm" data-f="l" title="Bullet list">• Bullets</button><button class="btn sm" data-f="t" title="Tidy pasted text">Tidy</button></div>
+      <textarea id="nx" maxlength="20000" spellcheck="true" placeholder="# Today&#10;- Assembly in the hall at 10:20&#10;- **Year 9**: options forms are due on Friday">${esc(n ? n.text : '')}</textarea></div>
+      <div><label>How the board will show it</label><div class="pv"><div class="md" id="np"></div></div></div></div>
+    <div class="acts"><button class="btn blue" id="ns">Save notices</button><button class="btn" id="nc">Clear this day</button><span class="st" id="nst">${n ? 'Saved at ' + esc(hhmm(n.updatedAt)) : 'Nothing saved for this day yet'}</span></div>`;
+  const tx = $('#nx'), pv = () => { $('#np').innerHTML = tx.value.trim() ? TC.render(tx.value) : '<p style="color:var(--muted)">No notices today</p>'; };
+  const touched = () => { dirty = true; $('#nst').className = 'st dirty'; $('#nst').textContent = 'Not saved yet'; pv(); };
+  pv(); tx.oninput = touched;
+  tx.addEventListener('paste', (e) => { const t = (e.clipboardData || window.clipboardData).getData('text/plain'); if (!t) return; e.preventDefault(); tx.setRangeText(TC.tidyPaste(t), tx.selectionStart, tx.selectionEnd, 'end'); touched(); });
+  $('#sNotices').querySelectorAll('.tb button').forEach((b) => b.onclick = () => {
+    const f = b.dataset.f, v = tx.value; let a = tx.selectionStart, z = tx.selectionEnd;
+    if (f === 't') { tx.value = TC.tidyPaste(v); touched(); return; }
+    if (f === 'b') { const sel = v.slice(a, z) || 'bold text'; tx.setRangeText('**' + sel + '**', a, z, 'select'); tx.focus(); touched(); return; }
+    const ls = v.lastIndexOf('\n', a - 1) + 1; let le = v.indexOf('\n', z); if (le < 0) le = v.length;
+    const lines = v.slice(ls, le).split('\n').map((l) => (f === 'h' ? (/^#+\s/.test(l) ? l.replace(/^#+\s*/, '') : '# ' + l) : (/^\s*[-*•]\s/.test(l) ? l.replace(/^\s*[-*•]\s*/, '') : l.trim() ? '- ' + l : l)));
+    tx.setRangeText(lines.join('\n'), ls, le, 'select'); tx.focus(); touched();
+  });
+  const go = (d) => { if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d === noticeDay) { $('#nd').value = noticeDay; return; } const sw = async () => { $('#nst').innerHTML = '<span class="spin"></span>Loading…'; try { if (await reload(d)) { drawNotices(); setPreviewLink(); } } catch (e) { $('#nst').className = 'st err'; $('#nst').textContent = NET; $('#nd').value = noticeDay; } }; if (dirty) confirmBox('Leave without saving?', 'The notices for ' + nice(noticeDay) + ' have changes that are not saved.', 'Leave', sw, true); else sw(); if (dirty) $('#nd').value = noticeDay; };
+  $('#nd').onchange = () => go($('#nd').value); $('#nt').onclick = () => go(S.today); $('#nm').onclick = () => go(addDays(S.today, 1));
+  $('#ns').onclick = async () => { const j = await act($('#ns'), $('#nst'), { a: 'tcnotices', day: noticeDay, text: tx.value }); if (j) { dirty = false; $('#nst').textContent = tx.value.trim() ? 'Saved at ' + hhmm(j.updatedAt || Date.now()) + ' ✓' : 'Cleared ✓'; refresh([]); } };
+  $('#nc').onclick = () => confirmBox('Clear the notices?', 'This removes the notices for ' + nice(noticeDay) + '.', 'Clear', async () => { if (await act($('#nc'), $('#nst'), { a: 'tcnotices', day: noticeDay, text: '' }, 'Cleared ✓')) { tx.value = ''; pv(); dirty = false; refresh([]); } }, true);
+}
+addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+// ---------- events ----------
+function drawEvents() {
+  const k = editEv || {}, up = S.events.filter((e) => e.date >= S.today), past = S.events.filter((e) => e.date < S.today).reverse();
+  const row = (e) => `<div class="evr"><div class="d">${esc(nice(e.date))}<small>${esc(e.time)}</small></div><div class="t">${esc(e.title)}<small>${esc(e.detail)}</small></div><div class="b"><button class="btn sm" data-ed="${esc(e.id)}">Edit</button><button class="btn sm" data-del="${esc(e.id)}" style="color:var(--bad)">Delete</button></div></div>`;
+  $('#sEvents').innerHTML = `<h2>Coming up</h2><p class="lead">Events shown in the side panel of the board, soonest first. Past events disappear from the board by themselves.</p>
+    <form id="ef" autocomplete="off"><div class="r"><div class="fix" style="width:180px"><label for="ed">Date</label><input id="ed" type="date" value="${esc(k.date || '')}"></div><div class="fix" style="width:130px"><label for="et">Time <small>(optional)</small></label><input id="et" type="time" value="${esc(/^\d{2}:\d{2}$/.test(k.time || '') ? k.time : '')}"></div>
+      <div style="flex:3;min-width:200px"><label for="en">Title</label><input id="en" type="text" maxlength="120" value="${esc(k.title || '')}" placeholder="e.g. Year 7 parents' evening"></div></div>
+      <label for="ex">Detail <small>(optional)</small></label><input id="ex" type="text" maxlength="400" value="${esc(k.detail || '')}" placeholder="e.g. Main hall, 17:00 to 19:30">
+      <div class="acts"><button class="btn blue" type="submit" id="es">${editEv ? 'Save changes' : 'Add event'}</button>${editEv ? '<button class="btn" type="button" id="ecx">Cancel</button>' : ''}<span class="st" id="est"></span></div></form>
+    <div class="list" id="el">${up.length ? up.map(row).join('') : '<p class="lead" style="margin:0">No upcoming events yet.</p>'}</div>
+    ${past.length ? `<details style="margin-top:8px"><summary>Past events (${past.length})</summary><div class="list">${past.map(row).join('')}</div></details>` : ''}`;
+  $('#ef').onsubmit = async (e) => {
+    e.preventDefault(); const d = { date: $('#ed').value, time: $('#et').value, title: $('#en').value.trim(), detail: $('#ex').value.trim() }, st = $('#est');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d.date)) { st.className = 'st err'; st.textContent = 'Pick the date.'; $('#ed').focus(); return; }
+    if (!d.title) { st.className = 'st err'; st.textContent = 'Type a title.'; $('#en').focus(); return; }
+    if (await act($('#es'), st, Object.assign({ a: editEv ? 'tceventedit' : 'tceventadd' }, editEv ? { id: editEv.id } : {}, d))) { editEv = null; refresh([drawEvents]); }
+  };
+  if ($('#ecx')) $('#ecx').onclick = () => { editEv = null; drawEvents(); };
+  $('#sEvents').querySelectorAll('[data-ed]').forEach((b) => b.onclick = () => { editEv = S.events.find((e) => e.id === b.dataset.ed) || null; drawEvents(); $('#en').focus(); $('#sEvents').scrollIntoView({ block: 'start' }); });
+  $('#sEvents').querySelectorAll('[data-del]').forEach((b) => b.onclick = () => { const e = S.events.find((x) => x.id === b.dataset.del); if (!e) return; confirmBox('Delete this event?', nice(e.date) + ' · ' + e.title, 'Delete', async () => { if (await act(b, $('#est'), { a: 'tceventdel', id: e.id }, 'Deleted ✓')) { if (editEv && editEv.id === e.id) editEv = null; refresh([drawEvents]); } }, true); });
+}
+
+// ---------- house quiz scores ----------
+const fmtN = (x) => (Math.round(Number(x) * 100) / 100).toString();
+function drawScores() {
+  const sc = S.scores, hs = S.houses, r = editRound, date = r ? r.date : lastWed(S.today), exists = sc.rounds.find((x) => x.date === date);
+  $('#sScores').innerHTML = `<h2>House quiz points</h2><p class="lead">The points each house earned in one round. The board shows the running totals as coloured bars. On a Wednesday-quiz day the round is added by itself a few minutes after the quiz closes; you can change or delete it here.</p>
+    <form id="sf" autocomplete="off"><div class="r"><div class="fix" style="width:190px"><label for="sd">Round date</label><input id="sd" type="date" value="${esc(date)}"></div><div class="st" id="swhen" style="align-self:center"></div></div>
+      <div class="pts">${hs.map((h, i) => `<div><label for="p${i}"><span class="sw" style="background:${esc(h.colour)}"></span>${esc(h.name)}</label><input id="p${i}" type="number" inputmode="decimal" step="0.5" min="-9999" max="9999" value="${r ? esc(r.points[h.name] == null ? '' : r.points[h.name]) : ''}" placeholder="0"></div>`).join('')}</div>
+      <div class="acts"><button class="btn blue" type="submit" id="ssv">${r ? 'Save changes' : 'Save round'}</button>${r ? '<button class="btn" type="button" id="scx">Cancel</button>' : ''}<span class="st" id="sst"></span></div></form>
+    <div class="tw">${sc.rounds.length ? `<table><thead><tr><th>Round</th>${hs.map((h) => `<th><span class="sw" style="background:${esc(h.colour)};display:inline-block;vertical-align:-1px;margin-right:5px"></span>${esc(h.name)}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${sc.rounds.slice().reverse().map((x) => `<tr><td>${esc(nice(x.date))}${x.avg ? '<small>from the quiz</small>' : ''}</td>${hs.map((h) => `<td>${esc(fmtN(x.points[h.name] || 0))}${x.avg && x.avg[h.name] != null ? `<small>avg ${esc(fmtN(x.avg[h.name]))}</small>` : ''}</td>`).join('')}<td><button class="btn sm" data-re="${esc(x.date)}">Edit</button> <button class="btn sm" data-rd="${esc(x.date)}" style="color:var(--bad)">Delete</button></td></tr>`).join('')}</tbody>
+      <tfoot><tr><td>Total</td>${hs.map((h) => `<td>${esc(fmtN(sc.totals[h.name] || 0))}</td>`).join('')}<td></td></tr></tfoot></table>` : '<p class="lead" style="margin:0">No rounds this term yet.</p>'}</div>
+    <details style="margin-top:10px"><summary>Start a new term or year</summary><p class="lead">The totals go back to zero. The old rounds are kept in the Google sheet (archived), not deleted.${S.archived && S.archived.length ? ' Archived so far: ' + S.archived.map((a) => esc(a.term) + ' (' + a.rounds + ')').join(', ') + '.' : ''}</p>
+      <div class="r"><div style="max-width:340px"><label for="tn">Name for the new term <small>(optional)</small></label><input id="tn" type="text" maxlength="40" placeholder="e.g. Spring 2027"></div><div class="fix"><button class="btn" id="tgo">Start a new term…</button></div><span class="st" id="tst" style="align-self:center">Now: ${esc(sc.term)}</span></div></details>`;
+  const when = () => { const d = $('#sd').value, ex = sc.rounds.find((x) => x.date === d); $('#swhen').textContent = nice(d, { weekday: 'long', day: 'numeric', month: 'long' }) + (ex && !(r && r.date === d) ? ' · this round exists: saving replaces it' : ''); };
+  when(); $('#sd').onchange = when;
+  $('#sf').onsubmit = async (e) => {
+    e.preventDefault(); const d = $('#sd').value, st = $('#sst'), points = {};
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { st.className = 'st err'; st.textContent = 'Pick the date.'; return; }
+    hs.forEach((h, i) => (points[h.name] = Number($('#p' + i).value) || 0));
+    if (await act($('#ssv'), st, Object.assign({ a: 'tcscore', date: d, points }, r && r.date !== d ? { was: r.date } : {}))) { editRound = null; refresh([drawScores]); }
+  };
+  if ($('#scx')) $('#scx').onclick = () => { editRound = null; drawScores(); };
+  $('#sScores').querySelectorAll('[data-re]').forEach((b) => b.onclick = () => { editRound = sc.rounds.find((x) => x.date === b.dataset.re) || null; drawScores(); $('#p0').focus(); });
+  $('#sScores').querySelectorAll('[data-rd]').forEach((b) => b.onclick = () => confirmBox('Delete this round?', 'The round of ' + nice(b.dataset.rd) + ' will be removed from the totals.', 'Delete', async () => { if (await act(b, $('#sst'), { a: 'tcscoredel', date: b.dataset.rd }, 'Deleted ✓')) { editRound = null; refresh([drawScores]); } }, true));
+  $('#tgo').onclick = () => confirmBox('Start a new term?', 'All house totals go back to zero on every board. The ' + sc.rounds.length + ' round(s) of “' + sc.term + '” are archived in the sheet, not deleted.', 'Start a new term', async () => { if (await act($('#tgo'), $('#tst'), { a: 'tcnewterm', name: $('#tn').value.trim() }, 'New term started ✓')) refresh([drawScores]); }, true);
+}
+
+// ---------- houses ----------
+function drawHouses() {
+  if (!houseDraft) houseDraft = S.houses.map((h) => ({ name: h.name, colour: h.colour, was: h.name }));
+  const SPARE = ['#7b3fa0', '#0f8b8d', '#d2691e', '#566573'];
+  $('#sHouses').innerHTML = `<h2>Houses</h2><p class="lead">The house names and colours used for the standings. Renaming a house keeps its points.</p>
+    <div id="hl">${houseDraft.map((h, i) => `<div class="hr"><input type="color" value="${esc(h.colour)}" data-c="${i}" aria-label="Colour of house ${i + 1}"><input type="text" maxlength="30" value="${esc(h.name)}" data-n="${i}" aria-label="Name of house ${i + 1}"><button class="btn sm" data-x="${i}" ${houseDraft.length <= 2 ? 'disabled' : ''} aria-label="Remove this house">Remove</button></div>`).join('')}</div>
+    <div class="acts"><button class="btn" id="ha" ${houseDraft.length >= 8 ? 'disabled' : ''}>+ Add a house</button><button class="btn blue" id="hsv">Save houses</button><span class="st" id="hst"></span></div>`;
+  const pull = () => { $('#sHouses').querySelectorAll('[data-n]').forEach((x) => (houseDraft[+x.dataset.n].name = x.value.trim())); $('#sHouses').querySelectorAll('[data-c]').forEach((x) => (houseDraft[+x.dataset.c].colour = x.value)); };
+  $('#ha').onclick = () => { pull(); houseDraft.push({ name: 'House ' + 'ABCDEFGH'[houseDraft.length], colour: SPARE[(houseDraft.length - 4 + 8) % 4], was: '' }); drawHouses(); };
+  $('#sHouses').querySelectorAll('[data-x]').forEach((b) => b.onclick = () => { pull(); const h = houseDraft[+b.dataset.x]; const rm = () => { houseDraft.splice(+b.dataset.x, 1); drawHouses(); }; if (h.was && (S.scores.totals[h.was] || 0) !== 0) confirmBox('Remove ' + h.was + '?', 'Its points stay in the sheet but will no longer be shown. This happens when you press “Save houses”.', 'Remove', rm, true); else rm(); });
+  $('#hsv').onclick = async () => {
+    pull(); const st = $('#hst'), names = houseDraft.map((h) => h.name.toLowerCase());
+    if (houseDraft.some((h) => !h.name)) { st.className = 'st err'; st.textContent = 'Every house needs a name.'; return; }
+    if (new Set(names).size !== names.length) { st.className = 'st err'; st.textContent = 'Two houses have the same name.'; return; }
+    if (await act($('#hsv'), st, { a: 'tchouses', houses: houseDraft })) { houseDraft = null; editRound = null; await refresh([drawScores]); drawHouses(); $('#hst').className = 'st ok'; $('#hst').textContent = 'Saved ✓'; }
+  };
+}
+
+// ---------- PIN + automatic notices ----------
+function drawMore() {
+  $('#sMore').innerHTML = `<h2>Settings</h2>
+    <details><summary>Change the admin PIN</summary><form id="pf" autocomplete="off"><div class="r"><div style="max-width:220px"><label for="np1">New PIN <small>(4 to 8 digits)</small></label><input id="np1" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password"></div><div style="max-width:220px"><label for="np2">New PIN again</label><input id="np2" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password"></div><div class="fix"><button class="btn blue" type="submit" id="psv">Change PIN</button></div></div><div class="st" id="pst" style="margin-top:8px"></div></form></details>
+    <p class="lead" style="margin:10px 0 0">Automatic notices from Teams (Power Automate): ${S.pushOn ? '<b>switched on</b> (a push key is set in the script).' : 'switched off. To use it, set the script property TC_PUSH_KEY: the steps are in the comment at the top of the tutor console section of Code.gs.'}</p>`;
+  $('#pf').onsubmit = async (e) => {
+    e.preventDefault(); const a = $('#np1').value.trim(), b = $('#np2').value.trim(), st = $('#pst');
+    if (!/^\d{4,8}$/.test(a)) { st.className = 'st err'; st.textContent = 'The PIN must be 4 to 8 digits.'; return; }
+    if (a !== b) { st.className = 'st err'; st.textContent = 'The two PINs are not the same.'; return; }
+    if (await act($('#psv'), st, { a: 'tcsetpin', newPin: a }, 'PIN changed ✓')) { pin = a; ss.set('pin', a); $('#np1').value = $('#np2').value = ''; }
+  };
+}
+
+if (!BACKEND) app.innerHTML = '<div class="narrow card"><h2>Not set up</h2><p class="lead">The server address is missing (workbooks.js).</p></div>';
+else if (pin) start();
+else stepPin();
+</script>
+</body>
+</html>

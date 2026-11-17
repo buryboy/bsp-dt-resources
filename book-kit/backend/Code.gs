@@ -35,6 +35,7 @@ function doPost(e) {
   if (d && d.a && String(d.a).indexOf('ds') === 0) return designStarterPost(d);
   if (d && d.a && String(d.a).indexOf('cv') === 0) return coverPost(d);
   if (d && d.a && String(d.a).indexOf('gs') === 0) return greenSlipPost(d);
+  if (d && d.a && String(d.a).indexOf('tc') === 0) return tutorPost(d);
   // several saves in one request (a device catching up after being offline or slow)
   if (d && d.a === 'batch' && Array.isArray(d.list)) {
     const lock = LockService.getScriptLock(); if (!lock.tryLock(25000)) return json({ ok: false, error: 'busy' });
@@ -109,6 +110,10 @@ function doGet(e) {
     if (p.a === 'dscount') return designStarterCount(p);
     if (p.a === 'cvinfo' || p.a === 'cvcount') return coverGet(p);
     if (p.a === 'cvlist') return cvListSlots(p);
+    if (p.a === 'tcget') return tcGet(p);
+    if (p.a === 'tcquiz') return tcQuizGet(p);
+    if (p.a === 'tcimg') return tcImg(p);
+    if (p.a === 'tcanswers') return tcAnswers(p);
     const pin = PROPS.getProperty('PIN') || '';
     if (!pin || String(p.pin || '') !== pin) return json({ ok: false, error: 'Wrong PIN' });
     const ss = book(), lesson = p.lesson || '';
@@ -458,4 +463,362 @@ function gsGroup(ticks) { // ["Courage: Determination", "Courage: Honesty", "Hum
   const g = {}, order = [];
   ticks.forEach((x) => { const i = x.indexOf(':'); const k = i > 0 ? x.slice(0, i).trim() : ''; const v = i > 0 ? x.slice(i + 1).trim() : x; if (!(k in g)) { g[k] = []; order.push(k); } g[k].push(v); });
   return order.map((k) => (k ? k + ': ' : '') + g[k].join(', ')).join('; ');
+}
+
+// ---------------- Tutor console (morning notices board for form tutors + its admin page) ----------------
+// tools/tutor-console.html (the board) reads everything with one public GET:  ?a=tcget[&day=YYYY-MM-DD]
+//   -> { ok, at, today, day, banner|null, notices|null, events[], houses[], scores{term, rounds[], totals{}, last}, updatedAt }
+//   (cached for 60 s in CacheService; every write changes TC_VER, which changes the cache key, so boards see changes at once).
+// tools/tutor-admin.html posts JSON with the admin PIN (script property TC_PIN, default '0000'):
+//   tccheck {pin}                                   is the PIN right?
+//   tcload {pin, day}                               everything for the admin page (banner even if expired, all events, all rounds)
+//   tcbanner {pin, text, until}                     the banner line ('' clears it; until = last day it shows, optional)
+//   tcnotices {pin, day, text}                      the notices for one day ('' removes them)
+//   tceventadd {pin, date, time, title, detail} / tceventedit {pin, id, ...} / tceventdel {pin, id}
+//   tchouses {pin, houses: [{name, colour, was}]}   the house list (was = the old name, so the scores follow a rename)
+//   tcscore {pin, date, points: {house: n}, was}    set one house-quiz round for all houses (was = old date when moving a round)
+//   tcscoredel {pin, date} / tcnewterm {pin, name}  delete a round / start a new term (old rounds stay in the sheet, archived)
+//   tcsetpin {pin, newPin}                          change the admin PIN (4 to 8 digits)
+// The Wednesday quiz (tools/house-quiz-admin.html writes it, forms answer it live on the board before the closing time):
+//   admin (PIN):  tcquizlist {pin}   tcquizget {pin, date}   tcresults {pin, date}   tcgroups {pin, groups: [{label, house}], close: 'HH:MM', scale: [4, 3, 2, 1]}
+//                 tcquizimg {pin, date, data: 'data:image/jpeg;base64,…'} -> {id}     tcquizsave {pin, date, was, title, questions: [{q, options[], correct, img}]}     tcquizdel {pin, date}
+//   public GET:   ?a=tcquiz&date=…   the questions WITHOUT the answers, the quiz groups (each belongs to a house) and the closing time
+//                 ?a=tcimg&id=…      one picture (kept in the sheet as base64 in chunks of 40,000 characters, not as Drive links)
+//                 ?a=tcanswers&date=…[&group=…&token=…]   the correct answers: only after the closing time (server clock, Europe/Paris),
+//                                    or earlier for a group that has submitted and shows the token it was given (that locks its submission).
+//                                    After closing it also carries the live house ranking for the day.
+//   public POST:  tcsubmit {date, group, answers[]} -> {ok, token}   marked here; a resubmit before closing replaces the earlier one;
+//                                    refused more than 5 minutes after the closing time (safety net for wrong device clocks)
+//   Tabs: Quizzes(date, title, updatedAt, json…)  QuizImages(id, date, seq, data)  Submissions(date, group, answers, score, max, at, token, locked)
+//   Settings: TC_GROUPS (JSON list of {label, house}), TC_CLOSE ('09:00'), TC_SCALE (points by position), TC_POSTED (quizzes already added to the standings).
+//   House score = the average of its groups' scores; 5 minutes after closing it is added to HouseScores as that date's round (see tcAutoPost).
+// Data: a Google Sheet "Tutor console" created on first use (script property TC_SHEET_ID) with tabs
+//   Notices(date, text, updatedAt)  Events(id, date, time, title, detail)  Houses(name, colour, order)  HouseScores(id, date, house, points, term, avg)
+// Settings in script properties: TC_PIN, TC_BANNER (JSON), TC_TERM (JSON), TC_VER (last change), TC_PUSH_KEY (see below).
+//
+// Posting the notices automatically (for example from Teams with Power Automate):
+//   tcpush {key, text, day, html}  — no PIN; guarded by the script property TC_PUSH_KEY. While TC_PUSH_KEY is not set, tcpush is OFF.
+//   1. Project Settings -> Script properties -> add TC_PUSH_KEY = a long random string (20+ characters).
+//   2. In the flow, add an HTTP action:  Method POST, URI = this web app's /exec link, header Content-Type: text/plain,
+//      Body: {"a":"tcpush","key":"<the key>","text":"<the message body>","html":true}
+//      "day" is optional (YYYY-MM-DD, default today in Paris). "html": true turns a Teams/Outlook HTML body into plain text with bullets.
+//   3. Apps Script answers a POST with a 302 redirect to the JSON result; the notices are already saved by then, so the flow
+//      may simply ignore the redirect (or follow it to read {"ok":true}).
+const TC_TZ = 'Europe/Paris';
+const TC_TABS = { Notices: ['date', 'text', 'updatedAt'], Events: ['id', 'date', 'time', 'title', 'detail'], Houses: ['name', 'colour', 'order'], HouseScores: ['id', 'date', 'house', 'points', 'term', 'avg'],
+  Quizzes: ['date', 'title', 'updatedAt', 'json'], QuizImages: ['id', 'date', 'seq', 'data'], Submissions: ['date', 'group', 'answers', 'score', 'max', 'at', 'token', 'locked'] };
+const TC_TEXT = { Notices: 'A:B', Events: 'A:E', Houses: 'A:B', HouseScores: 'A:C', Quizzes: 'A:B', QuizImages: 'A:D', Submissions: 'A:C' }; // columns kept as plain text (dates, times, '=' at the start of a line)
+const TC_HOUSES = [['House A', '#c8372d'], ['House B', '#2563c9'], ['House C', '#2e9a4f'], ['House D', '#d99a00']];
+function tcToday() { return Utilities.formatDate(new Date(), TC_TZ, 'yyyy-MM-dd'); }
+function tcDay(x) { x = String(x == null ? '' : x).trim(); return /^\d{4}-\d{2}-\d{2}$/.test(x) ? x : ''; }
+function tcT(x, n) { return String(x == null ? '' : x).trim().slice(0, n); }
+function tcBook() {
+  let id = PROPS.getProperty('TC_SHEET_ID'), ss = null;
+  if (id) try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; }
+  if (!ss) {
+    ss = SpreadsheetApp.create('Tutor console');
+    PROPS.setProperty('TC_SHEET_ID', ss.getId());
+    const first = ss.getSheets()[0];
+    Object.keys(TC_TABS).forEach((name, i) => { const sh = i ? ss.insertSheet(name) : first; if (!i) sh.setName(name); tcFormat(sh, name); });
+  }
+  return ss;
+}
+function tcFormat(sh, name) { sh.appendRow(TC_TABS[name]); sh.setFrozenRows(1); sh.getRange(TC_TEXT[name]).setNumberFormat('@'); if (name === 'HouseScores') sh.getRange('E:E').setNumberFormat('@'); if (name === 'Quizzes') sh.getRange('D:Z').setNumberFormat('@'); if (name === 'Submissions') sh.getRange('G:G').setNumberFormat('@'); }
+function tcSheet(name) { const ss = tcBook(); let sh = ss.getSheetByName(name); if (!sh) { sh = ss.insertSheet(name); tcFormat(sh, name); } return sh; }
+function tcRows(name) {
+  const cols = TC_TABS[name], v = tcSheet(name).getDataRange().getValues();
+  return v.slice(1).map((r, i) => { const o = { _row: i + 2 }; cols.forEach((k, j) => { let x = r[j]; if (x instanceof Date) x = k === 'date' ? Utilities.formatDate(x, TC_TZ, 'yyyy-MM-dd') : k === 'time' ? Utilities.formatDate(x, TC_TZ, 'HH:mm') : x.getTime(); o[k] = x; }); o.date = o.date == null ? undefined : String(o.date); return o; }).filter((o) => cols.some((k) => o[k] !== '' && o[k] != null));
+}
+function tcDelRows(name, rows) { const sh = tcSheet(name); rows.map((r) => r._row).sort((a, b) => b - a).forEach((n) => sh.deleteRow(n)); }
+function tcBust() { PROPS.setProperty('TC_VER', String(Math.max(Date.now(), (Number(PROPS.getProperty('TC_VER')) || 0) + 1))); } // a new version = new cache keys
+function tcBannerRaw() { let b = null; try { b = JSON.parse(PROPS.getProperty('TC_BANNER') || 'null'); } catch (e) { b = null; } return b && b.text ? { text: String(b.text), until: tcDay(b.until) } : null; }
+function tcTerm() { let t = null; try { t = JSON.parse(PROPS.getProperty('TC_TERM') || 'null'); } catch (e) { t = null; } return t && t.name ? { name: String(t.name), started: tcDay(t.started) } : { name: 'Current term', started: '' }; }
+function tcHouses() {
+  const rows = tcRows('Houses').filter((r) => String(r.name).trim()).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+  return rows.length ? rows.map((r) => ({ name: String(r.name), colour: /^#[0-9a-f]{6}$/i.test(String(r.colour)) ? String(r.colour) : '#667085' })) : TC_HOUSES.map((h) => ({ name: h[0], colour: h[1] }));
+}
+function tcNotice(day) { const r = tcRows('Notices').filter((x) => x.date === day).pop(); return r && String(r.text).trim() ? { day: day, text: String(r.text), updatedAt: Number(r.updatedAt) || 0 } : null; }
+function tcEvents() {
+  return tcRows('Events').map((r) => ({ id: String(r.id), date: r.date, time: String(r.time == null ? '' : r.time), title: String(r.title), detail: String(r.detail == null ? '' : r.detail) }))
+    .filter((r) => tcDay(r.date) && r.title).sort((a, b) => (a.date + ' ' + (a.time || '00:00') + a.title < b.date + ' ' + (b.time || '00:00') + b.title ? -1 : 1));
+}
+function tcScores(houses) { // the current term's rounds, oldest first, and the running totals
+  const term = tcTerm(), by = {}, totals = {}; houses.forEach((h) => (totals[h.name] = 0));
+  tcRows('HouseScores').forEach((r) => { if (String(r.term) !== term.name || !tcDay(r.date)) return; const k = r.date, n = Number(r.points) || 0; (by[k] = by[k] || { date: k, points: {} }).points[String(r.house)] = n; if (r.avg !== '' && r.avg != null) (by[k].avg = by[k].avg || {})[String(r.house)] = Number(r.avg); });
+  const rounds = Object.keys(by).sort().map((k) => by[k]);
+  rounds.forEach((r) => houses.forEach((h) => (totals[h.name] += Number(r.points[h.name]) || 0)));
+  return { term: term.name, started: term.started, rounds: rounds, totals: totals, last: rounds.length ? rounds[rounds.length - 1].date : null };
+}
+function tcPublic(day) {
+  const b = tcBannerRaw(), houses = tcHouses();
+  return { ok: true, at: Date.now(), today: tcToday(), day: day, banner: b && (!b.until || b.until >= day) ? b : null, notices: tcNotice(day),
+    events: tcEvents().filter((e) => e.date >= day).slice(0, 40), houses: houses, scores: tcScores(houses), quiz: tcQuizBrief(day), updatedAt: Number(PROPS.getProperty('TC_VER')) || 0 };
+}
+function tcGet(p) {
+  const day = tcDay(p.day) || tcToday(), cache = CacheService.getScriptCache(), key = 'tc-' + (PROPS.getProperty('TC_VER') || '0') + '-' + day;
+  let s = cache.get(key);
+  if (!s) { tcAutoPost(); s = JSON.stringify(tcPublic(day)); try { if (s.length < 90000) cache.put('tc-' + (PROPS.getProperty('TC_VER') || '0') + '-' + day, s, 60); } catch (e) {} }
+  return ContentService.createTextOutput(s).setMimeType(ContentService.MimeType.JSON);
+}
+function tcAdminState(d) {
+  tcAutoPost();
+  const today = tcToday(), day = tcDay(d.day) || today, houses = tcHouses(), term = tcTerm(), old = {};
+  tcRows('HouseScores').forEach((r) => { const t = String(r.term); if (t !== term.name) (old[t] = old[t] || {})[r.date] = 1; });
+  return { ok: true, today: today, day: day, banner: tcBannerRaw(), notices: tcNotice(day), noticeDays: tcRows('Notices').filter((r) => r.date >= today && String(r.text).trim()).map((r) => r.date).sort(),
+    events: tcEvents(), houses: houses, scores: tcScores(houses), archived: Object.keys(old).map((t) => ({ term: t, rounds: Object.keys(old[t]).length })), pushOn: !!PROPS.getProperty('TC_PUSH_KEY') };
+}
+function tcSetNotice(day, text) {
+  const sh = tcSheet('Notices'), rows = tcRows('Notices').filter((r) => r.date === day);
+  text = String(text == null ? '' : text).replace(/\r\n?/g, '\n').replace(/\s+$/, '').slice(0, 20000);
+  if (!text.trim()) { tcDelRows('Notices', rows); return 0; }
+  const now = Date.now();
+  if (rows.length) { const keep = rows.shift(); sh.getRange(keep._row, 2, 1, 2).setValues([[text, now]]); tcDelRows('Notices', rows); } else sh.appendRow([day, text, now]);
+  return now;
+}
+function tcHtmlToText(h) {
+  return String(h == null ? '' : h).replace(/\r?\n/g, ' ').replace(/<\s*br\s*\/?>/gi, '\n').replace(/<\s*li[^>]*>/gi, '\n- ').replace(/<\s*h[1-6][^>]*>/gi, '\n\n## ').replace(/<\/\s*(p|div|h[1-6]|tr|ul|ol)\s*>/gi, '\n')
+    .replace(/<\s*(strong|b)\s*>\s*(.*?)\s*<\/\s*\1\s*>/gi, '**$2**').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+    .split('\n').map((l) => l.replace(/[ \t]+/g, ' ').trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+function tcPush(d) {
+  const key = PROPS.getProperty('TC_PUSH_KEY') || '';
+  if (!key) return json({ ok: false, error: 'Push is switched off' });
+  if (String(d.key == null ? '' : d.key) !== key) return json({ ok: false, error: 'Wrong key' });
+  const day = tcDay(d.day) || tcToday(), text = d.html ? tcHtmlToText(d.text) : String(d.text == null ? '' : d.text);
+  if (!text.trim()) return json({ ok: false, error: 'No text' });
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return json({ ok: false, error: 'busy' });
+  try { const at = tcSetNotice(day, text); tcBust(); return json({ ok: true, day: day, updatedAt: at }); } finally { lock.releaseLock(); }
+}
+function tcEventClean(d) {
+  const o = { date: tcDay(d.date), time: tcT(d.time, 20), title: tcT(d.title, 120), detail: tcT(d.detail, 400) };
+  if (!o.date) return { err: 'Pick a date' };
+  if (!o.title) return { err: 'Type a title' };
+  return o;
+}
+function tutorPost(d) {
+  if (d.a === 'tcpush') return tcPush(d);
+  if (d.a === 'tcsubmit') return tcSubmit(d);
+  const cache = CacheService.getScriptCache(), bad = Number(cache.get('tc-badpin')) || 0;
+  if (bad >= 20) return json({ ok: false, error: 'Too many wrong PINs. Wait 10 minutes.' });
+  const pin = PROPS.getProperty('TC_PIN') || '0000';
+  if (String(d.pin == null ? '' : d.pin).trim() !== pin) { cache.put('tc-badpin', String(bad + 1), 600); return json({ ok: false, error: 'Wrong PIN' }); }
+  if (d.a === 'tccheck') return json({ ok: true });
+  if (d.a === 'tcload') return json(tcAdminState(d));
+  if (d.a === 'tcquizlist' || d.a === 'tcquizget' || d.a === 'tcresults') return json(tcQuizAdmin(d));
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return json({ ok: false, error: 'busy' });
+  try {
+    const out = tcWrite(d);
+    if (out.ok) tcBust();
+    return json(out);
+  } finally { lock.releaseLock(); }
+}
+function tcWrite(d) {
+  if (d.a === 'tcsetpin') { const n = String(d.newPin == null ? '' : d.newPin).trim(); if (!/^\d{4,8}$/.test(n)) return { ok: false, error: 'The PIN must be 4 to 8 digits' }; PROPS.setProperty('TC_PIN', n); return { ok: true }; }
+  if (d.a === 'tcbanner') {
+    const text = tcT(d.text, 300).replace(/\s*\n\s*/g, ' '), until = tcDay(d.until);
+    if (text) PROPS.setProperty('TC_BANNER', JSON.stringify({ text: text, until: until })); else PROPS.deleteProperty('TC_BANNER');
+    return { ok: true };
+  }
+  if (d.a === 'tcnotices') { const day = tcDay(d.day); if (!day) return { ok: false, error: 'Pick a date' }; return { ok: true, day: day, updatedAt: tcSetNotice(day, d.text) }; }
+  if (d.a === 'tceventadd' || d.a === 'tceventedit') {
+    const o = tcEventClean(d); if (o.err) return { ok: false, error: o.err };
+    const sh = tcSheet('Events');
+    if (d.a === 'tceventedit') {
+      const r = tcRows('Events').find((x) => String(x.id) === String(d.id)); if (!r) return { ok: false, error: 'not found' };
+      sh.getRange(r._row, 2, 1, 4).setValues([[o.date, o.time, o.title, o.detail]]); return { ok: true, id: String(r.id) };
+    }
+    const cut = Utilities.formatDate(new Date(Date.now() - 400 * 864e5), TC_TZ, 'yyyy-MM-dd'); // tidy: drop events more than about a year old
+    tcDelRows('Events', tcRows('Events').filter((r) => tcDay(r.date) && r.date < cut));
+    const id = Utilities.getUuid().slice(0, 8); sh.appendRow([id, o.date, o.time, o.title, o.detail]); return { ok: true, id: id };
+  }
+  if (d.a === 'tceventdel') { tcDelRows('Events', tcRows('Events').filter((x) => String(x.id) === String(d.id))); return { ok: true }; }
+  if (d.a === 'tchouses') {
+    const list = (Array.isArray(d.houses) ? d.houses : []).map((h) => ({ name: tcT(h && h.name, 30), colour: tcT(h && h.colour, 7).toLowerCase(), was: tcT(h && h.was, 30) })).filter((h) => h.name);
+    if (list.length < 2 || list.length > 8) return { ok: false, error: 'There must be between 2 and 8 houses' };
+    const seen = {}; for (let i = 0; i < list.length; i++) { const k = list[i].name.toLowerCase(); if (seen[k]) return { ok: false, error: 'Two houses have the same name' }; seen[k] = 1; if (!/^#[0-9a-f]{6}$/.test(list[i].colour)) return { ok: false, error: 'Pick a colour for every house' }; }
+    const ren = {}; list.forEach((h) => { if (h.was && h.was !== h.name) ren[h.was] = h.name; });
+    if (Object.keys(ren).length) { const ss = tcSheet('HouseScores'); tcRows('HouseScores').forEach((r) => { if (ren[String(r.house)]) ss.getRange(r._row, 3).setValue(ren[String(r.house)]); }); }
+    if (Object.keys(ren).length && PROPS.getProperty('TC_GROUPS')) { let g = []; try { g = JSON.parse(PROPS.getProperty('TC_GROUPS')) || []; } catch (e) { g = []; } PROPS.setProperty('TC_GROUPS', JSON.stringify(g.map((x) => ({ label: ren[x.label] && x.label === x.house ? ren[x.label] : x.label, house: ren[x.house] || x.house })))); }
+    const sh = tcSheet('Houses'), last = sh.getLastRow(); if (last > 1) sh.getRange(2, 1, last - 1, 3).clearContent();
+    sh.getRange(2, 1, list.length, 3).setValues(list.map((h, i) => [h.name, h.colour, i + 1]));
+    return { ok: true };
+  }
+  if (d.a === 'tcscore' || d.a === 'tcscoredel') {
+    const date = tcDay(d.date), was = tcDay(d.was) || date, term = tcTerm().name; if (!date) return { ok: false, error: 'Pick a date' };
+    const mine = tcRows('HouseScores').filter((r) => String(r.term) === term);
+    if (d.a === 'tcscore' && was !== date && mine.some((r) => r.date === date)) return { ok: false, error: 'There is already a round on that date' };
+    tcDelRows('HouseScores', mine.filter((r) => r.date === date || r.date === was));
+    if (d.a === 'tcscoredel') return { ok: true };
+    const pts = d.points && typeof d.points === 'object' ? d.points : {}, sh = tcSheet('HouseScores');
+    const rows = tcHouses().map((h) => [Utilities.getUuid().slice(0, 8), date, h.name, Math.max(-9999, Math.min(9999, Math.round((Number(pts[h.name]) || 0) * 2) / 2)), term]);
+    sh.getRange(sh.getLastRow() + 1, 1, rows.length, 5).setValues(rows);
+    return { ok: true, date: date };
+  }
+  if (d.a === 'tcnewterm') { // nothing is deleted: old rounds keep their term label and stop counting
+    const used = {}; tcRows('HouseScores').forEach((r) => (used[String(r.term)] = 1)); used[tcTerm().name] = 1;
+    const today = tcToday(), base = tcT(d.name, 40) || 'Term from ' + today; let name = base, n = 2; while (used[name]) name = base + ' (' + n++ + ')';
+    PROPS.setProperty('TC_TERM', JSON.stringify({ name: name, started: today })); return { ok: true, term: name };
+  }
+  if (d.a === 'tcquizimg' || d.a === 'tcquizsave' || d.a === 'tcquizdel' || d.a === 'tcgroups') return tcQuizWrite(d);
+  return { ok: false, error: 'unknown' };
+}
+
+// ---- Tutor console: the Wednesday quiz ----
+// Quiz groups: on Wednesdays students sit in their HOUSES, so each room is a house group. Default: one group per house, named after it.
+function tcGroups(houses) {
+  houses = houses || tcHouses(); let g = null; try { g = JSON.parse(PROPS.getProperty('TC_GROUPS') || 'null'); } catch (e) { g = null; }
+  const names = houses.map((h) => h.name), list = Array.isArray(g) ? g.filter((x) => x && x.label && names.indexOf(String(x.house)) >= 0).map((x) => ({ label: String(x.label), house: String(x.house) })) : [];
+  return list.length ? list : houses.map((h) => ({ label: h.name, house: h.name }));
+}
+// Points by finishing position: default 1st = number of houses, down to 1 for last (4, 3, 2, 1). TC_SCALE (JSON list) overrides it.
+function tcScale(n) { let s = null; try { s = JSON.parse(PROPS.getProperty('TC_SCALE') || 'null'); } catch (e) { s = null; } const custom = Array.isArray(s) && s.length, out = []; for (let i = 0; i < n; i++) out.push(custom ? Number(s[i]) || 0 : n - i); return out; }
+// The house ranking for one quiz: a house's score is the AVERAGE of the scores of its groups that submitted (so more rooms is no advantage).
+function tcRank(q, date) {
+  const houses = tcHouses(), groups = tcGroups(houses), subs = tcSubs(date), scale = tcScale(houses.length);
+  const rows = houses.map((h) => { const mine = groups.filter((g) => g.house === h.name).map((g) => g.label), sc = subs.filter((x) => mine.indexOf(x.group) >= 0).map((x) => tcMark(q, x.answers).score);
+    return { house: h.name, colour: h.colour, groups: mine.length, n: sc.length, avg: sc.length ? Math.round(sc.reduce((a, b) => a + b, 0) / sc.length * 100) / 100 : null, pos: null, points: 0 }; });
+  const ranked = rows.filter((r) => r.avg !== null).sort((a, b) => b.avg - a.avg);
+  ranked.forEach((r, i) => { r.pos = i && ranked[i - 1].avg === r.avg ? ranked[i - 1].pos : i + 1; r.points = scale[r.pos - 1] || 0; }); // tied houses share the higher points
+  return ranked.concat(rows.filter((r) => r.avg === null));
+}
+function tcPosted() { let d = []; try { d = JSON.parse(PROPS.getProperty('TC_POSTED') || '[]'); } catch (e) { d = []; } return Array.isArray(d) ? d : []; }
+// Once a quiz is closed for good (closing time + 5 minutes), its house result is added ONCE to the house standings as that date's round
+// (points by position, plus the raw average in column "avg"). It runs by itself the next time any board or admin page loads.
+// The admin can then change or delete that round in tutor admin; it is not added again.
+function tcAutoPost() {
+  const cut = Utilities.formatDate(new Date(Date.now() - 21 * 864e5), TC_TZ, 'yyyy-MM-dd'), isDue = (done) => tcQuizzes().filter((q) => q.date >= cut && done.indexOf(q.date) < 0 && q.questions.length && tcClosed(q.date, 5));
+  if (!isDue(tcPosted()).length) return false;
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(5000)) return false;
+  try {
+    const done = tcPosted(), due = isDue(done), term = tcTerm().name; if (!due.length) return false;
+    due.forEach((q) => {
+      const rank = tcRank(q, q.date).filter((r) => r.avg !== null);
+      if (rank.length && !tcRows('HouseScores').some((r) => String(r.term) === term && r.date === q.date)) {
+        const rows = tcHouses().map((h) => { const r = rank.filter((x) => x.house === h.name)[0]; return [Utilities.getUuid().slice(0, 8), q.date, h.name, r ? r.points : 0, term, r ? r.avg : '']; }), sh = tcSheet('HouseScores');
+        sh.getRange(sh.getLastRow() + 1, 1, rows.length, 6).setValues(rows);
+      }
+      done.push(q.date);
+    });
+    PROPS.setProperty('TC_POSTED', JSON.stringify(done.slice(-80))); tcBust(); return true;
+  } finally { lock.releaseLock(); }
+}
+function tcClose() { const c = PROPS.getProperty('TC_CLOSE') || ''; return /^([01]\d|2[0-3]):[0-5]\d$/.test(c) ? c : '09:00'; }
+function tcClosed(date, graceMin) { return Utilities.formatDate(new Date(Date.now() - (graceMin || 0) * 60000), TC_TZ, 'yyyy-MM-dd HH:mm:ss') >= date + ' ' + tcClose() + ':00'; }
+function tcQuizzes() {
+  const v = tcSheet('Quizzes').getDataRange().getValues();
+  return v.slice(1).map((r, i) => { let d = r[0], qs = []; if (d instanceof Date) d = Utilities.formatDate(d, TC_TZ, 'yyyy-MM-dd'); try { qs = JSON.parse(r.slice(3).join('')); } catch (e) { qs = []; } return { _row: i + 2, date: String(d), title: String(r[1]), updatedAt: Number(r[2]) || 0, questions: Array.isArray(qs) ? qs : [] }; }).filter((q) => tcDay(q.date));
+}
+function tcQuiz(date) { return tcQuizzes().filter((q) => q.date === date).pop() || null; }
+function tcQuizBrief(day) { const q = tcQuiz(day); return q && q.questions.length ? { date: q.date, title: q.title, closes: tcClose(), n: q.questions.length } : null; }
+function tcQuizGet(p) { // public: never includes the correct answers
+  const date = tcDay(p.date) || tcToday(), cache = CacheService.getScriptCache(), key = 'tcq-' + (PROPS.getProperty('TC_VER') || '0') + '-' + date;
+  let s = cache.get(key);
+  if (!s) {
+    const q = tcQuiz(date);
+    const houses = tcHouses();
+    s = JSON.stringify({ ok: true, houses: houses, groups: tcGroups(houses), quiz: q && q.questions.length ? { date: q.date, title: q.title, closes: tcClose(), questions: q.questions.map((x) => ({ q: x.q, options: x.options, img: x.img || '' })) } : null });
+    try { if (s.length < 90000) cache.put(key, s, 60); } catch (e) {}
+  }
+  return ContentService.createTextOutput(s).setMimeType(ContentService.MimeType.JSON);
+}
+function tcImgId(x) { x = String(x == null ? '' : x); return /^[a-z0-9]{6,12}$/.test(x) ? x : ''; }
+function tcImg(p) {
+  const id = tcImgId(p.id); if (!id) return json({ ok: false, error: 'not found' });
+  const cache = CacheService.getScriptCache(), n = Number(cache.get('tci-' + id)) || 0;
+  if (n) { const keys = []; for (let i = 0; i < n; i++) keys.push('tci-' + id + '-' + i); const got = cache.getAll(keys); if (keys.every((k) => got[k])) return json({ ok: true, id: id, data: keys.map((k) => got[k]).join('') }); }
+  const sh = tcSheet('QuizImages'), rows = sh.getRange('A:A').createTextFinder(id).matchEntireCell(true).findAll().map((r) => r.getRow());
+  if (!rows.length) return json({ ok: false, error: 'not found' });
+  const parts = rows.map((r) => sh.getRange(r, 3, 1, 2).getValues()[0]).sort((a, b) => Number(a[0]) - Number(b[0])).map((x) => String(x[1]));
+  try { const put = {}; parts.forEach((x, i) => (put['tci-' + id + '-' + i] = x)); cache.putAll(put, 21600); cache.put('tci-' + id, String(parts.length), 21600); } catch (e) {}
+  return json({ ok: true, id: id, data: parts.join('') });
+}
+function tcMark(q, answers) { let score = 0; const a = q.questions.map((x, i) => { const v = Array.isArray(answers) ? answers[i] : null; return typeof v === 'number' && v >= 0 && v < x.options.length && Math.floor(v) === v ? v : null; }); a.forEach((v, i) => { if (v !== null && v === q.questions[i].correct) score++; }); return { answers: a, score: score, max: q.questions.length }; }
+function tcSubs(date) { return tcRows('Submissions').filter((r) => r.date === date).map((r) => { let a = []; try { a = JSON.parse(r.answers); } catch (e) { a = []; } return { _row: r._row, group: String(r.group), answers: a, at: Number(r.at) || 0, token: String(r.token || ''), locked: String(r.locked) === '1' }; }); }
+function tcSubmit(d) {
+  const date = tcDay(d.date), group = tcT(d.group, 60), q = date ? tcQuiz(date) : null;
+  if (!q || !q.questions.length) return json({ ok: false, error: 'No quiz' });
+  if (!tcGroups().some((g) => g.label === group)) return json({ ok: false, error: 'Unknown group' });
+  if (tcClosed(date, 5)) return json({ ok: false, error: 'closed' });
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return json({ ok: false, error: 'busy' });
+  try {
+    const old = tcSubs(date).filter((r) => r.group === group);
+    if (old.some((r) => r.locked)) return json({ ok: false, error: 'locked' }); // the answers have already been shown to this group
+    const m = tcMark(q, d.answers), token = Utilities.getUuid().replace(/-/g, '').slice(0, 16);
+    tcDelRows('Submissions', old);
+    tcSheet('Submissions').appendRow([date, group, JSON.stringify(m.answers), m.score, m.max, Date.now(), token, '']);
+    return json({ ok: true, token: token, answered: m.answers.filter((v) => v !== null).length }); // no score here: it would give the answers away
+  } finally { lock.releaseLock(); }
+}
+function tcAnswers(p) {
+  const date = tcDay(p.date) || tcToday(), q = tcQuiz(date); if (!q) return json({ ok: false, error: 'No quiz' });
+  const group = tcT(p.group, 60), closed = tcClosed(date, 0), sub = group ? tcSubs(date).filter((r) => r.group === group).pop() : null;
+  if (closed) tcAutoPost();
+  if (!closed) {
+    if (!sub || !p.token || sub.token !== String(p.token)) return json({ ok: false, error: 'not yet', closes: tcClose() });
+    if (!sub.locked) tcSheet('Submissions').getRange(sub._row, 8).setValue('1'); // answers seen: no more changes for this group
+  }
+  const m = sub ? tcMark(q, sub.answers) : null;
+  return json({ ok: true, closed: closed, correct: q.questions.map((x) => x.correct), result: m ? { group: group, answers: m.answers, score: m.score, max: m.max } : null,
+    houses: closed ? tcRank(q, date) : undefined, final: closed ? tcPosted().indexOf(date) >= 0 : undefined }); // the live house ranking for the day
+}
+function tcQuizAdmin(d) {
+  tcAutoPost();
+  const houses = tcHouses();
+  if (d.a === 'tcquizlist') { const n = {}; tcRows('Submissions').forEach((r) => (n[r.date] = (n[r.date] || 0) + 1)); return { ok: true, today: tcToday(), houses: houses, groups: tcGroups(houses), close: tcClose(), scale: tcScale(houses.length), customScale: !!PROPS.getProperty('TC_SCALE'), quizzes: tcQuizzes().map((q) => ({ date: q.date, title: q.title, n: q.questions.length, subs: n[q.date] || 0 })).sort((a, b) => (a.date < b.date ? 1 : -1)) }; }
+  const date = tcDay(d.date), q = date ? tcQuiz(date) : null;
+  if (d.a === 'tcquizget') return { ok: true, quiz: q ? { date: q.date, title: q.title, questions: q.questions } : null, close: tcClose() };
+  if (!q) return { ok: false, error: 'No quiz' };
+  return { ok: true, quiz: { date: q.date, title: q.title, questions: q.questions }, houses: houses, groups: tcGroups(houses), close: tcClose(), closed: tcClosed(date, 0), rank: tcRank(q, date), posted: tcPosted().indexOf(date) >= 0,
+    subs: tcSubs(date).map((r) => { const m = tcMark(q, r.answers); return { group: r.group, answers: m.answers, score: m.score, max: m.max, at: r.at }; }) };
+}
+function tcImgDel(keep, dates) { // remove the pictures of these dates that are no longer used
+  const sh = tcSheet('QuizImages'), last = sh.getLastRow(); if (last < 2) return;
+  const v = sh.getRange(2, 1, last - 1, 2).getValues();
+  for (let i = v.length - 1; i >= 0; i--) { let dt = v[i][1]; if (dt instanceof Date) dt = Utilities.formatDate(dt, TC_TZ, 'yyyy-MM-dd'); if (dates.indexOf(String(dt)) >= 0 && !keep[String(v[i][0])]) sh.deleteRow(i + 2); }
+}
+function tcQuizWrite(d) {
+  if (d.a === 'tcgroups') {
+    const names = tcHouses().map((h) => h.name), seen = {};
+    const groups = (Array.isArray(d.groups) ? d.groups : []).map((x) => ({ label: tcT(x && x.label, 60), house: tcT(x && x.house, 30) })).filter((x) => x.label && !seen[x.label] && (seen[x.label] = 1)).slice(0, 60);
+    if (!groups.length) return { ok: false, error: 'Add at least one group' };
+    if (groups.some((g) => names.indexOf(g.house) < 0)) return { ok: false, error: 'Every group needs a house' };
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(d.close || ''))) return { ok: false, error: 'Pick a closing time' };
+    const scale = Array.isArray(d.scale) ? d.scale.map(Number).filter((x) => x >= 0 && x <= 1000).slice(0, 8) : [];
+    PROPS.setProperty('TC_GROUPS', JSON.stringify(groups)); PROPS.setProperty('TC_CLOSE', String(d.close));
+    if (scale.length) PROPS.setProperty('TC_SCALE', JSON.stringify(scale)); else PROPS.deleteProperty('TC_SCALE');
+    return { ok: true };
+  }
+  const date = tcDay(d.date); if (!date) return { ok: false, error: 'Pick a date' };
+  if (d.a === 'tcquizimg') {
+    const data = String(d.data || '');
+    if (!/^data:image\/(jpeg|png);base64,[A-Za-z0-9+\/=]+$/.test(data) || data.length > 1500000) return { ok: false, error: 'That picture is too big or not a JPEG/PNG' };
+    const id = Utilities.getUuid().replace(/-/g, '').slice(0, 10), rows = [];
+    for (let i = 0, n = 0; i < data.length; i += 40000, n++) rows.push([id, date, String(n), data.slice(i, i + 40000)]);
+    const sh = tcSheet('QuizImages'); sh.getRange(sh.getLastRow() + 1, 1, rows.length, 4).setValues(rows);
+    return { ok: true, id: id };
+  }
+  const was = tcDay(d.was) || date, all = tcQuizzes();
+  if (d.a === 'tcquizdel') {
+    tcDelRows('Quizzes', all.filter((q) => q.date === date)); tcImgDel({}, [date]); tcDelRows('Submissions', tcRows('Submissions').filter((r) => r.date === date));
+    return { ok: true };
+  }
+  // tcquizsave
+  if (was !== date && all.some((q) => q.date === date)) return { ok: false, error: 'There is already a quiz on that date' };
+  const qs = (Array.isArray(d.questions) ? d.questions : []).slice(0, 40).map((x) => ({ q: tcT(x && x.q, 600), options: (Array.isArray(x && x.options) ? x.options : []).map((o) => tcT(o, 200)).slice(0, 6), correct: Number(x && x.correct), img: tcImgId(x && x.img) }));
+  if (!qs.length) return { ok: false, error: 'Add at least one question' };
+  for (let i = 0; i < qs.length; i++) {
+    const x = qs[i];
+    if (!x.q && !x.img) return { ok: false, error: 'Question ' + (i + 1) + ' has no text' };
+    if (x.options.length < 2 || x.options.some((o) => !o)) return { ok: false, error: 'Question ' + (i + 1) + ' needs 2 to 6 options, none empty' };
+    if (!(Math.floor(x.correct) === x.correct && x.correct >= 0 && x.correct < x.options.length)) return { ok: false, error: 'Question ' + (i + 1) + ' has no correct answer marked' };
+  }
+  const js = JSON.stringify(qs), cells = []; for (let i = 0; i < js.length; i += 40000) cells.push(js.slice(i, i + 40000));
+  if (cells.length > 20) return { ok: false, error: 'The quiz is too long' };
+  const keep = {}; qs.forEach((x) => { if (x.img) keep[x.img] = 1; });
+  if (was !== date) { const ish = tcSheet('QuizImages'), last = ish.getLastRow(); if (last > 1) ish.getRange(2, 1, last - 1, 2).getValues().forEach((r, i) => { if (keep[String(r[0])]) ish.getRange(i + 2, 2).setValue(date); }); }
+  tcDelRows('Quizzes', all.filter((q) => q.date === date || q.date === was));
+  const sh = tcSheet('Quizzes'), row = [date, tcT(d.title, 80) || 'Wednesday quiz', Date.now()].concat(cells);
+  sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setValues([row]);
+  tcImgDel(keep, was !== date ? [date, was] : [date]);
+  return { ok: true, date: date, n: qs.length };
 }

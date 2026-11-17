@@ -423,7 +423,7 @@ function gsEsc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').rep
 function greenSlipPost(d) {
   const pinOK = () => { const pin = PROPS.getProperty('PIN') || ''; return !!pin && String(d.pin || '') === pin; };
   if (d.a === 'gssetcode') { if (!pinOK()) return json({ ok: false, error: 'Wrong PIN' }); const c = String(d.newCode || '').trim(); if (c.length < 4) return json({ ok: false, error: 'Code too short' }); PROPS.setProperty('STAFF_CODE', c); return json({ ok: true }); }
-  if (d.a === 'gssetto') { if (!pinOK()) return json({ ok: false, error: 'Wrong PIN' }); const to = String(d.to || '').trim().toLowerCase(); if (!/^[a-z0-9._%+-]+@britishschool\.fr$/.test(to)) return json({ ok: false, error: 'Email must end @britishschool.fr' }); PROPS.setProperty('GS_TO', to); return json({ ok: true, to: to }); }
+  if (d.a === 'gssetto') { if (!pinOK()) return json({ ok: false, error: 'Wrong PIN' }); const list = String(d.to || '').toLowerCase().split(/[\s,;]+/).filter(Boolean); if (!list.length || list.length > 10 || list.some((x) => !/^[a-z0-9._%+-]+@britishschool\.fr$/.test(x))) return json({ ok: false, error: 'Every email must end @britishschool.fr (up to 10)' }); const to = list.filter((x, i) => list.indexOf(x) === i).join(', '); PROPS.setProperty('GS_TO', to); return json({ ok: true, to: to }); }
   if (d.a === 'gscheck') return json({ ok: gsStaffOK(d) });
   if (d.a !== 'gssend') return json({ ok: false, error: 'unknown' });
   if (!gsStaffOK(d)) return json({ ok: false, error: 'Wrong staff code' });

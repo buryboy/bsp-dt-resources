@@ -307,7 +307,7 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
   <div class="row"><label class="l" for="newcode">New staff code <small>at least 4 characters</small></label><input type="text" id="newcode" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off"></div>
   <div class="btns"><button type="button" class="b" id="setcode">Set staff code</button></div>
   <hr>
-  <div class="row"><label class="l" for="newto">Send slips to <small>must end @britishschool.fr</small></label><input type="email" id="newto" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="office@britishschool.fr"></div>
+  <div class="row"><label class="l" for="newto">Send slips to <small>one or more @britishschool.fr addresses, separated by commas</small></label><input type="text" inputmode="email" id="newto" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="secretary@britishschool.fr, head@britishschool.fr"></div>
   <div class="btns"><button type="button" class="b" id="setto">Set recipient</button></div>
   <div class="msg" id="setmsg"></div>
   <hr>
@@ -635,7 +635,7 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
   }
   $('#setcode').onclick = () => { const c = $('#newcode').value.trim(); if (c.length < 4) { setMsg('The staff code needs at least 4 characters.'); return; }
     setting({ a: 'gssetcode', newCode: c }, () => 'Staff code changed. Teachers will be asked for the new one.', () => { code = c; lset('code', c); $('#gate').classList.remove('on'); }); };
-  $('#setto').onclick = () => { const to = $('#newto').value.trim().toLowerCase(); if (!/^[a-z0-9._%+-]+@britishschool\.fr$/.test(to)) { setMsg('The address must end @britishschool.fr'); return; }
+  $('#setto').onclick = () => { const list = $('#newto').value.toLowerCase().split(/[\s,;]+/).filter(Boolean); const bad = list.filter((x) => !/^[a-z0-9._%+-]+@britishschool\.fr$/.test(x)); if (!list.length || bad.length) { setMsg(bad.length ? 'Not a school address: ' + bad.join(', ') : 'Type at least one address.'); return; } if (list.length > 10) { setMsg('Up to 10 addresses.'); return; } const to = list.filter((x, i) => list.indexOf(x) === i).join(', ');
     setting({ a: 'gssetto', to: to }, (j) => 'Slips now go to ' + (j.to || to) + '.', (j) => { lset('to', j.to || to); where(); }); };
 
   // on a phone the header-band fields (the date) drop into the first row, under Pupil(s)

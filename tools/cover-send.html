@@ -69,7 +69,11 @@ const ls = { get(k, d) { try { const v = localStorage.getItem('bsp-cover.' + k);
 const params = new URLSearchParams(location.search);
 const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const BACKEND = (LOCAL && params.get('backend')) /* testing on this computer only */ || (window.WORKBOOKS && WORKBOOKS.backend) || '';
-const MAX_PAGES = 10, LONG = 2000, QUALITY = 0.82, TARGET = 2.0e6 /* data-URL characters ≈ 1.5 MB */, HARD = 5.6e6;
+const MAX_PAGES = 10, KB = 1366 /* data-URL characters per KB of picture */, TARGET = 700 * KB, HARD = 5.6e6;
+// Sizes tried in order until the picture is under about 700 KB: [longest side in px, JPEG quality]. Most photos stop at the first.
+const STEPS = [[1600, 0.72], [1600, 0.6], [1400, 0.6], [1200, 0.55], [1000, 0.5]];
+const TINY_PNG = 150 * 1024;   // a small screenshot is sent as it is
+const WAITS = [2, 4, 8, 15, 30];   // seconds before automatic tries 2 to 6 (each ± 30%)
 const app = $('#app');
 
 let code = (params.get('s') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
@@ -120,8 +124,12 @@ function loadImage(file) {
 async function shrink(file) {
   const im = await loadImage(file), w0 = im.naturalWidth, h0 = im.naturalHeight;
   if (!w0 || !h0) throw new Error('decode');
+  if (file.type === 'image/png' && file.size <= TINY_PNG && Math.max(w0, h0) <= STEPS[0][0]) {
+    const raw = await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result || '')); fr.onerror = () => res(''); fr.readAsDataURL(file); });
+    if (/^data:image\/png;base64,/.test(raw)) return raw;
+  }
   let out = '';
-  for (const [long, q] of [[LONG, QUALITY], [LONG, 0.7], [1600, 0.7], [1280, 0.6]]) {
+  for (const [long, q] of STEPS) {
     const k = Math.min(1, long / Math.max(w0, h0)), c = document.createElement('canvas');
     c.width = Math.max(1, Math.round(w0 * k)); c.height = Math.max(1, Math.round(h0 * k));
     const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
@@ -249,8 +257,8 @@ async function send() {
     for (let i = sendState.done; i < total; i++) {
       draw(`Sending page ${i + 1} of ${total}`);
       let ok = false, why = '';
-      for (let t = 0; t < 3 && !ok; t++) {
-        if (t) { draw(`Sending page ${i + 1} of ${total} (trying again)`); await wait(1500 * t); }
+      for (let t = 0; t <= WAITS.length && !ok; t++) {
+        if (t) { draw(`Busy, trying again… (page ${i + 1} of ${total})`); await wait(WAITS[t - 1] * 1000 * (0.7 + Math.random() * 0.6)); }
         try {
           const j = await upload(base + i + 1, pages[i].data);
           if (j && j.ok) ok = true;
@@ -259,7 +267,7 @@ async function send() {
       }
       if (!ok) {
         if (why === 'not open') { sendState = null; app.innerHTML = `<div class="center card"><div class="ic">🔒</div><h1>The hand-in has closed</h1><p>${sendState0(i, total)} Tell the teacher in the room now. Your photos are still on this iPad.</p><button class="btn blue big" id="mb" style="margin-top:16px">Go back to my pages</button></div>`; $('#mb').onclick = () => render(); return; }
-        draw(why === 'bad image' ? `Page ${i + 1} could not be sent. Go back, press Retake on that page, then send again.` : why === 'too many' ? 'The hand-in is full. Tell the teacher in the room.' : `Page ${i + 1} did not go through. Check the Wi-Fi, then press Try again.`, true);
+        draw(why === 'bad image' ? `Page ${i + 1} could not be sent. Go back, press Retake on that page, then send again.` : why === 'too many' ? 'The hand-in is full. Tell the teacher in the room.' : `Page ${i + 1} has not gone through yet. Wait a moment, check the Wi-Fi, then press Try again.`, true);
         return;
       }
       sendState.done = i + 1; draw(`Sending page ${Math.min(i + 2, total)} of ${total}`);

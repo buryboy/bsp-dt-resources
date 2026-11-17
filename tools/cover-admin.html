@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script src="../gate.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cover admin · BSP</title>
+<link rel="stylesheet" href="kit/tools.css">
+<style>
+body { min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 18px 18px; }
+.narrow { width: 100%; max-width: 560px; margin: 4vh auto 0; }
+h2 { font-size: clamp(26px, 3vw, 36px); margin: 0 0 6px; font-weight: 600; line-height: 1.1; }
+p.lead { font-size: 19px; margin: 0 0 6px; color: var(--muted); }
+label { display: block; font-weight: 600; font-size: 17px; margin: 12px 0 4px; }
+label small { font-weight: 400; color: var(--muted); font-size: 14px; }
+input[type=text], input[type=password], input[type=number], input[type=email], input[type=date], input[type=search], textarea { width: 100%; border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--card); font-size: 19px; min-height: 48px; }
+textarea { min-height: 200px; resize: vertical; line-height: 1.35; }
+input:focus, textarea:focus, button:focus-visible, .row:focus-visible, summary:focus-visible { outline: 3px solid var(--ink2); outline-offset: 1px; }
+.err { color: var(--red); font-weight: 600; min-height: 1.4em; margin-top: 8px; font-size: 17px; }
+.big { width: 100%; font-size: 22px; padding: 14px; min-height: 58px; margin-top: 6px; }
+.link { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; min-height: 44px; font-weight: 500; padding: 0 4px; }
+.bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 4px 0 14px; }
+.bar .new { font-size: 24px; padding: 14px 28px; min-height: 62px; }
+.bar input[type=search] { flex: 1; min-width: 220px; max-width: 420px; margin-left: auto; }
+.bar .upd { font-size: 14px; color: var(--muted); }
+section.grp { margin-bottom: 16px; }
+section.grp > h3, details.grp > summary { font-size: 22px; font-weight: 600; margin: 0 0 8px; }
+details.grp { margin-bottom: 12px; }
+details.grp > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; list-style: none; }
+details.grp > summary::-webkit-details-marker { display: none; }
+details.grp > summary::before { content: '▸'; display: inline-block; transition: transform .15s; }
+details.grp[open] > summary::before { transform: rotate(90deg); }
+.cnt { font-size: 15px; font-weight: 600; color: var(--muted); background: color-mix(in srgb, var(--ink2) 10%, transparent); border-radius: 999px; padding: 2px 10px; }
+.rows { display: grid; gap: 6px; }
+.row, .hdr { display: grid; grid-template-columns: 92px 84px 84px minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 1.1fr) 92px minmax(150px, 1fr); gap: 10px; align-items: center; padding: 8px 14px; }
+.rows.dated .row, .rows.dated .hdr { grid-template-columns: 108px 80px 76px 76px minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) 84px minmax(140px, 1fr); }
+.hdr { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding-top: 0; padding-bottom: 0; }
+.row { background: var(--card); border: 0; border-radius: 14px; box-shadow: 0 0 0 2px var(--line) inset; min-height: 54px; font-size: 18px; text-align: left; cursor: pointer; width: 100%; }
+.row:hover { box-shadow: 0 0 0 2px var(--ink2) inset; }
+.row > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .t { font-weight: 700; } .row .c { font-weight: 700; }
+.row .code { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; font-size: 19px; letter-spacing: .06em; }
+.row .tm { color: var(--muted); font-size: 16px; }
+.st { display: inline-block; border-radius: 999px; padding: 3px 12px; font-weight: 600; font-size: 15px; white-space: nowrap; background: color-mix(in srgb, var(--muted) 16%, transparent); }
+.st.col { background: color-mix(in srgb, var(--amber) 30%, transparent); }
+.st.sent { background: color-mix(in srgb, var(--green) 22%, transparent); }
+.empty { color: var(--muted); padding: 10px 4px; font-size: 17px; }
+.ov { position: fixed; inset: 0; background: #0b1030aa; display: grid; place-items: center; padding: 14px; z-index: 50; }
+.ov .card { width: 100%; max-width: 760px; padding: 22px; max-height: 96vh; overflow: auto; }
+.ov h3 { font-size: 28px; margin: 0 0 6px; font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; }
+.ov p { font-size: 18px; margin: 8px 0; line-height: 1.35; }
+.acts { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.acts .btn { flex: 1; font-size: 18px; min-height: 52px; white-space: nowrap; }
+.f3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 12px; }
+.f2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 0 12px; }
+.bigcode { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: clamp(64px, 12vw, 120px); font-weight: 700; letter-spacing: .12em; line-height: 1; text-align: center; margin: 6px 0; padding-left: .12em; }
+.give { display: flex; gap: 16px; align-items: center; margin-top: 10px; }
+.give .qr { flex: none; width: 150px; height: 150px; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 0 0 2px var(--line) inset; }
+.give .qr svg { width: 100%; height: 100%; display: block; }
+.msg { font-size: 19px; background: color-mix(in srgb, var(--ink2) 9%, transparent); border-radius: 12px; padding: 10px 12px; overflow-wrap: anywhere; user-select: all; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 10px 0; font-size: 18px; }
+dt { color: var(--muted); } dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.workbox { white-space: pre-wrap; overflow-wrap: anywhere; background: color-mix(in srgb, var(--ink2) 6%, transparent); border-radius: 12px; padding: 10px 12px; max-height: 30vh; overflow: auto; font-size: 17px; line-height: 1.35; }
+.note { background: color-mix(in srgb, var(--amber) 22%, transparent); border-radius: 12px; padding: 8px 12px; font-weight: 600; font-size: 16px; margin-top: 8px; }
+.spin { display: inline-block; width: 1em; height: 1em; border: .16em solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -.12em; margin-right: .4em; }
+@keyframes sp { to { transform: rotate(360deg); } }
+footer { font-size: 13px; color: var(--muted); text-align: center; padding: 0 16px 10px; line-height: 1.4; }
+@media (max-width: 1000px) {
+  .hdr { display: none; }
+  .row, .rows.dated .row { grid-template-columns: auto auto auto 1fr auto; gap: 4px 12px; padding: 10px 14px; }
+  .row > span { white-space: normal; }
+  .row .tch, .row .cov { grid-column: 1 / -1; font-size: 16px; color: var(--muted); }
+  .row .cov:empty { display: none; }
+  .row .sub { grid-column: span 1; }
+  .row .stw { grid-column: 1 / -2; }
+  .row .code { grid-column: -2 / -1; justify-self: end; }
+  .f3 { grid-template-columns: 1fr 1fr; } .bar input[type=search] { max-width: none; }
+}
+@media (max-width: 560px) { .f3, .f2 { grid-template-columns: 1fr; } .give { flex-direction: column; } }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<footer>Covers are saved in the school's Google results sheet (tab "Cover") and removed 31 days after their date. Students' photos are emailed to the absent teacher, then deleted.</footer>
+<script src="kit/tools.js"></script>
+<script src="vendor/qrcode-generator.js"></script>
+<script src="../workbooks.js"></script>
+<script>
+'use strict';
+TK.top('Cover admin');
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const params = new URLSearchParams(location.search);
+const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const TEST_BACKEND = LOCAL ? params.get('backend') : null;             // testing on this computer only
+const BACKEND = TEST_BACKEND || (window.WORKBOOKS && WORKBOOKS.backend) || '';
+const DOMAIN = 'britishschool.fr';
+const app = $('#app');
+const ss = { get(k, d) { try { const v = sessionStorage.getItem('bsp-cover.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { sessionStorage.setItem('bsp-cover.' + k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { sessionStorage.removeItem('bsp-cover.' + k); } catch (e) {} } };
+let office = ss.get('code', '');         // the office code: kept for this browser tab only
+let list = [], today = '', loaded = false, timer = null, fails = 0, lastOK = 0, query = '', openUp = false, openHist = false;
+const NET = 'Could not reach the server. Check the internet and try again.';
+
+async function post(body) {
+  const ac = new AbortController(), to = setTimeout(() => ac.abort(), 45000);
+  try {
+    const r = await fetch(BACKEND, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, signal: ac.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(to); }
+}
+async function get(q) {
+  const r = await fetch(BACKEND + (BACKEND.includes('?') ? '&' : '?') + new URLSearchParams(q), { cache: 'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+const busy = (btn, on, txt) => { if (!btn) return; if (on) { btn.dataset.t = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + esc(txt || 'Checking…'); } else { btn.disabled = false; if (btn.dataset.t) btn.innerHTML = btn.dataset.t; } };
+const localDay = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const niceDate = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); if (!m) return String(iso || ''); return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); };
+const clock = (ms) => { const d = new Date(Number(ms)); return isNaN(d) ? '' : d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); };
+const boardUrl = (code) => { const u = new URL('cover.html', location.href); u.search = ''; u.hash = ''; if (code) u.searchParams.set('c', code); if (TEST_BACKEND) u.searchParams.set('backend', TEST_BACKEND); return u.href; };
+const boardShown = () => { const u = new URL('cover.html', location.href); return u.host + u.pathname; };
+const giveMsg = (code) => `Open ${boardShown()} and type ${code}`;
+async function copy(text, btn) {
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (e) { try { const t = document.createElement('textarea'); t.value = text; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); ok = document.execCommand('copy'); t.remove(); } catch (x) {} }
+  if (btn) { const o = btn.textContent; btn.textContent = ok ? 'Copied ✓' : 'Could not copy'; setTimeout(() => { btn.textContent = o; }, 1500); }
+}
+function qrSvg(text) {
+  if (!window.qrcode) return '';
+  const q = qrcode(0, 'M'); q.addData(text); q.make();
+  const n = q.getModuleCount(); let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
+  return `<svg viewBox="-1 -1 ${n + 2} ${n + 2}" shape-rendering="crispEdges" role="img" aria-label="QR code for the cover teacher's page"><rect x="-1" y="-1" width="${n + 2}" height="${n + 2}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+function overlay(html, wide) {
+  const ov = document.createElement('div'); ov.className = 'ov';
+  ov.innerHTML = `<div class="card" role="dialog" aria-modal="true"${wide ? ' style="max-width:900px"' : ''}>${html}</div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('keydown', (e) => { if (e.key === 'Escape') ov.remove(); });
+  return ov;
+}
+
+// ---------- office code ----------
+function stepCode(msg) {
+  clearTimeout(timer);
+  app.innerHTML = `<form class="narrow card" id="f" autocomplete="off"><h2>Cover admin</h2>
+    <p class="lead">Book covered lessons, give each cover teacher a lesson code, and see when the work has been sent.</p>
+    <label for="cc">Office code</label><input id="cc" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="40">
+    <div class="err" id="err">${esc(msg || '')}</div><button class="btn go big" type="submit">Continue</button>
+    <div style="text-align:right;margin-top:6px"><button class="link" type="button" id="set">Settings (Mr Porter)</button></div></form>`;
+  $('#cc').focus(); $('#set').onclick = settings;
+  $('#f').onsubmit = async (e) => {
+    e.preventDefault();
+    const v = $('#cc').value.trim(), b = $('#f button[type=submit]');
+    if (!v) { $('#err').textContent = 'Type the office code first.'; return; }
+    busy(b, true);
+    try {
+      const j = await post({ a: 'cvcheck', cover: v });
+      if (j && j.ok) { office = v; ss.set('code', v); main(); return; }
+      $('#err').textContent = 'That code is not right. Check it and try again.'; $('#cc').select();
+    } catch (x) { $('#err').textContent = NET; }
+    busy(b, false);
+  };
+}
+function settings() {
+  const ov = overlay(`<form autocomplete="off"><h3>Set the office code</h3><p class="muted" style="font-size:16px">Changing the office code needs the D&amp;T dashboard PIN.</p>
+    <label for="pin">Dashboard PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="40">
+    <label for="nc">New office code <small>(4 or more characters, capitals do not matter)</small></label><input id="nc" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="40">
+    <div class="err" id="serr"></div><div class="acts"><button class="btn" type="button" id="sx">Close</button><button class="btn blue" type="submit">Save code</button></div></form>`);
+  $('#pin', ov).focus(); $('#sx', ov).onclick = () => ov.remove();
+  $('form', ov).onsubmit = async (e) => {
+    e.preventDefault();
+    const pin = $('#pin', ov).value.trim(), nc = $('#nc', ov).value.trim(), er = $('#serr', ov), b = $('button[type=submit]', ov);
+    if (!pin) { er.textContent = 'Type the dashboard PIN.'; return; }
+    if (nc.length < 4) { er.textContent = 'The new code needs 4 or more characters.'; return; }
+    busy(b, true, 'Saving…');
+    try {
+      const j = await post({ a: 'cvsetcode', pin, newCode: nc });
+      if (j && j.ok) { $('form', ov).innerHTML = `<h3>Saved</h3><p>The office code is now <b>${esc(nc)}</b>.</p><div class="acts"><button class="btn blue" type="button" id="sx2">Done</button></div>`; $('#sx2', ov).onclick = () => ov.remove(); return; }
+      er.textContent = j && j.error === 'Wrong PIN' ? 'That PIN is not right.' : 'Could not save: ' + ((j && j.error) || 'unknown error') + '.';
+    } catch (x) { er.textContent = NET; }
+    busy(b, false);
+  };
+}
+
+// ---------- the lists ----------
+function main() {
+  app.innerHTML = `<div class="bar"><button class="btn go new" id="new">+ New cover</button><span class="upd" id="upd"></span><input type="search" id="q" placeholder="Search class, teacher, room, code…" aria-label="Search covers" value="${esc(query)}"></div><div id="lists"><p class="empty"><span class="spin"></span>Loading…</p></div>`;
+  $('#new').onclick = () => form(null);
+  $('#q').oninput = () => { query = $('#q').value; draw(); };
+  refresh();
+}
+async function refresh() {
+  clearTimeout(timer);
+  if (!office || !$('#lists')) return;
+  if (!document.hidden || !loaded) {
+    try {
+      const j = await get({ a: 'cvlist', cover: office });
+      if (j && j.ok) { list = j.list || []; today = j.today || localDay(); loaded = true; fails = 0; lastOK = Date.now(); }
+      else if (j && j.error === 'Wrong office code') { office = ''; ss.del('code'); stepCode('The office code has changed. Please type it again.'); return; }
+      else fails++;
+    } catch (e) { fails++; }
+    draw();
+  }
+  timer = setTimeout(refresh, 15000);
+}
+function status(r, past) {
+  if (r.status === 'sent') return `<span class="st sent">Sent ${esc(clock(r.sentAt))} · ${esc(r.count === '' || r.count == null ? '?' : r.count)}${r.expected ? ' / ' + esc(r.expected) : ''}</span>`;
+  if (r.status === 'collecting') return `<span class="st col">${past ? 'Not sent' : 'Collecting'} · ${esc(r.received == null ? 0 : r.received)}${r.expected ? ' / ' + esc(r.expected) : ''}</span>`;
+  return `<span class="st">${past ? 'Not used' : 'Not started'}</span>`;
+}
+function rowHtml(r, dated, past) {
+  return `<button class="row" data-code="${esc(r.code)}">${dated ? `<span class="d">${esc(niceDate(r.date))}</span>` : ''}<span class="t">${esc(r.time)}</span><span class="rm">${esc(r.room)}</span><span class="c">${esc(r.cls)}</span><span class="sub">${esc(r.subject)}</span><span class="tch">${esc(String(r.teacher || '').replace('@' + DOMAIN, ''))}</span><span class="cov">${esc(r.coveredBy)}</span><span class="code">${esc(r.code)}</span><span class="stw">${status(r, past)}</span></button>`;
+}
+function block(rows, dated, past, none) {
+  if (!rows.length) return `<p class="empty">${none}</p>`;
+  return `<div class="rows${dated ? ' dated' : ''}"><div class="hdr">${dated ? '<span>Date</span>' : ''}<span>Time</span><span>Room</span><span>Class</span><span>Subject</span><span>Teacher</span><span>Covered by</span><span>Code</span><span>Status</span></div>${rows.map((r) => rowHtml(r, dated, past)).join('')}</div>`;
+}
+function draw() {
+  const box = $('#lists'); if (!box) return;
+  $('#upd').textContent = fails >= 2 ? 'Not updating: check the internet' : '';
+  if (!loaded) { if (fails) box.innerHTML = `<p class="empty">${NET}</p>`; return; }
+  const up0 = $('#gup'), hi0 = $('#ghist'); if (up0) openUp = up0.open; if (hi0) openHist = hi0.open;
+  const q = query.trim().toLowerCase();
+  const hit = (r) => !q || [r.code, r.date, niceDate(r.date), r.time, r.room, r.cls, r.subject, r.teacher, r.coveredBy].join(' ').toLowerCase().includes(q);
+  const all = list.filter(hit), td = all.filter((r) => r.date === today), up = all.filter((r) => r.date > today), hist = all.filter((r) => r.date < today).reverse();
+  box.innerHTML = `<section class="grp"><h3>Today's covers <span class="cnt">${td.length}</span> <span class="muted" style="font-size:16px;font-weight:400">${esc(niceDate(today))}</span></h3>${block(td, false, false, q ? 'No covers today match the search.' : 'No covers booked for today. Press “+ New cover”.')}</section>
+    <details class="grp" id="gup" ${openUp || (q && up.length) ? 'open' : ''}><summary>Upcoming <span class="cnt">${up.length}</span></summary>${block(up, true, false, 'Nothing booked for the coming days.')}</details>
+    <details class="grp" id="ghist" ${openHist || (q && hist.length) ? 'open' : ''}><summary>History (last 31 days) <span class="cnt">${hist.length}</span></summary>${block(hist, true, true, 'No past covers.')}</details>`;
+  box.querySelectorAll('.row').forEach((b) => b.onclick = () => { const r = list.find((x) => String(x.code) === b.dataset.code); if (r) view(r); });
+}
+
+// ---------- one cover ----------
+function view(r) {
+  const past = r.date < today;
+  const ov = overlay(`<h3>${esc([r.cls, r.subject].filter(Boolean).join(' · '))}</h3>
+    <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><div class="bigcode" style="font-size:56px;margin:0">${esc(r.code)}</div><div>${status(r, past)}</div></div>
+    <dl><dt>When</dt><dd>${esc(niceDate(r.date))}${r.time !== '' ? ' · ' + esc(r.time) : ''}</dd><dt>Room</dt><dd>${esc(r.room) || '–'}</dd><dt>On roll</dt><dd>${esc(r.expected) || '–'}</dd><dt>Absent teacher</dt><dd>${esc(r.teacher)}</dd><dt>Covered by</dt><dd>${esc(r.coveredBy) || '–'}</dd></dl>
+    <label style="margin-top:0">The work</label><div class="workbox">${esc(r.work) || '<span class="muted">No work entered.</span>'}</div>
+    ${!past && r.status !== 'sent' ? `<label>Message for the cover teacher</label><div class="msg" id="gm">${esc(giveMsg(r.code))}</div>` : ''}
+    <div class="acts">${!past && r.status !== 'sent' ? '<button class="btn" id="cm">Copy message</button>' : ''}<button class="btn" id="ed">Edit</button><button class="btn" id="dup">Copy as new</button><button class="btn" id="del" style="color:var(--red)">Delete</button><button class="btn blue" id="x">Close</button></div>`);
+  $('#x', ov).onclick = () => ov.remove(); $('#x', ov).focus();
+  if ($('#cm', ov)) $('#cm', ov).onclick = () => copy(giveMsg(r.code), $('#cm', ov));
+  $('#ed', ov).onclick = () => { ov.remove(); form(r, true); };
+  $('#dup', ov).onclick = () => { ov.remove(); form(Object.assign({}, r, { date: today || localDay() }), false); };
+  $('#del', ov).onclick = () => {
+    const c = overlay(`<h3>Delete this cover?</h3><p>${esc([r.cls, r.subject, niceDate(r.date), r.time].filter((x) => x !== '' && x != null).join(' · '))}</p><p>Lesson code ${esc(r.code)} will stop working.</p>${r.status === 'collecting' ? `<p class="note">This lesson is collecting work now${r.received ? ` (${esc(r.received)} handed in)` : ''}. If you delete it, that work cannot be sent to the teacher.</p>` : ''}<div class="err" id="derr"></div><div class="acts"><button class="btn" id="no">Go back</button><button class="btn stop" id="yes">Delete</button></div>`);
+    $('#no', c).onclick = () => c.remove(); $('#no', c).focus();
+    $('#yes', c).onclick = async () => {
+      busy($('#yes', c), true, 'Deleting…');
+      try { const j = await post({ a: 'cvdel', cover: office, code: r.code }); if (j && j.ok) { c.remove(); ov.remove(); list = list.filter((x) => x.code !== r.code); draw(); refresh(); return; } $('#derr', c).textContent = (j && j.error) || 'Could not delete.'; }
+      catch (e) { $('#derr', c).textContent = NET; }
+      busy($('#yes', c), false);
+    };
+  };
+}
+function cleanEmail(v) { v = String(v || '').trim().toLowerCase().replace(/\s+/g, ''); if (v && !v.includes('@')) v += '@' + DOMAIN; return v; }
+function form(r, editing) {
+  const k = r || {}, started = editing && k.status && k.status !== 'not started';
+  const ov = overlay(`<form autocomplete="off" novalidate><h3>${editing ? 'Edit cover · ' + esc(k.code) : 'New cover'}</h3>
+    ${started ? `<p class="note">${k.status === 'sent' ? 'This lesson\'s work has already been sent.' : 'This lesson has already started. Changes show on the board only if the cover teacher types the lesson code again.'}</p>` : ''}
+    <div class="f3">
+      <div><label for="fd">Date</label><input id="fd" type="date" value="${esc(k.date || today || localDay())}"></div>
+      <div><label for="ft">Time / period</label><input id="ft" type="text" maxlength="20" placeholder="e.g. P3 or 10:15" value="${esc(k.time)}"></div>
+      <div><label for="fr">Room</label><input id="fr" type="text" maxlength="30" placeholder="e.g. S12" value="${esc(k.room)}"></div>
+      <div><label for="fc">Class</label><input id="fc" type="text" maxlength="40" placeholder="e.g. 9B" value="${esc(k.cls)}"></div>
+      <div><label for="fs">Subject</label><input id="fs" type="text" maxlength="60" placeholder="e.g. History" value="${esc(k.subject)}"></div>
+      <div><label for="fe">Number on roll</label><input id="fe" type="number" inputmode="numeric" min="0" max="60" placeholder="e.g. 16" value="${esc(k.expected || '')}"></div>
+    </div>
+    <div class="f2">
+      <div><label for="fm">Absent teacher's email <small>(the work is sent here)</small></label><input id="fm" type="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="120" placeholder="name@${DOMAIN}" value="${esc(k.teacher)}"></div>
+      <div><label for="fb">Who is covering <small>(optional)</small></label><input id="fb" type="text" maxlength="80" value="${esc(k.coveredBy)}"></div>
+    </div>
+    <label for="fw">The work <small>(paste the lesson plan or instructions from the teacher: it is shown on the board)</small></label><textarea id="fw" maxlength="20000">${esc(k.work)}</textarea>
+    <div class="err" id="ferr"></div>
+    <div class="acts"><button class="btn" type="button" id="fx">Cancel</button><button class="btn go" type="submit">${editing ? 'Save changes' : 'Save and get the lesson code'}</button></div></form>`, true);
+  const g = (id) => $('#' + id, ov);
+  g('fx').onclick = () => ov.remove(); (editing ? g('fw') : g(k.cls ? 'fd' : 'ft')).focus();
+  g('fm').onblur = () => { g('fm').value = cleanEmail(g('fm').value); };
+  $('form', ov).onsubmit = async (e) => {
+    e.preventDefault();
+    const er = g('ferr'), b = $('button[type=submit]', ov);
+    const d = { date: g('fd').value, time: g('ft').value.trim(), room: g('fr').value.trim(), cls: g('fc').value.trim(), subject: g('fs').value.trim(), expected: Math.round(Number(g('fe').value)) || 0, teacher: cleanEmail(g('fm').value), coveredBy: g('fb').value.trim(), work: g('fw').value.trim() };
+    g('fm').value = d.teacher;
+    const bad = (m, id) => { er.textContent = m; g(id).focus(); };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d.date)) return bad('Pick the date of the lesson.', 'fd');
+    if (!editing && d.date < (today || localDay())) return bad('That date is in the past.', 'fd');
+    if (!d.cls) return bad('Type the class (for example 9B).', 'fc');
+    if (d.expected < 0 || d.expected > 60) return bad('Number on roll must be between 1 and 60.', 'fe');
+    if (!d.teacher) return bad("Type the absent teacher's school email.", 'fm');
+    if (!new RegExp('^[a-z0-9._%+-]+@' + DOMAIN.replace('.', '\\.') + '$').test(d.teacher)) return bad(`That email does not look right. It must be a school address ending @${DOMAIN}.`, 'fm');
+    busy(b, true, 'Saving…');
+    try {
+      const j = await post(Object.assign({ a: editing ? 'cvedit' : 'cvadd', cover: office }, editing ? { code: k.code } : {}, d));
+      if (j && j.ok) { ov.remove(); refresh(); if (!editing) saved(j.code, d); return; }
+      if (j && j.error === 'Wrong office code') { ov.remove(); office = ''; ss.del('code'); stepCode('The office code has changed. Please type it again.'); return; }
+      er.textContent = j && j.error === 'busy' ? 'The server is busy. Try again in a moment.' : j && j.error === 'not found' ? 'This cover no longer exists (it may have been deleted).' : (j && j.error) || 'Could not save. Try again.';
+    } catch (x) { er.textContent = NET; }
+    busy(b, false);
+  };
+}
+function saved(code, d) {
+  const ov = overlay(`<h3 style="text-align:center">Lesson code for ${esc([d.cls, d.subject].filter(Boolean).join(' · '))}</h3>
+    <div class="bigcode" id="bc">${esc(code)}</div>
+    <p class="muted" style="text-align:center;margin-top:0">Works only on ${esc(niceDate(d.date))}${d.coveredBy ? ' · for ' + esc(d.coveredBy) : ''}</p>
+    <div class="give"><div class="qr">${qrSvg(boardUrl(code))}</div><div style="flex:1;min-width:0"><label style="margin-top:0">Give this to the cover teacher</label><div class="msg" id="gm">${esc(giveMsg(code))}</div><p class="muted" style="font-size:15px">Or they can scan the QR code: it opens the page with the code filled in.</p></div></div>
+    <div class="acts"><button class="btn" id="cc2">Copy code</button><button class="btn" id="cm">Copy message</button><button class="btn" id="again">+ Another cover</button><button class="btn blue" id="x">Done</button></div>`);
+  $('#x', ov).onclick = () => ov.remove(); $('#x', ov).focus();
+  $('#cc2', ov).onclick = () => copy(String(code), $('#cc2', ov));
+  $('#cm', ov).onclick = () => copy(giveMsg(code), $('#cm', ov));
+  $('#again', ov).onclick = () => { ov.remove(); form({ date: d.date }, false); };
+}
+
+if (!BACKEND) app.innerHTML = '<div class="narrow card"><h2>Not set up</h2><p class="lead">The results server address is missing (workbooks.js).</p></div>';
+else if (office) main();
+else stepCode();
+</script>
+</body>
+</html>

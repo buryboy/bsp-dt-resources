@@ -22,12 +22,42 @@ input:focus, textarea:focus, button:focus-visible { outline: 3px solid var(--ink
 .how { margin-top: 18px; font-size: 17px; line-height: 1.45; color: var(--muted); }
 .how b { color: var(--ink); }
 
+/* lesson code screen */
+.lcode { text-align: center; font-size: clamp(44px, 7vw, 76px) !important; font-weight: 700; letter-spacing: .28em; padding: 6px 0 6px .28em !important; min-height: 0; font-variant-numeric: tabular-nums; }
+.pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.pad button { font-size: 26px; min-height: 52px; padding: 4px; }
 /* live board */
+.strip { display: flex; align-items: baseline; gap: 6px 18px; flex-wrap: wrap; padding: 0 4px 8px; }
+.strip .cl { font-size: clamp(22px, 2.3vw, 40px); font-weight: 700; line-height: 1.1; overflow-wrap: anywhere; }
+.strip .to { margin-left: auto; color: var(--muted); font-size: 15px; overflow-wrap: anywhere; }
+.seg { display: inline-flex; border-radius: 12px; box-shadow: 0 0 0 2px var(--line) inset; overflow: hidden; background: var(--card); }
+.seg button { border: 0; background: none; min-height: 44px; padding: 6px 14px; font-weight: 600; cursor: pointer; }
+.seg button[aria-pressed=true] { background: var(--ink2); color: #fff; }
+.pill { font-weight: 700; background: var(--card); box-shadow: 0 0 0 2px var(--line) inset; border-radius: 999px; padding: 8px 16px; font-variant-numeric: tabular-nums; }
+.pill.done { background: var(--green); color: #fff; box-shadow: none; }
 #live { flex: 1; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 16px; min-height: 0; }
 #live .card { padding: 16px 20px; }
-.left { display: flex; flex-direction: column; min-height: 0; }
+#live.v-handin .work, #live.v-work .left, #live.v-work .right { display: none; }
+#live.v-work { grid-template-columns: minmax(0, 1fr); }
+#live.v-both { grid-template-columns: minmax(0, 1.3fr) minmax(0, .8fr) minmax(0, .82fr); gap: 12px; }
+.work { display: flex; flex-direction: column; min-height: 0; }
+.work .wh { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.work .wh h2 { font-size: clamp(22px, 2.2vw, 36px); margin: 0 auto 0 0; font-weight: 700; }
+.work .wh button { min-height: 40px; min-width: 44px; padding: 4px 10px; }
+.worktext { flex: 1; min-height: 0; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: calc(var(--ws, 26) * 1px); line-height: 1.35; font-weight: 500; }
+#live.v-work .worktext { font-size: calc(var(--ws, 26) * 1.3px); }
+.worktext a { color: var(--ink2); }
+#live.v-both .left h2 { font-size: clamp(22px, 2.2vw, 38px); }
+#live.v-both .steps li { font-size: clamp(16px, 1.45vw, 26px); gap: 10px; }
+#live.v-both .scan { flex-direction: column; justify-content: center; gap: 8px; }
+#live.v-both .qr { height: auto; width: min(100%, 36vh); max-height: none; padding: 8px; }
+#live.v-both .scan .txt { text-align: center; font-size: clamp(14px, 1.2vw, 20px); }
+#live.v-both .scan .txt b { font-size: 1.1em; margin-bottom: 2px; }
+#live.v-both .tally .n { font-size: clamp(48px, 6vw, 110px); }
+#live.v-both .tally .t { font-size: clamp(17px, 1.5vw, 26px); }
+#live.v-both .card { padding: 12px 14px; }
+.left { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 .left h2 { font-size: clamp(30px, 3.5vw, 58px); margin: 0; font-weight: 700; line-height: 1.05; }
-.left .who { font-size: clamp(18px, 1.8vw, 30px); color: var(--muted); font-weight: 500; margin-top: 2px; overflow-wrap: anywhere; }
 .steps { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
 .steps li { display: flex; align-items: center; gap: 14px; font-size: clamp(21px, 2.15vw, 38px); font-weight: 500; line-height: 1.15; }
 .steps li i { flex: none; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--ink2); color: #fff; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: .85em; }
@@ -38,7 +68,7 @@ input:focus, textarea:focus, button:focus-visible { outline: 3px solid var(--ink
 .scan .txt b { display: block; font-size: 1.25em; margin-bottom: 6px; }
 .scan .url { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .74em; overflow-wrap: anywhere; color: var(--ink); background: color-mix(in srgb, var(--ink2) 9%, transparent); border-radius: 10px; padding: 6px 8px; display: inline-block; margin-top: 4px; }
 .scan .code { font-weight: 700; letter-spacing: .12em; font-size: 1.5em; }
-.right { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.right { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; padding: 0 2px 4px; margin: 0 -2px; }
 .tally { text-align: center; transition: background .4s, color .4s; flex: none; }
 .tally .n { font-size: clamp(64px, 9.5vw, 170px); font-weight: 700; line-height: .95; font-variant-numeric: tabular-nums; }
 .tally .n small { font-size: .5em; font-weight: 600; opacity: .75; }
@@ -76,13 +106,14 @@ input:focus, textarea:focus, button:focus-visible { outline: 3px solid var(--ink
 .spin { display: inline-block; width: 1em; height: 1em; border: .16em solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp 0.8s linear infinite; vertical-align: -.12em; margin-right: .4em; }
 @keyframes sp { to { transform: rotate(360deg); } }
 footer { font-size: 13px; color: var(--muted); text-align: center; padding: 0 16px 10px; line-height: 1.4; }
-@media (max-width: 900px) { #live { grid-template-columns: 1fr; } .qr { max-height: none; height: auto; width: min(46vw, 320px); } .row2 { grid-template-columns: 1fr; } main { padding: 0 12px 12px; } }
+@media (min-width: 901px) { body.live { height: 100vh; overflow: hidden; } #live { grid-template-rows: minmax(0, 1fr); } }
+@media (max-width: 900px) { #live, #live.v-both { grid-template-columns: minmax(0, 1fr); } .worktext { max-height: 60vh; } #live.v-both .scan { flex-direction: row; } #live.v-both .qr { width: min(46vw, 320px); } .qr { max-height: none; height: auto; width: min(46vw, 320px); } .row2 { grid-template-columns: 1fr; } main { padding: 0 12px 12px; } }
 @media (max-height: 800px) and (min-width: 901px) { .steps { margin-top: 8px; gap: 6px; } .tally .n { font-size: clamp(64px, 8vw, 120px); } #live .card { padding: 12px 18px; } }
 </style>
 </head>
 <body>
 <main id="app"></main>
-<footer id="foot">Students' photos are held in a temporary school Google Drive folder, emailed to the absent teacher when you press Send, then deleted. Nothing else is stored.</footer>
+<footer id="foot">Students' photos are held in a temporary school Google Drive folder, emailed to the absent teacher when you press Collect and send, then deleted. Nothing else is stored.</footer>
 <script src="kit/tools.js"></script>
 <script src="vendor/qrcode-generator.js"></script>
 <script src="../workbooks.js"></script>
@@ -100,9 +131,13 @@ const app = $('#app');
 // Kept for this browser tab only (sessionStorage): the cover code and the lesson being collected.
 const ss = { get(k, d) { try { const v = sessionStorage.getItem('bsp-cover.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { sessionStorage.setItem('bsp-cover.' + k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { sessionStorage.removeItem('bsp-cover.' + k); } catch (e) {} } };
 let cover = ss.get('code', '');
-let S = ss.get('session', null);          // { session, teacher, cls, subject, expected, note }
+let S = ss.get('session', null);          // { session, teacher, cls, subject, expected, note } + from a lesson code: { lesson, room, time, coveredBy, work }
 let people = [], isOpen = true, lastOK = 0, timer = null, sending = false, pollFails = 0;
-let hideNames = TK.store('cover.hideNames', false);
+let hideNames = TK.store('cover.hideNames', false), authBad = false;
+let view = TK.store('cover.view', 'both'), workSize = TK.store('cover.workSize', 26);
+// A lesson booked by the office is unlocked by its lesson code; the do-it-yourself way uses the office code.
+const auth = () => (S.lesson ? { lesson: S.lesson, session: S.session } : { cover, session: S.session });
+const setLive = (on) => document.body.classList.toggle('live', !!on);
 
 async function post(body, ms) {
   const ac = new AbortController(), to = setTimeout(() => ac.abort(), ms || 45000);
@@ -120,23 +155,57 @@ async function get(q) {
 const NET = 'Could not reach the server. Check the internet and try again.';
 const busy = (btn, on, txt) => { if (!btn) return; if (on) { btn.dataset.t = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + esc(txt || 'Checking…'); } else { btn.disabled = false; if (btn.dataset.t) btn.innerHTML = btn.dataset.t; } };
 
-// ---------- step 1: cover code ----------
+// ---------- step 1: the lesson code from the cover office ----------
+function stepLesson(msg) {
+  clearTimeout(timer); slot.innerHTML = ''; setLive(false);
+  const pre = (params.get('c') || '').replace(/\D/g, '').slice(0, 5);
+  app.innerHTML = `<form class="narrow card" id="f" autocomplete="off" style="max-width:520px;margin-top:1vh"><h2>Type your lesson code</h2>
+    <p class="lead">The 5-digit code the cover office gave you for this lesson.</p>
+    <input id="lc" class="lcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="off" aria-label="Lesson code" placeholder="·····" value="${esc(pre)}">
+    <div class="pad" aria-hidden="true">${['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].map((k) => (k ? `<button class="btn" type="button" tabindex="-1" data-k="${k}">${k}</button>` : '<span></span>')).join('')}</div>
+    <div class="err" id="err">${esc(msg || '')}</div>
+    <button class="btn go big" type="submit">Start the lesson</button>
+    <div style="text-align:center;margin-top:8px"><button class="link" type="button" id="diy">No lesson code? Set it up yourself (office code)</button></div></form>`;
+  const lc = $('#lc'); lc.focus();
+  lc.oninput = () => { lc.value = lc.value.replace(/\D/g, '').slice(0, 5); $('#err').textContent = ''; };
+  app.querySelectorAll('.pad button').forEach((b) => b.onclick = () => { lc.value = b.dataset.k === '⌫' ? lc.value.slice(0, -1) : (lc.value + b.dataset.k).slice(0, 5); $('#err').textContent = ''; lc.focus(); });
+  $('#diy').onclick = () => (cover ? stepForm() : stepCode());
+  $('#f').onsubmit = async (e) => {
+    e.preventDefault();
+    const v = lc.value.replace(/\D/g, ''), b = $('#f button[type=submit]');
+    if (v.length !== 5) { $('#err').textContent = 'The lesson code has 5 numbers.'; lc.focus(); return; }
+    busy(b, true, 'Opening…');
+    try {
+      const j = await post({ a: 'cvstart', lesson: v });
+      if (j && j.ok && j.session && j.slot) { fromSlot(j, ''); people = []; isOpen = true; authBad = false; if (params.get('c')) { const u = new URL(location.href); u.searchParams.delete('c'); history.replaceState(null, '', u); } live(); return; }
+      $('#err').textContent = j && j.error === 'busy' ? 'The server is busy. Try again in a moment.' : (j && j.error) || 'Could not open that lesson. Try again.'; lc.select();
+    } catch (x) { $('#err').textContent = NET; }
+    busy(b, false);
+  };
+}
+function fromSlot(j, note) {
+  const t = j.slot;
+  S = { lesson: String(t.code), session: j.session, teacher: t.teacher || '', cls: t.cls || '', subject: t.subject || '', expected: Number(t.expected) || 0, room: t.room || '', time: t.time == null ? '' : String(t.time), coveredBy: t.coveredBy || '', work: t.work == null ? '' : String(t.work), note: note || '' };
+  ss.set('session', S);
+}
+
+// ---------- fallback: set it up yourself with the office code ----------
 function stepCode(msg) {
-  clearTimeout(timer); slot.innerHTML = '';
+  clearTimeout(timer); slot.innerHTML = ''; setLive(false);
   app.innerHTML = `<form class="narrow card" id="f" autocomplete="off"><h2>Collect the class's work</h2>
     <p class="lead">Students photograph the work they did this lesson. It is emailed to their teacher.</p>
-    <label for="cc">Cover code <small>(from the cover sheet or the school office)</small></label>
+    <label for="cc">Office code <small>(the cover office's code)</small></label>
     <input id="cc" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="40">
     <div class="err" id="err">${esc(msg || '')}</div>
     <button class="btn go big" type="submit">Continue</button>
-    <div class="how"><b>How it works:</b> 1. Type the cover code. 2. Type the absent teacher's email and the class. 3. Students scan the code on the board and send photos of their work. 4. Press Send at the end of the lesson.</div>
-    <div style="text-align:right;margin-top:6px"><button class="link" type="button" id="set">Settings (Mr Porter)</button></div></form>`;
+    <div class="how"><b>How it works:</b> 1. Type the office code. 2. Type the absent teacher's email and the class. 3. Students scan the code on the board and send photos of their work. 4. Press Send at the end of the lesson.</div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px"><button class="link" type="button" id="back">← I have a lesson code</button><button class="link" type="button" id="set">Settings (Mr Porter)</button></div></form>`;
   $('#cc').focus();
-  $('#set').onclick = settings;
+  $('#set').onclick = settings; $('#back').onclick = () => stepLesson();
   $('#f').onsubmit = async (e) => {
     e.preventDefault();
     const v = $('#cc').value.trim(), b = $('#f button[type=submit]');
-    if (!v) { $('#err').textContent = 'Type the cover code first.'; return; }
+    if (!v) { $('#err').textContent = 'Type the office code first.'; return; }
     busy(b, true);
     try {
       const j = await post({ a: 'cvcheck', cover: v });
@@ -149,9 +218,9 @@ function stepCode(msg) {
 
 function settings() {
   const ov = document.createElement('div'); ov.className = 'ov';
-  ov.innerHTML = `<form class="card" autocomplete="off"><h3>Set the cover code</h3><p class="muted" style="font-size:17px">The cover code is what cover teachers type to use this page. Changing it needs the D&amp;T dashboard PIN.</p>
+  ov.innerHTML = `<form class="card" autocomplete="off"><h3>Set the office code</h3><p class="muted" style="font-size:17px">The office code opens the Cover admin page (and the set-it-up-yourself option here). Changing it needs the D&amp;T dashboard PIN.</p>
     <label for="pin">Dashboard PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="40">
-    <label for="nc">New cover code <small>(4 or more characters, capitals do not matter)</small></label><input id="nc" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="40">
+    <label for="nc">New office code <small>(4 or more characters, capitals do not matter)</small></label><input id="nc" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="40">
     <div class="err" id="serr"></div>
     <div class="acts"><button class="btn" type="button" id="sx">Close</button><button class="btn blue" type="submit">Save code</button></div></form>`;
   document.body.appendChild(ov);
@@ -165,7 +234,7 @@ function settings() {
     busy(b, true, 'Saving…');
     try {
       const j = await post({ a: 'cvsetcode', pin, newCode: nc });
-      if (j && j.ok) { ov.querySelector('form').innerHTML = `<h3>Saved</h3><p>The cover code is now <b>${esc(nc)}</b>.</p><div class="acts"><button class="btn blue" type="button" id="sx2">Done</button></div>`; $('#sx2', ov).onclick = () => ov.remove(); return; }
+      if (j && j.ok) { ov.querySelector('form').innerHTML = `<h3>Saved</h3><p>The office code is now <b>${esc(nc)}</b>.</p><div class="acts"><button class="btn blue" type="button" id="sx2">Done</button></div>`; $('#sx2', ov).onclick = () => ov.remove(); return; }
       er.textContent = j && j.error === 'Wrong PIN' ? 'That PIN is not right.' : 'Could not save: ' + ((j && j.error) || 'unknown error') + '.';
     } catch (x) { er.textContent = NET; }
     busy(b, false);
@@ -176,7 +245,7 @@ function settings() {
 function cleanEmail(v) { v = String(v || '').trim().toLowerCase().replace(/\s+/g, ''); if (v && !v.includes('@')) v += '@' + DOMAIN; return v; }
 function newCode() { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', r = new Uint32Array(5); crypto.getRandomValues(r); return Array.from(r, (x) => A[x % A.length]).join(''); }
 function stepForm(msg, keep) {
-  clearTimeout(timer); slot.innerHTML = '';
+  clearTimeout(timer); slot.innerHTML = ''; setLive(false);
   const k = keep || {};
   app.innerHTML = `<form class="narrow card" id="f" autocomplete="off" novalidate><h2>Which lesson is this?</h2>
     <label for="te">Absent teacher's school email <small>(the work is sent here)</small></label>
@@ -187,8 +256,9 @@ function stepForm(msg, keep) {
       <div><label for="ex">Students here</label><input id="ex" type="number" inputmode="numeric" min="1" max="60" placeholder="e.g. 16" value="${esc(k.expected || '')}"></div>
     </div>
     <div class="err" id="err">${esc(msg || '')}</div>
-    <button class="btn go big" type="submit">Start collecting</button></form>`;
-  $('#te').focus();
+    <button class="btn go big" type="submit">Start collecting</button>
+    <div style="text-align:center;margin-top:8px"><button class="link" type="button" id="back">← I have a lesson code</button></div></form>`;
+  $('#te').focus(); $('#back').onclick = () => stepLesson();
   $('#f').onsubmit = async (e) => {
     e.preventDefault();
     const teacher = cleanEmail($('#te').value), cls = $('#cl').value.trim(), subject = $('#su').value.trim(), expected = Math.round(Number($('#ex').value));
@@ -202,8 +272,8 @@ function stepForm(msg, keep) {
     busy(b, true, 'Starting…');
     try {
       const j = await post({ a: 'cvopen', cover, session: s.session, teacher, cls, subject, expected });
-      if (j && j.ok) { S = s; ss.set('session', S); people = []; isOpen = true; live(); return; }
-      if (j && j.error === 'Wrong cover code') { cover = ''; ss.del('code'); stepCode('The cover code has changed. Please type it again.'); return; }
+      if (j && j.ok) { S = s; ss.set('session', S); people = []; isOpen = true; authBad = false; live(); return; }
+      if (j && j.error === 'Wrong cover code') { cover = ''; ss.del('code'); stepCode('The office code has changed. Please type it again.'); return; }
       er.textContent = (j && j.error) || 'Could not start. Try again.';
     } catch (x) { er.textContent = NET; }
     busy(b, false);
@@ -219,13 +289,26 @@ function qrSvg(text) {
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
   return `<svg viewBox="-1 -1 ${n + 2} ${n + 2}" shape-rendering="crispEdges" role="img" aria-label="QR code for the hand-in page"><rect x="-1" y="-1" width="${n + 2}" height="${n + 2}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
 }
+function linkify(t) { return esc(t).replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]]/g, (u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`); }
+function setView(v) {
+  const has = !!(S && S.work && S.work.trim());
+  if (v) { view = v; TK.save('cover.view', v); }
+  const cur = has ? (['both', 'work', 'handin'].includes(view) ? view : 'both') : 'handin', el = $('#live'); if (!el) return;
+  el.className = 'v-' + cur;
+  slot.querySelectorAll('.seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === cur)));
+  const pill = $('#pill'); if (pill) pill.hidden = cur !== 'work';
+}
 function live() {
-  const url = studentUrl(), shown = url.replace(/^https?:\/\//, '').replace(/[?&]backend=.*$/, '');
-  slot.innerHTML = '<button class="btn" id="newc">New class</button>';
-  $('#newc').onclick = () => confirmBox('Start a new class?', people.length ? `<p><b>${people.length} student${people.length === 1 ? ' has' : 's have'} handed in and the work has NOT been sent yet.</b></p><p>Press Send first, or their teacher will not get it.</p>` : '<p>Nobody has handed in for this class, so nothing will be lost.</p>', people.length ? 'Leave without sending' : 'New class', people.length ? 'stop' : 'blue', reset);
-  app.innerHTML = `<div id="live">
+  const url = studentUrl(), shown = url.replace(/^https?:\/\//, '').replace(/[?&]backend=.*$/, ''), has = !!(S.work && S.work.trim());
+  setLive(true);
+  slot.innerHTML = (has ? '<span class="pill" id="pill" hidden></span><span class="seg" role="group" aria-label="What to show"><button data-v="both" title="Show the work and the hand-in (B)">Work + hand-in</button><button data-v="work" title="Show the work big (W)">Work</button><button data-v="handin" title="Show the hand-in big (H)">Hand-in</button></span>' : '') + '<button class="btn" id="newc">New class</button>';
+  slot.querySelectorAll('.seg button').forEach((b) => b.onclick = () => setView(b.dataset.v));
+  $('#newc').onclick = () => confirmBox('Start a new class?', people.length ? `<p><b>${people.length} student${people.length === 1 ? ' has' : 's have'} handed in and the work has NOT been sent yet.</b></p><p>Press Collect and send first, or their teacher will not get it.</p>` : '<p>Nobody has handed in for this class, so nothing will be lost.</p>', people.length ? 'Leave without sending' : 'New class', people.length ? 'stop' : 'blue', reset);
+  app.innerHTML = `<div class="strip"><span class="cl">${esc([S.cls, S.subject, S.room && (/^\d+$/.test(S.room) ? 'Room ' + S.room : S.room), S.time].filter(Boolean).join(' · '))}</span><span class="to">${S.coveredBy ? 'Covered by ' + esc(S.coveredBy) + ' · ' : ''}Sending to ${esc(S.teacher)}</span></div>
+  <div id="live">
+    ${has ? `<section class="card work"><div class="wh"><h2>Today's work</h2><button class="btn" id="wm" title="Smaller text" aria-label="Smaller text">A−</button><button class="btn" id="wp" title="Bigger text" aria-label="Bigger text">A+</button></div><div class="worktext" id="wt" tabindex="0">${linkify(S.work.trim())}</div></section>` : ''}
     <section class="card left">
-      <h2>Hand in your work</h2><div class="who">${esc([S.cls, S.subject].filter(Boolean).join(' · '))}</div>
+      <h2>Hand in your work</h2>
       <ol class="steps"><li><i>1</i><span>Take a photo of <b>every page</b> you did today</span></li><li><i>2</i><span>Type your name</span></li><li><i>3</i><span>Press <b>Send</b> and wait for the green tick</span></li></ol>
       <div class="scan"><div class="qr">${qrSvg(url)}</div><div class="txt"><b>Scan with your iPad camera</b>or go to<br><span class="url">${esc(shown)}</span></div></div>
     </section>
@@ -236,26 +319,36 @@ function live() {
         <div id="warn" hidden></div>
         <label for="note">Note for the teacher <small>(who was absent, behaviour, how far they got)</small></label>
         <textarea id="note" maxlength="3000" placeholder="Optional">${esc(S.note || '')}</textarea>
-        <div class="sendrow"><button class="btn go" id="send">Send to ${esc(S.teacher)}</button></div>
+        <div class="sendrow"><button class="btn go" id="send">Collect and send</button></div>
       </div>
     </section></div>`;
   $('#note').oninput = () => { S.note = $('#note').value; ss.set('session', S); };
   $('#hn').onclick = () => { hideNames = !hideNames; TK.save('cover.hideNames', hideNames); paint(); };
   $('#send').onclick = askSend;
-  paint(); poll();
+  if (has) {
+    const size = (d) => { workSize = Math.max(16, Math.min(60, workSize + d)); TK.save('cover.workSize', workSize); $('#wt').style.setProperty('--ws', workSize); };
+    size(0); $('#wm').onclick = () => size(-3); $('#wp').onclick = () => size(3);
+  }
+  setView(); paint(); poll();
 }
+addEventListener('keydown', (e) => {
+  if (!$('#live') || document.querySelector('.ov') || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  const v = { b: 'both', w: 'work', h: 'handin' }[e.key.toLowerCase()];
+  if (v && S && S.work && S.work.trim()) setView(v);
+});
 function paint() {
   if (!$('#live')) return;
   const n = people.length, ex = S.expected, done = ex > 0 && n >= ex;
   $('#tn').innerHTML = ex ? `${n} <small>/ ${ex}</small>` : String(n);
   $('#tt').textContent = done ? 'Everyone has handed in ✓' : 'handed in';
   $('#tally').classList.toggle('done', done);
-  $('#ts').textContent = pollFails >= 3 ? 'Not updating: check the internet' : '';
+  $('#ts').textContent = authBad ? (S.lesson ? 'This lesson code has stopped working. Ask the office.' : 'The office code has changed. Reload this page.') : pollFails >= 3 ? 'Not updating: check the internet' : '';
+  const pill = $('#pill'); if (pill) { pill.textContent = (ex ? `${n} / ${ex}` : n) + ' handed in'; pill.classList.toggle('done', done); }
   $('#hn').textContent = hideNames ? 'Show names' : 'Hide names'; $('#hn').setAttribute('aria-pressed', String(hideNames));
   $('#nh').textContent = hideNames ? 'Names hidden' : 'Who has handed in';
   $('#chips').innerHTML = hideNames ? '' : n ? people.map((p) => `<span class="chip">${esc(p.name)} <small>${p.photos} photo${p.photos === 1 ? '' : 's'}</small></span>`).join('') : '<span class="muted">Nobody yet. Names appear here as students send their work.</span>';
   const w = $('#warn');
-  if (!isOpen && !sending) { w.hidden = false; w.className = 'warn bad'; w.innerHTML = 'This hand-in has closed (it stays open for 4 hours). <button class="btn" id="reopen">Open it again</button>'; $('#reopen').onclick = reopen; }
+  if (!isOpen && !sending) { w.hidden = false; w.className = 'warn bad'; w.innerHTML = 'This hand-in has closed. <button class="btn" id="reopen">Open it again</button>'; $('#reopen').onclick = reopen; }
   else { w.hidden = true; w.innerHTML = ''; }
 }
 async function poll() {
@@ -264,10 +357,10 @@ async function poll() {
   if (!document.hidden) {
     const sid = S.session;
     try {
-      const j = await get({ a: 'cvcount', session: sid, cover });
+      const j = await get(Object.assign({ a: 'cvcount' }, auth()));
       if (!S || S.session !== sid || sending) return;
-      if (j && j.ok) { people = j.people || []; isOpen = !!j.open; pollFails = 0; lastOK = Date.now(); }
-      else if (j && j.error === 'Wrong cover code') { cover = ''; ss.del('code'); pollFails = 9; }
+      if (j && j.ok) { people = j.people || []; isOpen = !!j.open; pollFails = 0; authBad = false; lastOK = Date.now(); }
+      else if (j && j.error === 'Wrong cover code') { authBad = true; }
       else pollFails++;
     } catch (e) { pollFails++; }
     paint();
@@ -275,8 +368,11 @@ async function poll() {
   timer = setTimeout(poll, 4000);
 }
 async function reopen() {
-  try { const j = await post({ a: 'cvopen', cover, session: S.session, teacher: S.teacher, cls: S.cls, subject: S.subject, expected: S.expected }); if (j && j.ok) { isOpen = true; paint(); } else alertBox('Could not open it again', '<p>' + esc((j && j.error) || 'Try again.') + '</p>'); }
-  catch (e) { alertBox('Could not open it again', '<p>' + NET + '</p>'); }
+  try {
+    const j = S.lesson ? await post({ a: 'cvstart', lesson: S.lesson }) : await post({ a: 'cvopen', cover, session: S.session, teacher: S.teacher, cls: S.cls, subject: S.subject, expected: S.expected });
+    if (j && j.ok) { if (S.lesson && j.slot) { const keepView = view; fromSlot(j, S.note); isOpen = true; live(); setView(keepView); } else { isOpen = true; paint(); } }
+    else alertBox('Could not open it again', '<p>' + esc((j && j.error) || 'Try again.') + '</p>');
+  } catch (e) { alertBox('Could not open it again', '<p>' + NET + '</p>'); }
 }
 
 // ---------- dialogs ----------
@@ -299,7 +395,7 @@ function alertBox(title, html) {
 function askSend() {
   const n = people.length, ex = S.expected;
   if (!n) { confirmBox('Nobody has handed in yet', '<p>There is nothing to send. Ask the students to scan the code and send their photos.</p><p>If there really is no work, you can close this hand-in without an email.</p>', 'Close without sending', 'stop', (ov) => doSend(ov)); return; }
-  const short = ex && n < ex ? `<p class="warn">Only ${n} of ${ex} students have handed in. ${ex - n} still missing. Work sent after you press Send will be lost.</p>` : '';
+  const short = ex && n < ex ? `<p class="warn">Only ${n} of ${ex} students have handed in. ${ex - n} still missing. Work sent after you press the button will be lost.</p>` : '';
   confirmBox(`Send ${n} student${n === 1 ? "'s" : "s'"} work?`, `${short}<p>It will be emailed to <b>${esc(S.teacher)}</b>${S.note && S.note.trim() ? ' with your note' : ''}.</p><p>First check every student can see the green <b>✓ Handed in</b> on their iPad. After sending, this hand-in closes.</p>`, 'Yes, send it', 'go', (ov) => doSend(ov));
 }
 let triedSend = false;
@@ -308,31 +404,31 @@ async function doSend(ov) {
   sending = true; clearTimeout(timer); no.disabled = true; busy(yes, true, 'Sending… this can take a minute');
   const fail = (m) => { sending = false; no.disabled = false; busy(yes, false); let e = $('.err', ov); if (!e) { e = document.createElement('div'); e.className = 'err'; $('.acts', ov).before(e); } e.textContent = m; poll(); };
   try {
-    const j = await post({ a: 'cvsend', cover, session: S.session, note: S.note || '' }, 330000);
+    const j = await post(Object.assign({ a: 'cvsend', note: S.note || '' }, auth()), 330000);
     if (j && j.ok) { ov.remove(); success(j); return; }
     if (j && j.error === 'session expired' && triedSend) { ov.remove(); success({ sent: people.length, emails: 0, to: S.teacher, unsure: true }); return; }
-    if (j && j.error === 'session expired') { fail('This hand-in closed before it was sent (4 hours passed). Press Go back, then "Open it again", then Send.'); isOpen = false; return; }
-    if (j && j.error === 'Wrong cover code') { fail('The cover code has changed. Reload this page and type the new code, then press Send.'); return; }
+    if (j && j.error === 'session expired') { fail('This hand-in closed before it was sent (too much time passed). Press Go back, then "Open it again", then Collect and send.'); isOpen = false; return; }
+    if (j && j.error === 'Wrong cover code') { fail(S.lesson ? 'This lesson code has stopped working (the office changed or removed the lesson, or it is no longer today). Ask the office before closing this page.' : 'The office code has changed. Reload this page and type the new code, then send.'); return; }
     fail('Not sent: ' + ((j && j.error) || 'the server had a problem') + '. Press the button to try again.');
   } catch (e) { triedSend = true; fail('We could not confirm it was sent. Check the internet, then press the button again.'); }
 }
 function success(j) {
-  sending = false; clearTimeout(timer); ss.del('session'); triedSend = false;
+  sending = false; clearTimeout(timer); ss.del('session'); triedSend = false; setLive(false);
+  const wasLesson = !!(S && S.lesson);
   const n = j.sent || 0, to = j.to || (S && S.teacher) || '';
   slot.innerHTML = '';
   const head = !n ? 'Closed. Nothing was handed in, so no email was sent.' : j.unsure ? `Already sent to ${esc(to)}` : `Sent ${n} student${n === 1 ? "'s" : "s'"} work to ${esc(to)}, in ${j.emails} email${j.emails === 1 ? '' : 's'}`;
   app.innerHTML = `<div class="success"><div class="tick">${n ? '✓' : '○'}</div><h2 id="okmsg">${head}</h2><p>${n ? 'The photos have been deleted from the hand-in folder. You can close this page, or start the next lesson.' : 'You can close this page, or start the next lesson.'}</p><button class="btn blue" id="next">New class</button></div>`;
   S = null; people = [];
-  $('#next').onclick = () => stepForm();
+  $('#next').onclick = () => (wasLesson || !cover ? stepLesson() : stepForm());
   if (n) TK.beep('tada');
 }
-function reset(ov) { if (ov) ov.remove(); clearTimeout(timer); S = null; people = []; ss.del('session'); stepForm(); }
+function reset(ov) { if (ov) ov.remove(); clearTimeout(timer); const wasLesson = !!(S && S.lesson); S = null; people = []; ss.del('session'); if (wasLesson || !cover) stepLesson(); else stepForm(); }
 
 // ---------- start ----------
 if (!BACKEND) app.innerHTML = '<div class="narrow card"><h2>Not set up</h2><p class="lead">The results server address is missing (workbooks.js).</p></div>';
-else if (cover && S && S.session) live();
-else if (cover) stepForm();
-else stepCode();
+else if (S && S.session && (S.lesson || cover)) live();
+else stepLesson();
 </script>
 </body>
 </html>

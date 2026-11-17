@@ -107,6 +107,7 @@ function doGet(e) {
     if (p.a === 'img') return getImage(p);
     if (p.a === 'dscount') return designStarterCount(p);
     if (p.a === 'cvinfo' || p.a === 'cvcount') return coverGet(p);
+    if (p.a === 'cvlist') return cvListSlots(p);
     const pin = PROPS.getProperty('PIN') || '';
     if (!pin || String(p.pin || '') !== pin) return json({ ok: false, error: 'Wrong PIN' });
     const ss = book(), lesson = p.lesson || '';
@@ -212,12 +213,12 @@ function designStarterPost(d) {
     const to = Session.getEffectiveUser().getEmail(), when = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'd MMM yyyy HH:mm');
     const title = String(d.title || 'Design starter').slice(0, 80);
     const groups = []; let cur = [], size = 0;
-    files.forEach((f) => { const b = f.getBlob(), n = b.getBytes().length; if (cur.length && size + n > 18e6) { groups.push(cur); cur = []; size = 0; } cur.push(b); size += n; });
+    files.forEach((f) => { const n = f.getSize(); if (cur.length && size + n > 18e6) { groups.push(cur); cur = []; size = 0; } cur.push(f); size += n; });
     if (cur.length) groups.push(cur);
     groups.forEach((g, i) => MailApp.sendEmail({ to: to, name: 'D&T design starter',
       subject: title + ' · ' + when + ' · ' + files.length + ' sheets' + (groups.length > 1 ? ' (part ' + (i + 1) + ' of ' + groups.length + ')' : ''),
-      htmlBody: '<p>' + g.length + ' design starter sheet' + (g.length === 1 ? '' : 's') + ' (session ' + code + '):</p><ul>' + g.map((b) => '<li>' + b.getName().replace(/</g, '&lt;') + '</li>').join('') + '</ul>',
-      attachments: g }));
+      htmlBody: '<p>' + g.length + ' design starter sheet' + (g.length === 1 ? '' : 's') + ' (session ' + code + '):</p><ul>' + g.map((f) => '<li>' + f.getName().replace(/</g, '&lt;') + '</li>').join('') + '</ul>',
+      attachments: g.map((f) => f.getBlob()) }));
     folder.setTrashed(true);
     return json({ ok: true, sent: files.length, emails: groups.length });
   }
@@ -234,7 +235,7 @@ function designStarterCount(p) {
 // The cover teacher's board needs the COVER CODE (script property COVER_CODE, set from the board with the dashboard PIN).
 // Session details are held in the script cache for 4 hours; photos sit in a temporary Drive folder until sent, then are trashed.
 function cvSession(x) { return String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); }
-function cvCoverOK(d) { const c = PROPS.getProperty('COVER_CODE') || ''; return !!c && String(d.cover || '').trim().toLowerCase() === c.toLowerCase(); }
+function cvCoverOK(d) { const c = PROPS.getProperty('COVER_CODE') || ''; if (!!c && String(d.cover || '').trim().toLowerCase() === c.toLowerCase()) return true; return cvLessonOK(d); }
 function cvInfo(code) { try { return JSON.parse(CacheService.getScriptCache().get('cv-' + code) || 'null'); } catch (e) { return null; } }
 function cvFolder(code, create) {
   const sub = (parent, name) => { const it = parent.getFoldersByName(name); return it.hasNext() ? it.next() : (create ? parent.createFolder(name) : null); };
@@ -250,7 +251,9 @@ function cvList(code) {
 }
 function coverPost(d) {
   if (d.a === 'cvsetcode') { const pin = PROPS.getProperty('PIN') || ''; if (!pin || String(d.pin || '') !== pin) return json({ ok: false, error: 'Wrong PIN' }); const c = String(d.newCode || '').trim(); if (c.length < 4) return json({ ok: false, error: 'Code too short' }); PROPS.setProperty('COVER_CODE', c); return json({ ok: true }); }
-  if (d.a === 'cvcheck') return json({ ok: cvCoverOK(d) });
+  if (d.a === 'cvcheck') return json({ ok: cvOfficeOK(d) });
+  if (d.a === 'cvadd' || d.a === 'cvedit' || d.a === 'cvdel') return cvAdmin(d);
+  if (d.a === 'cvstart') return cvStart(d);
   const code = cvSession(d.session); if (!code) return json({ ok: false, error: 'no session' });
   const cache = CacheService.getScriptCache();
   if (d.a === 'cvopen') {
@@ -277,20 +280,23 @@ function coverPost(d) {
     if (!cvCoverOK(d)) return json({ ok: false, error: 'Wrong cover code' });
     const info = cvInfo(code); if (!info) return json({ ok: false, error: 'session expired' });
     info.open = false; cache.put('cv-' + code, JSON.stringify(info), 14400);
-    const people = cvList(code); if (!people.length) return json({ ok: true, sent: 0 });
+    const people = cvList(code); if (!people.length) { cache.remove('cv-' + code); cvMark(code, { status: 'sent', sentAt: new Date(), count: 0 }); return json({ ok: true, sent: 0 }); }
     const when = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'EEE d MMM yyyy HH:mm');
     const head = [info.cls, info.subject].filter(String).join(' ') || 'Class';
     const note = String(d.note || '').slice(0, 3000).replace(/</g, '&lt;').replace(/\n/g, '<br>');
-    const groups = []; let cur = [], size = 0, names = [];
-    people.forEach((p) => p.files.sort((a, b) => a.getName().localeCompare(b.getName())).forEach((f) => { const b = f.getBlob(); b.setName(p.name + ' - ' + f.getName().replace(/^.* (p\d+\.\w+)$/, '$1')); const n = b.getBytes().length; if (cur.length && size + n > 18e6) { groups.push(cur); cur = []; size = 0; } cur.push(b); size += n; }));
+    // plan the emails from file sizes first, then load and send one email at a time (keeps memory low for big classes)
+    const items = []; people.forEach((p) => p.files.sort((a, b) => a.getName().localeCompare(b.getName())).forEach((f) => items.push({ f: f, name: p.name + ' - ' + f.getName().replace(/^.* (p\d+\.\w+)$/, '$1'), n: f.getSize() })));
+    const groups = []; let cur = [], size = 0;
+    items.forEach((it) => { if (cur.length && size + it.n > 18e6) { groups.push(cur); cur = []; size = 0; } cur.push(it); size += it.n; });
     if (cur.length) groups.push(cur);
     const list = '<ul>' + people.map((p) => '<li>' + p.name.replace(/</g, '&lt;') + ' (' + p.files.length + ' photo' + (p.files.length === 1 ? '' : 's') + ')</li>').join('') + '</ul>';
     groups.forEach((g, i) => MailApp.sendEmail({ to: info.teacher, name: 'Cover work', replyTo: info.teacher,
       subject: head + ': cover work · ' + when + (groups.length > 1 ? ' (part ' + (i + 1) + ' of ' + groups.length + ')' : ''),
       htmlBody: '<p>Work handed in during your covered lesson: <b>' + people.length + '</b> student' + (people.length === 1 ? '' : 's') + (info.expected ? ' of ' + info.expected + ' expected' : '') + '.</p>' + (note ? '<p><b>Note from the cover teacher:</b><br>' + note + '</p>' : '') + list + (groups.length > 1 ? '<p>This is part ' + (i + 1) + ' of ' + groups.length + ' (the photos were too big for one email).</p>' : ''),
-      attachments: g }));
+      attachments: g.map((it) => { const b = it.f.getBlob(); b.setName(it.name); return b; }) }));
     const folder = cvFolder(code, false); if (folder) folder.setTrashed(true);
     cache.remove('cv-' + code);
+    cvMark(code, { status: 'sent', sentAt: new Date(), count: people.length });
     return json({ ok: true, sent: people.length, emails: groups.length, to: info.teacher });
   }
   return json({ ok: false, error: 'unknown' });
@@ -300,4 +306,91 @@ function coverGet(p) {
   if (p.a === 'cvinfo') return json({ ok: true, open: !!(info && info.open), cls: info ? info.cls : '', subject: info ? info.subject : '' });
   if (!cvCoverOK(p)) return json({ ok: false, error: 'Wrong cover code' });
   return json({ ok: true, open: !!(info && info.open), expected: info ? info.expected : 0, people: cvList(code).map((x) => ({ name: x.name, photos: x.files.length })) });
+}
+
+// ---------------- Cover lessons booked in advance by the office (cover admin page) ----------------
+// Sheet "Cover" in the results spreadsheet. Each covered lesson gets a 5-digit lesson code that works only on its date.
+// The office (cover code) adds/edits/deletes and sees the list (kept for 31 days). The cover teacher types only the lesson code:
+// the board fills itself in, opens collection, and Send goes to the email the office entered.
+const CV_COLS = ['code', 'date', 'time', 'room', 'cls', 'subject', 'expected', 'teacher', 'coveredBy', 'work', 'created', 'session', 'status', 'sentAt', 'count'];
+const CV_TZ = 'Europe/Paris';
+function cvOfficeOK(d) { const c = PROPS.getProperty('COVER_CODE') || ''; return !!c && String(d.cover || '').trim().toLowerCase() === c.toLowerCase(); }
+function cvToday() { return Utilities.formatDate(new Date(), CV_TZ, 'yyyy-MM-dd'); }
+function cvSheet() {
+  const ss = book(); let sh = ss.getSheetByName('Cover');
+  if (!sh) { sh = ss.insertSheet('Cover'); sh.appendRow(CV_COLS); sh.setFrozenRows(1); }
+  if (sh.getRange('A2').getNumberFormat() !== '@') sh.getRange('A:J').setNumberFormat('@'); // keep typed text as text (times, codes, '=' in work)
+  sh.getRange('L:M').setNumberFormat('@');
+  return sh;
+}
+function cvRows() {
+  const sh = cvSheet(), v = sh.getDataRange().getValues();
+  return v.slice(1).map((r, i) => { const o = { _row: i + 2 }; CV_COLS.forEach((k, j) => (o[k] = r[j] instanceof Date ? (k === 'date' ? Utilities.formatDate(r[j], CV_TZ, 'yyyy-MM-dd') : r[j].getTime()) : r[j])); o.code = String(o.code); o.date = String(o.date); return o; });
+}
+function cvPurge(sh) { // keep 31 days of history
+  const cut = Utilities.formatDate(new Date(Date.now() - 31 * 864e5), CV_TZ, 'yyyy-MM-dd');
+  const rows = cvRows().filter((r) => r.date && r.date < cut).map((r) => r._row).sort((a, b) => b - a);
+  rows.forEach((n) => sh.deleteRow(n));
+}
+function cvClean(d) {
+  const t = (x, n) => String(x == null ? '' : x).trim().slice(0, n);
+  const o = { date: t(d.date, 10), time: t(d.time, 20), room: t(d.room, 30), cls: t(d.cls, 40), subject: t(d.subject, 60), expected: Math.max(0, Math.min(60, Number(d.expected) || 0)), teacher: t(d.teacher, 120).toLowerCase(), coveredBy: t(d.coveredBy, 80), work: t(d.work, 20000) };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(o.date)) return { err: 'Pick a date' };
+  if (!/^[a-z0-9._%+-]+@britishschool\.fr$/.test(o.teacher)) return { err: 'Teacher email must end @britishschool.fr' };
+  if (!o.cls) return { err: 'Type the class' };
+  return o;
+}
+function cvAdmin(d) {
+  if (!cvOfficeOK(d)) return json({ ok: false, error: 'Wrong office code' });
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return json({ ok: false, error: 'busy' });
+  try {
+    const sh = cvSheet();
+    if (d.a === 'cvdel') { const r = cvRows().find((x) => x.code === String(d.code)); if (r) sh.deleteRow(r._row); return json({ ok: true }); }
+    const o = cvClean(d); if (o.err) return json({ ok: false, error: o.err });
+    if (d.a === 'cvedit') {
+      const r = cvRows().find((x) => x.code === String(d.code)); if (!r) return json({ ok: false, error: 'not found' });
+      ['date', 'time', 'room', 'cls', 'subject', 'expected', 'teacher', 'coveredBy', 'work'].forEach((k) => sh.getRange(r._row, CV_COLS.indexOf(k) + 1).setValue(o[k]));
+      return json({ ok: true, code: r.code });
+    }
+    cvPurge(sh);
+    const used = {}; cvRows().forEach((r) => { if (r.date >= cvToday()) used[r.code] = 1; });
+    let code; do { code = String(10000 + Math.floor(Math.random() * 90000)); } while (used[code]);
+    sh.appendRow([code, o.date, o.time, o.room, o.cls, o.subject, o.expected, o.teacher, o.coveredBy, o.work, new Date(), '', 'not started', '', '']);
+    return json({ ok: true, code: code });
+  } finally { lock.releaseLock(); }
+}
+function cvListSlots(p) {
+  if (!cvOfficeOK(p)) return json({ ok: false, error: 'Wrong office code' });
+  const list = cvRows().sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).map((r) => {
+    const o = {}; CV_COLS.forEach((k) => (o[k] = r[k]));
+    if (r.session && r.status === 'collecting') { o.received = cvList(r.session).length; }
+    return o;
+  });
+  return json({ ok: true, today: cvToday(), list: list });
+}
+function cvSlotByCode(code) { return cvRows().find((r) => r.code === String(code || '').replace(/\D/g, '')); }
+function cvLessonOK(d) {
+  if (!d.lesson) return false;
+  const r = cvSlotByCode(d.lesson); return !!r && r.date === cvToday() && cvSession(r.session) === cvSession(d.session);
+}
+function cvMark(session, patch) {
+  const sh = cvSheet(), r = cvRows().find((x) => cvSession(x.session) === session && session); if (!r) return;
+  Object.keys(patch).forEach((k) => sh.getRange(r._row, CV_COLS.indexOf(k) + 1).setValue(patch[k]));
+}
+function cvStart(d) { // cover teacher types the lesson code
+  const r = cvSlotByCode(d.lesson);
+  if (!r) return json({ ok: false, error: 'That lesson code was not found. Check it with the office.' });
+  if (r.date !== cvToday()) return json({ ok: false, error: 'That lesson code is for ' + r.date + ', not today. Ask the office.' });
+  if (r.status === 'sent') return json({ ok: false, error: 'This lesson\'s work has already been sent to the teacher.' });
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return json({ ok: false, error: 'busy' });
+  try {
+    let session = cvSession(r.session);
+    if (!session) { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; session = ''; for (let i = 0; i < 5; i++) session += A[Math.floor(Math.random() * A.length)]; }
+    const info = { teacher: r.teacher, cls: r.cls, subject: r.subject, expected: Number(r.expected) || 0, open: true, at: Date.now() };
+    CacheService.getScriptCache().put('cv-' + session, JSON.stringify(info), 21600);
+    const sh = cvSheet();
+    sh.getRange(r._row, CV_COLS.indexOf('session') + 1).setValue(session);
+    sh.getRange(r._row, CV_COLS.indexOf('status') + 1).setValue('collecting');
+    return json({ ok: true, session: session, slot: { code: r.code, date: r.date, time: r.time, room: r.room, cls: r.cls, subject: r.subject, expected: Number(r.expected) || 0, teacher: r.teacher, coveredBy: r.coveredBy, work: r.work } });
+  } finally { lock.releaseLock(); }
 }

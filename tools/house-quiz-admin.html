@@ -118,6 +118,46 @@ function parseQuiz(text) {
 }
 window.parseQuiz = parseQuiz;
 
+/* ---------- CSV file -> same shape as parseQuiz, plus an optional picture address ----------
+   Header row (any order, case-insensitive): question, A, B, C, D, E, F, answer, image
+   (also "option A" / "option_a" / "answer A"…; "answer" may be the letter or the option's text; image = optional https picture address)
+   Commas or semicolons (French Excel) both work; quotes "like, this" are fine. */
+function csvRows(text) {
+  text = String(text || '').replace(/^\uFEFF/, '');
+  const first = text.split(/\r?\n/)[0] || '', sep = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ';' : (first.indexOf('\t') >= 0 && first.indexOf(',') < 0 ? '\t' : ',');
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; continue; }
+    if (c === '"' && f === '') q = true; else if (c === sep) { row.push(f); f = ''; } else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; } else f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  return rows.filter((r) => r.some((x) => String(x).trim()));
+}
+function parseCsvQuiz(text) {
+  const rows = csvRows(text); if (rows.length < 2) return [];
+  const h = rows[0].map((x) => String(x).trim().toLowerCase().replace(/[^a-z]/g, ''));
+  const col = (...names) => h.findIndex((x) => names.includes(x));
+  const qi = col('question', 'q', 'questiontext'), ai = col('answer', 'correct', 'correctanswer', 'ans', 'key'), ii = col('image', 'picture', 'imageurl', 'pictureurl', 'img', 'photo');
+  const oi = LET.split('').map((L) => col(L.toLowerCase(), 'option' + L.toLowerCase(), 'answer' + L.toLowerCase(), 'choice' + L.toLowerCase()));
+  if (qi < 0 || oi[0] < 0 || oi[1] < 0) return null;
+  return rows.slice(1).map((r) => {
+    const cell = (k) => (k >= 0 && r[k] != null ? String(r[k]).trim() : '');
+    const options = oi.map(cell); while (options.length && !options[options.length - 1]) options.pop();
+    const a = cell(ai); let correct = -1;
+    if (/^[A-Fa-f]$/.test(a.replace(/[().\s]/g, ''))) correct = LET.indexOf(a.replace(/[().\s]/g, '').toUpperCase());
+    else if (a) correct = options.findIndex((o) => o.toLowerCase() === a.toLowerCase());
+    if (correct >= options.length) correct = -1;
+    const img = cell(ii);
+    const flag = options.filter(Boolean).length < 2 ? 'Fewer than two options were found: add them.' : correct < 0 ? 'No answer was found for this question: tap the letter of the correct answer.' : '';
+    while (options.length < 2) options.push('');
+    return { q: cell(qi), options: options.slice(0, 6), correct, flag, imgUrl: /^https:\/\//i.test(img) ? img : '' };
+  }).filter((x) => x.q || x.options.some(Boolean));
+}
+window.parseCsvQuiz = parseCsvQuiz;
+const CSV_TEMPLATE = 'question,A,B,C,D,answer,image\r\n"Which planet is known as the Red Planet?",Venus,Mars,Jupiter,Saturn,B,\r\n"Which of these is used to mark a line at 90 degrees to an edge?","Tenon saw","Coping saw","Try square","Bench hook",C,\r\n"True or false: a spider is an insect.",True,False,,,B,\r\n';
+const AI_PROMPT = 'Write a multiple-choice house quiz for a British international secondary school in Paris (students aged 11 to 18, playing in mixed-age house groups). Topic: [YOUR TOPIC]. Write [10] questions, each with 2 to 6 options (normally 4) and exactly one correct answer. Keep facts accurate and not time-sensitive, and avoid anything upsetting or culturally insensitive.\n\nGive the result as a CSV file with this exact header row:\nquestion,A,B,C,D,E,F,answer,image\n\n- answer is the letter of the correct option (A to F).\n- Leave unused option columns empty.\n- image is optional: a direct https link to a freely licensed picture (e.g. upload.wikimedia.org), or empty.\n- Put any text containing a comma in double quotes.\nReturn only the CSV.';
+
 // ---------- PIN ----------
 function stepPin(msg) {
   app.innerHTML = `<form class="narrow card" id="f" autocomplete="off"><h2>Wednesday quiz admin</h2><p class="lead">Write the house quiz, set who answers it and see the results. Same PIN as tutor admin.</p>
@@ -173,7 +213,12 @@ function drawQuiz() {
       <details style="margin-top:14px" id="pd"><summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">Paste questions</summary>
         <p class="lead">Paste a whole quiz. Each question starts on its own line, then the options (A, B, C…) and an answer line. Then check the questions above before saving.</p>
         <textarea id="pt" style="min-height:180px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px" placeholder="1. Which planet is known as the Red Planet?&#10;A) Venus&#10;B) Mars&#10;C) Jupiter&#10;D) Saturn&#10;Answer: B"></textarea>
-        <div class="acts"><button class="btn blue" id="pa">Add these questions</button><span class="st" id="pst"></span></div></details></section>`;
+        <div class="acts"><button class="btn blue" id="pa">Add these questions</button><span class="st" id="pst"></span></div></details>
+      <details style="margin-top:6px" id="cd"><summary style="cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center">Import a CSV file</summary>
+        <p class="lead">Drop in a quiz made in Excel, Google Sheets or by an AI assistant. One row per question with the columns <b>question, A, B, C, D, (E, F), answer, image</b>. The answer is the letter of the correct option; image is an optional picture link.</p>
+        <label class="btn blue" style="display:inline-flex;align-items:center">📄 Choose a CSV file<input type="file" id="cf" accept=".csv,text/csv,.txt" hidden></label>
+        <div id="cdrop" style="margin-top:10px;border:2px dashed var(--line,#ccc);border-radius:12px;padding:18px;text-align:center;color:var(--muted,#666)">…or drop the file here</div>
+        <div class="acts"><button class="btn" id="ctpl">Download a template</button><button class="btn" id="cs1">Load sample quiz 1</button><button class="btn" id="cs2">Load sample quiz 2</button><button class="btn" id="cai">Copy instructions for an AI</button><span class="st" id="cst"></span></div></details></section>`;
   const bar = document.createElement('div'); bar.className = 'save';
   bar.innerHTML = `<span class="st${dirty ? ' dirty' : ''}" id="sst">${dirty ? 'Not saved yet' : Q.was ? 'Saved' : ''}</span><button class="btn go" id="sv">Save quiz</button>${Q.was ? '<button class="btn" id="dl" style="color:var(--bad)">Delete quiz</button>' : ''}`;
   document.body.appendChild(bar);
@@ -192,6 +237,36 @@ function drawQuiz() {
     say($('#pst'), bad ? 'dirty' : 'ok', 'Added ' + got.length + (got.length === 1 ? ' question' : ' questions') + (bad ? ': ' + bad + ' need checking (marked in amber above).' : '. Check them above, then save.'));
     const first = document.querySelector('.q.flag') || document.querySelectorAll('.q')[Q.questions.length - got.length]; if (first) first.scrollIntoView({ block: 'center' });
   };
+  const importCsv = async (file) => {
+    const st = $('#cst'); if (!file) return; say(st, '', 'Reading ' + file.name + '…');
+    let got; try { got = parseCsvQuiz(await file.text()); } catch (e) { got = null; }
+    if (got === null) { say(st, 'err', 'That file needs a header row with at least question, A, B and answer columns. Download the template to see the layout.'); return; }
+    if (!got.length) { say(st, 'err', 'No questions were found in that file.'); return; }
+    pull(); if (Q.questions.length === 1 && !Q.questions[0].q && Q.questions[0].options.every((o) => !o) && !Q.questions[0].img && !Q.questions[0].imgData) Q.questions = [];
+    const start = Q.questions.length;
+    got.forEach((g) => Q.questions.push({ q: g.q, options: g.options, correct: g.correct, img: '', imgData: '', flag: g.flag }));
+    touch(); drawQs();
+    let pics = 0, badPics = 0; const withPic = got.map((g, k) => [g, k]).filter(([g]) => g.imgUrl);
+    for (const [g, k] of withPic) {
+      say(st, '', 'Fetching pictures… ' + (pics + badPics + 1) + ' of ' + withPic.length);
+      try { const r = await fetch(g.imgUrl, { mode: 'cors' }); if (!r.ok) throw 0; const b = await r.blob(); if (!/^image\//.test(b.type)) throw 0; Q.questions[start + k].imgData = await shrink(b); pics++; }
+      catch (e) { const q = Q.questions[start + k]; q.flag = (q.flag ? q.flag + ' ' : '') + 'The picture link could not be loaded: add the picture by hand.'; badPics++; }
+    }
+    drawQs();
+    const bad = Q.questions.slice(start).filter((q) => q.flag).length;
+    say(st, bad ? 'dirty' : 'ok', 'Imported ' + got.length + (got.length === 1 ? ' question' : ' questions') + (pics ? ', ' + pics + ' with pictures' : '') + (bad ? ': ' + bad + ' need checking (marked in amber above).' : '. Check them above, then save.'));
+    const first = document.querySelector('.q.flag') || document.querySelectorAll('.q')[start]; if (first) first.scrollIntoView({ block: 'center' });
+  };
+  const sample = async (n, name) => { try { const r = await fetch('samples/' + n + '?v=1', { cache: 'no-store' }); if (!r.ok) throw 0; importCsv(new File([await r.text()], name)); } catch (e) { say($('#cst'), 'err', 'Could not load the sample.'); } };
+  $('#cs1').onclick = () => { if (!$('#qt').value.trim()) { $('#qt').value = 'Sample quiz: general knowledge'; touch(); } sample('house-quiz-sample-general.csv', 'sample quiz 1'); };
+  $('#cs2').onclick = () => { if (!$('#qt').value.trim()) { $('#qt').value = 'Sample quiz: science and the world'; touch(); } sample('house-quiz-sample-science-world.csv', 'sample quiz 2'); };
+  $('#cf').onchange = () => { importCsv($('#cf').files && $('#cf').files[0]); $('#cf').value = ''; };
+  const dz = $('#cdrop');
+  dz.ondragover = (e) => { e.preventDefault(); dz.style.borderColor = 'var(--blue,#2b4c9b)'; };
+  dz.ondragleave = () => { dz.style.borderColor = ''; };
+  dz.ondrop = (e) => { e.preventDefault(); dz.style.borderColor = ''; importCsv(e.dataTransfer.files && e.dataTransfer.files[0]); };
+  $('#ctpl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\uFEFF' + CSV_TEMPLATE], { type: 'text/csv' })); a.download = 'house-quiz-template.csv'; document.body.appendChild(a); a.click(); a.remove(); };
+  $('#cai').onclick = async () => { let ok = false; try { await navigator.clipboard.writeText(AI_PROMPT); ok = true; } catch (e) {} say($('#cst'), ok ? 'ok' : 'err', ok ? 'Copied. Paste it into an AI assistant, fill in the topic, then save its answer as a .csv file and import it here.' : 'Could not copy on this device.'); };
   $('#sv').onclick = save;
   if ($('#dl')) $('#dl').onclick = () => confirmBox('Delete this quiz?', 'The quiz of ' + nice(Q.was) + ', its pictures and any answers already sent for it will be deleted.', 'Delete', async () => { busy($('#dl'), true, 'Deleting…'); try { const j = await post({ a: 'tcquizdel', date: Q.was }); if (j && j.ok) { await loadList(); newQuiz(nextWed(L.today)); draw(); return; } say($('#sst'), 'err', (j && j.error) || 'Could not delete.'); } catch (e) { say($('#sst'), 'err', NET); } busy($('#dl'), false); }, true);
 }

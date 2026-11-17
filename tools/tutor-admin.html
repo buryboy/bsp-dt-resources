@@ -53,6 +53,7 @@ details > summary { cursor: pointer; font-weight: 600; min-height: 44px; display
 .hint { color: var(--muted); font-size: 14.5px; margin: 10px 0 0; }
 @media (max-width: 560px) { .ce { grid-template-columns: 1fr; } .cd { justify-content: flex-start; padding-left: 34px; } .tg { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 footer { font-size: 13px; color: var(--muted); text-align: center; padding: 0 16px 14px; line-height: 1.4; }
+#nx.drop { outline: 3px dashed var(--blue, #2b4c9b); outline-offset: 2px; background: color-mix(in srgb, var(--blue, #2b4c9b) 6%, transparent); }
 </style>
 </head>
 <body>
@@ -156,20 +157,91 @@ function drawBanner() {
   $('#bc').onclick = async () => { if (await act($('#bc'), $('#bst'), { a: 'tcbanner', text: '', until: '' }, 'Cleared ✓')) refresh([drawBanner]); };
 }
 
+// ---------- notices PDF -> board text ----------
+// Reads the text layer with pdf.js (loaded only when needed), rebuilds lines, finds headings from font size / bold,
+// turns bullet glyphs into "- " bullets, re-joins wrapped lines into paragraphs and drops repeated page headers/footers.
+let pdfjsReady = null;
+function loadPdfjs() {
+  if (!pdfjsReady) pdfjsReady = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'vendor/pdfjs/pdf.min.js'; sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js'; res(window.pdfjsLib); }; sc.onerror = () => { pdfjsReady = null; rej(new Error('pdf.js')); }; document.head.appendChild(sc); });
+  return pdfjsReady;
+}
+async function pdfToNotices(file) {
+  const lib = await loadPdfjs(), doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+  const pages = [];
+  for (let n = 1; n <= Math.min(doc.numPages, 20); n++) {
+    const page = await doc.getPage(n), tc = await page.getTextContent(); let bold = () => false;
+    try { await page.getOperatorList(); bold = (fn) => { try { const f = page.commonObjs.get(fn); return !!f && (/bold|black|heavy|semibold|demi/i.test(f.name || '') || f.bold === true); } catch (e) { return false; } }; } catch (e) {}
+    const items = tc.items.filter((it) => it.str != null).map((it) => ({ s: it.str, x: it.transform[4], y: it.transform[5], h: Math.hypot(it.transform[2], it.transform[3]) || it.height || 10, w: it.width, b: bold(it.fontName), eol: it.hasEOL }));
+    items.sort((a, b) => (Math.abs(a.y - b.y) < Math.min(a.h, b.h) * 0.5 ? a.x - b.x : b.y - a.y));
+    const lines = [];
+    items.forEach((it) => {
+      if (!it.s.trim() && !lines.length) return;
+      let L = lines[lines.length - 1];
+      if (!L || Math.abs(L.y - it.y) > Math.min(L.h, it.h) * 0.5) { L = { y: it.y, x: it.x, h: it.h, parts: [], end: it.x }; lines.push(L); }
+      if (it.s.trim()) { const gap = it.x - L.end; L.parts.push({ s: (L.parts.length && gap > it.h * 0.2 ? ' ' : '') + it.s, b: it.b }); L.h = Math.max(L.h, it.h); }
+      else if (L.parts.length) L.parts.push({ s: ' ', b: L.parts[L.parts.length - 1].b });
+      L.end = it.x + (it.w || 0);
+    });
+    lines.forEach((L) => { L.text = L.parts.map((p) => p.s).join('').replace(/\s+/g, ' ').trim(); const vis = L.parts.filter((p) => p.s.trim()); L.bold = vis.length > 0 && vis.every((p) => p.b); L.md = L.bold ? L.text : L.parts.reduce((acc, p, i, a) => { const open = p.b && p.s.trim() && !(i && a[i - 1].b && a[i - 1].s.trim()), close = p.b && p.s.trim() && !(a[i + 1] && a[i + 1].b && a[i + 1].s.trim()); return acc + (open ? p.s.replace(/^(\s*)/, '$1**') : p.s).replace(close ? /(\s*)$/ : /$^/, close ? '**$1' : ''); }, '').replace(/\s+/g, ' ').trim(); });
+    pages.push(lines.filter((L) => L.text));
+  }
+  // repeated headers / footers and page numbers
+  const edge = (ls, i) => i < 2 || i >= ls.length - 2, count = {};
+  pages.forEach((ls) => new Set(ls.filter((L, i) => edge(ls, i)).map((L) => L.text.toLowerCase())).forEach((t) => { count[t] = (count[t] || 0) + 1; }));
+  const junk = (ls, i) => { const t = ls[i].text; return /^(page\s*)?\d+(\s*(of|\/)\s*\d+)?$/i.test(t) || (pages.length >= 2 && edge(ls, i) && count[t.toLowerCase()] >= Math.max(2, Math.ceil(pages.length * 0.6)) && t.length < 80); };
+  const all = []; pages.forEach((ls) => ls.forEach((L, i) => { if (!junk(ls, i)) all.push(Object.assign(L, { top: i === 0 })); }));
+  if (!all.length) return '';
+  // body size = the size most characters use
+  const hist = {}; all.forEach((L) => { const k = Math.round(L.h * 2) / 2; hist[k] = (hist[k] || 0) + L.text.length; });
+  const body = Number(Object.keys(hist).sort((a, b) => hist[b] - hist[a])[0]) || 10;
+  const BUL = /^(?:[•·‣◦▪●■□➢➤►▸✓✔–—-]|o(?=\s))\s*/;
+  const xs = all.filter((L) => !BUL.test(L.text)).map((L) => L.x).sort((a, b) => a - b), left = xs.length ? xs[Math.floor(xs.length * 0.1)] : 0;
+  const out = []; let prev = null, firstH = true;
+  all.forEach((L) => {
+    const t = L.text, big = L.h >= body * 1.18, shortish = t.length <= 90 && !/[.,;]$/.test(t);
+    const gap = prev && !L.top ? prev.y - L.y : Infinity, tight = gap <= Math.max(prev ? prev.h : 0, L.h) * 1.6;
+    let kind, txt;
+    if (BUL.test(t)) { kind = 'li'; const rest = (L.bold ? t : L.md).replace(/^\**\s*/, (m) => m).replace(BUL, '').replace(/^\*\*\s*\*\*/, ''); txt = (L.x - left > body * 1.6 ? '  - ' : '- ') + rest.replace(BUL, ''); }
+    else if (/^\d{1,2}[.)]\s+\S/.test(t)) { kind = 'li'; txt = L.md; }
+    else if ((big || (L.bold && shortish)) && t.length <= 120) { kind = 'h'; txt = (big && L.h >= body * 1.4 && firstH ? '# ' : '## ') + t; firstH = false; }
+    else { kind = 'p'; txt = L.md; }
+    const last = out[out.length - 1];
+    if (prev && kind === 'p' && tight && last && (last.kind === 'p' || last.kind === 'li') && L.x - left < body * 3 && !(last.kind === 'li' && L.x < prev.x - body)) {
+      last.txt = /[A-Za-zÀ-ÿ]-$/.test(last.txt) ? last.txt.slice(0, -1) + txt : last.txt + ' ' + txt; prev = L; return;
+    }
+    if (last && (kind === 'h' || last.kind === 'h' || !tight || (kind !== last.kind))) out.push({ kind: 'gap', txt: '' });
+    out.push({ kind, txt }); prev = L;
+  });
+  return out.map((o) => o.txt).join('\n').replace(/\*\*\s*\*\*/g, '').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+window.pdfToNotices = pdfToNotices;
+
 // ---------- notices ----------
 function drawNotices() {
   const n = S.notices, prepared = (S.noticeDays || []).filter((d) => d !== noticeDay);
   dirty = false;
-  $('#sNotices').innerHTML = `<h2>Notices</h2><p class="lead">What tutors read out. Paste from Teams or a PDF: line breaks are kept and • or - lines become bullets. Use <b># Heading</b>, <b>**bold**</b> and <b>- bullets</b>.</p>
+  $('#sNotices').innerHTML = `<h2>Notices</h2><p class="lead">What tutors read out. Drop the notices PDF onto the text box (or use <b>📄 From a PDF</b>) and it is laid out for the board, or paste from Teams: line breaks are kept and • or - lines become bullets. Use <b># Heading</b>, <b>**bold**</b> and <b>- bullets</b>.</p>
     <div class="r"><div class="fix" style="width:190px"><label for="nd">Notices for</label><input id="nd" type="date" value="${esc(noticeDay)}"></div><div class="fix"><button class="btn sm" id="nt">Today</button> <button class="btn sm" id="nm">Tomorrow</button></div>
       <div class="st" style="align-self:center">${esc(nice(noticeDay, { weekday: 'long', day: 'numeric', month: 'long' }))}${noticeDay === S.today ? ' (today)' : noticeDay < S.today ? ' (in the past)' : ''}${prepared.length ? ' · also prepared: ' + prepared.map((d) => esc(nice(d))).join(', ') : ''}</div></div>
-    <div class="two" style="margin-top:8px"><div><label for="nx">Text</label><div class="tb"><button class="btn sm" data-f="h" title="Make the line a heading"># Heading</button><button class="btn sm" data-f="b" title="Bold"><b>B</b> Bold</button><button class="btn sm" data-f="l" title="Bullet list">• Bullets</button><button class="btn sm" data-f="t" title="Tidy pasted text">Tidy</button></div>
+    <div class="two" style="margin-top:8px"><div><label for="nx">Text</label><div class="tb"><button class="btn sm" data-f="h" title="Make the line a heading"># Heading</button><button class="btn sm" data-f="b" title="Bold"><b>B</b> Bold</button><button class="btn sm" data-f="l" title="Bullet list">• Bullets</button><button class="btn sm" data-f="t" title="Tidy pasted text">Tidy</button><label class="btn sm" title="Read the notices from a PDF">📄 From a PDF<input type="file" id="npdf" accept="application/pdf,.pdf" hidden></label></div>
       <textarea id="nx" maxlength="20000" spellcheck="true" placeholder="# Today&#10;- Assembly in the hall at 10:20&#10;- **Year 9**: options forms are due on Friday">${esc(n ? n.text : '')}</textarea></div>
       <div><label>How the board will show it</label><div class="pv"><div class="md" id="np"></div></div></div></div>
     <div class="acts"><button class="btn blue" id="ns">Save notices</button><button class="btn" id="nc">Clear this day</button><span class="st" id="nst">${n ? 'Saved at ' + esc(hhmm(n.updatedAt)) : 'Nothing saved for this day yet'}</span></div>`;
   const tx = $('#nx'), pv = () => { $('#np').innerHTML = tx.value.trim() ? TC.render(tx.value) : '<p style="color:var(--muted)">No notices today</p>'; };
   const touched = () => { dirty = true; $('#nst').className = 'st dirty'; $('#nst').textContent = 'Not saved yet'; pv(); };
   pv(); tx.oninput = touched;
+  const fromPdf = async (file) => {
+    if (!file) return; if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { $('#nst').className = 'st err'; $('#nst').textContent = 'That is not a PDF file.'; return; }
+    $('#nst').className = 'st'; $('#nst').innerHTML = '<span class="spin"></span>Reading the PDF…';
+    let t; try { t = await pdfToNotices(file); } catch (e) { $('#nst').className = 'st err'; $('#nst').textContent = 'That PDF could not be read' + (/password/i.test(e && e.message) ? ' (it has a password).' : '.'); return; }
+    if (!t.trim()) { $('#nst').className = 'st err'; $('#nst').textContent = 'No text was found in that PDF: it may be a scanned picture. Type or paste the notices instead.'; return; }
+    const put = () => { tx.value = t; touched(); $('#nst').textContent = 'Read from ' + file.name + ': check it, then save.'; tx.scrollTop = 0; };
+    if (tx.value.trim()) confirmBox('Replace the notices?', 'The text box already has notices for ' + nice(noticeDay) + '. Replace them with the text from ' + file.name + '?', 'Replace', put); else put();
+  };
+  $('#npdf').onchange = () => { fromPdf($('#npdf').files && $('#npdf').files[0]); $('#npdf').value = ''; };
+  tx.addEventListener('dragover', (e) => { if ([...(e.dataTransfer.types || [])].includes('Files')) { e.preventDefault(); tx.classList.add('drop'); } });
+  tx.addEventListener('dragleave', () => tx.classList.remove('drop'));
+  tx.addEventListener('drop', (e) => { const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (!f) return; e.preventDefault(); tx.classList.remove('drop'); fromPdf(f); });
   tx.addEventListener('paste', (e) => { const t = (e.clipboardData || window.clipboardData).getData('text/plain'); if (!t) return; e.preventDefault(); tx.setRangeText(TC.tidyPaste(t), tx.selectionStart, tx.selectionEnd, 'end'); touched(); });
   $('#sNotices').querySelectorAll('.tb button').forEach((b) => b.onclick = () => {
     const f = b.dataset.f, v = tx.value; let a = tx.selectionStart, z = tx.selectionEnd;

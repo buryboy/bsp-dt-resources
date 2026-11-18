@@ -1,5 +1,5 @@
 /* Shared look for BSP D&T classroom tools: big, high-contrast, works on a projector. */
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+@import url('../../fonts/fonts.css');
 :root { --ink: #1e2e96; --ink2: #2b3fd1; --bg: #fbfaf5; --card: #fff; --line: #dfe3f3; --red: #d33a2c; --green: #2bb24c; --amber: #f2a51a; --muted: #6b7290; --radius: 18px; }
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: Fredoka, system-ui, sans-serif; }

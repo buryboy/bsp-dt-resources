@@ -1,7 +1,7 @@
 /* NEA kit: landscape A3 folder sheets. Two looks:
    body.theme-sketch  – GCSE: cream cartridge paper, graphite, Caveat handwriting
    body.theme-studio  – A level: drafting paper with a faint grid, IBM Plex Sans, technical labels */
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=block');
+@import url('../fonts/fonts.css');
 .theme-sketch { --paper: #efe6d2; --ink: #2c2c30; --soft: #6b6962; --acc: #2f5a3c; --acc2: #9a4a2c; --line: rgba(44,44,48,.45); --fill: rgba(255,255,255,.3); --strip: rgba(44,44,48,.05);
   --text: 400 24px/1.3 'Caveat', 'Segoe Print', cursive; --head: 700 30px 'Caveat', cursive; --title: 700 50px/1 'Caveat', cursive; --small: 400 19px/1.3 'Caveat', cursive; }
 .theme-studio { --paper: #f6f6f2; --ink: #1f2328; --soft: #5f6670; --acc: #b0402a; --acc2: #24539c; --line: rgba(31,35,40,.35); --fill: rgba(255,255,255,.75); --strip: #1f2328;

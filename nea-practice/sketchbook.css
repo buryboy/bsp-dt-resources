@@ -1,6 +1,6 @@
 /* Sketchbook Graphite theme for the NEA practice book: cream unlined cartridge paper, graphite ink, spiral binding.
    Loaded after book-kit/book.css and only overrides it. */
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=block');
+@import url('../fonts/fonts.css');
 :root {
   --ink: #2c2c30; --red: #9a4a2c; --green: #2f5a3c; --paper: #efe6d2; --desk: #2b2925; --R: 32px; --pad-l: 92px; --pad-r: 40px;
   --hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive; --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;

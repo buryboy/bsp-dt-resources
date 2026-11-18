@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Gloria+Hallelujah&display=block');
+@import url('../fonts/fonts.css');
 :root {
   --ink: #1e2e96; --red: #b21c26; --green: #186e3c; --rule: rgba(110,160,215,.75); --margin: rgba(225,95,105,.8);
   --paper: #fbfaf5; --desk: #6e4a30; --R: 34px; --pad-l: 104px; --pad-r: 34px;

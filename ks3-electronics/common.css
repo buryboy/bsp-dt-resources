@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+@import url('../fonts/fonts.css');
 :root{--ink:#1b2a41;--paper:#fbfdff;--yellow:#ffd23f;--orange:#ff9f1c;--red:#ef476f;--green:#06d6a0;--blue:#118ab2;--purple:#7b5cff;--navy:#0f1d33}
 *{box-sizing:border-box}
 html,body{margin:0}

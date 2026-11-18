@@ -45,7 +45,7 @@ window.GREEN_SLIP = {
       { name: 'Wisdom', items: ['Curiosity', 'Creativity', 'Independence'] },
     ],
   },
-  reason: { label: 'Brief explanation why referral has been given', placeholder: 'A sentence or two is plenty. Type, or press Dictate and say it.', required: true, max: 5000 },
+  reason: { label: 'Brief explanation why referral has been given', placeholder: 'A sentence or two is plenty.', required: true, max: 5000 },
   photos: { max: 0, maxPx: 1800, quality: 0.8 },   // max 0 = no photos on the slip (the photo box is hidden)
 };
 </script>
@@ -479,7 +479,8 @@ select { font-family: inherit; padding-right: 40px; cursor: pointer; background-
   $('#reason').addEventListener('blur', () => later(() => { if (anyTouched) { touch('#reason'); check(); } }));
 
   // ---------- dictation (Web Speech API) ----------
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const DICTATE = false;   // the Dictate button is switched off for now (set to true to bring it back)
+  const SR = DICTATE ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
   const D = { mode: 'off', rec: null, done: 0, pos: null, fails: 0 }; // mode: off | on | paused
   function dictUI(msg) {
     $('#dstart').hidden = D.mode !== 'off'; $('#dpause').hidden = D.mode !== 'on'; $('#dresume').hidden = D.mode !== 'paused'; $('#dstop').hidden = D.mode === 'off';
@@ -535,7 +536,7 @@ select { font-family: inherit; padding-right: 40px; cursor: pointer; background-
     $('#dpause').onclick = () => { D.mode = 'paused'; endRec(); dictUI(); };
     $('#dresume').onclick = () => { D.mode = 'on'; D.fails = 0; dictUI(); startRec(); };
     $('#dstop').onclick = () => { D.mode = 'off'; endRec(); dictUI(); touch('#reason'); check(); };
-  } else { $('#dict').hidden = true; $('#dtip').hidden = false; }
+  } else { $('#dict').hidden = true; $('#dtip').hidden = !DICTATE; }
   function stopDictation() { if (D.mode !== 'off') { D.mode = 'off'; endRec(); dictUI(); } }
 
   // ---------- photos ----------

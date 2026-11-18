@@ -486,6 +486,7 @@ function gsGroup(ticks) { // ["Courage: Determination", "Courage: Honesty", "Hum
 //   admin (PIN):  tcquizlist {pin}   tcquizget {pin, date}   tcresults {pin, date}   tcgroups {pin, groups: [{label, house}], close: 'HH:MM', scale: [4, 3, 2, 1]}
 //                 tcquizimg {pin, date, data: 'data:image/jpeg;base64,…'} -> {id}     tcquizsave {pin, date, was, title, questions: [{q, options[], correct, img}]}     tcquizdel {pin, date}
 //   public GET:   ?a=tcquiz&date=…   the questions WITHOUT the answers, the quiz groups (each belongs to a house) and the closing time
+//                 tcposter {pin, data: 'data:image/jpeg;base64,…' | '', title, until, w, h}   the Coming up poster ('' removes it)
 //                 ?a=tcimg&id=…      one picture (kept in the sheet as base64 in chunks of 40,000 characters, not as Drive links)
 //                 ?a=tcanswers&date=…[&group=…&token=…]   the correct answers: only after the closing time (server clock, Europe/Paris),
 //                                    or earlier for a group that has submitted and shows the token it was given (that locks its submission).
@@ -566,7 +567,7 @@ function tcScores(houses) { // the current term's rounds, oldest first, and the 
 function tcPublic(day) {
   const b = tcBannerRaw(), houses = tcHouses();
   return { ok: true, at: Date.now(), today: tcToday(), day: day, banner: b && (!b.until || b.until >= day) ? b : null, notices: tcNotice(day),
-    events: tcEvents().filter((e) => e.date >= day).slice(0, 40), houses: houses, scores: tcScores(houses), quiz: tcQuizBrief(day), theme: tcTheme(), updatedAt: Number(PROPS.getProperty('TC_VER')) || 0 };
+    events: tcEvents().filter((e) => e.date >= day).slice(0, 40), houses: houses, scores: tcScores(houses), quiz: tcQuizBrief(day), theme: tcTheme(), poster: tcPosterFor(day), updatedAt: Number(PROPS.getProperty('TC_VER')) || 0 };
 }
 function tcGet(p) {
   const day = tcDay(p.day) || tcToday(), cache = CacheService.getScriptCache(), key = 'tc-' + (PROPS.getProperty('TC_VER') || '0') + '-' + day;
@@ -579,7 +580,7 @@ function tcAdminState(d) {
   const today = tcToday(), day = tcDay(d.day) || today, houses = tcHouses(), term = tcTerm(), old = {};
   tcRows('HouseScores').forEach((r) => { const t = String(r.term); if (t !== term.name) (old[t] = old[t] || {})[r.date] = 1; });
   return { ok: true, today: today, day: day, banner: tcBannerRaw(), notices: tcNotice(day), noticeDays: tcRows('Notices').filter((r) => r.date >= today && String(r.text).trim()).map((r) => r.date).sort(),
-    events: tcEvents(), houses: houses, scores: tcScores(houses), theme: tcTheme(), archived: Object.keys(old).map((t) => ({ term: t, rounds: Object.keys(old[t]).length })), pushOn: !!PROPS.getProperty('TC_PUSH_KEY') };
+    events: tcEvents(), houses: houses, scores: tcScores(houses), theme: tcTheme(), poster: tcPoster(), archived: Object.keys(old).map((t) => ({ term: t, rounds: Object.keys(old[t]).length })), pushOn: !!PROPS.getProperty('TC_PUSH_KEY') };
 }
 function tcSetNotice(day, text) {
   const sh = tcSheet('Notices'), rows = tcRows('Notices').filter((r) => r.date === day);
@@ -629,6 +630,17 @@ function tutorPost(d) {
 function tcWrite(d) {
   if (d.a === 'tcsetpin') { const n = String(d.newPin == null ? '' : d.newPin).trim(); if (!/^\d{4,8}$/.test(n)) return { ok: false, error: 'The PIN must be 4 to 8 digits' }; PROPS.setProperty('TC_PIN', n); return { ok: true }; }
   if (d.a === 'tctheme') { const js = JSON.stringify(tcThemeClean(d.theme)); if (js.length > 8500) return { ok: false, error: 'Too many calendar entries' }; PROPS.setProperty('TC_THEME', js); return { ok: true, theme: JSON.parse(js) }; }
+  if (d.a === 'tcposter') { // a picture (e.g. page 1 of the "countdown to Christmas" PDF) shown in Coming up; '' removes it
+    const old = tcPoster(), data = String(d.data || '');
+    if (!data) { if (old) tcImgRemove(old.id); PROPS.deleteProperty('TC_POSTER'); return { ok: true, poster: null }; }
+    if (!/^data:image\/(jpeg|png);base64,[A-Za-z0-9+\/=]+$/.test(data) || data.length > 1500000) return { ok: false, error: 'That picture is too big or not a JPEG/PNG' };
+    const id = Utilities.getUuid().replace(/-/g, '').slice(0, 10), rows = [];
+    for (let i = 0, n = 0; i < data.length; i += 40000, n++) rows.push([id, 'poster', String(n), data.slice(i, i + 40000)]);
+    const sh = tcSheet('QuizImages'); sh.getRange(sh.getLastRow() + 1, 1, rows.length, 4).setValues(rows);
+    const po = { id: id, title: tcT(d.title, 80), until: tcDay(d.until), w: Math.max(0, Math.min(9999, Number(d.w) || 0)), h: Math.max(0, Math.min(9999, Number(d.h) || 0)), at: Date.now() };
+    PROPS.setProperty('TC_POSTER', JSON.stringify(po)); if (old) tcImgRemove(old.id);
+    return { ok: true, poster: po };
+  }
   if (d.a === 'tcbanner') {
     const text = tcT(d.text, 300).replace(/\s*\n\s*/g, ' '), until = tcDay(d.until);
     if (text) PROPS.setProperty('TC_BANNER', JSON.stringify({ text: text, until: until })); else PROPS.deleteProperty('TC_BANNER');
@@ -785,6 +797,13 @@ function tcQuizAdmin(d) {
   if (!q) return { ok: false, error: 'No quiz' };
   return { ok: true, quiz: { date: q.date, title: q.title, questions: q.questions }, houses: houses, groups: tcGroups(houses), close: tcClose(), closed: tcClosed(date, 0), rank: tcRank(q, date), posted: tcPosted().indexOf(date) >= 0,
     subs: tcSubs(date).map((r) => { const m = tcMark(q, r.answers); return { group: r.group, answers: m.answers, score: m.score, max: m.max, at: r.at }; }) };
+}
+function tcPoster() { let t = null; try { t = JSON.parse(PROPS.getProperty('TC_POSTER') || 'null'); } catch (e) { t = null; } return t && tcImgId(t.id) ? t : null; }
+function tcPosterFor(day) { const t = tcPoster(); return t && (!t.until || t.until >= day) ? t : null; }
+function tcImgRemove(id) { // delete every chunk of one picture
+  id = tcImgId(id); if (!id) return;
+  const sh = tcSheet('QuizImages'); sh.getRange('A:A').createTextFinder(id).matchEntireCell(true).findAll().map((r) => r.getRow()).sort((a, b) => b - a).forEach((r) => sh.deleteRow(r));
+  try { CacheService.getScriptCache().remove('tci-' + id); } catch (e) {}
 }
 function tcImgDel(keep, dates) { // remove the pictures of these dates that are no longer used
   const sh = tcSheet('QuizImages'), last = sh.getLastRow(); if (last < 2) return;

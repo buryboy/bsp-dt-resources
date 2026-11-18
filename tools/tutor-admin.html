@@ -161,6 +161,52 @@ function drawBanner() {
   $('#bc').onclick = async () => { if (await act($('#bc'), $('#bst'), { a: 'tcbanner', text: '', until: '' }, 'Cleared ✓')) refresh([drawBanner]); };
 }
 
+// ---------- Coming up poster (a PDF page or a picture, e.g. the countdown to Christmas) ----------
+let posterDraft = null; // { data, w, h, name, pages, page, file }
+async function renderPdfPage(file, n) {
+  const lib = await loadPdfjs(), doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+  const page = await doc.getPage(Math.min(Math.max(1, n), doc.numPages)), v1 = page.getViewport({ scale: 1 }), scale = Math.min(3, 1400 / Math.max(v1.width, v1.height));
+  const vp = page.getViewport({ scale }), c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+  await page.render({ canvasContext: g, viewport: vp }).promise;
+  return { canvas: c, pages: doc.numPages };
+}
+function canvasToJpeg(c) { let q = 0.85, d = c.toDataURL('image/jpeg', q); while (d.length > 1400000 && q > 0.4) { q -= 0.1; d = c.toDataURL('image/jpeg', q); } return d; }
+async function imageFileToCanvas(file) {
+  const url = URL.createObjectURL(file); try { const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const k = Math.min(1, 1400 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); return c; } finally { URL.revokeObjectURL(url); }
+}
+function drawPoster() {
+  const w = $('#pwrap'); if (!w) return; const cur = S.poster, d = posterDraft;
+  w.innerHTML = `<h3 style="margin:22px 0 4px">Poster in Coming up <small style="font-weight:500;color:var(--muted)">(optional)</small></h3>
+    <p class="lead" style="margin:0 0 10px">Drop in a PDF (for example the countdown to Christmas) or a picture. It shows at the top of the Coming up panel, and tutors can tap it to see it full screen. With no events, it fills the panel.</p>
+    <div id="pdz" style="border:2px dashed var(--line);border-radius:12px;padding:14px;text-align:center;color:var(--muted)">
+      <label class="btn blue" style="display:inline-flex;align-items:center">📄 Choose a PDF or picture<input type="file" id="pf" accept="application/pdf,.pdf,image/jpeg,image/png" hidden></label><div style="margin-top:6px">…or drop it here</div></div>
+    ${d ? `<div style="margin-top:12px"><img src="${d.data}" alt="" style="max-width:100%;max-height:420px;border-radius:10px;box-shadow:0 0 0 1px var(--line)">
+      ${d.pages > 1 ? `<div class="r" style="margin-top:8px;align-items:center"><label for="pp" style="margin:0">Page</label><select id="pp" style="width:auto">${Array.from({ length: d.pages }, (x, i) => `<option value="${i + 1}"${i + 1 === d.page ? ' selected' : ''}>${i + 1} of ${d.pages}</option>`).join('')}</select></div>` : ''}
+      <div class="r" style="margin-top:8px"><div style="flex:2;min-width:180px"><label for="ptt">Caption <small>(optional)</small></label><input id="ptt" type="text" maxlength="80" placeholder="e.g. Countdown to Christmas"></div><div class="fix" style="width:180px"><label for="pun">Show until <small>(optional)</small></label><input id="pun" type="date"></div></div>
+      <div class="acts"><button class="btn blue" id="pps">Put it on the board</button><button class="btn" id="ppx">Cancel</button><span class="st" id="ppst"></span></div></div>`
+    : cur ? `<div class="acts" style="margin-top:10px"><span class="st ok">On the board now${cur.title ? ': ' + esc(cur.title) : ''}${cur.until ? ' (until ' + esc(nice(cur.until)) + ')' : ''}</span><button class="btn" id="prm">Remove the poster</button><span class="st" id="ppst"></span></div>` : ''}`;
+  const take = async (file) => {
+    if (!file) return; const st = $('#pdz'); const isPdf = /pdf$/i.test(file.type) || /\.pdf$/i.test(file.name);
+    if (!isPdf && !/^image\/(jpeg|png)$/.test(file.type)) { st.lastElementChild.textContent = 'Please choose a PDF, JPEG or PNG.'; return; }
+    st.lastElementChild.innerHTML = '<span class="spin"></span>Reading ' + esc(file.name) + '…';
+    try {
+      if (isPdf) { const r = await renderPdfPage(file, 1); posterDraft = { data: canvasToJpeg(r.canvas), w: r.canvas.width, h: r.canvas.height, name: file.name, pages: r.pages, page: 1, file }; }
+      else { const c = await imageFileToCanvas(file); posterDraft = { data: canvasToJpeg(c), w: c.width, h: c.height, name: file.name, pages: 1, page: 1 }; }
+      drawPoster(); const t = $('#ptt'); if (t && !t.value) t.value = file.name.replace(/\.(pdf|jpe?g|png)$/i, '').replace(/[_-]+/g, ' ').slice(0, 80);
+    } catch (e) { st.lastElementChild.textContent = 'That file could not be read' + (/password/i.test(e && e.message) ? ' (it has a password).' : '.'); }
+  };
+  $('#pf').onchange = () => { take($('#pf').files && $('#pf').files[0]); $('#pf').value = ''; };
+  const dz = $('#pdz'); dz.ondragover = (e) => { e.preventDefault(); dz.style.borderColor = 'var(--blue, #2b4c9b)'; }; dz.ondragleave = () => { dz.style.borderColor = ''; };
+  dz.ondrop = (e) => { e.preventDefault(); dz.style.borderColor = ''; take(e.dataTransfer.files && e.dataTransfer.files[0]); };
+  if ($('#pp')) $('#pp').onchange = async () => { const n = Number($('#pp').value), keepT = $('#ptt').value, keepU = $('#pun').value; try { const r = await renderPdfPage(posterDraft.file, n); Object.assign(posterDraft, { data: canvasToJpeg(r.canvas), w: r.canvas.width, h: r.canvas.height, page: n }); drawPoster(); $('#ptt').value = keepT; $('#pun').value = keepU; } catch (e) {} };
+  if ($('#ppx')) $('#ppx').onclick = () => { posterDraft = null; drawPoster(); };
+  if ($('#pps')) $('#pps').onclick = async () => { const j = await act($('#pps'), $('#ppst'), { a: 'tcposter', data: posterDraft.data, w: posterDraft.w, h: posterDraft.h, title: $('#ptt').value.trim(), until: $('#pun').value }, 'On the board ✓'); if (j) { posterDraft = null; S.poster = j.poster; drawPoster(); } };
+  if ($('#prm')) $('#prm').onclick = () => confirmBox('Remove the poster?', 'It will disappear from the Coming up panel on every board.', 'Remove', async () => { if (await act($('#prm'), $('#ppst'), { a: 'tcposter', data: '' }, 'Removed ✓')) { S.poster = null; drawPoster(); } }, true);
+}
+
 // ---------- notices PDF -> board text ----------
 // Reads the text layer with pdf.js (loaded only when needed), rebuilds lines, finds headings from font size / bold,
 // turns bullet glyphs into "- " bullets, re-joins wrapped lines into paragraphs and drops repeated page headers/footers.
@@ -272,7 +318,9 @@ function drawEvents() {
       <label for="ex">Detail <small>(optional)</small></label><input id="ex" type="text" maxlength="400" value="${esc(k.detail || '')}" placeholder="e.g. Main hall, 17:00 to 19:30">
       <div class="acts"><button class="btn blue" type="submit" id="es">${editEv ? 'Save changes' : 'Add event'}</button>${editEv ? '<button class="btn" type="button" id="ecx">Cancel</button>' : ''}<span class="st" id="est"></span></div></form>
     <div class="list" id="el">${up.length ? up.map(row).join('') : '<p class="lead" style="margin:0">No upcoming events yet.</p>'}</div>
-    ${past.length ? `<details style="margin-top:8px"><summary>Past events (${past.length})</summary><div class="list">${past.map(row).join('')}</div></details>` : ''}`;
+    ${past.length ? `<details style="margin-top:8px"><summary>Past events (${past.length})</summary><div class="list">${past.map(row).join('')}</div></details>` : ''}
+    <div id="pwrap"></div>`;
+  drawPoster();
   $('#ef').onsubmit = async (e) => {
     e.preventDefault(); const d = { date: $('#ed').value, time: $('#et').value, title: $('#en').value.trim(), detail: $('#ex').value.trim() }, st = $('#est');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d.date)) { st.className = 'st err'; st.textContent = 'Pick the date.'; $('#ed').focus(); return; }

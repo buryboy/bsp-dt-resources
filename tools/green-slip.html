@@ -622,7 +622,7 @@ select { font-family: inherit; padding-right: 40px; cursor: pointer; background-
   }
   $('#newslip').onclick = () => fresh(true);
   $('#clear').onclick = () => { stopDictation(); ldel('draft'); fresh(true); };
-  function where() { const to = lget('to', ''); $('#where').textContent = 'Pressing Send emails this slip' + (to ? ' to ' + to : ' to the school office') + ' and keeps a backup copy in the school Google Drive. Nothing is sent until you press Send. Dictation uses your browser\'s speech service.'; }
+  function where() { const to = lget('to', ''); $('#where').textContent = 'Pressing Send emails this slip' + (to ? ' to ' + to : ' to the school office') + ' and keeps a backup copy in the school Google Drive. Nothing is sent until you press Send.'; }
 
   // ---------- staff code ----------
   function askCode(msg) { $('#gate').classList.add('on'); $('#codemsg').classList.remove('ok'); $('#codemsg').textContent = msg || ''; $('#code').value = ''; setTimeout(() => $('#code').focus(), 50); }

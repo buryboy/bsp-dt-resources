@@ -139,7 +139,10 @@ async function start() {
   app.innerHTML = '<p class="lead" style="text-align:center;margin-top:8vh"><span class="spin"></span>Loading…</p>';
   try { if (!(await reload())) return; } catch (e) { app.innerHTML = `<div class="narrow card" style="box-shadow:none;border:1px solid var(--line)"><h2>Could not load</h2><p class="lead">${NET}</p><button class="btn blue" id="again">Try again</button></div>`; $('#again').onclick = start; return; }
   app.innerHTML = `<section class="card links" id="top"></section><section class="card" id="sBanner"></section><section class="card" id="sNotices"></section><section class="card" id="sEvents"></section><section class="card" id="sScores"></section><section class="card" id="sHouses"></section><section class="card" id="sStyle"></section><section class="card" id="sTheme"></section><section class="card" id="sMore"></section>`;
-  drawTop(); drawBanner(); drawNotices(); drawEvents(); drawScores(); drawHouses(); drawStyle(); drawTheme(); drawMore();
+  // each section draws on its own: one broken section must never blank the whole page
+  [['top', drawTop], ['sBanner', drawBanner], ['sNotices', drawNotices], ['sEvents', drawEvents], ['sScores', drawScores], ['sHouses', drawHouses], ['sStyle', drawStyle], ['sTheme', drawTheme], ['sMore', drawMore]].forEach(([id, f]) => {
+    try { f(); } catch (e) { console.error(id, e); const el = document.getElementById(id); if (el) el.innerHTML += `<p class="st err" style="margin:8px 0 0">This section could not be shown (${esc(String(e && e.message || e)).slice(0, 160)}). Refresh the page; if it stays, send this message to Mr Porter.</p>`; }
+  });
 }
 async function refresh(parts) { try { if (!(await reload())) return; } catch (e) { return; } (parts || []).forEach((f) => f()); }
 function drawTop() {

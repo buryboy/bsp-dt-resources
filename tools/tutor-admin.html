@@ -156,11 +156,15 @@ function myStyle() { const s = (TH && TH.style) || (S && S.theme && S.theme.styl
 // ---------- banner ----------
 function drawBanner() {
   const b = S.banner || { text: '', until: '' }, expired = b.text && b.until && b.until < S.today;
-  $('#sBanner').innerHTML = `<h2>Banner line</h2><p class="lead">One line across the top of every board, for something urgent or coming up. Leave it empty to hide it.</p>
-    <div class="r"><div style="flex:3;min-width:220px"><label for="bt">Banner text</label><input id="bt" type="text" maxlength="300" value="${esc(b.text)}" placeholder="e.g. Fire drill at 10:20 today: line up on the field"></div>
+  const lines = String(b.text || '').split(/\s*(?:\n|\s\|\s)\s*/).filter(Boolean);
+  $('#sBanner').innerHTML = `<h2>Banner</h2><p class="lead">Scrolls across the top of every board, round and round. Put each message on its own line and they follow one another. Leave it empty to hide it.</p>
+    <div class="r"><div style="flex:3;min-width:220px"><label for="bt">Banner messages <small>(one per line)</small></label><textarea id="bt" rows="3" maxlength="900" style="min-height:110px;font-family:inherit;font-size:17px" placeholder="e.g. Fire drill at 10:20 today: line up on the field&#10;Christmas jumper day on Friday">${esc(lines.join('\n'))}</textarea></div>
     <div><label for="bu">Show until <small>(optional)</small></label><input id="bu" type="date" value="${esc(b.until)}"></div></div>
-    <div class="acts"><button class="btn blue" id="bs">Save banner</button><button class="btn" id="bc">Clear</button><span class="st${expired ? ' dirty' : ''}" id="bst">${b.text ? (expired ? 'Not showing: it ended on ' + esc(nice(b.until)) : 'Showing now' + (b.until ? ' until ' + esc(nice(b.until)) : '')) : 'No banner'}</span></div>`;
-  $('#bs').onclick = async () => { if (await act($('#bs'), $('#bst'), { a: 'tcbanner', text: $('#bt').value.replace(/\s+/g, ' ').trim(), until: $('#bu').value })) refresh([drawBanner]); };
+    <div class="acts"><button class="btn blue" id="bs">Save banner</button><button class="btn" id="bc">Clear</button><span class="st${expired ? ' dirty' : ''}" id="bst">${b.text ? (expired ? 'Not showing: it ended on ' + esc(nice(b.until)) : 'Showing now' + (lines.length > 1 ? ' (' + lines.length + ' messages)' : '') + (b.until ? ' until ' + esc(nice(b.until)) : '')) : 'No banner'}</span></div>`;
+  // messages travel as "one | two | three" so they survive the server's single-line banner field
+  $('#bs').onclick = async () => { const t = $('#bt').value.split('\n').map((x) => x.replace(/\s+/g, ' ').replace(/\s\|\s/g, ' / ').trim()).filter(Boolean).join(' | ');
+    if (t.length > 300) { $('#bst').className = 'st err'; $('#bst').textContent = 'That is too long for the banner (' + t.length + ' of 300 characters). Shorten or remove a message.'; return; }
+    if (await act($('#bs'), $('#bst'), { a: 'tcbanner', text: t, until: $('#bu').value })) refresh([drawBanner]); };
   $('#bc').onclick = async () => { if (await act($('#bc'), $('#bst'), { a: 'tcbanner', text: '', until: '' }, 'Cleared ✓')) refresh([drawBanner]); };
 }
 

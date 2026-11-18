@@ -45,7 +45,8 @@ body[data-deco] .hd { padding-top: 18px; }   /* room for bunting or fairy lights
 .banner .tag { flex: none; background: var(--gold); color: #fff; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(13px, 1vw, 17px); display: flex; align-items: center; padding: 0 16px; } body.dark .banner .tag { color: #111; }
 .banner .mq { flex: 1; min-width: 0; overflow: hidden; display: flex; align-items: center; white-space: nowrap; font-weight: 600; font-size: calc(clamp(20px, 1.9vw, 34px) * var(--ts, 1)); padding: 8px 0; }
 .banner .mq span { padding: 0 18px; display: inline-block; }
-.banner .mq.run span { padding: 0; animation: mq var(--mqd, 20s) linear infinite; } .banner .mq em { font-style: normal; padding: 0 70px 0 18px; }
+.banner .mq.run > span { padding: 0; animation: mq var(--mqd, 20s) linear infinite; display: inline-flex; } .banner .mq .seq { display: inline-flex; align-items: center; padding: 0; }
+.banner .mq em { font-style: normal; padding: 0 28px; } .banner .mq .sep { font-style: normal; opacity: .9; color: var(--gold); }
 @keyframes mq { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .banner .mq { white-space: normal; } }
 /* panels */
@@ -348,9 +349,22 @@ function tick() {
   applyTheme(); QZ.onTick();
 }
 function drawBanner() {
-  const b = data && data.banner, box = $('#banner'); box.hidden = !(b && b.text); if (box.hidden) return;
-  const mq = $('#mq'), sp = $('#mqt'); mq.classList.remove('run'); sp.textContent = b.text;
-  requestAnimationFrame(() => { if (sp.scrollWidth > mq.clientWidth + 2 && !matchMedia('(prefers-reduced-motion: reduce)').matches) { mq.style.setProperty('--mqd', Math.max(12, Math.round((sp.scrollWidth + 70) / 80)) + 's'); sp.innerHTML = '<em>' + esc(b.text) + '</em><em aria-hidden="true">' + esc(b.text) + '</em>'; mq.classList.add('run'); } });   // a long banner scrolls round and round
+  const b = data && data.banner, box = $('#banner'); box.hidden = !(b && b.text); if (box.hidden) { clearInterval(drawBanner.rot); return; }
+  const msgs = String(b.text).split(/\s*(?:\n|\s\|\s)\s*/).filter(Boolean), mq = $('#mq'), sp = $('#mqt'), still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const key = msgs.join('\n') + still; if (drawBanner.key === key) return; drawBanner.key = key; clearInterval(drawBanner.rot);
+  mq.classList.remove('run', 'fade');
+  if (still) { // no movement: show the messages one at a time
+    let i = 0; const show = () => { sp.textContent = msgs[i % msgs.length]; i++; }; show(); if (msgs.length > 1) drawBanner.rot = setInterval(show, 8000); return;
+  }
+  // a news ticker: every message in turn, separated by a dot, round and round
+  const one = msgs.map((m) => '<em>' + esc(m) + '</em>').join('<i class="sep" aria-hidden="true">•</i>') + '<i class="sep" aria-hidden="true">•</i>';
+  sp.innerHTML = '<span class="seq">' + one + '</span>';
+  requestAnimationFrame(() => {
+    const w = sp.firstChild.scrollWidth; let reps = 1; while (w * reps < mq.clientWidth + 40 && reps < 8) reps++;   // short messages: repeat so the track is always full
+    const seq = '<span class="seq">' + one.repeat(reps) + '</span>';
+    sp.innerHTML = seq + seq.replace('class="seq"', 'class="seq" aria-hidden="true"');
+    mq.style.setProperty('--mqd', Math.max(10, Math.round((w * reps) / 90)) + 's'); mq.classList.add('run');
+  });
 }
 
 // ---------- the background behind the panels (set in tutor admin; which theme applies today is worked out here, by the date in Paris) ----------

@@ -480,7 +480,7 @@ function gsGroup(ticks) { // ["Courage: Determination", "Courage: Honesty", "Hum
 //   tcscoredel {pin, date} / tcnewterm {pin, name}  delete a round / start a new term (old rounds stay in the sheet, archived)
 //   tcsetpin {pin, newPin}                          change the admin PIN (4 to 8 digits)
 //   tctheme {pin, theme}                            the background behind the board: {mode: 'plain'|'theme'|'auto'|'image', themeId, until,
-//                                                   intensity: 'subtle'|'normal', customUrl, attribution, strength, blur, calendar: {set: {id: {on, from, to}}, custom: [...]}}
+//                                                   intensity: 'subtle'|'normal', customUrl, attribution, strength, blur, style, calendar: {set: {id: {on, from, to}}, custom: [...]}}
 //                                                   stored in TC_THEME and sent with tcget; the board works out which theme applies on the day (Europe/Paris)
 // The Wednesday quiz (tools/house-quiz-admin.html writes it, forms answer it live on the board before the closing time):
 //   admin (PIN):  tcquizlist {pin}   tcquizget {pin, date}   tcresults {pin, date}   tcgroups {pin, groups: [{label, house}], close: 'HH:MM', scale: [4, 3, 2, 1]}
@@ -539,7 +539,8 @@ function tcTheme() { let t = null; try { t = JSON.parse(PROPS.getProperty('TC_TH
 function tcThemeClean(t) { // only known fields, and only an https picture address, are kept
   t = t && typeof t === 'object' ? t : {};
   const o = { mode: ['plain', 'theme', 'auto', 'image'].indexOf(t.mode) >= 0 ? t.mode : 'plain', themeId: tcT(t.themeId, 30).replace(/[^a-z0-9-]/g, ''), until: tcDay(t.until), intensity: t.intensity === 'normal' ? 'normal' : 'subtle',
-    customUrl: /^https:\/\/[^\s"'()<>\\]{4,600}$/.test(String(t.customUrl || '')) ? String(t.customUrl) : '', attribution: tcT(t.attribution, 200), strength: Math.max(5, Math.min(60, Number(t.strength) || 25)), blur: t.blur !== false };
+    customUrl: /^https:\/\/[^\s"'()<>\\]{4,600}$/.test(String(t.customUrl || '')) ? String(t.customUrl) : '', attribution: tcT(t.attribution, 200), strength: Math.max(5, Math.min(60, Number(t.strength) || 25)), blur: t.blur !== false,
+    style: /^[a-z0-9-]{1,20}$/.test(String(t.style || '')) ? String(t.style) : 'classic' }; // the look of the board (classic, synth, pixel, chalk, notebook, news, hc)
   const cal = t.calendar && typeof t.calendar === 'object' ? t.calendar : {}, set = {}, d = (x) => (/^(\d{4}-)?\d{2}-\d{2}$/.test(String(x || '')) ? String(x) : '');
   Object.keys(cal.set && typeof cal.set === 'object' ? cal.set : {}).slice(0, 60).forEach((k) => { const v = cal.set[k] || {}, e = {}; if (typeof v.on === 'boolean') e.on = v.on; if (d(v.from)) e.from = d(v.from); if (d(v.to)) e.to = d(v.to); if (/^[a-z0-9]{1,20}$/.test(k)) set[k] = e; });
   o.calendar = { set: set, custom: (Array.isArray(cal.custom) ? cal.custom : []).slice(0, 30).map((c) => ({ label: tcT(c && c.label, 40), theme: tcT(c && c.theme, 30).replace(/[^a-z0-9-]/g, ''), from: tcDay(c && c.from), to: tcDay(c && c.to), on: !(c && c.on === false) })).filter((c) => c.from && c.theme) };

@@ -3,7 +3,8 @@
    Everything is drawn in code on one canvas: no pictures or sound files. Deliberately quiet: few, slow, low-opacity shapes, nothing flashes,
    about 30 frames a second at most, paused when the tab is hidden, and a still picture when the device asks for reduced motion.
    TCT.THEMES            [{ id, name }]
-   TCT.mount(host, id, { intensity: 'subtle'|'normal', mini, still, paused(), dark(), band() }) -> { stop(), stats() }
+   TCT.mount(host, id, { intensity: 'subtle'|'normal', style, mini, still, paused(), dark(), band() }) -> { stop(), stats() }
+   TCT.STYLES            [{ id, name, dark }]  the looks of the board; the same themes are drawn to suit each one (see "drawn in the style" below)
    TCT.entries(theme, year) / TCT.resolve(theme, 'YYYY-MM-DD') / TCT.easter(year) / TCT.parisDay(ms) */
 (function () {
   'use strict';
@@ -45,6 +46,9 @@
     { id: 'confetti', name: 'Celebration confetti', grad: ['#f4ecf6', '#f3f1ea'], gradD: ['#1e1630', '#0e1422'], parts: [{ shape: 'confetti', n: 30, motion: 'fall', size: [5, 10], speed: 0.026, col: ['#c8372d', '#2563c9', '#2e9a4f', '#d99a00', '#7b3fa0'], alpha: 0.55 }] },
   ];
   const byId = {}; THEMES.forEach((t) => (byId[t.id] = t));
+  /* the looks of the board (tutor admin: Style). dark: the style is always dark, so the light/dark button is hidden for it. */
+  const STYLES = [{ id: 'classic', name: 'Classic' }, { id: 'synth', name: 'Synthwave', dark: true }, { id: 'pixel', name: 'Pixel / 8-bit' }, { id: 'chalk', name: 'Chalkboard', dark: true }, { id: 'notebook', name: 'Notebook' }, { id: 'news', name: 'Newspaper' }, { id: 'hc', name: 'High contrast' }];
+  const byStyle = {}; STYLES.forEach((x) => (byStyle[x.id] = x));
 
   /* ---------- shapes: drawn around (0, 0), about s pixels across ---------- */
   const TAU = Math.PI * 2;
@@ -85,9 +89,22 @@
     wash.style.cssText = 'position:absolute;inset:0'; cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block';
     host.appendChild(wash); host.appendChild(cv);
     const isDark = opt.dark || (() => document.body.classList.contains('dark'));
+    /* Drawn in the style of the board. Classic is untouched. The others change how the SAME shapes are drawn, at no extra cost per frame:
+       pixel: a coarse canvas (one drawn pixel = 4 screen pixels), positions snapped to that grid, no smoothing;  synth: neon tints with a soft glow;
+       chalk: outlines in chalk colours;  notebook: ink outlines, like doodles;  news and hc: one quiet grey, at about half strength. */
+    const style = byStyle[opt.style] && opt.style !== 'classic' ? opt.style : '', Q = style === 'pixel' ? (mini ? 3 : 4) : 1, outline = style === 'chalk' || style === 'notebook';
+    const sK = style === 'news' || style === 'hc' ? 0.5 : style === 'chalk' || style === 'synth' || style === 'pixel' ? 1.15 : 1;
+    if (style) {
+      const P = CanvasRenderingContext2D.prototype, hash = (v) => { let h = 7; for (let i = 0; i < v.length; i++) h = (h * 31 + v.charCodeAt(i)) >>> 0; return h; };
+      const PAL = { synth: ['#ff5fd2', '#5ee7ff', '#ffd166', '#b28dff'], chalk: ['#f4f1e4', '#ffe38a', '#f6b8c4', '#b9e0f2'], notebook: ['#1f3fae', '#1b2a6b', '#c0392b'], notebookD: ['#9db4ff', '#dfe6ff', '#ff9a8a'] };
+      const map = (v) => { if (typeof v !== 'string') return v; const d = isDark(); if (style === 'news' || style === 'hc') return d ? '#e8e4d8' : '#2a2a2a'; const pal = PAL[style + (d ? 'D' : '')] || PAL[style]; return pal ? pal[hash(v) % pal.length] : v; };
+      ['fillStyle', 'strokeStyle'].forEach((k) => { const d = Object.getOwnPropertyDescriptor(P, k); Object.defineProperty(ctx, k, { configurable: true, get() { return d.get.call(this); }, set(v) { const m = map(v); d.set.call(this, m); if (style === 'synth') this.shadowColor = m; } }); });
+      if (outline) { ctx.fill = function () { this.stroke(); }; ctx.fillRect = function (x, y, w, h) { this.strokeRect(x, y, w, h); }; }
+      if (Q > 1) { const d = Object.getOwnPropertyDescriptor(P, 'lineWidth'); Object.defineProperty(ctx, 'lineWidth', { configurable: true, get() { return d.get.call(this); }, set(v) { d.set.call(this, Math.max(v, Q)); } }); cv.style.imageRendering = 'pixelated'; }
+    }
     const R = rng(th.id.length * 977 + th.id.charCodeAt(0) * 131 + th.id.charCodeAt(th.id.length - 1));
     let W = 1, H = 1, dpr = 1, parts = [], darkNow = null, raf = 0, last = 0, t0 = 0, stopped = false, frames = 0, sum = 0, max = 0, bursts = [], nextBurst = 1.5;
-    const aK = (normal ? 1 : 0.62) * (mini ? 1.15 : 1);
+    const aK = (normal ? 1 : 0.62) * (mini ? 1.15 : 1) * sK;
     function build() {
       parts = []; const area = mini ? 0.3 : Math.max(0.6, Math.min(1.7, (W * H) / (1366 * 768)));
       (th.parts || []).forEach((sp) => {
@@ -95,9 +112,10 @@
         for (let i = 0; i < n; i++) parts.push({ sp, x: R(), y: R(), s: (sp.size[0] + R() * (sp.size[1] - sp.size[0])) * (mini ? 0.62 : 1), v: (sp.speed || 0) * (0.65 + R() * 0.7), ph: R() * TAU, rot: R() * TAU, vr: (R() - 0.5) * 0.9, c: Math.floor(R() * 99), dir: R() < 0.5 ? -1 : 1 });
       });
     }
-    function size() { const r = host.getBoundingClientRect(); W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height)); dpr = mini ? 1 : Math.min(1.5, window.devicePixelRatio || 1); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); build(); paint(0); }
+    function size() { const r = host.getBoundingClientRect(); W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height)); dpr = Q > 1 ? 1 / Q : mini ? 1 : Math.min(1.5, window.devicePixelRatio || 1); cv.width = Math.max(1, Math.round(W * dpr)); cv.height = Math.max(1, Math.round(H * dpr)); build(); paint(0); }
     function washNow() {
-      const d = isDark(); if (d === darkNow) return; darkNow = d; const g = (d ? th.gradD : th.grad) || [];
+      const d = isDark(); if (d === darkNow) return; darkNow = d; const g = (style && !th.slow ? null : d ? th.gradD : th.grad) || [];   // a style has its own page colour, so the theme's wash is left out
+      if (style) wash.style.opacity = '0.3';
       wash.style.background = g.length ? 'linear-gradient(' + (th.slow ? '120deg' : '180deg') + ',' + g.join(',') + (th.slow ? ',' + g[0] : '') + ')' : 'none';
       if (th.slow) { wash.style.backgroundSize = '300% 300%'; wash.style.animation = reduce ? 'none' : 'tct-slow 90s ease-in-out infinite'; }
     }
@@ -127,7 +145,7 @@
     }
     function paint(dt) {
       const t = reduce ? 3 : t0, dark = isDark(), b = band(); washNow();
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H); ctx.imageSmoothingEnabled = Q === 1; ctx.shadowBlur = style === 'synth' ? (mini ? 4 : 9) : 0;
       for (let i = 0; i < parts.length; i++) {
         const p = parts[i], sp = p.sp; let a = (sp.alpha || 0.5) * aK, yy;
         if (sp.motion === 'fall') { p.y += p.v * dt; p.x += Math.sin(t * 0.5 + p.ph) * 0.006 * dt; p.rot += p.vr * dt * 0.6; if (p.y > 1.06) { p.y = -0.06; p.x = R(); } }
@@ -137,10 +155,12 @@
         if (sp.zone === 'band') yy = b.top + (0.25 + (p.y * 0.55)) * (b.bottom - b.top); else yy = p.y * H;
         if (sp.motion === 'float') yy += Math.sin(t * 0.45 + p.ph) * (mini ? 2 : 5);
         const cols = (dark && sp.colD) || sp.col, col = cols[p.c % cols.length];
-        ctx.save(); ctx.translate((sp.zone === 'band' && !mini ? 0.42 + p.x * 0.4 : p.x) * W, yy);   // band shapes keep to the gap between the date and the clock
-        if (sp.motion === 'fall' && (sp.shape === 'leaf' || sp.shape === 'petal' || sp.shape === 'confetti' || sp.shape === 'pancake')) ctx.rotate(sp.shape === 'pancake' ? Math.sin(p.rot) * 0.25 : p.rot);
+        const px = (sp.zone === 'band' && !mini ? 0.42 + p.x * 0.4 : p.x) * W;
+        ctx.save(); if (Q > 1) ctx.translate(Math.round(px / Q) * Q, Math.round(yy / Q) * Q); else ctx.translate(px, yy);   // band shapes keep to the gap between the date and the clock
+        if (outline) ctx.lineWidth = style === 'chalk' ? 1.7 : 1.3;
+        if (Q === 1 && sp.motion === 'fall' && (sp.shape === 'leaf' || sp.shape === 'petal' || sp.shape === 'confetti' || sp.shape === 'pancake')) ctx.rotate(sp.shape === 'pancake' ? Math.sin(p.rot) * 0.25 : p.rot);
         if (sp.motion === 'drift' && p.dir < 0 && sp.shape !== 'ribbon' && sp.shape !== 'ball') ctx.scale(-1, 1);
-        ctx.globalAlpha = Math.min(0.8, a); ctx.fillStyle = col; ctx.strokeStyle = col; SHAPES[sp.shape](ctx, p.s, p, t, dark); ctx.restore();
+        ctx.globalAlpha = Math.min(0.8, a); ctx.fillStyle = col; ctx.strokeStyle = col; SHAPES[sp.shape](ctx, Q > 1 ? Math.max(p.s * 1.25, Q * 2) : p.s, p, t, dark); ctx.restore();
       }
       if (th.custom === 'fireworks') fireworks(t, dt, dark);
       if (th.deco) deco(t, dark);
@@ -224,5 +244,5 @@
   }
   function parisDay(ms) { try { const p = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(ms)), g = (k) => p.find((x) => x.type === k).value; return g('year') + '-' + g('month') + '-' + g('day'); } catch (e) { const d = new Date(ms); return iso(d.getFullYear(), d.getMonth() + 1, d.getDate()); } }
 
-  window.TCT = { THEMES, byId, CALENDAR, mount, easter, entries, autoEntry, resolve, parisDay, okUrl, addDays };
+  window.TCT = { THEMES, byId, STYLES, byStyle, CALENDAR, mount, easter, entries, autoEntry, resolve, parisDay, okUrl, addDays };
 })();

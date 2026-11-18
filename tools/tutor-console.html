@@ -168,6 +168,88 @@ body[data-deco] .hd { padding-top: 18px; }   /* room for bunting or fairy lights
   html, body { height: auto; } #app { min-height: 0; } .grid { grid-template-columns: 1fr; } .panel { max-height: none; } .nwrap { max-height: 70vh; } .evs { max-height: 60vh; }
   .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } .hd { flex-wrap: wrap; } .qbody.pic { grid-template-columns: 1fr; } .qbody .im { max-height: 34vh; } .opts { grid-template-columns: 1fr; } .res .cols { grid-template-columns: 1fr; } .it { grid-template-columns: 1fr; } .sb .btn { width: 52px; height: 52px; }
 }
+/* ---------- styles (tutor admin: Style). Classic is everything above, untouched; each style below only changes colours, heading fonts, panel edges and the header band.
+   Layout, sizes and positions stay the same. Notices, events and answers keep a plain readable face in every style. Synthwave and Chalkboard are always dark. ---------- */
+body.style-synth .tk-theme, body.style-chalk .tk-theme { display: none; }
+[class*="style-"]:not(.style-classic) .clockbox { --bad: #c0392b; }                       /* the closing-time red is the same strong red in every style */
+[class*="style-"]:not(.style-classic) .clockbox.u3 { background: #b4443a; } [class*="style-"]:not(.style-classic) .clockbox.u4 { background: #bf2f22; } [class*="style-"]:not(.style-classic) .clockbox.u5 { background: #cc1f10; }   /* solid reds, so the white time always reads */
+[class*="style-"]:not(.style-classic) .opt.sel .l { background: var(--bg); color: var(--ink); }
+[class*="style-"]:not(.style-classic) .tile.hot small { color: var(--bg); }
+/* Synthwave */
+body.style-synth, body.style-synth.dark { --bg: #150b33; --card: #1c1042; --ink: #f5eeff; --ink2: #6ee9ff; --line: #50308f; --muted: #c3b3ea; --gold: #ff79da; --soft: #2b1a5c; --good: #5fe6a8; --bad: #ff7584; --warn: #ffcf66; --head: 'Josefin Sans', Inter, sans-serif;
+  background: linear-gradient(#ff5fd20f 1px, transparent 1px) 0 0 / 46px 46px, linear-gradient(90deg, #5ee7ff0d 1px, transparent 1px) 0 0 / 46px 46px, linear-gradient(180deg, #120a2e, #24104f 70%, #3a1560) fixed, #1a0d3d; }
+body.style-synth .panel, body.style-synth .tile, body.style-synth .act .it, body.style-synth .act .cardb, body.style-synth .act .opt { border-color: #7d4fd0; box-shadow: 0 0 0 1px #ff5fd233, 0 0 16px #ff5fd21f; }
+body.style-synth .hd .date { font-family: var(--head); font-weight: 700; letter-spacing: .01em; text-shadow: 0 0 14px #ff5fd2aa, 0 0 2px #ff5fd2; }
+body.style-synth #clockbox:not(.u3):not(.u4):not(.u5) .t, body.style-synth #clockbox .t { font-family: var(--head); font-weight: 700; }
+body.style-synth #clockbox:not(.u3):not(.u4):not(.u5):not(.shut) .t { text-shadow: 0 0 14px #5ee7ffaa, 0 0 2px #5ee7ff; }
+body.style-synth .ph h2, body.style-synth .tile b, body.style-synth .ah h2, body.style-synth .kick { font-family: var(--head); }
+body.style-synth .ph h2, body.style-synth .kick { text-shadow: 0 0 10px #ff5fd288; }
+body.style-synth .tile svg { color: var(--gold); } body.style-synth .tile.hot { background: #ff79da; border-color: #ff79da; color: #1a0b33; } body.style-synth .tile.hot svg, body.style-synth .tile.hot small { color: #1a0b33; }
+body.style-synth .banner { background: linear-gradient(90deg, #3a1560, #1c2a6b), #2a1f66; color: #fff; box-shadow: 0 0 0 1px #5ee7ff55, 0 0 14px #5ee7ff22; } body.style-synth .banner .tag { color: #1a0b33; }
+body.style-synth .hd::before { content: ''; position: absolute; z-index: -1; left: 57%; bottom: 0; width: clamp(110px, 12vw, 190px); aspect-ratio: 2 / 1; border-radius: 999px 999px 0 0; opacity: .5;
+  background: repeating-linear-gradient(180deg, transparent 0 9%, #150b33 9% 13%), linear-gradient(180deg, #ffd166, #ff79da 60%, #b23cff); -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent); mask-image: linear-gradient(180deg, #000 55%, transparent); }
+body.style-synth .hd { position: relative; isolation: isolate; }
+/* Pixel / 8-bit */
+body.style-pixel { --bg: #e4e0cd; --card: #fffdf3; --ink: #1a1c2c; --ink2: #29366f; --line: #1a1c2c; --muted: #454a63; --gold: #a3324a; --soft: #dfe5f2; --good: #1c6e3a; --bad: #b13e53; --warn: #8f5a00; --radius: 0px; --head: 'Press Start 2P', monospace;
+  background: linear-gradient(45deg, #1a1c2c0a 25%, transparent 25% 75%, #1a1c2c0a 75%) 0 0 / 8px 8px, linear-gradient(45deg, #1a1c2c0a 25%, transparent 25% 75%, #1a1c2c0a 75%) 4px 4px / 8px 8px, #e4e0cd; }
+body.style-pixel.dark { --bg: #1a1c2c; --card: #262b44; --ink: #f4f4f4; --ink2: #73eff7; --line: #94b0c2; --muted: #c0cddb; --gold: #ffcd75; --soft: #333c57; --good: #a7f070; --bad: #ff8a9a; --warn: #ffcd75;
+  background: linear-gradient(45deg, #ffffff08 25%, transparent 25% 75%, #ffffff08 75%) 0 0 / 8px 8px, linear-gradient(45deg, #ffffff08 25%, transparent 25% 75%, #ffffff08 75%) 4px 4px / 8px 8px, #1a1c2c; }
+body.style-pixel *, body.style-pixel *::before { border-radius: 0 !important; }
+body.style-pixel .panel, body.style-pixel .tile { border: 4px solid var(--line); box-shadow: 5px 5px 0 color-mix(in srgb, var(--ink) 28%, transparent); }
+body.style-pixel .btn, body.style-pixel .act .opt, body.style-pixel .act .cardb, body.style-pixel .act .it, body.style-pixel .dot, body.style-pixel .wt, body.style-pixel .key { box-shadow: 3px 3px 0 color-mix(in srgb, var(--ink) 30%, transparent); border-color: var(--line); }
+body.style-pixel .btn { outline: 2px solid var(--line); outline-offset: -2px; }
+body.style-pixel .banner { border: 4px solid var(--line); box-shadow: 5px 5px 0 color-mix(in srgb, var(--ink) 28%, transparent); }
+body.style-pixel .ph { border-bottom-width: 4px; }
+/* Press Start 2P is only crisp at multiples of 8px, so its sizes go in steps; the line heights keep the header the same height as Classic */
+body.style-pixel .hd .date { font: 400 16px/calc(1.05 * clamp(30px, 3.5vw, 62px)) var(--head); letter-spacing: 0; -webkit-font-smoothing: none; } body.style-pixel .hd .date small { line-height: 1.2; }
+body.style-pixel #clockbox .t { font: 400 24px/clamp(34px, 4vw, 70px) var(--head); -webkit-font-smoothing: none; }
+@media (min-width: 1100px) { body.style-pixel .hd .date { font-size: 24px; } body.style-pixel #clockbox .t { font-size: 32px; } }
+@media (min-width: 1700px) { body.style-pixel .hd .date { font-size: 32px; } body.style-pixel #clockbox .t { font-size: 40px; } body.style-pixel .tile b { font-size: 12px !important; } body.style-pixel .ph h2 { font-size: 16px !important; } }
+body.style-pixel .ph h2, body.style-pixel .kick { font-family: var(--head); font-weight: 400; letter-spacing: 0; font-size: 12px; line-height: 1.6; }
+body.style-pixel .kick { font-size: 16px; }
+body.style-pixel .tile b { font: 400 8px/1.6 var(--head); word-spacing: -.35em; } body.style-pixel .tile { padding: 8px 4px; gap: 3px; } body.style-pixel .ah h2 { font: 400 16px/1.5 var(--head); }
+body.style-pixel .tile svg { shape-rendering: crispEdges; }
+/* Chalkboard */
+body.style-chalk, body.style-chalk.dark { --bg: #24493b; --card: #1d3d31; --ink: #f6f3e7; --ink2: #ffe38a; --line: #6f9482; --muted: #cfdcd2; --gold: #ffd98a; --soft: #2d5646; --good: #a8ec9c; --bad: #ffa397; --warn: #ffd98a; --head: 'Patrick Hand', 'Gloria Hallelujah', cursive; --serif: 'Patrick Hand', Georgia, serif;
+  background: radial-gradient(circle at 20% 30%, #ffffff0d 0 1px, transparent 1.6px) 0 0 / 7px 9px, radial-gradient(circle at 70% 60%, #ffffff0a 0 1px, transparent 1.6px) 0 0 / 13px 11px, linear-gradient(100deg, #ffffff08, transparent 30%, #ffffff06 55%, transparent 80%), #24493b; }
+body.style-chalk::after { content: ''; position: fixed; inset: 0; z-index: 39; pointer-events: none; box-shadow: inset 0 0 0 6px #8a5a33, inset 0 0 0 8px #54361c, inset 0 0 14px 8px #0005; }
+body.style-chalk .panel, body.style-chalk .tile { border: 1.5px solid #f6f3e766; box-shadow: none; }
+body.style-chalk .hd .date { font: 400 clamp(34px, 3.9vw, 70px)/.94 var(--head); letter-spacing: .01em; } body.style-chalk .hd .date small { font-family: var(--head); font-weight: 400; letter-spacing: .1em; font-size: clamp(14px, 1.1vw, 19px); line-height: 1.1; }
+body.style-chalk #clockbox .t { font: 400 clamp(38px, 4.5vw, 78px)/.89 var(--head); }
+body.style-chalk .ph h2, body.style-chalk .kick { font-family: var(--head); font-weight: 400; letter-spacing: .1em; font-size: clamp(16px, 1.28vw, 22px); line-height: 1.02; } body.style-chalk .kick { font-size: clamp(17px, 1.7vw, 32px); }
+body.style-chalk .tile b { font: 400 clamp(16px, 1.36vw, 24px)/1.02 var(--head); } body.style-chalk .ah h2 { font-family: var(--head); font-weight: 400; }
+body.style-chalk .md h2, body.style-chalk .md h3 { font-weight: 400; letter-spacing: .01em; } body.style-chalk .md h3 { color: var(--ink2); } body.style-chalk .md mark { background: color-mix(in srgb, var(--warn) 20%, transparent); }
+body.style-chalk .banner { background: #173328; color: #f6f3e7; box-shadow: 0 0 0 1.5px #f6f3e755 inset; } body.style-chalk .tile.hot { background: #ffe38a; border-color: #ffe38a; color: #1d3d31; } body.style-chalk .tile.hot svg, body.style-chalk .tile.hot small { color: #1d3d31; }
+body.style-chalk .act .bigq, body.style-chalk .act .qt, body.style-chalk .act .ans, body.style-chalk .act .score, body.style-chalk .clockbox .t, body.style-chalk .ah .clockbox .t { font-family: 'Source Serif 4', Georgia, serif; }
+body.style-chalk #clockbox .t { font-family: var(--head); }
+/* Notebook: like the D&T workbooks */
+body.style-notebook { --bg: #f4f1e6; --card: #fffefb; --ink: #1b2a6b; --ink2: #1f3fae; --line: #c3cfe6; --muted: #46527a; --gold: #b83227; --soft: #edf1fb; --good: #1c7a45; --bad: #b83227; --warn: #8a5a00; --head: Caveat, 'Patrick Hand', cursive;
+  background: repeating-linear-gradient(180deg, transparent 0 31px, #c9d6ee 31px 32px), #f4f1e6; }
+body.style-notebook.dark { --bg: #0f1626; --card: #151e33; --ink: #e3e9ff; --ink2: #9db4ff; --line: #2f3d63; --muted: #aab4d0; --gold: #ff9c8c; --soft: #1e2942; --good: #5fd08a; --bad: #ff8f80; --warn: #f0b83a;
+  background: repeating-linear-gradient(180deg, transparent 0 31px, #24304f 31px 32px), #0f1626; }
+body.style-notebook .panel { background: linear-gradient(90deg, transparent 0 10px, color-mix(in srgb, var(--gold) 45%, transparent) 10px 11.5px, transparent 11.5px), var(--card); }
+body.style-notebook .hd .date { font: 700 clamp(40px, 4.6vw, 82px)/.8 var(--head); letter-spacing: 0; } body.style-notebook .hd .date small { line-height: 1.2; }
+body.style-notebook #clockbox .t { font: 700 clamp(44px, 5.2vw, 90px)/.77 var(--head); }
+body.style-notebook .ph h2, body.style-notebook .kick { font-family: var(--head); font-weight: 700; letter-spacing: .04em; text-transform: none; font-size: clamp(20px, 1.65vw, 28px); line-height: .78; } body.style-notebook .kick { font-size: clamp(22px, 2.2vw, 40px); line-height: 1; }
+body.style-notebook .tile b { font: 700 clamp(19px, 1.62vw, 28px)/.86 var(--head); } body.style-notebook .ah h2 { font: 700 clamp(26px, 2.4vw, 40px)/1 var(--head); }
+body.style-notebook .md h2, body.style-notebook .md h3 { font-family: var(--head); font-weight: 700; font-size: 1.5em; line-height: 1; } body.style-notebook .md h3 { font-size: 1.3em; }
+/* Newspaper */
+body.style-news { --bg: #efe9d9; --card: #f8f4e7; --ink: #151515; --ink2: #151515; --line: #2a2a2a; --muted: #4a4741; --gold: #8f1d1d; --soft: #e5dfcd; --good: #17603a; --bad: #9b1c1c; --warn: #7a4e00; --radius: 2px; background: #efe9d9; }
+body.style-news.dark { --bg: #121212; --card: #1b1b1b; --ink: #f1ede2; --ink2: #f1ede2; --line: #8a8578; --muted: #beb9ac; --gold: #ff9288; --soft: #2a2a28; --good: #6fd39a; --bad: #ff8a80; --warn: #e8b84a; background: #121212; }
+body.style-news .panel { border: 0; border-top: 4px double var(--line); border-bottom: 1px solid var(--line); box-shadow: -7px 0 0 -6px var(--line), 7px 0 0 -6px var(--line); }
+body.style-news .tile { border-color: var(--line); } body.style-news .ph { border-bottom-color: var(--line); }
+body.style-news .hd { background: linear-gradient(var(--line), var(--line)) bottom / 100% 1px no-repeat; }
+body.style-news .hd .date { font-weight: 700; letter-spacing: -.02em; } body.style-news .ph h2, body.style-news .kick, body.style-news .tile b { font-family: var(--serif); letter-spacing: .12em; } body.style-news .tile b { letter-spacing: 0; font-weight: 700; }
+body.style-news .btn, body.style-news .act .opt, body.style-news .act .cardb, body.style-news .act .it { border-radius: 2px; } body.style-news .tile svg { color: var(--gold); }
+body.style-news .banner { border-radius: 0; }
+/* High contrast (accessibility): black and white, bold, no texture */
+body.style-hc { --bg: #ffffff; --card: #ffffff; --ink: #000000; --ink2: #000000; --line: #000000; --muted: #1f1f1f; --gold: #000000; --soft: #ffffff; --good: #005a1e; --bad: #a40000; --warn: #6b4300; --radius: 6px; background: #fff; }
+body.style-hc.dark { --bg: #000000; --card: #000000; --ink: #ffffff; --ink2: #ffffff; --line: #ffffff; --muted: #f0f0f0; --gold: #ffe600; --soft: #000000; --good: #7dff9b; --bad: #ff8080; --warn: #ffd24d; background: #000; }
+body.style-hc .panel, body.style-hc .tile, body.style-hc .act .opt, body.style-hc .act .cardb, body.style-hc .act .it { border: 2px solid var(--line); } body.style-hc .act .opt { border-width: 3px; }
+body.style-hc .btn { box-shadow: 0 0 0 2px var(--line) inset; } body.style-hc .ev .cal, body.style-hc .hrow .track, body.style-hc .opt .l { box-shadow: 0 0 0 2px var(--line) inset; }
+body.style-hc .md, body.style-hc .ev .dt, body.style-hc .tile small, body.style-hc .ph .upd, body.style-hc .help { font-weight: 600; } body.style-hc .ev .tt, body.style-hc .tile b, body.style-hc .hd .date, body.style-hc .ph h2 { font-weight: 800; } body.style-hc .md a { color: inherit; text-decoration-thickness: 2px; }
+body.style-hc .tile.hot small, body.style-hc .tile.hot svg { color: var(--bg); } body.style-hc.dark .tile.hot small, body.style-hc.dark .tile.hot svg { color: #000; } body.style-hc.dark .banner .tag { color: #000; }
+body.style-hc .md mark { background: none; outline: 2px solid var(--ink); outline-offset: 1px; }
 </style>
 </head>
 <body>
@@ -211,6 +293,7 @@ const TEST_BACKEND = LOCAL ? params.get('backend') : null;             // testin
 const BACKEND = TEST_BACKEND || (window.WORKBOOKS && WORKBOOKS.backend) || '';
 const PREVIEW = /^\d{4}-\d{2}-\d{2}$/.test(params.get('day') || '') ? params.get('day') : '';   // admin preview of another day
 const PREVIEW_THEME = (() => { try { const t = params.get('theme'); return t ? JSON.parse(t) : null; } catch (e) { return null; } })();   // admin "Preview" of a background, not saved
+const URL_STYLE = params.get('style');                                  // preview of a style (tutor admin), e.g. ?style=pixel
 let clockOffset = 0;                                                    // testing only: a pretend device clock
 if (LOCAL && params.get('clock')) { const t = new Date(params.get('clock')).getTime(); if (!isNaN(t)) clockOffset = t - Date.now(); }
 const now = () => Date.now() + clockOffset;
@@ -239,7 +322,8 @@ async function post(body) {
 function drawDate() {
   const d = dateOf(DAY);
   $('#date').innerHTML = '<small>The British School of Paris · Tutor time</small>' + esc(d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }));
-  $('#prev').hidden = !PREVIEW && !PREVIEW_THEME; if (PREVIEW || PREVIEW_THEME) $('#prev').textContent = PREVIEW ? 'Preview: this is how the board will look on ' + d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Preview of the background: it is not saved until you press Save in tutor admin';
+  $('#prev').hidden = (!PREVIEW && !PREVIEW_THEME) || params.get('embed') === '1';   // embed=1: the small preview inside tutor admin
+  if (PREVIEW || PREVIEW_THEME) $('#prev').textContent = PREVIEW ? 'Preview: this is how the board will look on ' + d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Preview of the background: it is not saved until you press Save in tutor admin';
 }
 function closeAt() { const q = data && data.quiz; if (!q || q.date !== DAY) return 0; const m = /^(\d{2}):(\d{2})$/.exec(q.closes || '09:00'), d = dateOf(DAY); d.setHours(+m[1], +m[2], 0, 0); return d.getTime(); }
 const quizClosed = () => { const c = closeAt(); return !!c && now() >= c; };
@@ -257,12 +341,21 @@ function drawBanner() {
 }
 
 // ---------- the background behind the panels (set in tutor admin; which theme applies today is worked out here, by the date in Paris) ----------
-let bg = null, bgKey = '';
+let bg = null, bgKey = '', styleNow = '';
+// the look of the board (tutor admin: Style). Classic adds nothing; Synthwave and Chalkboard are always dark.
+function applyStyle() {
+  const th = PREVIEW_THEME || (data && data.theme) || {}, want = TCT.byStyle[URL_STYLE] ? URL_STYLE : TCT.byStyle[th.style] ? th.style : 'classic';
+  if (want === styleNow) return;
+  if (styleNow) document.body.classList.remove('style-' + styleNow);
+  styleNow = want; document.body.classList.add('style-' + want); document.body.classList.toggle('dark', !!TCT.byStyle[want].dark || !!TK.store('dark', false));
+  bgKey = '';
+}
 function applyTheme() {
-  const th = PREVIEW_THEME || (data && data.theme) || null, r = TCT.resolve(th, PREVIEW || TCT.parisDay(now())), key = JSON.stringify(r);
+  applyStyle();
+  const th = PREVIEW_THEME || (data && data.theme) || null, r = TCT.resolve(th, PREVIEW || TCT.parisDay(now())), key = styleNow + JSON.stringify(r);
   if (key === bgKey) return; bgKey = key;
   const host = $('#bgfx'), at = $('#bgattr'); if (bg) bg.stop(); bg = null; host.textContent = ''; at.hidden = true; document.body.dataset.bg = r.id; if (r.kind === 'theme' && /^(bunting|lights)$/.test(TCT.byId[r.id].deco || '')) document.body.dataset.deco = '1'; else delete document.body.dataset.deco;
-  if (r.kind === 'theme') bg = TCT.mount(host, r.id, { intensity: r.intensity, paused: () => !$('#act').hidden, band: () => { const b = $('.hd').getBoundingClientRect(); return { top: b.top - 6, bottom: b.bottom + 4 }; } });
+  if (r.kind === 'theme') bg = TCT.mount(host, r.id, { intensity: r.intensity, style: styleNow, paused: () => !$('#act').hidden, band: () => { const b = $('.hd').getBoundingClientRect(); return { top: b.top - 6, bottom: b.bottom + 4 }; } });
   else if (r.kind === 'image') {   // a soft, dimmed picture: only its address is stored
     const d = document.createElement('div'); d.className = 'img'; d.style.backgroundImage = 'url("' + r.url + '")'; d.style.opacity = String(r.strength / 100); if (r.blur) d.style.filter = 'blur(14px)'; host.appendChild(d);
     if (r.attribution) { at.textContent = r.attribution; at.hidden = false; }

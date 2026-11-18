@@ -51,6 +51,8 @@ details > summary { cursor: pointer; font-weight: 600; min-height: 44px; display
 .pk { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; margin-top: 8px; } .pk button { border: 3px solid transparent; border-radius: 10px; padding: 0; overflow: hidden; cursor: pointer; background: var(--soft); aspect-ratio: 4 / 3; } .pk button.on { border-color: var(--ink2); } .pk img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ipv { position: relative; height: 150px; border-radius: 12px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); margin-top: 12px; display: grid; place-items: center; } .ipv .im { position: absolute; inset: -12px; background-size: cover; background-position: center; } .ipv .pan { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 18px; text-align: center; } .ipv .pan b { display: block; font: 600 18px var(--serif); } .ipv .pan span { color: var(--muted); font-size: 13.5px; }
 .hint { color: var(--muted); font-size: 14.5px; margin: 10px 0 0; }
+.spw { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; } .spw > div:first-child { flex: 1; min-width: 220px; max-width: 360px; }
+.sprev { width: 328px; height: 185px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; flex: none; background: var(--soft); max-width: 100%; } .sprev iframe { width: 1366px; height: 768px; border: 0; transform: scale(.2402); transform-origin: 0 0; pointer-events: none; display: block; }
 @media (max-width: 560px) { .ce { grid-template-columns: 1fr; } .cd { justify-content: flex-start; padding-left: 34px; } .tg { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 footer { font-size: 13px; color: var(--muted); text-align: center; padding: 0 16px 14px; line-height: 1.4; }
 #nx.drop { outline: 3px dashed var(--blue, #2b4c9b); outline-offset: 2px; background: color-mix(in srgb, var(--blue, #2b4c9b) 6%, transparent); }
@@ -136,15 +138,17 @@ async function reload(day) {
 async function start() {
   app.innerHTML = '<p class="lead" style="text-align:center;margin-top:8vh"><span class="spin"></span>Loading…</p>';
   try { if (!(await reload())) return; } catch (e) { app.innerHTML = `<div class="narrow card" style="box-shadow:none;border:1px solid var(--line)"><h2>Could not load</h2><p class="lead">${NET}</p><button class="btn blue" id="again">Try again</button></div>`; $('#again').onclick = start; return; }
-  app.innerHTML = `<section class="card links" id="top"></section><section class="card" id="sBanner"></section><section class="card" id="sNotices"></section><section class="card" id="sEvents"></section><section class="card" id="sScores"></section><section class="card" id="sHouses"></section><section class="card" id="sTheme"></section><section class="card" id="sMore"></section>`;
-  drawTop(); drawBanner(); drawNotices(); drawEvents(); drawScores(); drawHouses(); drawTheme(); drawMore();
+  app.innerHTML = `<section class="card links" id="top"></section><section class="card" id="sBanner"></section><section class="card" id="sNotices"></section><section class="card" id="sEvents"></section><section class="card" id="sScores"></section><section class="card" id="sHouses"></section><section class="card" id="sStyle"></section><section class="card" id="sTheme"></section><section class="card" id="sMore"></section>`;
+  drawTop(); drawBanner(); drawNotices(); drawEvents(); drawScores(); drawHouses(); drawStyle(); drawTheme(); drawMore();
 }
 async function refresh(parts) { try { if (!(await reload())) return; } catch (e) { return; } (parts || []).forEach((f) => f()); }
 function drawTop() {
   $('#top').innerHTML = `<a class="btn blue" id="pvw" target="_blank" rel="noopener" href="#">Preview the console ↗</a><a class="btn" href="${esc(withBackend('house-quiz-admin.html'))}">Wednesday quiz admin →</a><span class="st" style="margin-left:auto">Today is ${esc(nice(S.today, { weekday: 'long', day: 'numeric', month: 'long' }))}</span>`;
   setPreviewLink();
 }
-function setPreviewLink() { const a = $('#pvw'); if (a) a.href = withBackend('tutor-console.html' + (noticeDay && noticeDay !== S.today ? '?day=' + noticeDay : '')); }
+function setPreviewLink() { const a = $('#pvw'); if (a) a.href = withBackend('tutor-console.html?style=' + encodeURIComponent(myStyle()) + (noticeDay && noticeDay !== S.today ? '&day=' + noticeDay : '')); }
+// the chosen style: from the server once the script knows about styles; until then from this device (so the preview works straight away)
+function myStyle() { const s = (TH && TH.style) || (S && S.theme && S.theme.style) || TK.store('tutor.style', 'classic'); return TCT.byStyle[s] ? s : 'classic'; }
 
 // ---------- banner ----------
 function drawBanner() {
@@ -328,13 +332,13 @@ function drawHouses() {
 // ---------- background (themes) ----------
 const COMMONS = (LOCAL && params.get('commons')) /* testing only */ || 'https://commons.wikimedia.org/w/api.php';
 let TH = null, minis = [], miniIO = null, picks = [], pickMsg = '';
-const themeDefaults = (t) => Object.assign({ mode: 'plain', themeId: 'snow', until: '', intensity: 'subtle', customUrl: '', attribution: '', strength: 25, blur: true }, JSON.parse(JSON.stringify(t || {})), { calendar: Object.assign({ set: {}, custom: [] }, JSON.parse(JSON.stringify((t && t.calendar) || {}))) });
+const themeDefaults = (t) => Object.assign({ style: TCT.byStyle[TK.store('tutor.style', 'classic')] ? TK.store('tutor.style', 'classic') : 'classic', mode: 'plain', themeId: 'snow', until: '', intensity: 'subtle', customUrl: '', attribution: '', strength: 25, blur: true }, JSON.parse(JSON.stringify(t || {})), { calendar: Object.assign({ set: {}, custom: [] }, JSON.parse(JSON.stringify((t && t.calendar) || {}))) });
 const dm = (md) => (/^\d{2}-\d{2}$/.test(md || '') ? md.slice(3) + '/' + md.slice(0, 2) : '');             // 'MM-DD' -> 'DD/MM'
 const md = (v) => { const m = /^\s*(\d{1,2})\s*[\/.\- ]\s*(\d{1,2})\s*$/.exec(v || ''); if (!m || +m[1] < 1 || +m[1] > 31 || +m[2] < 1 || +m[2] > 12) return ''; return pad(+m[2]) + '-' + pad(+m[1]); };
 function stopMinis() { minis.forEach((m) => m.stop()); minis = []; if (miniIO) miniIO.disconnect(); miniIO = null; }
 function miniPreviews(root) {   // small live previews, running only while they are on screen
   const live = new Map();
-  const on = (el) => { if (live.has(el)) return; const m = TCT.mount(el, el.dataset.th, { mini: true, intensity: 'normal' }); live.set(el, m); minis.push(m); };
+  const on = (el) => { if (live.has(el)) return; const m = TCT.mount(el, el.dataset.th, { mini: true, intensity: 'normal', style: TH ? TH.style : 'classic', dark: () => document.body.classList.contains('dark') || !!(TH && TCT.byStyle[TH.style] && TCT.byStyle[TH.style].dark) }); live.set(el, m); minis.push(m); };
   const off = (el) => { const m = live.get(el); if (m) { m.stop(); live.delete(el); minis = minis.filter((x) => x !== m); } };
   if (!window.IntersectionObserver) { root.querySelectorAll('.mini').forEach(on); return; }
   miniIO = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? on(e.target) : off(e.target))), { rootMargin: '60px' });
@@ -347,6 +351,36 @@ async function commonsSearch(q) {
   const pages = (j.query && j.query.pages) || [], text = (h) => { const d = new DOMParser().parseFromString('<p>' + String(h || '') + '</p>', 'text/html'); return (d.body.textContent || '').replace(/\s+/g, ' ').trim(); };
   return (Array.isArray(pages) ? pages : Object.values(pages)).map((pg) => { const ii = pg.imageinfo && pg.imageinfo[0]; if (!ii || !TCT.okUrl(ii.thumburl) || ii.width < 600) return null; const m = ii.extmetadata || {}, v = (k) => (m[k] && m[k].value) || '', artist = text(v('Artist')).slice(0, 50) || 'see Commons page', lic = text(v('LicenseShortName')).slice(0, 24); return { u: ii.thumburl, s: ii.thumburl.replace(/\/\d+px-/, '/330px-'), c: ('Photo: ' + artist + (lic ? ' · ' + lic : '') + ' · Wikimedia Commons').slice(0, 140) }; }).filter(Boolean);
 }
+// ---------- style (the look of the board) ----------
+let pvTimer = null, pvUrl = '';
+function updatePreview() {   // the small live board: the chosen style with the chosen background
+  const f = $('#spv'); if (!f || !TH) return; const u = withBackend('tutor-console.html?embed=1&style=' + encodeURIComponent(TH.style) + '&theme=' + encodeURIComponent(JSON.stringify(TH)));
+  if (u === pvUrl) return; pvUrl = u; clearTimeout(pvTimer); pvTimer = setTimeout(() => { f.src = u; }, f.getAttribute('src') ? 400 : 0);
+}
+async function saveTheme(btn, st, okText) {
+  const j = await act(btn, st, { a: 'tctheme', theme: TH }); if (!j) return false;
+  const kept = j.theme && j.theme.style === TH.style; TK.save('tutor.style', TH.style);
+  S.theme = j.theme; TH = themeDefaults(j.theme); drawStyle(); drawTheme(); setPreviewLink();
+  const el = st === $('#sst2') || !$('#thst') ? $('#sst2') : $('#thst'); if (st && st.id === 'sst2') { $('#sst2').className = 'st ok'; $('#sst2').textContent = kept ? 'Saved ✓ The boards pick it up within a few minutes.' : 'Saved on this device ✓'; }
+  else if ($('#thst')) { $('#thst').className = 'st ok'; $('#thst').textContent = okText || 'Saved ✓ The boards pick it up within a few minutes.'; }
+  $('#soldn').hidden = kept;
+  return true;
+}
+function drawStyle() {
+  if (!TH) TH = themeDefaults(S.theme);
+  $('#sStyle').innerHTML = `<h2>Style</h2><p class="lead">The look of the board. The layout and the text sizes stay the same, and the backgrounds below are drawn to match. Classic is the usual look.</p>
+    <div class="spw"><div><label for="tsty">Style</label><select id="tsty">${TCT.STYLES.map((x) => `<option value="${x.id}" ${x.id === TH.style ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
+      <div class="acts"><button class="btn blue" id="ssave">Save style</button><a class="btn" id="spop" target="_blank" rel="noopener" href="#">Open full size ↗</a></div><div class="st" id="sst2" style="margin-top:8px"></div>
+      <p class="hint" id="soldn" hidden>The style is saved on this device, so the preview and the “Preview the console” link show it. The boards will follow once the Apps Script has been republished with the newest Code.gs.</p></div>
+      <div class="sprev" aria-hidden="true"><iframe id="spv" title="Small preview of the board" tabindex="-1"></iframe></div></div>`;
+  pvUrl = '';
+  const link = () => { $('#spop').href = withBackend('tutor-console.html?style=' + encodeURIComponent(TH.style) + '&theme=' + encodeURIComponent(JSON.stringify(TH))); };
+  link(); updatePreview();
+  $('#tsty').onchange = () => { TH.style = $('#tsty').value; TK.save('tutor.style', TH.style); $('#sst2').className = 'st dirty'; $('#sst2').textContent = 'Not saved yet'; link(); updatePreview(); setPreviewLink(); stopMinis(); drawTheme(); };
+  $('#ssave').onclick = () => saveTheme($('#ssave'), $('#sst2'));
+}
+
+// ---------- background (themes) ----------
 function drawTheme() {
   if (!TH) TH = themeDefaults(S.theme);
   stopMinis();
@@ -385,7 +419,7 @@ function drawTheme() {
     <p class="hint" id="tnow"></p>`;
   const tnow = () => { const n2 = TCT.resolve(TH, S.today); $('#tnow').innerHTML = 'On the boards now: <b>' + esc(nm(saved)) + '</b>' + (JSON.stringify(n2) !== JSON.stringify(saved) ? ' · after saving: <b>' + esc(nm(n2)) + '</b>' : '') + (TH.mode === 'auto' ? ' · today is ' + esc(nice(S.today)) : ''); };
   tnow();
-  const root = $('#sTheme'), changed = () => { say('#thst', 'dirty', 'Not saved yet'); tnow(); };
+  const root = $('#sTheme'), changed = () => { say('#thst', 'dirty', 'Not saved yet'); tnow(); updatePreview(); const l = $('#spop'); if (l) l.href = withBackend('tutor-console.html?style=' + encodeURIComponent(TH.style) + '&theme=' + encodeURIComponent(JSON.stringify(TH))); };
   function say(sel, cls, t) { const el = $(sel); if (el) { el.className = 'st ' + cls; el.textContent = t; } }
   root.querySelectorAll('[data-seg] button').forEach((b) => b.onclick = () => { TH[b.parentNode.dataset.seg] = b.dataset.v; drawTheme(); changed(); });
   root.querySelectorAll('.tt').forEach((b) => b.onclick = () => { TH.themeId = b.dataset.id; root.querySelectorAll('.tt').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); changed(); });
@@ -414,9 +448,9 @@ function drawTheme() {
     $('#tbl').onchange = () => { TH.blur = $('#tbl').checked; ipv(); changed(); };
   }
   const ready = () => { if (TH.mode === 'image' && !TCT.okUrl(TH.customUrl)) { say('#thst', 'err', 'Choose a picture or paste its address first.'); return false; } return true; };
-  $('#tsave').onclick = async () => { if (!ready()) return; const j = await act($('#tsave'), $('#thst'), { a: 'tctheme', theme: TH }); if (j) { S.theme = j.theme; TH = themeDefaults(j.theme); drawTheme(); say('#thst', 'ok', 'Saved ✓ The boards pick it up within a few minutes.'); } };
-  $('#tprev').onclick = () => { if (!ready()) return; const u = withBackend('tutor-console.html?theme=' + encodeURIComponent(JSON.stringify(TH))); window.__lastPreview = u; window.open(u, '_blank', 'noopener'); };
-  $('#toff').onclick = async () => { const keep = Object.assign({}, TH, { mode: 'plain' }); const j = await act($('#toff'), $('#thst'), { a: 'tctheme', theme: keep }); if (j) { S.theme = j.theme; TH = themeDefaults(j.theme); drawTheme(); say('#thst', 'ok', 'Background turned off ✓'); } };
+  $('#tsave').onclick = () => { if (ready()) saveTheme($('#tsave'), $('#thst')); };
+  $('#tprev').onclick = () => { if (!ready()) return; const u = withBackend('tutor-console.html?style=' + encodeURIComponent(TH.style) + '&theme=' + encodeURIComponent(JSON.stringify(TH))); window.__lastPreview = u; window.open(u, '_blank', 'noopener'); };
+  $('#toff').onclick = async () => { const keep = Object.assign({}, TH, { mode: 'plain' }); TH = themeDefaults(keep); await saveTheme($('#toff'), $('#thst'), 'Background turned off ✓'); };
 }
 
 // ---------- PIN + automatic notices ----------

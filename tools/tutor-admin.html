@@ -63,8 +63,8 @@ footer { font-size: 13px; color: var(--muted); text-align: center; padding: 0 16
 <footer>Notices, events and house points are saved in the school's Google sheet “Tutor console”. Nothing about students is stored.</footer>
 <script src="kit/tools.js"></script>
 <script src="../workbooks.js"></script>
-<script src="tutor-console-content.js"></script>
-<script src="tutor-console-themes.js"></script>
+<script src="tutor-console-content.js?v=202611180802"></script>
+<script src="tutor-console-themes.js?v=202611180802"></script>
 <script>
 'use strict';
 TK.top('Tutor admin');
@@ -151,7 +151,7 @@ function drawTop() {
 }
 function setPreviewLink() { const a = $('#pvw'); if (a) a.href = withBackend('tutor-console.html?style=' + encodeURIComponent(myStyle()) + (noticeDay && noticeDay !== S.today ? '&day=' + noticeDay : '')); }
 // the chosen style: from the server once the script knows about styles; until then from this device (so the preview works straight away)
-function myStyle() { const s = (TH && TH.style) || (S && S.theme && S.theme.style) || TK.store('tutor.style', 'classic'); return TCT.byStyle[s] ? s : 'classic'; }
+function myStyle() { const s = (TH && TH.style) || (S && S.theme && S.theme.style) || TK.store('tutor.style', 'classic'); return window.TCT && TCT.byStyle && TCT.byStyle[s] ? s : 'classic'; }
 
 // ---------- banner ----------
 function drawBanner() {

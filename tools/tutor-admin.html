@@ -230,7 +230,7 @@ function drawPoster() {
   w.innerHTML = `<h3 style="margin:22px 0 4px">Poster in Coming up <small style="font-weight:500;color:var(--muted)">(optional)</small></h3>
     <p class="lead" style="margin:0 0 10px">Drop in a PDF (for example the countdown to Christmas) or a picture. It shows at the top of the Coming up panel, and tutors can tap it to see it full screen. With no events, it fills the panel.</p>
     <div id="pdz" style="border:2px dashed var(--line);border-radius:12px;padding:14px;text-align:center;color:var(--muted)">
-      <label class="btn blue" style="display:inline-flex;align-items:center">📄 Choose a PDF or picture<input type="file" id="pf" accept="application/pdf,.pdf,image/jpeg,image/png" hidden></label><div style="margin-top:6px">…or drop it here</div></div>
+      <label class="btn blue" style="display:inline-flex;align-items:center">📄 Choose a PDF or picture<input type="file" id="pofile" accept="application/pdf,.pdf,image/jpeg,image/png" hidden></label><div style="margin-top:6px">…or drop it here</div></div>
     ${d ? `<div style="margin-top:12px"><img src="${d.data}" alt="" style="max-width:100%;max-height:420px;border-radius:10px;box-shadow:0 0 0 1px var(--line)">
       ${d.pages > 1 ? `<div class="r" style="margin-top:8px;align-items:center"><label for="pp" style="margin:0">Page</label><select id="pp" style="width:auto">${Array.from({ length: d.pages }, (x, i) => `<option value="${i + 1}"${i + 1 === d.page ? ' selected' : ''}>${i + 1} of ${d.pages}</option>`).join('')}</select></div>` : ''}
       <div class="r" style="margin-top:8px"><div style="flex:2;min-width:180px"><label for="ptt">Caption <small>(optional)</small></label><input id="ptt" type="text" maxlength="80" placeholder="e.g. Countdown to Christmas"></div><div class="fix" style="width:180px"><label for="pun">Show until <small>(optional)</small></label><input id="pun" type="date"></div></div>
@@ -246,7 +246,7 @@ function drawPoster() {
       drawPoster(); const t = $('#ptt'); if (t && !t.value) t.value = file.name.replace(/\.(pdf|jpe?g|png)$/i, '').replace(/[_-]+/g, ' ').slice(0, 80);
     } catch (e) { st.lastElementChild.textContent = 'That file could not be read' + (/password/i.test(e && e.message) ? ' (it has a password).' : '.'); }
   };
-  $('#pf').onchange = () => { take($('#pf').files && $('#pf').files[0]); $('#pf').value = ''; };
+  $('#pofile').onchange = () => { take($('#pofile').files && $('#pofile').files[0]); $('#pofile').value = ''; };
   const dz = $('#pdz'); dz.ondragover = (e) => { e.preventDefault(); dz.style.borderColor = 'var(--blue, #2b4c9b)'; }; dz.ondragleave = () => { dz.style.borderColor = ''; };
   dz.ondrop = (e) => { e.preventDefault(); dz.style.borderColor = ''; take(e.dataTransfer.files && e.dataTransfer.files[0]); };
   if ($('#pp')) $('#pp').onchange = async () => { const n = Number($('#pp').value), keepT = $('#ptt').value, keepU = $('#pun').value; try { const r = await renderPdfPage(posterDraft.file, n); Object.assign(posterDraft, { data: canvasToJpeg(r.canvas), w: r.canvas.width, h: r.canvas.height, page: n }); drawPoster(); $('#ptt').value = keepT; $('#pun').value = keepU; } catch (e) {} };

@@ -329,13 +329,18 @@ let IMG,layers=[],tries=0,pressed=false;const GAP=16;
 function step1(){G.setStep(0);
   IMG={h:grainURL(0),v:grainURL(1),end:endURL(),long:longURL()};
   stage.innerHTML=`<div class="lab"><div class="scene3d"><div class="press" id="press"></div></div>
-  <div class="side"><div class="goal"><b class="big">🏭 Order: 5-ply sheet</b>Build plywood from thin wood sheets called <b>veneers</b>. Tap a layer to turn its grain 90°.</div>
+  <div class="side"><div class="goal"><b class="big">🏭 Order: 5-ply sheet</b>Build plywood from thin wood sheets called <b>veneers</b>. The arrow on each layer shows which way its <b>grain</b> runs. <b>Tap a layer</b> to turn its grain 90°.</div>
   <div class="goal" style="text-align:center"><div class="cnt" id="cnt">2 layers</div></div>
   <div class="tools"><button class="ghost" id="add">➕ Add veneer</button><button class="ghost" id="rem">➖ Remove</button></div></div></div>`;
   layers=[0,0];render1();
   $('#add').onclick=()=>{if(pressed)return;if(layers.length>=9){G.toast('That’s enough layers!','bad');return;}layers.push(0);render1(true);};
   $('#rem').onclick=()=>{if(pressed)return;if(layers.length<=1)return;layers.pop();render1();};
-  panel.innerHTML=`<h2>Build a sheet of plywood</h2><p>Plywood is made of veneers glued together. Get the <b>number of layers</b> and the <b>grain directions</b> right, then press it.</p><button class="cta" id="press-go">🗜️ Glue and press</button>`;
+  panel.innerHTML=`<h2>Build a sheet of plywood</h2><p style="margin-bottom:6px">Plywood is thin <b>veneers</b> glued together with the grain of each layer at <b>90° (right angles)</b> to the one underneath. This is called <b>cross-graining</b>.</p>
+    <ol class="plysteps" style="margin:0 0 10px;padding-left:22px;line-height:1.4">
+      <li><b>➕ Add veneer</b> until you have <b>5 layers</b> (plywood always has an <b>odd</b> number).</li>
+      <li><b>Tap a layer</b> to turn its grain arrow 90°, so the direction <b>swaps every layer</b>: <span aria-hidden="true" style="white-space:nowrap">${['↔','↕','↔','↕','↔'].map((x)=>'<span style="display:inline-grid;place-items:center;width:26px;height:22px;margin:0 1px;border-radius:5px;background:#e8cf9e;color:#633;border:1px solid #a8834e;font-size:14px;font-weight:700;vertical-align:middle">'+x+'</span>').join('')}</span></li>
+      <li>Both <b>outside layers</b> should run the <b>same way</b>. Then glue and press.</li>
+    </ol><button class="cta" id="press-go">🗜️ Glue and press</button>`;
   $('#press-go').onclick=pressIt;}
 function render1(added){const p=$('#press');p.innerHTML='';
   layers.forEach((d,i)=>{const l=document.createElement('div');l.className='ly'+(added&&i===layers.length-1?' new':'');l.style.transform=`translateZ(${(i+1)*GAP}px)`;
@@ -347,7 +352,7 @@ function render1(added){const p=$('#press');p.innerHTML='';
 function pressIt(){if(pressed)return;const n=layers.length;const bad=[];for(let i=1;i<n;i++)if(layers[i]===layers[i-1])bad.push(i);
   let msg=null;
   if(n!==5){msg=n%2===0?`You have <b>${n}</b> layers. Plywood always has an <b>odd</b> number of layers, and this order is for <b>5</b>.`:`You have <b>${n}</b> layers, but the order is for a <b>5-ply</b> sheet.`;}
-  else if(bad.length){msg='Some neighbouring layers have their grain running the <b>same way</b>. Each layer must be at <b>90°</b> to the one next to it.';
+  else if(bad.length){msg='The layers shaking red have their grain running the <b>same way</b> as the layer next to them. <b>Tap one of them</b> to turn it 90°, so the grain swaps direction every layer: across, along, across, along, across.';
     $$('.ly').forEach((l,i)=>{if(bad.includes(i)||bad.includes(i+1))l.classList.add('bad');});setTimeout(()=>$$('.ly').forEach(l=>l.classList.remove('bad')),1600);}
   tries++;
   if(msg){G.toast('Not quite!','bad');panel.innerHTML=`<span class="tag bad">Try again</span><p>${msg}</p><button class="cta" id="press-go">🗜️ Glue and press</button>`;$('#press-go').onclick=pressIt;return;}

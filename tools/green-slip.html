@@ -208,7 +208,7 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
 }
 /* laptop / iPad landscape: photo beside the explanation, Send beside Teacher and Subject, so the slip fits one screen */
 @media (min-width: 1000px) {
-  .expl { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 0 18px; }
+  .expl { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 0 18px; } .expl.nophoto { grid-template-columns: minmax(0, 1fr); }
   .photocol { margin-top: 0; } .photos .b { flex: 1 1 100%; justify-content: center; } .th { width: 60px; height: 60px; }
   .lastrow { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); border-top: 1.5px solid var(--rule); }
   .lastrow .row.two { border-top: 0; grid-template-columns: 1fr 1fr; }
@@ -363,7 +363,7 @@ select { font-family: inherit; padding-right: 40px; cursor: pointer; background-
   $('#school').textContent = CFG.title + ' · ' + CFG.school; $('#subtitle').textContent = CFG.subtitle;
   $('#ticklabel').textContent = CFG.ticks.label;
   $('#reasonlabel').textContent = CFG.reason.label; $('#reason').placeholder = CFG.reason.placeholder || ''; $('#reason').maxLength = CFG.reason.max || 5000;
-  $('#pmax').textContent = CFG.photos.max; if (!CFG.photos.max) document.querySelector('.photocol').hidden = true;
+  $('#pmax').textContent = CFG.photos.max; if (!CFG.photos.max) { document.querySelector('.photocol').hidden = true; document.querySelector('.expl').classList.add('nophoto'); }
   const fieldHTML = (f) => {
     const id = esc(f.id); let list = '';
     if (f.suggest) { const opts = f.suggest === 'classes' ? Object.keys(TK.classes()).sort() : f.suggest; if (opts.length) list = '<datalist id="dl-' + id + '">' + opts.map((o) => '<option value="' + esc(o) + '">').join('') + '</datalist>'; }

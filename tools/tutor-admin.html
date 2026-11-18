@@ -256,6 +256,7 @@ async function pdfToNotices(file) {
     let kind, txt;
     if (BUL.test(t)) { kind = 'li'; const rest = (L.bold ? t : L.md).replace(/^\**\s*/, (m) => m).replace(BUL, '').replace(/^\*\*\s*\*\*/, ''); txt = (L.x - left > body * 1.6 ? '  - ' : '- ') + rest.replace(BUL, ''); }
     else if (/^\d{1,2}[.)]\s+\S/.test(t)) { kind = 'li'; txt = L.md; }
+    else if (/^\d{1,2}([.:]\d{2})?\s*(am|pm)?\s*[-–—]\s*\S/i.test(t) && /^\d{1,2}([.:]\d{2}\s*(am|pm)?|\s*(am|pm))/i.test(t)) { kind = 'li'; txt = '- ' + L.md; }   // "1.30pm – Student Council…": one item per time
     else if ((big || (L.bold && shortish)) && t.length <= 120) { kind = 'h'; txt = (big && L.h >= body * 1.4 && firstH ? '# ' : '## ') + t; firstH = false; }
     else { kind = 'p'; txt = L.md; }
     const last = out[out.length - 1];

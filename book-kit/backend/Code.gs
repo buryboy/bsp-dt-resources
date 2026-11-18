@@ -451,7 +451,7 @@ function greenSlipPost(d) {
   const html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#111">' +
     '<h2 style="color:#1f6b3a;margin:0 0 8px">Pupil Character Strength Referral (green slip)</h2><table style="border-collapse:collapse">' +
     row('Pupil(s)', s.student) + row('Class', s.cls) + row('Subject', s.subject) + row('Date', s.date || when) + row('Teacher', s.teacher) +
-    s.other.map((kv) => row(kv[0], kv[1])).join('') + (s.ticks.length ? row('Character strengths', gsGroup(s.ticks)) : '') + '</table>' +
+    s.other.map((kv) => row(kv[0], kv[1])).join('') + (s.ticks.length ? '<tr><td style="padding:4px 12px 4px 0;color:#555;vertical-align:top"><b>Character strengths</b></td><td style="padding:4px 0">' + gsGroupHtml(s.ticks) + '</td></tr>' : '') + '</table>' +
     '<h3 style="margin:14px 0 4px">Why the referral has been given</h3><p style="margin:0">' + gsEsc(s.reason) + '</p>' +
     (blobs.length ? '<p style="color:#555">' + blobs.length + ' photo' + (blobs.length > 1 ? 's' : '') + ' attached.</p>' : '') + '</div>';
   const text = 'PUPIL CHARACTER STRENGTH REFERRAL (GREEN SLIP)\n\nPupil(s): ' + s.student + '\nClass: ' + s.cls + '\nSubject: ' + s.subject + '\nDate: ' + (s.date || when) + '\nTeacher: ' + s.teacher + '\n' +
@@ -459,6 +459,9 @@ function greenSlipPost(d) {
   MailApp.sendEmail({ to: to, name: 'Green slips', subject: 'Green slip: ' + s.student + (s.cls ? ' (' + s.cls + ')' : '') + ' from ' + s.teacher, body: text, htmlBody: html, attachments: blobs });
   gsBook().getSheets()[0].appendRow([new Date().toISOString(), s.date || when, s.teacher, s.student, s.cls, s.subject, s.ticks.join(', '), s.reason, s.other.map((kv) => kv[0] + ': ' + kv[1]).join(' | '), links.join(' '), to, id]);
   return json({ ok: true, id: id, to: to });
+}
+function gsGroupHtml(ticks) { // one line per strength group, the group (column) name in bold: "<b>Courage:</b> Determination, Honesty"
+  return gsGroup(ticks).split('; ').map((g) => { const i = g.indexOf(': '); return i > 0 ? '<b>' + gsEsc(g.slice(0, i)) + ':</b> ' + gsEsc(g.slice(i + 2)) : gsEsc(g); }).join('<br>');
 }
 function gsGroup(ticks) { // ["Courage: Determination", "Courage: Honesty", "Humanity: Kindness"] -> "Courage: Determination, Honesty; Humanity: Kindness"
   const g = {}, order = [];

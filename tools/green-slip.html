@@ -29,8 +29,11 @@ window.GREEN_SLIP = {
     { id: 'student', at: 'top', label: 'Pupil(s)', send: 'student', type: 'pupils', required: true, placeholder: 'First name and surname', max: 300 },
     { id: 'cls', at: 'top', label: 'Class', send: 'cls', type: 'text', required: true, remember: true, placeholder: 'e.g. 7B', max: 40, suggest: 'classes' },
     { id: 'teacher', at: 'foot', label: 'Teacher', send: 'teacher', type: 'text', required: true, remember: true, placeholder: 'Your name, e.g. Mr Porter', max: 80 },
-    { id: 'subject', at: 'foot', label: 'Subject', send: 'subject', type: 'text', required: true, remember: true, placeholder: 'e.g. Science', max: 60,
-      suggest: ['Art', 'Biology', 'Chemistry', 'Computing', 'Design & Technology', 'Drama', 'Economics', 'English', 'French', 'Geography', 'German', 'History', 'Maths', 'Music', 'PE', 'Physics', 'PSHE', 'Science', 'Spanish', 'Tutor time'] },
+    { id: 'subject', at: 'foot', label: 'Subject', send: 'subject', type: 'select', required: true, remember: true, placeholder: 'Choose a subject…',
+      options: ['Art', 'Biology', 'Business Studies', 'Chemistry', 'Computer Science', 'Design & Technology', 'Drama', 'Economics', 'English', 'English as an Additional Language', 'French',
+        'Geography', 'German', 'History', 'Latin', 'Learning Support', 'Library', 'Mandarin', 'Maths', 'Media Studies', 'Music', 'PE', 'Physics', 'Psychology', 'PSHE', 'Religious Studies',
+        'Science', 'Spanish', 'Tutor time', 'Clubs & activities', 'Trips & visits', 'Other'] },
+    { id: 'kind', at: 'kind', label: 'Referral type', type: 'choice', required: true, options: ['Academic', 'Pastoral', 'Extracurricular'] },
   ],
   ticks: {
     label: 'Reason (please highlight or tick)',
@@ -43,7 +46,7 @@ window.GREEN_SLIP = {
     ],
   },
   reason: { label: 'Brief explanation why referral has been given', placeholder: 'A sentence or two is plenty. Type, or press Dictate and say it.', required: true, max: 5000 },
-  photos: { max: 4, maxPx: 1800, quality: 0.8 },
+  photos: { max: 0, maxPx: 1800, quality: 0.8 },   // max 0 = no photos on the slip (the photo box is hidden)
 };
 </script>
 <style>
@@ -76,9 +79,9 @@ main { max-width: 1100px; margin: 0 auto; padding: 2px 14px 24px; }
 .f { min-width: 0; }
 label.l, .l { display: block; font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 6px; }
 .l small { font-weight: 500; color: var(--sub); margin-left: 6px; }
-input[type=text], input[type=date], input[type=password], input[type=email], textarea, .pup {
+input[type=text], select, input[type=date], input[type=password], input[type=email], textarea, .pup {
   width: 100%; min-height: 48px; font-size: 17px; padding: 10px 12px; border: 1.5px solid var(--fline); border-radius: 9px; background: var(--field); color: var(--text); outline: none; -webkit-appearance: none; appearance: none; }
-input:focus, textarea:focus, .pup:focus-within { border-color: var(--g2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--g2) 25%, transparent); }
+input:focus, select:focus, textarea:focus, .pup:focus-within { border-color: var(--g2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--g2) 25%, transparent); }
 input[type=date] { display: block; min-width: 0; }
 textarea { min-height: 104px; resize: vertical; line-height: 1.4; display: block; }
 .pupwrap { display: flex; gap: 8px; align-items: flex-start; }
@@ -217,6 +220,14 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
   .grp h4 { padding-top: 5px; padding-bottom: 5px; } .band h2 { font-size: 21px; } .band .f input { min-height: 42px; padding-top: 6px; padding-bottom: 6px; } label.l, .l { margin-bottom: 4px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.seg button { min-height: 52px; border-radius: 12px; border: 2px solid var(--fline); background: var(--field); color: var(--text); font: inherit; font-size: 17px; font-weight: 700; cursor: pointer; }
+.seg button.on { background: var(--g); border-color: var(--g); color: var(--paper); box-shadow: 0 2px 8px #1f6b3a40; }
+.seg button:focus-visible { outline: 3px solid #f2c94c; outline-offset: 2px; }
+#kindrow { margin-bottom: 4px; } #kindrow .f { width: 100%; }
+select { font-family: inherit; padding-right: 40px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%232c8a4d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+@media (max-width: 420px) { .seg { grid-template-columns: 1fr; } }
+.photocol[hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -230,6 +241,7 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
     <div id="form">
       <div id="restored"><span>Your unsent slip has been put back.</span><button type="button" id="clear">Clear it</button></div>
       <div class="row two" id="top"></div>
+      <div class="row" id="kindrow"></div>
       <div class="row f" id="tickwrap">
         <div class="l"><span id="ticklabel"></span>:</div>
         <div class="groups" id="ticks"></div>
@@ -351,16 +363,19 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
   $('#school').textContent = CFG.title + ' · ' + CFG.school; $('#subtitle').textContent = CFG.subtitle;
   $('#ticklabel').textContent = CFG.ticks.label;
   $('#reasonlabel').textContent = CFG.reason.label; $('#reason').placeholder = CFG.reason.placeholder || ''; $('#reason').maxLength = CFG.reason.max || 5000;
-  $('#pmax').textContent = CFG.photos.max;
+  $('#pmax').textContent = CFG.photos.max; if (!CFG.photos.max) document.querySelector('.photocol').hidden = true;
   const fieldHTML = (f) => {
     const id = esc(f.id); let list = '';
     if (f.suggest) { const opts = f.suggest === 'classes' ? Object.keys(TK.classes()).sort() : f.suggest; if (opts.length) list = '<datalist id="dl-' + id + '">' + opts.map((o) => '<option value="' + esc(o) + '">').join('') + '</datalist>'; }
     const attrs = ' id="f-' + id + '"' + (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + (f.max ? ' maxlength="' + f.max + '"' : '') + (list ? ' list="dl-' + id + '"' : '') + ' autocapitalize="words" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next"';
     const lab = '<label class="l" for="f-' + id + '">' + esc(f.label) + ':' + (f.required ? '' : '<small>optional</small>') + '</label>';
+    if (f.type === 'select') { const op = ['<option value="">' + esc(f.placeholder || 'Choose…') + '</option>'].concat((f.options || []).map((o) => '<option>' + esc(o) + '</option>')).join('');
+      return '<div class="f" data-f="' + id + '">' + lab + '<select id="f-' + id + '">' + op + '</select><div class="miss">' + esc(f.label) + ' is needed</div></div>'; }
+    if (f.type === 'choice') return '<div class="f" data-f="' + id + '"><div class="l">' + esc(f.label) + ':</div><div class="seg" role="radiogroup" aria-label="' + esc(f.label) + '">' + (f.options || []).map((o) => '<button type="button" role="radio" aria-checked="false" data-ch="' + id + '" data-v="' + esc(o) + '">' + esc(o) + '</button>').join('') + '</div><input type="hidden" id="f-' + id + '"><div class="miss">Choose the ' + esc(f.label.toLowerCase()) + '</div></div>';
     if (f.type === 'pupils') return '<div class="f" data-f="' + id + '">' + lab + '<div class="pupwrap"><div class="pup" id="pup-' + id + '"><input type="text"' + attrs + '></div><button type="button" class="b addp" data-add="' + id + '" title="Add another pupil to this slip">+ Add pupil</button></div><div class="miss" data-miss>' + esc(f.label) + ' is needed</div></div>';
     return '<div class="f" data-f="' + id + '">' + lab + (f.type === 'date' ? '<input type="date" id="f-' + id + '">' : '<input type="text"' + attrs + '>') + list + '<div class="miss">' + esc(f.label) + ' is needed</div></div>';
   };
-  [['header', '#hdr'], ['top', '#top'], ['foot', '#foot']].forEach((p) => { $(p[1]).innerHTML = CFG.fields.filter((f) => (f.at || 'top') === p[0]).map(fieldHTML).join(''); });
+  [['header', '#hdr'], ['top', '#top'], ['kind', '#kindrow'], ['foot', '#foot']].forEach((p) => { $(p[1]).innerHTML = CFG.fields.filter((f) => (f.at || 'top') === p[0]).map(fieldHTML).join(''); });
   $('#ticks').innerHTML = CFG.ticks.groups.map((g) => '<div class="grp"><h4>' + esc(g.name) + '</h4>' + g.items.map((it) => '<label class="tick"><input type="checkbox" value="' + esc(g.name + ': ' + it) + '"><span class="box"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="t">' + esc(it) + '</span></label>').join('') + '</div>').join('');
   $('#tickmiss').textContent = CFG.ticks.min > 1 ? 'Highlight at least ' + CFG.ticks.min + ' strengths' : 'Highlight at least one strength';
   const fin = (id) => document.getElementById('f-' + id), fwrap = (id) => document.querySelector('[data-f="' + id + '"]');
@@ -384,10 +399,13 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
     }
   }
   function paint() {
-    CFG.fields.forEach((f) => { if (isP(f)) { fin(f.id).value = state.pend[f.id] || ''; paintChips(f); } else fin(f.id).value = state.v[f.id] || ''; });
+    CFG.fields.forEach((f) => { if (isP(f)) { fin(f.id).value = state.pend[f.id] || ''; paintChips(f); }
+      else { const el = fin(f.id), v = state.v[f.id] || ''; if (f.type === 'select' && v && ![...el.options].some((o) => o.value === v)) el.add(new Option(v, v)); el.value = v; if (f.type === 'choice') paintChoice(f); } });
     document.querySelectorAll('.tick').forEach((el) => { const cb = el.querySelector('input'), on = state.ticks.indexOf(cb.value) >= 0; el.classList.toggle('on', on); cb.checked = on; });
     $('#reason').value = state.reason; grow(); paintPhotos(); check();
   }
+  function paintChoice(f) { document.querySelectorAll('[data-ch="' + f.id + '"]').forEach((b) => { const on = b.dataset.v === (state.v[f.id] || ''); b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); }); }
+  document.addEventListener('click', (e) => { const b = e.target.closest('[data-ch]'); if (!b) return; const f = CFG.fields.find((x) => x.id === b.dataset.ch); anyTouched = true; state.v[f.id] = state.v[f.id] === b.dataset.v ? '' : b.dataset.v; fin(f.id).value = state.v[f.id]; paintChoice(f); saveDraft(); check(); });
   function grow() { const t = $('#reason'); t.style.height = 'auto'; t.style.height = Math.min(Math.max(t.scrollHeight + 2, 96), 420) + 'px'; }
 
   // ---------- validation ----------
@@ -603,7 +621,7 @@ body.dark #send[aria-disabled=true] { background: #2a332c; color: #7d8a80; }
   }
   $('#newslip').onclick = () => fresh(true);
   $('#clear').onclick = () => { stopDictation(); ldel('draft'); fresh(true); };
-  function where() { const to = lget('to', ''); $('#where').textContent = 'Pressing Send emails this slip' + (to ? ' to ' + to : ' to the school office') + ' and keeps a backup copy (with any photos) in the school Google Drive. Nothing is sent until you press Send. Dictation uses your browser\'s speech service.'; }
+  function where() { const to = lget('to', ''); $('#where').textContent = 'Pressing Send emails this slip' + (to ? ' to ' + to : ' to the school office') + ' and keeps a backup copy in the school Google Drive. Nothing is sent until you press Send. Dictation uses your browser\'s speech service.'; }
 
   // ---------- staff code ----------
   function askCode(msg) { $('#gate').classList.add('on'); $('#codemsg').classList.remove('ok'); $('#codemsg').textContent = msg || ''; $('#code').value = ''; setTimeout(() => $('#code').focus(), 50); }

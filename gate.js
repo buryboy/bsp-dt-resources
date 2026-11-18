@@ -3,6 +3,18 @@
    Not real security: it keeps casual visitors out; anyone who reads the page code could get round it.
    To change the password: put the SHA-256 of the new password (lower case, no spaces) in H. */
 (function () {
+  /* MAINTENANCE: true = every page shows "under maintenance" and nothing else loads or runs (no data is sent or fetched).
+     Set back to false to reopen the site. */
+  var MAINTENANCE = true;
+  if (MAINTENANCE && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+    try { window.stop(); } catch (e) {}
+    document.documentElement.innerHTML = '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>Under maintenance</title>' +
+      '<style>html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#eef4f0;color:#1d2b22;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px;box-sizing:border-box}' +
+      '.c{max-width:460px;background:#fff;border-radius:18px;box-shadow:0 10px 34px #1f4d3622;overflow:hidden;text-align:center}.t{background:#1f4d36;color:#fff;padding:16px 20px;font-weight:700;letter-spacing:.04em;font-size:14px}' +
+      '.b{padding:26px 24px 28px}.i{font-size:44px;line-height:1;margin-bottom:10px}h1{font-size:22px;margin:0 0 8px}p{margin:0;line-height:1.5;color:#4a5a50}</style></head>' +
+      '<body><div class="c" role="main"><div class="t">THE BRITISH SCHOOL OF PARIS</div><div class="b"><div class="i" aria-hidden="true">🛠️</div><h1>Under maintenance</h1><p>These resources are not available at the moment. Please check back later.</p></div></div></body>';
+    return;
+  }
   var H = 'e6148a925a1d24ea191e7960eda136d22716d869639e501911e607e36f1e346d', K = 'bsp-hub-ok';
   if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return; // local testing only
   try { if (localStorage.getItem(K) === H.slice(0, 16)) return; } catch (e) {}

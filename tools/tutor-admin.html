@@ -138,9 +138,9 @@ async function reload(day) {
 async function start() {
   app.innerHTML = '<p class="lead" style="text-align:center;margin-top:8vh"><span class="spin"></span>Loading…</p>';
   try { if (!(await reload())) return; } catch (e) { app.innerHTML = `<div class="narrow card" style="box-shadow:none;border:1px solid var(--line)"><h2>Could not load</h2><p class="lead">${NET}</p><button class="btn blue" id="again">Try again</button></div>`; $('#again').onclick = start; return; }
-  app.innerHTML = `<section class="card links" id="top"></section><section class="card" id="sBanner"></section><section class="card" id="sNotices"></section><section class="card" id="sEvents"></section><section class="card" id="sScores"></section><section class="card" id="sHouses"></section><section class="card" id="sStyle"></section><section class="card" id="sTheme"></section><section class="card" id="sMore"></section>`;
+  app.innerHTML = `<section class="card links" id="top"></section><section class="card" id="sAnn"></section><section class="card" id="sBanner"></section><section class="card" id="sNotices"></section><section class="card" id="sEvents"></section><section class="card" id="sScores"></section><section class="card" id="sHouses"></section><section class="card" id="sStyle"></section><section class="card" id="sTheme"></section><section class="card" id="sMore"></section>`;
   // each section draws on its own: one broken section must never blank the whole page
-  [['top', drawTop], ['sBanner', drawBanner], ['sNotices', drawNotices], ['sEvents', drawEvents], ['sScores', drawScores], ['sHouses', drawHouses], ['sStyle', drawStyle], ['sTheme', drawTheme], ['sMore', drawMore]].forEach(([id, f]) => {
+  [['top', drawTop], ['sAnn', drawAnn], ['sBanner', drawBanner], ['sNotices', drawNotices], ['sEvents', drawEvents], ['sScores', drawScores], ['sHouses', drawHouses], ['sStyle', drawStyle], ['sTheme', drawTheme], ['sMore', drawMore]].forEach(([id, f]) => {
     try { f(); } catch (e) { console.error(id, e); const el = document.getElementById(id); if (el) el.innerHTML += `<p class="st err" style="margin:8px 0 0">This section could not be shown (${esc(String(e && e.message || e)).slice(0, 160)}). Refresh the page; if it stays, send this message to Mr Porter.</p>`; }
   });
 }
@@ -162,6 +162,51 @@ function drawBanner() {
     <div class="acts"><button class="btn blue" id="bs">Save banner</button><button class="btn" id="bc">Clear</button><span class="st${expired ? ' dirty' : ''}" id="bst">${b.text ? (expired ? 'Not showing: it ended on ' + esc(nice(b.until)) : 'Showing now' + (b.until ? ' until ' + esc(nice(b.until)) : '')) : 'No banner'}</span></div>`;
   $('#bs').onclick = async () => { if (await act($('#bs'), $('#bst'), { a: 'tcbanner', text: $('#bt').value.replace(/\s+/g, ' ').trim(), until: $('#bu').value })) refresh([drawBanner]); };
   $('#bc').onclick = async () => { if (await act($('#bc'), $('#bst'), { a: 'tcbanner', text: '', until: '' }, 'Cleared ✓')) refresh([drawBanner]); };
+}
+
+// ---------- the tannoy: record a short message that every open board plays ----------
+const ANN_MAX = 60; let rec = null; // { chunks, mr, stream, t0, timer, blob, url, secs, mime }
+function annMime() { const M = window.MediaRecorder; if (!M) return ''; return ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus'].find((t) => { try { return M.isTypeSupported(t); } catch (e) { return false; } }) || ''; }
+function drawAnn() {
+  const a = S.announcement, live = a && Date.now() - a.at < 15 * 60 * 1000, can = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+  const state = rec && rec.mr && rec.mr.state === 'recording' ? 'rec' : rec && rec.blob ? 'done' : 'idle';
+  $('#sAnn').innerHTML = `<h2>📢 Announcement</h2><p class="lead">Record a short spoken message (up to ${ANN_MAX} seconds). Every open tutor console plays a chime and then your message within about 20 seconds. Boards need their sound on, and someone must have tapped the board once since it was opened. Not for emergencies: use the school's alarm systems for those. Recordings are deleted after 24 hours.</p>
+    ${!can ? '<p class="st err">This browser cannot record sound. Try Chrome, Edge or Safari, and allow the microphone.</p>' : `
+    <div class="acts" style="align-items:center">
+      ${state === 'rec' ? `<button class="btn stop" id="arstop">■ Stop</button><span class="st" id="artime" style="font-variant-numeric:tabular-nums;font-weight:700;color:#c0392b">● Recording 0:00 / 1:00</span>`
+        : `<button class="btn ${state === 'done' ? '' : 'blue'}" id="arrec">● ${state === 'done' ? 'Record again' : 'Record'}</button>`}
+    </div>
+    ${state === 'done' ? `<div style="margin-top:10px"><audio id="arplay" controls src="${rec.url}" style="width:100%;max-width:520px"></audio>
+      <div class="r" style="margin-top:8px"><div style="flex:2;min-width:200px"><label for="artt">Shown on the boards <small>(optional)</small></label><input id="artt" type="text" maxlength="80" placeholder="e.g. Message from Mr Porter"></div></div>
+      <div class="acts"><button class="btn blue" id="arsend">📢 Send to all boards</button><button class="btn" id="arx">Discard</button><span class="st" id="arst">${rec.secs} seconds</span></div></div>` : ''}`}
+    ${a ? `<div class="acts" style="margin-top:10px"><span class="st ${live ? 'ok' : ''}">${live ? 'Playing on boards: sent at ' + esc(hhmm(a.at)) + (a.title ? ' (' + esc(a.title) + ')' : '') : 'Last announcement sent at ' + esc(hhmm(a.at)) + ', no longer shown on the boards'}</span>${live ? '<button class="btn" id="arcan">Stop it</button>' : '<button class="btn" id="arcan">Delete the recording</button>'}<span class="st" id="arcst"></span></div>` : ''}`;
+  if ($('#arrec')) $('#arrec').onclick = annStart;
+  if ($('#arstop')) $('#arstop').onclick = () => annStop();
+  if ($('#arx')) $('#arx').onclick = () => { annReset(); drawAnn(); };
+  if ($('#arsend')) $('#arsend').onclick = () => confirmBox('Send to all boards?', 'Every open tutor console will play this ' + rec.secs + '-second message within about 20 seconds.', 'Send', annSend);
+  if ($('#arcan')) $('#arcan').onclick = async () => { if (await act($('#arcan'), $('#arcst'), { a: 'tcanncancel' }, live ? 'Stopped ✓' : 'Deleted ✓')) { S.announcement = null; setTimeout(drawAnn, 900); } };
+}
+function annReset() { if (rec) { try { clearInterval(rec.timer); } catch (e) {} try { rec.stream && rec.stream.getTracks().forEach((t) => t.stop()); } catch (e) {} if (rec.url) URL.revokeObjectURL(rec.url); } rec = null; }
+async function annStart() {
+  annReset(); let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+  catch (e) { $('#sAnn').insertAdjacentHTML('beforeend', '<p class="st err">The microphone was not allowed. Allow it in the browser (the icon in the address bar) and try again.</p>'); return; }
+  const mime = annMime(), opts = mime ? { mimeType: mime, audioBitsPerSecond: 32000 } : {};
+  let mr; try { mr = new MediaRecorder(stream, opts); } catch (e) { mr = new MediaRecorder(stream); }
+  rec = { chunks: [], mr, stream, t0: Date.now(), mime: mr.mimeType || mime || 'audio/webm' };
+  mr.ondataavailable = (e) => { if (e.data && e.data.size) rec.chunks.push(e.data); };
+  mr.onstop = () => { if (!rec) return; rec.stream.getTracks().forEach((t) => t.stop()); clearInterval(rec.timer); rec.secs = Math.max(1, Math.round((Date.now() - rec.t0) / 1000)); rec.blob = new Blob(rec.chunks, { type: rec.mime.split(';')[0] }); rec.url = URL.createObjectURL(rec.blob); drawAnn(); };
+  mr.start(1000); drawAnn();
+  rec.timer = setInterval(() => { const s = Math.floor((Date.now() - rec.t0) / 1000), el = $('#artime'); if (el) el.textContent = '● Recording ' + Math.floor(s / 60) + ':' + pad2(s % 60) + ' / 1:00'; if (s >= ANN_MAX) annStop(); }, 250);
+}
+function annStop() { if (rec && rec.mr && rec.mr.state === 'recording') rec.mr.stop(); }
+const pad2 = (n) => String(n).padStart(2, '0');
+async function annSend() {
+  const st = $('#arst'); st.className = 'st'; st.innerHTML = '<span class="spin"></span>Sending…';
+  const data = await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result)); fr.readAsDataURL(rec.blob); });
+  const clean = data.replace(/^data:([^;,]+)(;[^,]*)?;base64,/, (m, t) => 'data:' + t + ';base64,');
+  const j = await act($('#arsend'), st, { a: 'tcannounce', data: clean, secs: rec.secs, title: ($('#artt') && $('#artt').value.trim()) || '' }, 'Sent ✓');
+  if (j) { S.announcement = j.announcement; annReset(); drawAnn(); }
 }
 
 // ---------- Coming up poster (a PDF page or a picture, e.g. the countdown to Christmas) ----------

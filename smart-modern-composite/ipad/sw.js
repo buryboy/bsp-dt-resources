@@ -1,0 +1,81 @@
+// Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
+const CACHE = 'ipad-smart-modern-composite-61219283f85c';
+const FILES = [
+ "./",
+ "app.webmanifest",
+ "../../gate.js?h=20eca810",
+ "../../book-kit/icons/smart-modern-composite-180.png",
+ "../../book-kit/book.css?h=32238363",
+ "../config.js?h=e3d45786",
+ "../../book-kit/solo.js?h=7100f701",
+ "../../book-kit/harness.js?h=73af921e",
+ "../../book-kit/sound.js?h=b44355da",
+ "../../book-kit/ink.js?h=179d4440",
+ "../../book-kit/book.js?h=0b6b718a",
+ "../pages/p01-starter.js?h=67a4561e",
+ "../pages/p02-modern.js?h=f9c4eb35",
+ "../pages/p03-smart-pigments.js?h=047a974b",
+ "../pages/p04-sma.js?h=7695bdfe",
+ "../pages/p05-composites.js?h=2e616746",
+ "../pages/p06-tech-textiles.js?h=2ebb7b61",
+ "../pages/p07-sort-it.js?h=68e6618b",
+ "../pages/p08-choose.js?h=81cad279",
+ "../pages/p09-detective.js?h=2c625c77",
+ "../pages/p10-exam-practice.js?h=f36c7a1a",
+ "../pages/p11-exit-quiz.js?h=8501db43",
+ "../manifest.js?h=b40ee309",
+ "../final-quiz.js?h=14b23036",
+ "../../nea-kit/vendor/html2canvas.min.js",
+ "../../nea-kit/vendor/jspdf.umd.min.js",
+ "../../fonts/fonts.css",
+ "../../fonts/files/caveat-latin-ext-wght-normal.woff2",
+ "../../fonts/files/caveat-latin-wght-normal.woff2",
+ "../../fonts/files/fredoka-latin-ext-wght-normal.woff2",
+ "../../fonts/files/fredoka-latin-wght-normal.woff2",
+ "../../fonts/files/gloria-hallelujah-latin-400-normal.woff2",
+ "../../fonts/files/gloria-hallelujah-latin-ext-400-normal.woff2",
+ "../../fonts/files/ibm-plex-mono-latin-400-normal.woff2",
+ "../../fonts/files/ibm-plex-mono-latin-600-normal.woff2",
+ "../../fonts/files/ibm-plex-mono-latin-ext-400-normal.woff2",
+ "../../fonts/files/ibm-plex-mono-latin-ext-600-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-400-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-500-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-600-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-700-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-ext-400-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-ext-500-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-ext-600-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-ext-700-normal.woff2",
+ "../../fonts/files/inter-latin-ext-wght-normal.woff2",
+ "../../fonts/files/inter-latin-wght-normal.woff2",
+ "../../fonts/files/josefin-sans-latin-ext-wght-normal.woff2",
+ "../../fonts/files/josefin-sans-latin-wght-normal.woff2",
+ "../../fonts/files/monoton-latin-400-normal.woff2",
+ "../../fonts/files/monoton-latin-ext-400-normal.woff2",
+ "../../fonts/files/nunito-latin-ext-wght-normal.woff2",
+ "../../fonts/files/nunito-latin-wght-normal.woff2",
+ "../../fonts/files/patrick-hand-latin-400-normal.woff2",
+ "../../fonts/files/patrick-hand-latin-ext-400-normal.woff2",
+ "../../fonts/files/press-start-2p-latin-400-normal.woff2",
+ "../../fonts/files/press-start-2p-latin-ext-400-normal.woff2",
+ "../../fonts/files/source-serif-4-latin-ext-opsz-normal.woff2",
+ "../../fonts/files/source-serif-4-latin-opsz-normal.woff2",
+ "../../fonts/files/space-grotesk-latin-ext-wght-normal.woff2",
+ "../../fonts/files/space-grotesk-latin-wght-normal.woff2",
+ "../../fonts/files/space-mono-latin-400-normal.woff2",
+ "../../fonts/files/space-mono-latin-700-normal.woff2",
+ "../../fonts/files/space-mono-latin-ext-400-normal.woff2",
+ "../../fonts/files/space-mono-latin-ext-700-normal.woff2",
+ "../../book-kit/icons/smart-modern-composite-192.png",
+ "../../book-kit/icons/smart-modern-composite-512.png"
+];
+self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
+self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('ipad-smart-modern-composite-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener('fetch', (e) => {
+  const r = e.request; if (r.method !== 'GET') return;
+  if (r.mode === 'navigate') { // the page itself: newest copy when online, cached copy when not
+    e.respondWith(fetch(r).then((res) => { const cp = res.clone(); caches.open(CACHE).then((c) => c.put('./', cp)); return res; }).catch(() => caches.match('./')));
+    return;
+  }
+  e.respondWith(caches.match(r).then((hit) => hit || fetch(r).then((res) => { if (res.ok && new URL(r.url).origin === location.origin) { const cp = res.clone(); caches.open(CACHE).then((c) => c.put(r, cp)); } return res; })));
+});

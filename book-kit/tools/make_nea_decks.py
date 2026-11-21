@@ -8,7 +8,7 @@ Writes ipad-home/teacher/dt/nea/gcse-<a..f>.html, alevel-<g1..g11>.html and the 
 Each deck: title · what you need to do and why · key terms · what the moderator looks for · a worked example on an
 A3 sheet with numbered notes · weak vs strong · where it goes in the folder · checklist · your turn.
 """
-import html, json, pathlib, sys
+import html, json, pathlib, re, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from nea_gcse import GCSE, CLIENT as GC_CLIENT  # noqa: E402
@@ -17,6 +17,27 @@ import make_home  # noqa: E402
 
 OUT = make_home.HOME / 'teacher/dt/nea'
 E = html.escape
+
+
+ROOT = make_home.ROOT
+HANDIN = ('Each of these is a sheet in your NEA workbook on the iPad. Finished a sheet? Tap **📄 Save sheet**, then **Share / save** and choose **Showbie** to hand it in.')
+
+
+def sheets(rubric):
+    # the workbook's own sheets, so the slides name exactly the pages students fill in
+    s = (ROOT / rubric).read_text()
+    return re.findall(r"id: '([a-z0-9]+)-[a-z-]+', title: '([^']*)', guide: \{ what: '([^']*)'", s)
+
+
+def with_sheets(d, prefix, rows):
+    mine = [(t, w) for k, t, w in rows if k == prefix]
+    if not mine:
+        return d
+    d = dict(d)
+    d['pagesNote'] = HANDIN
+    d['pages'] = mine
+    d['check'] = d['check'] + ['I saved each finished sheet and shared it to **Showbie**']
+    return d
 
 
 def write(name, deck, course):
@@ -37,11 +58,12 @@ def write(name, deck, course):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     rows = {'gcse': [], 'alevel': []}
+    gs, als = sheets('nea-practice/rubric.js'), sheets('nea-alevel/rubric.js')
     for d in GCSE:
-        d = dict(d, theme='sketch'); write(f'gcse-{d["key"]}.html', d, 'AQA GCSE D&T NEA')
+        d = with_sheets(dict(d, theme='sketch'), d['key'], gs); write(f'gcse-{d["key"]}.html', d, 'AQA GCSE D&T NEA')
         rows['gcse'].append((f'gcse-{d["key"]}.html', d['chip'], d['title'], d['facts'][0][1]))
     for d in ALEVEL:
-        d = dict(d, theme='studio'); write(f'alevel-{d["key"]}.html', d, 'Edexcel A level D&T NEA')
+        d = with_sheets(dict(d, theme='studio'), d['key'], als); write(f'alevel-{d["key"]}.html', d, 'Edexcel A level D&T NEA')
         rows['alevel'].append((f'alevel-{d["key"]}.html', d['chip'], d['title'], d['facts'][0][1]))
 
     def lst(r):

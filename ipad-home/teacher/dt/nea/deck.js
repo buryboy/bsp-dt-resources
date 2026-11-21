@@ -42,7 +42,7 @@
       <div class="band">${D.bands.map(([b, t]) => `<div><b>${E(b)}</b><span>${md(t)}</span></div>`).join('')}</div>`, steps: D.look.length };
   }
   function sPages() {
-    return { html: head('where it goes', 'Where it goes in your folder') + `<p class="sub">${md(D.pagesNote)}</p><div class="pages">${D.pages.map((p, i) => `<div class="pg s${i + 1}"><div class="thumb"><span>${i + 1}</span></div><b>${E(p[0])}</b><small>${md(p[1])}</small></div>`).join('')}</div>`, steps: D.pages.length };
+    return { html: head('where it goes', D.pagesNote && D.pagesNote.includes('Showbie') ? 'Where it goes: your workbook sheets' : 'Where it goes in your folder') + `<p class="sub">${md(D.pagesNote)}</p><div class="pages">${D.pages.map((p, i) => `<div class="pg s${i + 1}"><div class="thumb"><span>${i + 1}</span></div><b>${E(p[0])}</b><small>${md(p[1])}</small></div>`).join('')}</div>`, steps: D.pages.length };
   }
   function block(b) {
     const st = `left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px`;

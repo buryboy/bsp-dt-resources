@@ -6,7 +6,9 @@
   /* MAINTENANCE: true = every page shows "under maintenance" and nothing else loads or runs (no data is sent or fetched).
      Set back to false to reopen the site. */
   var MAINTENANCE = true;
-  if (MAINTENANCE && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+  /* The iPad versions of the workbooks (…/ipad/) send and fetch no data at all, so maintenance does not close them. */
+  var NODATA = /\/ipad\/(index\.html)?$/.test(location.pathname);
+  if (MAINTENANCE && !NODATA && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
     try { window.stop(); } catch (e) {}
     document.documentElement.innerHTML = '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>Under maintenance</title>' +
       '<style>html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#eef4f0;color:#1d2b22;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px;box-sizing:border-box}' +

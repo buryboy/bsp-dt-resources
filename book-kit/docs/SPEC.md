@@ -55,3 +55,10 @@ python3 book-kit/tools/shot.py /tmp/x --book <folder> --pages 3 --script "docume
 
 
 **Site password:** every HTML page must load the site password screen as the first thing in `<head>`: `<script src="../gate.js"></script>` (or `gate.js` at the repo root). It is skipped automatically on localhost, so local testing is unaffected.
+
+## iPad version (no sign-in, no data)
+`python3 book-kit/tools/make_solo.py <folder>` writes `<folder>/ipad/` (index.html, app.webmanifest, sw.js).
+The iPad page loads `book-kit/solo.js` after config.js: results server off, name + class only on the cover, answers kept on the device
+under a separate key, and a **Save this page as PDF** box at the end of every page (A4 PDF with name / page / time, shared via the iPad
+share sheet: Showbie, Save to Files). `sw.js` caches every file so it works offline after the first visit (Add to Home Screen).
+Re-run make_solo.py after changing a workbook. `gate.js` lets `/ipad/` pages through the maintenance screen (they send no data).

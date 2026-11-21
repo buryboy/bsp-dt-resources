@@ -303,6 +303,7 @@
     ensureEl(p); if (p.built) return; p.built = true;
     const content = p.el.querySelector('.content');
     try { p.build(makeUI(p, content), content); } catch (e) { console.error(e); content.insertAdjacentHTML('beforeend', `<p class="red">Oops, this page had a problem: ${esc(e.message)}</p>`); }
+    if (C.solo && window.BookSolo && p.id !== 'cover') window.BookSolo.pageAdded(p, content); // iPad version: "Save this page as PDF"
   }
   function tally() { const p = pages[cur]; if (!p) return; const ps = st.pages[p.id] || (st.pages[p.id] = { seconds: 0, visits: 0 }); ps.seconds += (Date.now() - enterAt) / 1000; enterAt = Date.now(); save(); }
 
@@ -353,19 +354,19 @@
       ui.p(esc(C.subtitle || ''), 'lede');
       const f = ui.el('div', 'box'); requestAnimationFrame(() => Ink.frame(f));
       f.innerHTML = `<div class="field"><label>Your name</label><input id="cv-name" autocomplete="name" placeholder="First name and surname"></div>
-        <div class="field"><label>School email</label><input id="cv-email" type="email" autocapitalize="off" placeholder="name@${esc(C.emailDomain || 'school')}" inputmode="email"></div>
+        <div class="field"${C.solo ? ' style="display:none"' : ''}><label>School email</label><input id="cv-email" type="email" autocapitalize="off" placeholder="name@${esc(C.emailDomain || 'school')}" inputmode="email"></div>
         <div class="field"><label>Class</label><select id="cv-class"><option value="">choose…</option>${(C.classes || []).map((c) => `<option>${esc(c)}</option>`).join('')}</select></div>
         <div class="err" id="cv-err"></div>`;
       if (st.student) { $('#cv-name', f).value = st.student.name; $('#cv-email', f).value = st.student.email; $('#cv-class', f).value = st.student.cls; }
-      ui.p(`<span class="small">Your answers save automatically every time you turn a page, so your teacher can see how you got on. Take your time and have a go at everything.</span>`);
+      ui.p(C.solo ? `<span class="small">Everything you do stays on this iPad: nothing is sent anywhere. At the end of each page, tap <b>Save this page as PDF</b> and hand it in on Showbie. Take your time and have a go at everything.</span>` : `<span class="small">Your answers save automatically every time you turn a page, so your teacher can see how you got on. Take your time and have a go at everything.</span>`);
     }, gate: null };
   }
   function checkCover() {
     const name = $('#cv-name').value.trim(), email = $('#cv-email').value.trim().toLowerCase(), cls = $('#cv-class').value;
     const dom = (C.emailDomain || '').toLowerCase();
-    const err = !name || name.split(/\s+/).length < 2 ? 'Please write your first name and surname.' : dom && !email.endsWith('@' + dom) ? `Please use your school email (…@${dom}).` : !cls && (C.classes || []).length ? 'Please choose your class.' : '';
+    const err = !name || name.split(/\s+/).length < 2 ? 'Please write your first name and surname.' : !C.solo && dom && !email.endsWith('@' + dom) ? `Please use your school email (…@${dom}).` : !cls && (C.classes || []).length ? 'Please choose your class.' : '';
     $('#cv-err').textContent = err; if (err) { Book.sfx('error', { gain: 0.3 }); return false; }
-    const changed = !st.student || st.student.email !== email;
+    const changed = !st.student || st.student.email !== email || st.student.name !== name;
     st.student = { name, email, cls }; if (changed) st.session = Math.random().toString(36).slice(2, 10);
     save(); return true;
   }
@@ -380,7 +381,7 @@
       };
       p_finish.onShow = () => { paint(); send('finish', p_finish); };
       paint();
-      ui.p('Your answers have been sent to your teacher. You can still go back and improve them: they will update automatically.');
+      ui.p(C.solo ? 'Remember to save each page as a PDF and hand them in on Showbie. You can still go back and improve your answers first.' : 'Your answers have been sent to your teacher. You can still go back and improve them: they will update automatically.');
     } };
   }
   let p_finish;
@@ -472,7 +473,7 @@
     q.answers = q.answers || {};
     o.innerHTML = `<div class="qsheet"><div class="content" style="padding-top:40px"></div></div>`;
     const c = o.querySelector('.content'); c.appendChild(Ink.bubble('Final quiz', { size: 56 }));
-    c.insertAdjacentHTML('beforeend', `<div class="box" id="qrules"><span class="tag">Read this first</span><b>${N} questions. One go only.</b> Pick one answer for each question. You can change your answers until you press <b>Submit</b>; after that they are locked and sent to your teacher. No notes, no helping each other!</div>`);
+    c.insertAdjacentHTML('beforeend', `<div class="box" id="qrules"><span class="tag">Read this first</span><b>${N} questions. One go only.</b> Pick one answer for each question. You can change your answers until you press <b>Submit</b>; after that they are locked${C.solo ? ', and you save your result as a PDF for Showbie' : ' and sent to your teacher'}. No notes, no helping each other!</div>`);
     requestAnimationFrame(() => Ink.frame(c.querySelector('#qrules'), { color: Ink.RED }));
     FQ.questions.forEach((qu, i) => {
       const id = 'fq.q' + String(i + 1).padStart(2, '0');

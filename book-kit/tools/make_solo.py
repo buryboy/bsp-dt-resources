@@ -36,9 +36,10 @@ def main(folder):
     if not cfg:
         sys.exit('no config.js in ' + folder)
     html = html.replace(cfg.group(0), cfg.group(0) + f'\n<script src="../../book-kit/solo.js?h={solo_h}"></script>', 1)
+    ico = folder if (ROOT / f'book-kit/icons/{folder}-192.png').is_file() else 'icon'  # own icon from make_icons.py
     title = re.search(r'<title>(.*?)</title>', html)
     name = (title.group(1).split('·')[0].strip() if title else folder)
-    head_extra = (f'<link rel="manifest" href="app.webmanifest">\n<link rel="apple-touch-icon" href="../../book-kit/icons/icon-180.png">\n'
+    head_extra = (f'<link rel="manifest" href="app.webmanifest">\n<link rel="apple-touch-icon" href="../../book-kit/icons/{ico}-180.png">\n'
                   f'<meta name="apple-mobile-web-app-title" content="{name}">\n<meta name="theme-color" content="#1f4d36">\n<meta name="robots" content="noindex">\n')
     html = html.replace('</title>', '</title>\n' + head_extra, 1)
     html = re.sub(r'<title>(.*?)</title>', lambda m: f'<title>{name} · iPad</title>', html, count=1)
@@ -47,8 +48,8 @@ def main(folder):
     (out / 'app.webmanifest').write_text(json.dumps({
         'name': f'{name} · BSP D&T', 'short_name': name[:12], 'start_url': './', 'scope': './', 'display': 'standalone',
         'background_color': '#1f4d36', 'theme_color': '#1f4d36',
-        'icons': [{'src': '../../book-kit/icons/icon-192.png', 'sizes': '192x192', 'type': 'image/png'},
-                  {'src': '../../book-kit/icons/icon-512.png', 'sizes': '512x512', 'type': 'image/png'}]}, indent=1))
+        'icons': [{'src': f'../../book-kit/icons/{ico}-192.png', 'sizes': '192x192', 'type': 'image/png'},
+                  {'src': f'../../book-kit/icons/{ico}-512.png', 'sizes': '512x512', 'type': 'image/png'}]}, indent=1))
 
     # everything to cache: the page, its scripts and styles, fonts, PDF libraries, icons
     urls = ['./', 'app.webmanifest']
@@ -57,7 +58,7 @@ def main(folder):
             urls.append(u)
     extra = [ROOT / 'nea-kit/vendor/html2canvas.min.js', ROOT / 'nea-kit/vendor/jspdf.umd.min.js', ROOT / 'fonts/fonts.css']
     extra += sorted((ROOT / 'fonts/files').glob('*.woff2'))
-    extra += sorted((ROOT / 'book-kit/icons').glob('*.png'))
+    extra += sorted((ROOT / 'book-kit/icons').glob(f'{ico}-*.png'))
     for f in extra:
         u = '../../' + str(f.relative_to(ROOT)).replace('\\', '/')
         if u not in urls:

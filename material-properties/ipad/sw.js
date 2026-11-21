@@ -1,10 +1,10 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-material-properties-1066bb730090';
+const CACHE = 'ipad-material-properties-0de33d31a307';
 const FILES = [
  "./",
  "app.webmanifest",
  "../../gate.js?h=20eca810",
- "../../book-kit/icons/icon-180.png",
+ "../../book-kit/icons/material-properties-180.png",
  "../../book-kit/book.css?h=32238363",
  "../config.js?h=75ac1eb1",
  "../../book-kit/solo.js?h=7100f701",
@@ -66,8 +66,8 @@ const FILES = [
  "../../fonts/files/space-mono-latin-700-normal.woff2",
  "../../fonts/files/space-mono-latin-ext-400-normal.woff2",
  "../../fonts/files/space-mono-latin-ext-700-normal.woff2",
- "../../book-kit/icons/icon-192.png",
- "../../book-kit/icons/icon-512.png"
+ "../../book-kit/icons/material-properties-192.png",
+ "../../book-kit/icons/material-properties-512.png"
 ];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('ipad-material-properties-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });

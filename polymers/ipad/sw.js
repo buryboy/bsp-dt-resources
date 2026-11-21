@@ -1,17 +1,17 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-polymers-f8c9ccc02560';
+const CACHE = 'ipad-polymers-58145b0e7eac';
 const FILES = [
  "./",
  "app.webmanifest",
- "../../gate.js?h=20eca810",
+ "../../gate.js?h=a98cbd18",
  "../../book-kit/icons/polymers-180.png",
  "../../book-kit/book.css?h=32238363",
  "../config.js?h=5c85c3fa",
- "../../book-kit/solo.js?h=7100f701",
+ "../../book-kit/solo.js?h=ea0a640e",
  "../../book-kit/harness.js?h=73af921e",
  "../../book-kit/sound.js?h=b44355da",
  "../../book-kit/ink.js?h=179d4440",
- "../../book-kit/book.js?h=0b6b718a",
+ "../../book-kit/book.js?h=541b0d5d",
  "../pages/p01-starter.js?h=d8235e46",
  "../pages/p02-oil-to-polymer.js?h=d05c9567",
  "../pages/p03-two-families.js?h=cd16f583",
@@ -25,6 +25,7 @@ const FILES = [
  "../pages/p11-exit-quiz.js?h=8c2214a1",
  "../manifest.js?h=2171fa11",
  "../final-quiz.js?h=2932940a",
+ "../../book-kit/install-help.js",
  "../../nea-kit/vendor/html2canvas.min.js",
  "../../nea-kit/vendor/jspdf.umd.min.js",
  "../../fonts/fonts.css",

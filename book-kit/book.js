@@ -506,7 +506,7 @@
   // ---------------- start ----------------
   Book.start = () => {
     document.body.insertAdjacentHTML('beforeend', `<div id="book"></div>
-      <div id="topbar"><span class="chip" id="contbtn">☰ Contents</span><span class="chip quizchip" id="quizchip" style="display:none"></span><span class="chip" id="savechip">${st.student ? esc(st.student.name.split(' ')[0]) : 'not signed in'}</span><span class="chip" id="mute">${Book.muted ? '🔇' : '🔊'}</span></div>
+      <div id="topbar"><span class="chip" id="contbtn">☰ Contents</span><span class="chip quizchip" id="quizchip" style="display:none"></span><span class="chip" id="savechip">${st.student ? esc(st.student.name.split(' ')[0]) : (C.solo ? 'no name yet' : 'not signed in')}</span><span class="chip" id="mute">${Book.muted ? '🔇' : '🔊'}</span></div>
       <div id="bottombar"><button class="navbtn back" id="prev">◂ Back</button><span id="pagenum"></span><button class="navbtn" id="next">Next ▸</button></div>
       <div id="contents"></div><div id="quiz"></div><div id="toast"></div>`);
     $('#quizchip').onclick = openQuiz;

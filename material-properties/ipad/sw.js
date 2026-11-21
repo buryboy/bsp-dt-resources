@@ -1,17 +1,17 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-material-properties-0de33d31a307';
+const CACHE = 'ipad-material-properties-6e7b3477b155';
 const FILES = [
  "./",
  "app.webmanifest",
- "../../gate.js?h=20eca810",
+ "../../gate.js?h=a98cbd18",
  "../../book-kit/icons/material-properties-180.png",
  "../../book-kit/book.css?h=32238363",
  "../config.js?h=75ac1eb1",
- "../../book-kit/solo.js?h=7100f701",
+ "../../book-kit/solo.js?h=ea0a640e",
  "../../book-kit/harness.js?h=73af921e",
  "../../book-kit/sound.js?h=b44355da",
  "../../book-kit/ink.js?h=179d4440",
- "../../book-kit/book.js?h=0b6b718a",
+ "../../book-kit/book.js?h=541b0d5d",
  "../pages/p01-starter.js?h=311decba",
  "../pages/p02-two-families.js?h=ec17ed91",
  "../pages/p03-density-absorbency.js?h=e9c987ba",
@@ -25,6 +25,7 @@ const FILES = [
  "../pages/p11-exit-quiz.js?h=3caaf1bb",
  "../manifest.js?h=b38b61ff",
  "../final-quiz.js?h=3d7f4320",
+ "../../book-kit/install-help.js",
  "../../nea-kit/vendor/html2canvas.min.js",
  "../../nea-kit/vendor/jspdf.umd.min.js",
  "../../fonts/fonts.css",

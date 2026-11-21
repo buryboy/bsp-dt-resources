@@ -156,6 +156,29 @@ def icons():
     d.ellipse([672, 172, 728, 228], fill=W)
     finish(im, g, 'nea-alevel')
 
+    # Woods & timbers: a log end with growth rings and a leaf
+    im, g = base((150, 200, 90), (60, 120, 50)), layer(); d = ImageDraw.Draw(g)
+    d.ellipse([200, 260, 760, 820], fill=(214, 160, 100, 255))
+    for k, c in enumerate([(236, 190, 130, 255), (214, 160, 100, 255), (236, 190, 130, 255), (214, 160, 100, 255), (236, 190, 130, 255)]):
+        r = 230 - k * 44; d.ellipse([480 - r, 540 - r, 480 + r, 540 + r], outline=(150, 100, 55, 255), width=12)
+    d.ellipse([200, 260, 760, 820], outline=W, width=26)
+    d.line([(480, 540), (600, 380)], fill=(120, 75, 40, 255), width=14)
+    d.ellipse([650, 170, 870, 330], fill=W); d.line([(680, 300), (840, 200)], fill=(80, 150, 70, 255), width=10)
+    finish(im, g, 'woods-and-timbers')
+
+    # KS3 electronics: a glowing bulb with a lightning bolt
+    im, g = base((255, 200, 70), (240, 120, 30)), layer(); d = ImageDraw.Draw(g)
+    d.ellipse([290, 180, 734, 624], fill=W)
+    d.rounded_rectangle([400, 600, 624, 700], 20, fill=(240, 240, 245, 255))
+    for y in (712, 760): d.rounded_rectangle([410, y, 614, y + 34], 14, fill=W)
+    d.polygon([(540, 240), (420, 440), (510, 440), (470, 590), (610, 370), (520, 370), (580, 240)], fill=(255, 170, 40, 255))
+    for a in range(0, 360, 45):
+        if 100 < a < 260: continue
+        x, y = 512 + 300 * math.cos(math.radians(a - 90)), 400 + 300 * math.sin(math.radians(a - 90))
+        x2, y2 = 512 + 370 * math.cos(math.radians(a - 90)), 400 + 370 * math.sin(math.radians(a - 90))
+        d.line([(x, y), (x2, y2)], fill=W, width=26)
+    finish(im, g, 'ks3-electronics')
+
 
 if __name__ == '__main__':
     icons(); print('icons written to', OUT)

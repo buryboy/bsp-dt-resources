@@ -1,17 +1,17 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-cams-gears-pulleys-17c9d900bf77';
+const CACHE = 'ipad-cams-gears-pulleys-d9a658e8688d';
 const FILES = [
  "./",
  "app.webmanifest",
- "../../gate.js?h=20eca810",
+ "../../gate.js?h=a98cbd18",
  "../../book-kit/icons/cams-gears-pulleys-180.png",
  "../../book-kit/book.css?h=32238363",
  "../config.js?h=3fe5f71d",
- "../../book-kit/solo.js?h=7100f701",
+ "../../book-kit/solo.js?h=ea0a640e",
  "../../book-kit/harness.js?h=73af921e",
  "../../book-kit/sound.js?h=b44355da",
  "../../book-kit/ink.js?h=179d4440",
- "../../book-kit/book.js?h=0b6b718a",
+ "../../book-kit/book.js?h=541b0d5d",
  "../pages/p01-starter.js?h=6b86cee7",
  "../pages/p02-cams-followers.js?h=3f2fa383",
  "../pages/p03-cam-shapes.js?h=304e73ce",
@@ -25,6 +25,7 @@ const FILES = [
  "../pages/p11-exit-quiz.js?h=35843dec",
  "../manifest.js?h=16d9994d",
  "../final-quiz.js?h=7ae48cb8",
+ "../../book-kit/install-help.js",
  "../../nea-kit/vendor/html2canvas.min.js",
  "../../nea-kit/vendor/jspdf.umd.min.js",
  "../../fonts/fonts.css",

@@ -7,7 +7,7 @@
      Set back to false to reopen the site. */
   var MAINTENANCE = true;
   /* The iPad versions of the workbooks (…/ipad/) send and fetch no data at all, so maintenance does not close them. */
-  var NODATA = /\/ipad\/(index\.html)?$/.test(location.pathname);
+  var NODATA = /\/ipad\/[^\/]*$/.test(location.pathname);
   if (MAINTENANCE && !NODATA && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
     try { window.stop(); } catch (e) {}
     document.documentElement.innerHTML = '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>Under maintenance</title>' +

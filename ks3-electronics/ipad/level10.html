@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../gate.js?h=a98cbd18"></script>
+<script src="../../book-kit/solo-pages.js?h=70eba3ce"></script>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/ks3-electronics-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KS3 Electronics – Interactive Workbook">
+<meta name="theme-color" content="#1f4d36">
+<meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 10 · Solder It</title>
+<link rel="stylesheet" href="../common.css?h=1095ee77">
+<script type="application/json" id="level-info">
+{"t":"Solder It","d":"Workshop safety, the steps of soldering, spotting good and bad joints – then try to solder a perfect joint yourself.","s":"Soldering & making","c":"#e76f51","emoji":"🔥🔩"}
+</script>
+<style>
+.steps{display:grid;gap:8px;margin-top:10px}
+.stp{text-align:left;font:700 16.5px Nunito;color:var(--ink);border:3px solid #dde7f3;background:#fff;border-radius:14px;padding:11px 14px;cursor:pointer}
+.stp.done{border-color:var(--green);background:#dcfaf0;cursor:default}
+.stp .no{display:inline-block;width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;text-align:center;line-height:28px;margin-right:8px;font-size:15px}
+.joint{background:var(--paper);border:3px solid #d3e0f0;border-radius:18px;display:block;width:100%;max-width:440px}
+.gauge{height:26px;background:#e9eef5;border-radius:99px;position:relative;overflow:hidden;margin:4px 0 10px}
+.gauge .zone{position:absolute;top:0;bottom:0;background:rgba(6,214,160,.35)}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .05s}
+.gl{font:800 14px Nunito;color:#5a6f8c;display:flex;justify-content:space-between}
+.hold{font:600 20px Fredoka;border:0;border-radius:16px;padding:16px 18px;color:#fff;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;flex:1;min-width:150px;box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.hold.on{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.card-say{font:600 22px Fredoka;text-align:center;padding:18px;background:#f2f7fd;border-radius:16px;margin:10px 0}
+</style>
+</head>
+<body>
+<script src="../common.js?h=daf867c1"></script>
+<script>
+/* ---------- joint drawing (side view, cut through the board) ---------- */
+function jointSVG(o){
+ o=Object.assign({wet:0,blob:0,burnt:false,bridge:false,iron:false,solderWire:false,hot:0},o);
+ const pad=(x,lift)=>`<rect x="${x-34}" y="${lift?136:146}" width="68" height="8" rx="2" fill="${o.burnt&&lift?'#5a3d1e':'#d08c3a'}" ${lift?'transform="rotate(-8 '+(x-34)+' 146)"':''}/>`;
+ const leg=x=>`<rect x="${x-3}" y="40" width="6" height="150" fill="#b8c0c8"/>`;
+ const cone=(x,w)=>{if(w<=0)return'';const r=10+24*Math.min(w,1.5),ht=12+38*Math.min(w,1.5),bow=w>1.15?(w-1.15)*60:0;
+  return `<path d="M${x-r},146 Q${x-6-bow},${146-ht*.35-bow*.3} ${x-3},${146-ht} L${x+3},${146-ht} Q${x+6+bow},${146-ht*.35-bow*.3} ${x+r},146 Z" fill="url(#shine)" stroke="#9aa4ae" stroke-width="1.5"/>`;};
+ const X1=150,X2=270;
+ let s=`<svg viewBox="0 0 420 220" class="joint"><defs><linearGradient id="shine" x1="0" x2="1"><stop offset="0" stop-color="#aeb6bf"/><stop offset=".45" stop-color="#f4f6f8"/><stop offset="1" stop-color="#9ea7b0"/></linearGradient></defs>`;
+ s+=`<rect x="20" y="152" width="380" height="22" rx="4" fill="#2e7d4f"/><text x="30" y="210" font-family="Nunito" font-weight="800" font-size="13" fill="#5a6f8c">circuit board (PCB)</text>`;
+ s+=pad(X1,o.burnt)+leg(X1);
+ if(o.bridge)s+=pad(X2,false)+leg(X2)+`<path d="M${X1-26},146 Q${X1},100 ${(X1+X2)/2},112 Q${X2},100 ${X2+26},146 Z" fill="url(#shine)" stroke="#9aa4ae" stroke-width="1.5"/>`;
+ else s+=cone(X1,o.wet);
+ if(o.blob>0)s+=`<circle cx="${X1}" cy="${118-o.blob*6}" r="${7+o.blob*14}" fill="#8a9097" stroke="#6c737a" stroke-width="2"/><path d="M${X1-6},${112-o.blob*6} l5,4 l-3,5" stroke="#5c6168" stroke-width="2" fill="none"/>`;
+ if(o.burnt)s+=`<g opacity=".6"><circle cx="${X1-30}" cy="120" r="9" fill="#777"/><circle cx="${X1-40}" cy="100" r="12" fill="#999"/></g>`;
+ if(o.iron)s+=`<g><path d="M${X1+8},140 L${X1+70},76 L${X1+150},20 L${X1+168},34 L${X1+86},92 Z" fill="#6c757d"/><path d="M${X1+8},140 L${X1+40},112 L${X1+50},122 Z" fill="${o.hot>.55?'#ff7b3a':'#adb5bd'}"/><text x="${X1+120}" y="80" font-family="Nunito" font-weight="800" font-size="13" fill="#5a6f8c">iron</text></g>`;
+ if(o.solderWire)s+=`<path d="M${X1-12},128 L${X1-90},60 L${X1-130},50" stroke="#c9ced4" stroke-width="5" fill="none" stroke-linecap="round"/><text x="${X1-140}" y="42" font-family="Nunito" font-weight="800" font-size="13" fill="#5a6f8c">solder</text>`;
+ return s+'</svg>';
+}
+
+const SAFE=[
+ ['Put the iron back in its stand every time you let go of it',1],['Wear safety glasses',1],['Hold the component in place with your fingers while you solder',0],
+ ['Turn on the fume extractor',1],['Touch the tip to see if it is hot yet',0],['Tie back long hair',1],['Lay the hot iron down on the bench',0],
+ ['Clean the tip on a damp sponge',1],['Wash your hands after soldering',1],['Leave the iron switched on when you go to lunch',0]];
+const ORDER=['Clean the hot tip on the damp sponge','Push the component legs through the holes in the PCB','Hold the iron on the pad AND the leg for 2–3 seconds','Feed solder into the joint (not onto the iron)','Take the solder away, then the iron','Let the joint cool without moving it','Trim the extra leg with side cutters'];
+
+Level({n:10,title:'Solder It',summary:'safety first – iron in its stand, glasses on, fumes extracted. Heat the pad and the leg together, then feed in the solder. A good joint is shiny and shaped like a small volcano. Too cold gives a dull blob; too much solder can bridge two pads and cause a short circuit.',steps:[
+ // safety sort
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);const q=shuffle(SAFE);let i=0;
+  function show(){c.innerHTML='';
+   if(i>=q.length){c.append(h('h2',{},'Safety check done ✅'),h('div',{class:'fact'},'A soldering iron tip is about 350 °C – more than hot enough to burn you badly in a split second. It looks exactly the same hot or cold!'),h('div',{class:'row',style:'margin-top:12px'},api.nextBtn()));return;}
+   c.append(h('div',{class:'kicker'},`Step 1 · Safe or unsafe? · ${i+1} of ${q.length}`),h('div',{class:'card-say'},q[i][0]));
+   const row=h('div',{class:'opts two'});c.append(row);let d=false;
+   [['✅ Safe',1],['❌ Unsafe',0]].forEach(([t,v])=>row.append(h('button',{class:'opt',style:'text-align:center;font-size:20px',onclick:e=>{if(d)return;d=true;const ok=v===q[i][1];
+    e.currentTarget.classList.add(ok?'right':'wrong','shake');ok?Sfx.good():Sfx.bad();api.add(ok?1:0,1);setTimeout(()=>{i++;show();},ok?600:1300);}},t)));
+  }
+  show();
+ },
+ // order steps
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  c.append(h('div',{class:'kicker'},'Step 2 · How to solder'),h('h2',{},'Put the steps in order'),h('p',{class:'lead',html:'Tap the steps in the <b>right order</b>, starting with the first thing you do.'}));
+  const box=h('div',{class:'steps'});c.append(box);let next=0,mist=0;const msg=h('div',{class:'msg hide'});c.append(msg);
+  shuffle(ORDER.map((t,i)=>({t,i}))).forEach(o=>{const b=h('button',{class:'stp'},o.t);b.onclick=()=>{if(b.classList.contains('done'))return;
+    if(o.i===next){b.classList.add('done');b.innerHTML=`<span class="no">${next+1}</span>${o.t}`;next++;Sfx.good();box.insertBefore(b,box.querySelector('.stp:not(.done)'));
+     if(next===ORDER.length){const p=Math.max(0,7-mist);api.add(p,7);msg.className='msg good';msg.textContent=`🎉 All in order with ${mist} mistake${mist===1?'':'s'}. +${p}`;c.append(h('div',{class:'row',style:'margin-top:12px'},api.nextBtn()));}}
+    else{mist++;Sfx.bad();b.classList.add('shake');setTimeout(()=>b.classList.remove('shake'),400);msg.className='msg bad';msg.textContent='Not yet – what comes before that?';}};box.append(b);});
+ },
+ // spot the joint
+ (st,api)=>{
+  const J=shuffle([
+   {o:{wet:1},a:'A perfect joint',why:'Shiny, smooth and shaped like a little volcano – the solder has flowed onto the pad and up the leg.'},
+   {o:{blob:1},a:'A dry (cold) joint',why:'The solder is dull and balled up – the pad wasn\'t hot enough so the solder didn\'t flow onto it. It may not connect at all.'},
+   {o:{wet:1.6},a:'Too much solder',why:'A big bulging blob. It wastes solder and can hide a bad connection underneath.'},
+   {o:{wet:.25},a:'Not enough solder',why:'The pad isn\'t covered, so the joint is weak and may crack.'},
+   {o:{bridge:true},a:'A solder bridge',why:'The solder has joined two pads that should be separate – this makes a short circuit!'},
+   {o:{burnt:true},a:'Overheated – the pad has lifted',why:'The iron was held on too long. The copper pad has peeled off the board.'}]);
+  const opts=['A perfect joint','A dry (cold) joint','Too much solder','Not enough solder','A solder bridge','Overheated – the pad has lifted'];
+  quiz(st,api,{title:'Step 3 · Good joint or bad joint?',qs:J.map(j=>({q:'What kind of joint is this?',pre:host=>host.insertAdjacentHTML('beforeend',jointSVG(j.o)),opts:[j.a,...shuffle(opts.filter(x=>x!==j.a)).slice(0,3)],a:0,two:true,why:j.why}))});
+ },
+ // the game
+ (st,api)=>{
+  const w=h('div',{class:'split'});st.append(w);const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+  L.append(h('div',{class:'kicker'},'Step 4 · Your turn'),h('h2',{},'Solder three perfect joints'),
+   h('div',{class:'lead',html:'<ol><li><b>Hold</b> 🔥 to heat the pad and leg until the temperature is in the <b style="color:#06a77d">green zone</b>.</li><li>Keep heating and <b>hold</b> 🧵 to feed in solder until the amount is in the green zone.</li><li>Press <b>Finish joint</b>.</li></ol><p>Feed solder too early and it won\'t flow. Heat too long and you\'ll burn the pad!</p>'}));
+  const tally=h('div',{class:'msg'},'Joint 1 of 3');L.append(tally);const res=h('div');L.append(res);
+  const view=h('div');R.append(view);
+  R.append(h('div',{class:'gl'},h('span',{},'🌡️ Temperature'),h('span',{id:'tv'},'')));const tg=h('div',{class:'gauge',html:'<div class="zone" style="left:55%;width:32%"></div><div class="fill" style="background:linear-gradient(90deg,#ffd23f,#ef476f)"></div>'});R.append(tg);
+  R.append(h('div',{class:'gl'},h('span',{},'🧵 Solder')));const sg=h('div',{class:'gauge',html:'<div class="zone" style="left:42%;width:36%"></div><div class="fill" style="background:#adb5bd"></div>'});R.append(sg);
+  const heat=h('button',{class:'hold',style:'background:#ef476f'},'🔥 Hold iron on joint'),feed=h('button',{class:'hold',style:'background:#6c757d'},'🧵 Feed solder');
+  const fin=h('button',{class:'btn go',style:'width:100%;margin-top:10px'},'✔ Finish joint');
+  R.append(h('div',{class:'row'},heat,feed),fin);
+  let T,wet,blob,over,burnt,hH,hF,joint=0,perfect=0,live;
+  const bind=(b,set)=>{b.addEventListener('pointerdown',e=>{e.preventDefault();Sfx.ac();set(true);b.classList.add('on');});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{set(false);b.classList.remove('on');}));};
+  bind(heat,v=>hH=v);bind(feed,v=>hF=v);
+  function reset(){T=0;wet=0;blob=0;over=0;burnt=false;hH=hF=false;live=true;tally.textContent=`Joint ${joint+1} of 3`;res.innerHTML='';fin.disabled=false;}
+  let last=performance.now();
+  function loop(t){if(!document.body.contains(view))return;const dt=Math.min(.05,(t-last)/1000);last=t;
+   if(live){
+    T=Math.max(0,Math.min(100,T+((hH?38:-18)-(hF&&hH?30:0))*dt));
+    if(T>92)over+=dt;if(over>.8&&!burnt){burnt=true;Sfx.pop();}
+    if(hF){if(hH&&T>=55)wet+=.45*dt;else blob+=.45*dt;if(Math.random()<.2)Sfx.tone(900+Math.random()*300,.03,'sine',.02);}
+   }
+   view.innerHTML=jointSVG({wet,blob:Math.min(blob*2.5,1.4),burnt,iron:hH,solderWire:hF,hot:T/100});
+   tg.querySelector('.fill').style.width=T+'%';sg.querySelector('.fill').style.width=Math.min(100,wet*55)+'%';
+   document.getElementById('tv').textContent=Math.round(150+T*2.5)+' °C';
+   requestAnimationFrame(loop);}
+  fin.onclick=()=>{if(!live)return;live=false;hH=hF=false;fin.disabled=true;
+   const wp=wet*55;let r,ok=false;
+   if(burnt)r='🔥 Overheated – the pad lifted off the board. Don\'t hold the iron on so long.';
+   else if(blob>.15)r='🪨 Dry joint – the solder balled up because the joint wasn\'t hot enough. Heat first, then feed the solder.';
+   else if(wp<42)r='🤏 Not enough solder – the pad isn\'t covered. Feed a bit more.';
+   else if(wp>78)r='🫧 Too much solder – it\'s a big blob. Stop feeding sooner.';
+   else{r='🌋 Perfect volcano! Shiny and smooth.';ok=true;}
+   if(ok){perfect++;Sfx.win();confetti(50);}else Sfx.bad();api.add(ok?1:0,1);
+   joint++;res.append(h('div',{class:'msg '+(ok?'good':'bad')},r),h('div',{class:'row',style:'margin-top:12px'},
+    joint<3?h('button',{class:'btn',onclick:reset},'Next joint →'):api.nextBtn(`Finish (${perfect}/3 perfect) →`)));};
+  reset();requestAnimationFrame(loop);
+ },
+ (st,api)=>quiz(st,api,{title:'Check your understanding',qs:[
+  {q:'Roughly how hot is the tip of a soldering iron?',opts:['About 350 °C','About 50 °C','About 100 °C'],a:0,why:'Hot enough to melt solder (around 220 °C) – and to cause a serious burn.'},
+  {q:'Why is a solder bridge between two pads a problem?',opts:['It joins things that shouldn\'t be joined – a short circuit','It makes the board heavier','It changes the LED colour'],a:0,why:'Just like the extra wires in the Fault Finder level!'},
+  {q:'Which components must you put in the PCB the right way round before soldering?',opts:['LEDs and batteries (polarised parts)','Resistors','Wires'],a:0,why:'LEDs, battery clips and some capacitors are polarised. Resistors work either way.'},
+  {q:'Why should you feed the solder onto the joint rather than onto the iron?',opts:['So the solder flows onto the hot pad and leg and makes a good bond','So the iron stays clean','It doesn\'t matter'],a:0,why:'If the joint itself isn\'t hot, the solder won\'t stick to it – you get a dry joint.'}
+ ]})
+]});
+</script>
+</body>
+</html>

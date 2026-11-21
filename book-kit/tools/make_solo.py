@@ -56,7 +56,7 @@ def main(folder):
     for u in re.findall(r'\b(?:src|href)=["\']([^"\']+)["\']', html):
         if not re.match(r'^(https?:|data:|#|/)', u) and u not in urls:
             urls.append(u)
-    extra = [ROOT / 'nea-kit/vendor/html2canvas.min.js', ROOT / 'nea-kit/vendor/jspdf.umd.min.js', ROOT / 'fonts/fonts.css']
+    extra = [ROOT / 'book-kit/install-help.js', ROOT / 'nea-kit/vendor/html2canvas.min.js', ROOT / 'nea-kit/vendor/jspdf.umd.min.js', ROOT / 'fonts/fonts.css']
     extra += sorted((ROOT / 'fonts/files').glob('*.woff2'))
     extra += sorted((ROOT / 'book-kit/icons').glob(f'{ico}-*.png'))
     for f in extra:

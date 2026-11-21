@@ -10,6 +10,7 @@
   C.solo = true; C.backend = ''; C.sync = false; C.lesson = (C.lesson || 'lesson') + '-ipad';
   const KIT = new URL('.', document.currentScript.src).href; // …/book-kit/
   const VENDOR = new URL('../nea-kit/vendor/', KIT).href;
+  { const s = document.createElement('script'); s.src = KIT + 'install-help.js'; document.head.appendChild(s); } // how to add it to the home screen
   if ('serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

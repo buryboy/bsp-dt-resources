@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../gate.js?h=a98cbd18"></script>
+<script src="../../book-kit/solo-pages.js?h=70eba3ce"></script>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/ks3-electronics-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KS3 Electronics – Interactive Workbook">
+<meta name="theme-color" content="#1f4d36">
+<meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KS3 Electronics – Interactive Workbook</title>
+<link rel="stylesheet" href="../common.css?h=1095ee77">
+<style>
+.wrap{max-width:1120px;margin:0 auto;padding:26px 18px 50px}
+.hero{display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;color:#fff;margin-bottom:22px}
+.hero h1{font:700 46px Fredoka,sans-serif;margin:6px 0}
+.hero p{font-size:18px;max-width:620px;opacity:.9;margin:0}
+.tag{display:inline-block;font:700 13px Nunito;letter-spacing:.08em;padding:5px 11px;border-radius:99px;background:var(--yellow);color:#3a2b00}
+.total{font:700 38px Fredoka;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);border-radius:20px;padding:12px 22px;text-align:center;color:var(--yellow)}
+.total small{display:block;font:700 14px Nunito;color:#fff;opacity:.8}
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.lv{display:block;text-decoration:none;color:var(--ink);background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.3);transition:transform .15s}
+.lv:active{transform:scale(.98)}
+.lv .art{height:130px;position:relative;background:var(--paper);background-image:linear-gradient(#e6eef8 1px,transparent 1px),linear-gradient(90deg,#e6eef8 1px,transparent 1px);background-size:18px 18px;border-bottom:4px solid var(--c)}
+.lv .art svg{position:absolute;inset:8px 0 0;margin:auto;height:116px;width:auto;left:0;right:0}
+.lv .num{position:absolute;top:12px;left:14px;width:46px;height:46px;border-radius:50%;background:var(--c);color:#fff;font:700 24px Fredoka;display:flex;align-items:center;justify-content:center;border:4px solid #fff;box-shadow:0 3px 8px #0003;z-index:2}
+.lv .body{padding:14px 18px 18px}
+.lv h2{font:600 23px Fredoka;margin:0 0 4px}
+.lv p{margin:0 0 10px;font-size:15.5px;line-height:1.4}
+.meta{display:flex;justify-content:space-between;align-items:center}
+.skill{font:800 12.5px Nunito;background:#eaf2fb;padding:4px 10px;border-radius:99px}
+.st{font-size:23px;letter-spacing:2px}
+.foot{margin-top:24px;font-size:14px;color:#a9bbd3;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.foot button{border:0;background:none;color:#a9bbd3;text-decoration:underline;font:inherit;cursor:pointer}
+.sy line,.sy path,.sy rect,.sy circle{stroke:var(--ink);stroke-width:3.2;stroke-linecap:round;fill:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div><span class="tag">KS3 DESIGN &amp; TECHNOLOGY · ELECTRONICS</span>
+      <h1>Circuit Lab ⚡</h1>
+      <p>An interactive workbook. Learn the symbols, build circuits that really work, hunt down faults and design your own. Work through the levels in order and earn up to three stars on each.</p></div>
+    <div class="total"><span id="tot">0</span> / <span id="max">18</span> ⭐<small>stars earned</small></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="foot"><span>Levels 1–6 take about an hour · Progress is saved on this device only.</span><button id="reset">Reset my stars</button></div>
+</div>
+<script src="../common.js?h=daf867c1"></script>
+<script src="../circuit.js?h=8b387158"></script>
+<script>
+const L=[
+ {n:1,c:'#118ab2',t:'Symbol Spotter',d:'Meet the components, match each one to its circuit symbol, then beat the speed round.',s:'Components & symbols',
+  parts:{'h-0-0':'cell','h-0-1':'bulb','h-0-2':'led'}},
+ {n:2,c:'#06d6a0',t:'Make It Work',d:'Complete the loop! Light a bulb, add a switch, spin a motor and wire up a doorbell.',s:'Complete circuits',
+  parts:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb+','v-0-2':'wire','h-1-0':'switch+','h-1-1':'wire'},power:1},
+ {n:3,c:'#ffd23f',t:'Series or Parallel?',d:'Two bulbs, two ways to connect them. Predict, build and test which is brighter.',s:'Series & parallel',
+  parts:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'wire','v-0-1':'bulb','v-0-2':'bulb','h-1-0':'wire','h-1-1':'wire'},power:1},
+ {n:4,c:'#ef476f',t:'Resistors & LEDs',d:'Control the current with resistors, rescue an LED from burning out and find its + leg.',s:'Controlling current',
+  parts:{'v-0-0':'battery','h-0-0':'resistor','h-0-1':'led','v-0-2':'wire','h-1-0':'wire','h-1-1':'wire'},power:1},
+ {n:5,c:'#ff9f1c',t:'Fault Finder',d:'Eight broken circuits. Track down the gaps, shorts and backwards parts, then fix them.',s:'Fault finding',
+  parts:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-2':'wire','h-1-1':'wire'}},
+ {n:6,c:'#7b5cff',t:'Circuit Designer',d:'Learn the rules for drawing circuit diagrams, then design circuits to meet real briefs.',s:'Drawing & designing',
+  parts:{'v-0-0':'battery','h-0-0':'switch+','h-0-1':'motor','v-0-2':'wire','h-1-0':'wire','h-1-1':'wire'},power:1}
+];
+const S=Stars.all();let tot=0,count=0;const g=document.getElementById('grid');
+function card(l){const st=S[l.n]||0;tot+=st;count++;
+  const a=h('a',{class:'lv',href:`level${l.n}.html`,style:`--c:${l.c}`},
+    h('div',{class:'art'},h('div',{class:'num'},l.n)),
+    h('div',{class:'body'},h('h2',{},l.t),h('p',{},l.d),
+      h('div',{class:'meta'},h('span',{class:'skill',style:`color:${l.c==='#ffd23f'?'#8a6a00':l.c}`},l.s),h('span',{class:'st'},'⭐'.repeat(st)+'☆'.repeat(3-st)))));
+  g.append(a);
+  const art=a.querySelector('.art');
+  if(l.parts){const b=new Circuit.Board(art,{cols:l.cols||3,rows:l.rows||2,S:100,M:40,mode:'view',parts:l.parts,power:!!l.power,noStatus:true});
+   art.querySelector('.board').style.cssText='border:0;background:none;height:100%';
+   art.querySelector('.board svg').style.cssText='height:118px;width:100%';}
+  else if(l.emoji)art.append(h('div',{style:'font-size:72px;text-align:center;line-height:130px'},l.emoji));
+  document.getElementById('tot').textContent=tot;document.getElementById('max').textContent=count*3;}
+L.forEach(card);
+/* Extra levels: any level7.html, level8.html … uploaded next to this page are found automatically.
+   Each one carries its card details in <script type="application/json" id="level-info">. */
+(async()=>{for(let n=L.length+1;n<=60;n++){
+  let txt;try{const r=await fetch(`level${n}.html`,{cache:'no-store'});if(!r.ok)break;txt=await r.text();}catch(e){break;}
+  const doc=new DOMParser().parseFromString(txt,'text/html');const el=doc.getElementById('level-info');if(!el)break;
+  let info;try{info=JSON.parse(el.textContent);}catch(e){break;}
+  card(Object.assign({n,c:'#118ab2',t:`Level ${n}`,d:'',s:'Extra level'},info));}})();
+const rs=document.getElementById('reset');let arm=false;rs.onclick=()=>{if(!arm){arm=true;rs.textContent='Tap again to reset all stars';setTimeout(()=>{arm=false;rs.textContent='Reset my stars';},3000);return;}Stars.reset();location.reload();};
+</script>
+</body>
+</html>

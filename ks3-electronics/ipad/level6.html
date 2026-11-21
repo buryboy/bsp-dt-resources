@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../gate.js?h=a98cbd18"></script>
+<script src="../../book-kit/solo-pages.js?h=70eba3ce"></script>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/ks3-electronics-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KS3 Electronics – Interactive Workbook">
+<meta name="theme-color" content="#1f4d36">
+<meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 6 · Circuit Designer</title>
+<link rel="stylesheet" href="../common.css?h=1095ee77">
+<style>.brief{background:#13233b;color:#fff;border-radius:16px;padding:14px 16px;margin:10px 0;font-size:17px;line-height:1.45}.brief .kicker{color:var(--yellow)}
+.rules{display:grid;gap:10px;margin:12px 0;padding:0;list-style:none}.rules li{background:#f2f7fd;border-radius:12px;padding:10px 14px;font-weight:700}.rules li b{color:var(--blue)}</style>
+</head>
+<body>
+<script src="../common.js?h=daf867c1"></script>
+<script src="../circuit.js?h=8b387158"></script>
+<script>
+const P='var(--paper)';
+const symAt=(t,x,y,rot=0,extra='')=>`<g transform="translate(${x},${y}) rotate(${rot})"><rect x="-30" y="-24" width="60" height="48" fill="#fbfdff"/>${Circuit.sym(Circuit.parse(t),{},30)}</g>${extra}`;
+const BAD={
+ curvy:`<svg viewBox="0 0 320 210"><path d="M50,50 C100,25 130,75 160,50 S240,25 270,50 C292,100 248,120 270,160 C220,185 160,135 110,165 S60,172 50,160 C28,120 72,90 50,50" class="sy" style="fill:none;stroke:var(--ink);stroke-width:3.2"/>${symAt('battery',50,105,90)}${symAt('bulb',160,50)}<text class="lbl" x="66" y="85">+</text></svg>`,
+ pic:`<svg viewBox="0 0 320 210"><path d="M50,50 H270 V160 H50 Z" style="fill:none;stroke:var(--ink);stroke-width:3.2"/>${symAt('battery',50,105,90)}<g transform="translate(160,46)"><rect x="-32" y="-34" width="64" height="62" fill="#fbfdff"/><circle cx="0" cy="-8" r="18" fill="#fff7cf" stroke="#c9b458" stroke-width="3"/><rect x="-10" y="9" width="20" height="14" rx="2" fill="#adb5bd"/><path d="M-6 -2 q3 -6 6 0 q3 -6 6 0" stroke="#e76f51" stroke-width="2.5" fill="none"/></g>${symAt('switch',160,160)}<text class="lbl" x="66" y="85">+</text></svg>`
+};
+const LOOPGAP={'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-2':'wire','h-1-1':'switch+'};
+const GOOD={'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-2':'wire','h-1-1':'switch+','h-1-0':'wire'};
+const RULE_OPTS=['There is a gap – the circuit isn\'t complete','Wires should be straight lines with square corners','Use symbols, not pictures','Nothing – it\'s a perfect diagram'];
+const lit=(sum,t)=>sum[t].some(x=>x.s.on);
+const SHORT='⚠️ There is a short circuit in at least one switch position. Look for a wire that lets the current skip past the components.';
+const BRIEFS=[
+ {t:'The torch',brief:'A camping torch needs <b>one bulb</b> that can be turned on and off with a <b>switch</b>.',
+  check:b=>{const s=b.summary();if(!s.bulbs.length)return'Add a bulb.';if(!s.switches.length)return'Add a switch so the torch can be turned on and off.';
+   const cs=b.combos();if(cs.some(c=>c.res.short))return SHORT;const on=cs.filter(c=>lit(c.sum,'bulbs'));
+   if(!on.length)return'The bulb never lights. Check every part is joined in one complete loop (look for hollow rings).';
+   if(on.length===cs.length)return'The bulb can\'t be turned off. The switch must be in the same loop as the bulb.';
+   if(!on.some(c=>c.sum.bulbs.every(x=>x.s.bright>.5)))return'The bulb is very dim. Is something else sharing the loop?';}},
+ {t:'Desk fan with power light',brief:'A desk fan needs a <b>motor</b> controlled by a <b>switch</b>. A red <b>LED</b> must light up whenever the fan is on, protected by a <b>resistor</b>.',
+  check:b=>{const s=b.summary();if(!s.motors.length)return'Add a motor for the fan.';if(!s.switches.length)return'Add a switch.';if(!s.leds.length)return'Add an LED as the power light.';if(!s.resistors.length)return'Protect the LED with a resistor.';
+   const cs=b.combos();if(cs.some(c=>c.res.short))return SHORT;if(cs.some(c=>c.res.burn.length))return'💥 The LED burns out in one switch position! Put the resistor in series with the LED.';
+   if(!cs.some(c=>lit(c.sum,'motors')))return'The fan never spins. Check for gaps – and check the resistor isn\'t in the same loop as the motor. A resistor slows a motor right down, so give the LED and resistor their own parallel branch.';if(!cs.some(c=>lit(c.sum,'leds')))return'The LED never lights. Is it the right way round? (Triangle points away from +.)';
+   if(cs.some(c=>lit(c.sum,'motors')!==lit(c.sum,'leds')))return'The LED must be on when the fan is on, and off when the fan is off. Check where your switch is.';
+   if(cs.every(c=>lit(c.sum,'motors')))return'The switch can\'t turn the fan off. Put it where ALL the current has to go through it.';}},
+ {t:'Two-room lighting',brief:'A house has <b>two rooms</b>. Each room has <b>one bright bulb</b> and its <b>own switch</b>. Each switch must only control its own room.',
+  check:b=>{const s=b.summary();if(s.bulbs.length!==2)return'You need exactly two bulbs.';if(s.switches.length!==2)return'You need exactly two switches.';
+   const cs=b.combos();if(cs.some(c=>c.res.short))return SHORT;if(!Circuit.pairCheck(b))return'Each switch must control just one bulb. Try a parallel circuit with a bulb and a switch on each branch.';
+   if(cs.some(c=>c.sum.bulbs.some(x=>x.s.on&&x.s.bright<.7)))return'The bulbs are dim – make sure the branches are in parallel, not series.';}},
+ {t:'Doorbell with a light',brief:'For a deaf visitor, the doorbell must <b>ring a buzzer and light a bulb</b> at the same time – but only while the <b>push switch</b> is held down.',
+  check:b=>{const s=b.summary();if(!s.pushes.length)return'A doorbell needs a push switch.';if(!s.buzzers.length)return'Add a buzzer.';if(!s.bulbs.length)return'Add a bulb.';
+   const cs=b.combos();if(cs.some(c=>c.res.short))return SHORT;
+   if(lit(cs[0].sum,'buzzers')||lit(cs[0].sum,'bulbs'))return'It goes off even when nobody presses the button! The push switch must control everything.';
+   if(!cs.some(c=>lit(c.sum,'buzzers')&&lit(c.sum,'bulbs')))return'When the button is pressed, the buzzer and bulb must BOTH come on. Check for gaps.';
+   if(cs.some(c=>lit(c.sum,'buzzers')!==lit(c.sum,'bulbs')))return'The buzzer and light should always come on together.';}}
+];
+const TOOLS=['wire','switch','push','bulb','motor','buzzer','resistor','led','bin'];
+
+function brief(st,api,B,idx){
+ const w=h('div',{class:'split'});st.append(w);const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+ L.append(h('div',{class:'kicker'},`Design brief ${idx+1} of ${BRIEFS.length}`),h('h2',{},B.t),h('div',{class:'brief',html:`<div class="kicker">The client wants…</div>${B.brief}`}),
+  h('p',{style:'font-weight:600;color:#5a6f8c',html:'Draw your circuit on the grid. Test it yourself by tapping switches, then press <b>Check my design</b>.'}));
+ const msg=h('div',{class:'msg hide'}),nx=h('div',{class:'row hide',style:'margin-top:12px'},api.nextBtn());let tries=0,passed=false;
+ const b=new Circuit.Board(R,{cols:4,rows:3,S:100,parts:{'v-0-0':'battery!'}});
+ b.palette(R,TOOLS);
+ const test=h('button',{class:'btn warm',onclick:()=>{if(passed)return;const err=B.check(b);
+   if(err){tries++;Sfx.bad();msg.className='msg bad';msg.innerHTML='Not yet: '+err;}
+   else{passed=true;const pts=tries===0?2:1;api.add(pts,2);Sfx.win();confetti(90);msg.className='msg good';msg.innerHTML=`✅ The client is happy! ${tries===0?'First time – +2 points.':'+1 point.'}`;test.disabled=true;nx.classList.remove('hide');}}},'✔ Check my design');
+ L.append(h('div',{class:'row'},test,h('button',{class:'btn ghost',onclick:()=>{b.load({'v-0-0':'battery!'});b.changed();msg.className='msg hide';}},'↺ Clear')),msg,nx);
+}
+
+Level({n:6,title:'Circuit Designer',summary:'good circuit diagrams use the correct symbols, straight lines drawn with a ruler, square corners and no gaps. Design by thinking about what each switch must control, then test every switch position.',steps:[
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  c.append(h('div',{class:'kicker'},'Step 1 · Drawing circuit diagrams'),h('h2',{},'The rules of the drawing'),
+   h('p',{class:'lead'},'Circuit diagrams are drawn the same way all over the world, so anyone can read them. When you draw one on paper:'),
+   h('ul',{class:'rules',html:'<li>📏 Use a <b>ruler</b> – wires are <b>straight lines</b> with <b>square corners</b>.</li><li>🔣 Use the correct <b>symbols</b>, never pictures.</li><li>🔗 <b>No gaps</b> – lines must join up to every symbol.</li><li>⚫ Put a <b>dot</b> where wires join (a junction).</li><li>🏷️ <b>Label</b> components if there are more than one, e.g. S1, S2.</li><li>✏️ Draw in <b>pencil</b> so you can fix mistakes.</li>'}));
+  c.append(h('div',{class:'row',style:'margin-top:8px'},api.nextBtn('Spot the mistakes →')));
+ },
+ (st,api)=>{
+  const D=[{show:host=>host.insertAdjacentHTML("beforeend",`<div class="board" style="max-width:480px">${BAD.curvy}</div>`),a:1},
+   {show:host=>host.insertAdjacentHTML("beforeend",`<div class="board" style="max-width:480px">${BAD.pic}</div>`),a:2},
+   {show:host=>{const d=h('div',{style:'max-width:480px'});host.append(d);new Circuit.Board(d,{mode:'view',parts:LOOPGAP,power:false,noStatus:true});},a:0},
+   {show:host=>{const d=h('div',{style:'max-width:480px'});host.append(d);new Circuit.Board(d,{mode:'view',parts:GOOD,power:false,noStatus:true});},a:3}];
+  quiz(st,api,{title:'Step 2 · Spot the mistake',qs:shuffle(D).map(d=>({q:'What is wrong with this circuit diagram?',pre:host=>d.show(host),opts:RULE_OPTS,a:d.a,
+   why:['Look at the loose end (hollow ring) – every line must join up.','Wires must be drawn with a ruler: straight lines and square corners.','Always use the bulb symbol (a circle with a cross), never a drawing.','This one follows all the rules!'][d.a]}))});
+ },
+ ...BRIEFS.map((B,i)=>(st,api)=>brief(st,api,B,i)),
+ (st,api)=>{
+  const w=h('div',{class:'split'});st.append(w);const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+  L.append(h('div',{class:'kicker'},'Bonus · Free build'),h('h2',{},'Invent your own'),
+   h('div',{class:'lead',html:'<p>Everything is unlocked, including cells and batteries. Ideas to try:</p><ul><li>A burglar alarm with a buzzer and flashing… well, an LED!</li><li>A model car with two motors</li><li>What happens with two batteries in series? (Careful with those bulbs!)</li><li>Can you make an LED light with just one 1.5 V cell?</li></ul>'}),
+   h('div',{class:'row'},api.nextBtn('Finish level →')));
+  const b=new Circuit.Board(R,{cols:5,rows:4,S:95,parts:{'v-0-0':'battery'}});
+  b.palette(R,['wire','battery','cell','switch','push','bulb','motor','buzzer','resistor','led','bin']);
+ }
+]});
+</script>
+</body>
+</html>

@@ -1,17 +1,17 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-nea-alevel-89c8246aea5e';
+const CACHE = 'ipad-nea-alevel-c52a6dbc88aa';
 const FILES = [
  "./",
  "app.webmanifest",
- "../../gate.js?h=20eca810",
+ "../../gate.js?h=a98cbd18",
  "../../book-kit/icons/nea-alevel-180.png",
  "../../book-kit/book.css?h=32238363",
  "../config.js?h=06b024a1",
- "../../book-kit/solo.js?h=064644cf",
+ "../../book-kit/solo.js?h=ea0a640e",
  "../../book-kit/harness.js?h=73af921e",
  "../../book-kit/sound.js?h=b44355da",
  "../../book-kit/ink.js?h=179d4440",
- "../../book-kit/book.js?h=0b6b718a",
+ "../../book-kit/book.js?h=541b0d5d",
  "../../nea-kit/sheets.css?h=523d804e",
  "../../nea-kit/core.js?h=2b73387e",
  "../rubric.js?h=31355f94",
@@ -19,6 +19,7 @@ const FILES = [
  "../../nea-kit/start.js?h=1e6ccf48",
  "../pages/sheets.js?h=66ccc06d",
  "../manifest.js?h=8b81ccf7",
+ "../../book-kit/install-help.js",
  "../../nea-kit/vendor/html2canvas.min.js",
  "../../nea-kit/vendor/jspdf.umd.min.js",
  "../../fonts/fonts.css",

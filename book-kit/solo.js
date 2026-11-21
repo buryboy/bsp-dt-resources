@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   const C = window.BOOK_CONFIG || (window.BOOK_CONFIG = {});
-  C.solo = true; C.backend = ''; C.sync = false; C.lesson = (C.lesson || 'lesson') + '-ipad';
+  C.solo = true; C.backend = ''; C.sync = false; C.gateHash = ''; // no workbook password in the iPad versions C.lesson = (C.lesson || 'lesson') + '-ipad';
   const KIT = new URL('.', document.currentScript.src).href; // …/book-kit/
   const VENDOR = new URL('../nea-kit/vendor/', KIT).href;
   { const s = document.createElement('script'); s.src = KIT + 'install-help.js'; document.head.appendChild(s); } // how to add it to the home screen

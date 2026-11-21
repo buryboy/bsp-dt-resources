@@ -1,0 +1,81 @@
+// Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
+const CACHE = 'ipad-polymers-f8c9ccc02560';
+const FILES = [
+ "./",
+ "app.webmanifest",
+ "../../gate.js?h=20eca810",
+ "../../book-kit/icons/polymers-180.png",
+ "../../book-kit/book.css?h=32238363",
+ "../config.js?h=5c85c3fa",
+ "../../book-kit/solo.js?h=7100f701",
+ "../../book-kit/harness.js?h=73af921e",
+ "../../book-kit/sound.js?h=b44355da",
+ "../../book-kit/ink.js?h=179d4440",
+ "../../book-kit/book.js?h=0b6b718a",
+ "../pages/p01-starter.js?h=d8235e46",
+ "../pages/p02-oil-to-polymer.js?h=d05c9567",
+ "../pages/p03-two-families.js?h=cd16f583",
+ "../pages/p04-thermoforming.js?h=4480c5c4",
+ "../pages/p05-thermosetting.js?h=87d563d3",
+ "../pages/p06-id-lab.js?h=b4138b52",
+ "../pages/p07-recycling.js?h=342b74ca",
+ "../pages/p08-choose.js?h=0a52d4a5",
+ "../pages/p09-detective.js?h=c4b6b39f",
+ "../pages/p10-exam-practice.js?h=83ef0a6b",
+ "../pages/p11-exit-quiz.js?h=8c2214a1",
+ "../manifest.js?h=2171fa11",
+ "../final-quiz.js?h=2932940a",
+ "../../nea-kit/vendor/html2canvas.min.js",
+ "../../nea-kit/vendor/jspdf.umd.min.js",
+ "../../fonts/fonts.css",
+ "../../fonts/files/caveat-latin-ext-wght-normal.woff2",
+ "../../fonts/files/caveat-latin-wght-normal.woff2",
+ "../../fonts/files/fredoka-latin-ext-wght-normal.woff2",
+ "../../fonts/files/fredoka-latin-wght-normal.woff2",
+ "../../fonts/files/gloria-hallelujah-latin-400-normal.woff2",
+ "../../fonts/files/gloria-hallelujah-latin-ext-400-normal.woff2",
+ "../../fonts/files/ibm-plex-mono-latin-400-normal.woff2",
+ "../../fonts/files/ibm-plex-mono-latin-600-normal.woff2",
+ "../../fonts/files/ibm-plex-mono-latin-ext-400-normal.woff2",
+ "../../fonts/files/ibm-plex-mono-latin-ext-600-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-400-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-500-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-600-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-700-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-ext-400-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-ext-500-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-ext-600-normal.woff2",
+ "../../fonts/files/ibm-plex-sans-latin-ext-700-normal.woff2",
+ "../../fonts/files/inter-latin-ext-wght-normal.woff2",
+ "../../fonts/files/inter-latin-wght-normal.woff2",
+ "../../fonts/files/josefin-sans-latin-ext-wght-normal.woff2",
+ "../../fonts/files/josefin-sans-latin-wght-normal.woff2",
+ "../../fonts/files/monoton-latin-400-normal.woff2",
+ "../../fonts/files/monoton-latin-ext-400-normal.woff2",
+ "../../fonts/files/nunito-latin-ext-wght-normal.woff2",
+ "../../fonts/files/nunito-latin-wght-normal.woff2",
+ "../../fonts/files/patrick-hand-latin-400-normal.woff2",
+ "../../fonts/files/patrick-hand-latin-ext-400-normal.woff2",
+ "../../fonts/files/press-start-2p-latin-400-normal.woff2",
+ "../../fonts/files/press-start-2p-latin-ext-400-normal.woff2",
+ "../../fonts/files/source-serif-4-latin-ext-opsz-normal.woff2",
+ "../../fonts/files/source-serif-4-latin-opsz-normal.woff2",
+ "../../fonts/files/space-grotesk-latin-ext-wght-normal.woff2",
+ "../../fonts/files/space-grotesk-latin-wght-normal.woff2",
+ "../../fonts/files/space-mono-latin-400-normal.woff2",
+ "../../fonts/files/space-mono-latin-700-normal.woff2",
+ "../../fonts/files/space-mono-latin-ext-400-normal.woff2",
+ "../../fonts/files/space-mono-latin-ext-700-normal.woff2",
+ "../../book-kit/icons/polymers-192.png",
+ "../../book-kit/icons/polymers-512.png"
+];
+self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
+self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('ipad-polymers-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener('fetch', (e) => {
+  const r = e.request; if (r.method !== 'GET') return;
+  if (r.mode === 'navigate') { // the page itself: newest copy when online, cached copy when not
+    e.respondWith(fetch(r).then((res) => { const cp = res.clone(); caches.open(CACHE).then((c) => c.put('./', cp)); return res; }).catch(() => caches.match('./')));
+    return;
+  }
+  e.respondWith(caches.match(r).then((hit) => hit || fetch(r).then((res) => { if (res.ok && new URL(r.url).origin === location.origin) { const cp = res.clone(); caches.open(CACHE).then((c) => c.put(r, cp)); } return res; })));
+});

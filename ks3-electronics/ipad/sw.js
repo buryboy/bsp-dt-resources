@@ -1,5 +1,5 @@
 // Offline cache for the iPad version of this activity. Made by book-kit/tools/make_solo_pages.py: do not edit by hand.
-const CACHE = 'ipad-ks3-electronics-cc0f60e64528';
+const CACHE = 'ipad-ks3-electronics-d757942057c9';
 const FILES = [
  "./",
  "app.webmanifest",
@@ -21,7 +21,8 @@ const FILES = [
  "../common.css?h=1095ee77",
  "../common.js?h=daf867c1",
  "../../book-kit/install-help.js",
- "../../book-kit/solo-pages.js?h=70eba3ce",
+ "../../book-kit/updater.js",
+ "../../book-kit/solo-pages.js?h=e80f7906",
  "../../nea-kit/vendor/html2canvas.min.js",
  "../../nea-kit/vendor/jspdf.umd.min.js",
  "../../fonts/files/caveat-latin-ext-wght-normal.woff2",
@@ -46,6 +47,8 @@ const FILES = [
  "../../fonts/files/inter-latin-wght-normal.woff2",
  "../../fonts/files/josefin-sans-latin-ext-wght-normal.woff2",
  "../../fonts/files/josefin-sans-latin-wght-normal.woff2",
+ "../../fonts/files/lexend-latin-ext-wght-normal.woff2",
+ "../../fonts/files/lexend-latin-wght-normal.woff2",
  "../../fonts/files/monoton-latin-400-normal.woff2",
  "../../fonts/files/monoton-latin-ext-400-normal.woff2",
  "../../fonts/files/nunito-latin-ext-wght-normal.woff2",

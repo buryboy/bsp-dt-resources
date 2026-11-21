@@ -1,12 +1,12 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-polymers-f0f5b1d51567';
+const CACHE = 'ipad-polymers-ae9e594987e5';
 const FILES = [
  "./",
  "app.webmanifest",
  "../../book-kit/icons/polymers-180.png",
  "../../book-kit/book.css?h=32238363",
  "../config.js?h=5c85c3fa",
- "../../book-kit/solo.js?h=23646a36",
+ "../../book-kit/solo.js?h=e984f64d",
  "../../book-kit/harness.js?h=73af921e",
  "../../book-kit/sound.js?h=b44355da",
  "../../book-kit/ink.js?h=179d4440",
@@ -25,6 +25,7 @@ const FILES = [
  "../manifest.js?h=2171fa11",
  "../final-quiz.js?h=2932940a",
  "../../book-kit/install-help.js",
+ "../../book-kit/updater.js",
  "../../nea-kit/vendor/html2canvas.min.js",
  "../../nea-kit/vendor/jspdf.umd.min.js",
  "../../fonts/fonts.css",
@@ -50,6 +51,8 @@ const FILES = [
  "../../fonts/files/inter-latin-wght-normal.woff2",
  "../../fonts/files/josefin-sans-latin-ext-wght-normal.woff2",
  "../../fonts/files/josefin-sans-latin-wght-normal.woff2",
+ "../../fonts/files/lexend-latin-ext-wght-normal.woff2",
+ "../../fonts/files/lexend-latin-wght-normal.woff2",
  "../../fonts/files/monoton-latin-400-normal.woff2",
  "../../fonts/files/monoton-latin-ext-400-normal.woff2",
  "../../fonts/files/nunito-latin-ext-wght-normal.woff2",

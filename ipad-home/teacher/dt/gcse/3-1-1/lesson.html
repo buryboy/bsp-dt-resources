@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New technologies lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a finishing workshop's test bench: try a finish, watch what happens
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>New and emerging technologies<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.1.1</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+
+const S=[
+{t:'Industry and automation',c:'#3B5BA5',lead:'New technology changes how factories work, and who works in them. Robots and automation bring big benefits and real costs for people.',
+ cards:[['Automation','Machines and robots doing jobs people used to do: welding, painting, packing.'],['Benefits','Faster, more accurate, consistent, can run 24/7, safer for dangerous jobs.'],['Costs','Expensive to buy; some jobs lost; workers need retraining.'],['Trade unions','Represent workers in talks about pay, safety and retraining when change happens.'],['Changing job roles','Fewer repetitive jobs, more skilled jobs: programming, maintenance, design.']],
+ demo:{type:'robots',title:'Lab test: the packing line',q:'Robot arms replace hand packing. What happens to output and to jobs?',opts:['Output up, all jobs gone','Output up, packing jobs down, new technician jobs','No change'],right:1,ms:5000,
+  res:'Output rises because robots work faster and never stop. Packing jobs fall, but new skilled jobs appear: programming and maintaining the robots. Unions push for retraining.'}},
+{t:'Enterprise',c:'#C99A06',lead:'Enterprise means starting and running a business. New technology has created new ways to fund, sell and organise.',
+ cards:[['Privately owned business','Owned by individuals, who take the risks and profits.'],['Crowdfunding','Many people pay small amounts online to fund a product before it exists.'],['Virtual marketing and retail','Selling and advertising online: websites, apps, social media.'],['Co-operatives','Owned and run by members who share decisions and profits.'],['Fair Trade','Certification that producers get a fair price and decent conditions.']],
+ demo:{type:'crowd',title:'Lab test: a crowdfunding campaign',q:'An inventor needs £5,000 to make her first 500 bike lights. How does crowdfunding help?',opts:['A bank lends her the money','Many backers pay in advance','The government pays'],right:1,ms:5000,
+  res:'Hundreds of backers each pay a small amount in advance, often getting a reward or the product. It raises the money AND proves people want it before she spends a penny.'}},
+{t:'Sustainability',c:'#2E8B57',lead:'Designers must think about where materials come from and where products end up.',
+ cards:[['Finite resources','Will run out: oil (for plastics), metal ores, coal.'],['Non-finite resources','Can be replaced: timber from managed forests, cotton, wool.'],['Disposal of waste','Landfill, recycling, energy from waste. Design so products can be taken apart.'],['Global warming','Burning fossil fuels in production and transport adds CO₂.']],
+ demo:{type:'resources',title:'Lab test: 100 years of use',q:'Oil and timber from a managed forest are both used for 100 years. Which runs out?',opts:['Oil','Managed timber','Both'],right:0,ms:5000,
+  res:'Oil is finite: once used, it is gone. A managed forest is replanted, so timber keeps regrowing. That is why non-finite materials are more sustainable.'}},
+{t:'People, culture and society',c:'#BE3F66',lead:'Products are shaped by what people want and by new technology, and good design includes everyone.',
+ cards:[['Technology push','New technology leads to new products, e.g. the first touchscreens, 3D printers.'],['Market pull','Users\' needs and wants lead to new products, e.g. lighter cordless vacuums.'],['Culture and fashion','Trends change fast; designers respect different faiths, beliefs and traditions.'],['Inclusive design','Products for everyone: elderly people, people with disabilities.']],
+ demo:{type:'pushpull',title:'Lab test: push or pull?',q:'Scientists invented the touchscreen, then companies designed products around it. Push or pull?',opts:['Technology push','Market pull'],right:0,ms:5000,
+  res:'Technology push: the technology came first and products followed. Market pull is the other way round: users ask for something and designers respond.'}},
+{t:'Production techniques',c:'#C2410C',lead:'Modern factories use computers and clever systems to make products faster, cheaper and with less waste.',
+ cards:[['CAD/CAM','Design on screen, send straight to machines. Accurate and repeatable.'],['Standardisation','Using standard parts and sizes so they fit and are cheaper.'],['FMS','Flexible manufacturing system: computer-controlled machines that switch products quickly.'],['Just in time (JIT)','Materials arrive exactly when needed: little stock, less waste.'],['Lean manufacturing','Removing waste of every kind and continuously improving.']],
+ demo:{type:'jit',title:'Lab test: the store room',q:'A factory switches to Just In Time. What happens to the amount of stock in its store room?',opts:['It grows','It shrinks to almost nothing','It stays the same'],right:1,ms:5000,
+  res:'With JIT, small deliveries arrive exactly when needed, so the store room is almost empty: less money tied up, less waste. The risk: one late delivery stops the line.'}},
+{t:'Design decisions',c:'#7449B0',lead:'Designers decide how long a product should last. That choice affects customers, the business and the planet.',
+ cards:[['Planned obsolescence','Designing products to fail or go out of date so people buy again. More sales, more waste.'],['Design for maintenance','Parts can be repaired or replaced: longer life, less waste.'],['Ethics','Is it right? Who is affected? Workers, users, the environment.'],['Critical evaluation','Weigh up benefits and drawbacks of any new technology before using it.']],
+ demo:{type:'obsol',title:'Lab test: six years of phones',q:'Over 6 years, how many phones go to landfill if each one fails after 2 years and cannot be repaired?',opts:['1','3','6'],right:1,ms:5500,
+  res:'Three sealed phones are thrown away in 6 years. A repairable phone with a new battery at year 3 can last the whole time: one phone, far less e-waste and fewer finite resources used.'}},
+{t:'Quick fire',c:'#14213d',lead:'Name the idea before you tap. Then the exam question.',
+ cards:[['Paying fairly for cocoa','<em>Fair Trade</em>'],['Fund a product before making it','<em>Crowdfunding</em>'],['Materials arrive when needed','<em>Just in time</em>'],['Made to fail on purpose','<em>Planned obsolescence</em>'],['Users ask, designers respond','<em>Market pull</em>'],['Oil, metal ores','<em>Finite</em> resources']],
+ exam:{q:'Discuss the impact of automation on the workforce of a furniture factory. (4 marks)',a:'Positive: faster, more consistent production (1); safer, as robots take dangerous jobs (1). Negative: repetitive jobs are lost (1); workers need retraining for new skilled roles such as programming and maintenance (1).'}}
+];
+const DEMOS={
+robots:(t)=>{const r=clamp(t*1.3);let o='<rect x="20" y="150" width="560" height="20" fill="#9aa3ab"/>';for(let i=0;i<8;i++){const x=((t*900+i*80)%600);o+=`<rect x="${x}" y="128" width="40" height="22" fill="#d8b57a"/>`}
+ for(let i=0;i<4;i++){const x=80+i*130,rob=i<Math.round(r*4);o+=rob?`<rect x="${x}" y="60" width="16" height="70" fill="#3b5ba5"/><rect x="${x-10}" y="56" width="50" height="12" fill="#3b5ba5"/><circle cx="${x+8}" cy="135" r="6" fill="#3b5ba5"/>`:`<circle cx="${x+8}" cy="80" r="14" fill="#c2410c"/><rect x="${x-4}" y="96" width="24" height="40" rx="8" fill="#c2410c"/>`}
+ const out=Math.round(lerp(400,1100,r)),pk=Math.round(lerp(20,4,r)),tech=Math.round(lerp(0,4,r));
+ return o+T(20,215,`Output: ${out} boxes/day`,'font-weight="700"')+T(20,245,`Packing jobs: ${pk}`,'fill="#c2410c" font-weight="700"')+T(300,245,`Technician jobs: ${tech}`,'fill="#3b5ba5" font-weight="700"')},
+crowd:(t)=>{const p=clamp(t*1.15),raised=Math.round(p*5600);let o=`<rect x="40" y="60" width="520" height="40" rx="20" fill="#eee"/><rect x="40" y="60" width="${Math.min(520,520*raised/5000)}" height="40" rx="20" fill="#c99a06"/>`+T(40,45,`£${raised.toLocaleString()} raised of £5,000`,'font-weight="700"');
+ const n=Math.floor(p*40);for(let i=0;i<n;i++)o+=`<circle cx="${50+(i%20)*26}" cy="${150+Math.floor(i/20)*34}" r="10" fill="#3b5ba5"/>`;
+ return o+T(40,240,`${Math.floor(p*412)} backers`,'font-size="16"')+(raised>=5000?T(330,240,'FUNDED: production can start','font-weight="700" fill="#2e8b57"'):'')},
+resources:(t)=>{const y=Math.round(t*100);const oil=Math.max(0,100-t*130),tim=60+20*Math.sin(t*12);return T(20,30,`Year ${y}`,'font-size="22" font-weight="700"')+`<rect x="80" y="${260-oil*2}" width="140" height="${oil*2}" fill="#1b2a33"/>`+T(150,285,'Oil (finite)','text-anchor="middle"')+`<rect x="360" y="${260-tim*2}" width="140" height="${tim*2}" fill="#2e8b57"/>`+T(430,285,'Managed timber','text-anchor="middle"')+(oil<=0?T(80,150,'RUN OUT','font-weight="700" fill="#c2410c" font-size="24"'):'')},
+pushpull:(t)=>{const items=[['Touchscreen phones',0],['Cordless vacuum',1],['3D printers',0],['Lighter pushchair',1]];let o=`<rect x="20" y="170" width="270" height="110" rx="12" fill="#fbe9f0" stroke="#be3f66" stroke-width="3"/><rect x="310" y="170" width="270" height="110" rx="12" fill="#e7f1fb" stroke="#3b5ba5" stroke-width="3"/>`+T(155,270,'TECHNOLOGY PUSH','text-anchor="middle" font-weight="700" fill="#be3f66"')+T(445,270,'MARKET PULL','text-anchor="middle" font-weight="700" fill="#3b5ba5"');
+ items.forEach(([n,k],i)=>{const p=clamp(t*4.4-i);const x=lerp(300,k?445:155,p),y=lerp(30+i*30,185+(i>>1)*35+((i%2)?0:0),p);o+=T(x,p<1?30+i*32:190+Math.floor(i/2)*34,n,`text-anchor="middle" font-size="14" opacity="${.4+.6*p}"`)});return o},
+jit:(t)=>{let o=T(20,30,'Traditional','font-weight="700"')+T(320,30,'Just in time','font-weight="700"');const p=clamp(t*1.2);
+ for(let i=0;i<24;i++){if(i<24-p*4)o+=`<rect x="${30+(i%6)*40}" y="${60+Math.floor(i/6)*40}" width="34" height="34" fill="#d8b57a"/>`}
+ const n=Math.round(2+Math.sin(t*20));for(let i=0;i<n;i++)o+=`<rect x="${330+i*40}" y="${180}" width="34" height="34" fill="#c2410c"/>`;
+ o+=`<rect x="${320+((t*1500)%260)}" y="230" width="60" height="30" rx="6" fill="#3b5ba5"/>`+T(330,280,'small deliveries, just when needed','font-size="14"');return o+T(30,280,'big stock, money tied up','font-size="14"')},
+obsol:(t)=>{const y=t*6;let o=T(20,30,`Year ${y.toFixed(1)}`,'font-size="22" font-weight="700"')+T(20,80,'Sealed phone','font-weight="700"')+T(20,190,'Repairable phone','font-weight="700"');
+ const dumped=Math.min(3,Math.floor(y/2));for(let i=0;i<3;i++){const x=200+i*120;o+=`<rect x="${x}" y="50" width="40" height="70" rx="8" fill="${i<dumped?'#999':'#1b2a33'}" opacity="${i<=dumped?1:.15}"/>`+(i<dumped?T(x-4,140,'landfill','font-size="13" fill="#c2410c"'):'')}
+ o+=`<rect x="200" y="160" width="40" height="70" rx="8" fill="#7449b0"/>`+(y>3?T(250,200,'new battery fitted at year 3','font-size="14" fill="#7449b0"'):'');return o+T(20,285,`Phones in landfill: sealed ${dumped} · repairable 0`,'font-weight="700"')}
+};
+
+
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const AR=(x1,y1,x2,y2,c='#c2410c',w=5)=>{const a=Math.atan2(y2-y1,x2-x1),s=12;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/><polygon points="${x2},${y2} ${x2-s*Math.cos(a-.5)},${y2-s*Math.sin(a-.5)} ${x2-s*Math.cos(a+.5)},${y2-s*Math.sin(a+.5)}" fill="${c}"/>`};
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">${d.run||'Run the test'}</button><button class="go sec" id="reset">Reset</button>${(d.buttons||[]).map(b=>`<button class="opt" data-b="${b}">${b}</button>`).join('')}${d.slider?`<input type="range" id="slider" min="0" max="1000" value="0" aria-label="${d.slider}"><span class="clock" id="clock"></span>`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"${right?'':' style="grid-template-columns:1fr"'}><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt[data-k]').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run'),sl=document.getElementById('slider'),ck=document.getElementById('clock');
+ const D=DEMOS[d.type];let state={mode:d.mode0||(d.buttons||[])[0]};
+ const draw=t=>{st.innerHTML=`<svg viewBox="0 0 600 300">${D(t,state,d)}</svg>`;if(sl){sl.value=Math.round(t*1000);if(d.clock)ck.textContent=d.clock(t)}};
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,done=finish)=>{cancelAnimationFrame(anim);const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);draw(t);if(t<1)anim=requestAnimationFrame(step);else done()};anim=requestAnimationFrame(step)};
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));state.mode=d.mode0||(d.buttons||[])[0];draw(0)};
+ run.onclick=()=>{reset();if(d.runMode)state.mode=d.runMode;play(d.ms||3000)};
+ document.getElementById('reset').onclick=reset;
+ main.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.b;play(d.bms||1600,()=>{})});
+ if(sl)sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/1000);if(sl.value>=1000)finish()};
+ draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,378 @@
+{
+ "spec": [
+  [
+   "3.1",
+   "Core technical principles",
+   [
+    [
+     "3.1.1",
+     "New and emerging technologies"
+    ],
+    [
+     "3.1.2",
+     "Energy generation and storage"
+    ],
+    [
+     "3.1.3",
+     "Developments in new materials"
+    ],
+    [
+     "3.1.4",
+     "Systems approach to designing"
+    ],
+    [
+     "3.1.5",
+     "Mechanical devices"
+    ],
+    [
+     "3.1.6",
+     "Materials and their working properties"
+    ]
+   ]
+  ],
+  [
+   "3.2",
+   "Specialist technical principles",
+   [
+    [
+     "3.2.1",
+     "Selection of materials or components"
+    ],
+    [
+     "3.2.2",
+     "Forces and stresses"
+    ],
+    [
+     "3.2.3",
+     "Ecological and social footprint"
+    ],
+    [
+     "3.2.4",
+     "Sources and origins"
+    ],
+    [
+     "3.2.5",
+     "Using and working with materials"
+    ],
+    [
+     "3.2.6",
+     "Stock forms, types and sizes"
+    ],
+    [
+     "3.2.7",
+     "Scales of production"
+    ],
+    [
+     "3.2.8",
+     "Specialist techniques and processes"
+    ],
+    [
+     "3.2.9",
+     "Surface treatments and finishes"
+    ]
+   ]
+  ],
+  [
+   "3.3",
+   "Designing and making principles",
+   [
+    [
+     "3.3.1",
+     "Investigation, primary and secondary data"
+    ],
+    [
+     "3.3.2",
+     "Environmental, social and economic challenge"
+    ],
+    [
+     "3.3.3",
+     "The work of others"
+    ],
+    [
+     "3.3.4",
+     "Design strategies"
+    ],
+    [
+     "3.3.5",
+     "Communication of design ideas"
+    ],
+    [
+     "3.3.6",
+     "Prototype development"
+    ],
+    [
+     "3.3.7",
+     "Selection of materials and components"
+    ],
+    [
+     "3.3.8",
+     "Tolerances"
+    ],
+    [
+     "3.3.9",
+     "Material management"
+    ],
+    [
+     "3.3.10",
+     "Specialist tools and equipment"
+    ],
+    [
+     "3.3.11",
+     "Specialist techniques and processes"
+    ]
+   ]
+  ]
+ ],
+ "topics": [
+  {
+   "slug": "3-1-1",
+   "codes": [
+    "3.1.1"
+   ],
+   "title": "New and emerging technologies",
+   "app": "Business Advisory",
+   "appdesc": "Students advise small firms whether to invest in automation, CAD/CAM, flexible manufacturing or crowdfunding.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Emerging-tech-notes-sheet.pdf",
+    "deck": "Business-Advisory.pptx",
+    "pack": "Business-Advisory-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-1-2",
+   "codes": [
+    "3.1.2"
+   ],
+   "title": "Energy generation and storage",
+   "app": "The Energy Planner",
+   "appdesc": "Students choose energy sources and storage for clients from a TV remote to a whole country.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Energy-notes-sheet.pdf",
+    "deck": "Energy-Planner.pptx",
+    "pack": "Energy-Planner-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-1-3",
+   "codes": [
+    "3.1.3"
+   ],
+   "title": "Developments in new materials",
+   "app": "The Innovation Lab",
+   "appdesc": "Students pitch modern, smart and composite materials to solve product problems.",
+   "workbooks": [
+    "smart-modern-composite"
+   ],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "New-materials-notes-sheet.pdf",
+    "deck": "Innovation-Lab.pptx",
+    "pack": "Innovation-Lab-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-1-4",
+   "codes": [
+    "3.1.4"
+   ],
+   "title": "Systems approach to designing",
+   "app": "The Systems Lab",
+   "appdesc": "Students design input, process, output systems for client briefs.",
+   "workbooks": [
+    "systems-electronics"
+   ],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Systems-notes-sheet.pdf",
+    "deck": "Systems-Lab.pptx",
+    "pack": "Systems-Lab-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-1-5",
+   "codes": [
+    "3.1.5"
+   ],
+   "title": "Mechanical devices",
+   "app": "The Mechanism Workshop",
+   "appdesc": "Students choose mechanisms and do the calculations for toy and tool briefs.",
+   "workbooks": [
+    "levers-linkages",
+    "cams-gears-pulleys"
+   ],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Mechanisms-notes-sheet.pdf",
+    "deck": "Mechanism-Workshop.pptx",
+    "pack": "Mechanism-Workshop-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-1-6",
+   "codes": [
+    "3.1.6"
+   ],
+   "title": "Materials and their working properties",
+   "app": "Material Matchmakers",
+   "appdesc": "Students act as materials consultants, matching materials to client products.",
+   "workbooks": [
+    "material-properties",
+    "papers-boards",
+    "woods-and-timbers",
+    "metals-alloys",
+    "polymers",
+    "textiles"
+   ],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Properties-notes-sheet.pdf",
+    "deck": "Material-Matchmakers.pptx",
+    "pack": "Material-Matchmakers-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-2-1",
+   "codes": [
+    "3.2.1",
+    "3.2.6",
+    "3.3.7",
+    "3.3.9"
+   ],
+   "title": "Selection of materials, stock forms and material management",
+   "app": "The Quote Desk",
+   "appdesc": "Students quote customer orders: stock, cutting layouts, quantities, waste and cost. All six material areas.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Materials-stock-notes-sheet.pdf",
+    "deck": "Quote-Desk.pptx",
+    "pack": "Quote-Desk-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-2-2",
+   "codes": [
+    "3.2.2"
+   ],
+   "title": "Forces and stresses",
+   "app": "The Returns Desk",
+   "appdesc": "Students investigate failed products: the force, why it failed and how to reinforce it. All six material areas.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Forces-notes-sheet.pdf",
+    "deck": "Returns-Desk.pptx",
+    "pack": "Returns-Desk-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-2-3",
+   "codes": [
+    "3.2.3",
+    "3.2.4"
+   ],
+   "title": "Ecological and social footprint; sources and origins",
+   "app": "The Ethical Buyer",
+   "appdesc": "Students choose between two suppliers on footprint and ethics, and suggest a 6R improvement. All six material areas.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Footprint-notes-sheet.pdf",
+    "deck": "Ethical-Buyer.pptx",
+    "pack": "Ethical-Buyer-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-2-5",
+   "codes": [
+    "3.2.5",
+    "3.2.8",
+    "3.3.10",
+    "3.3.11"
+   ],
+   "title": "Using and working with materials; specialist techniques and processes",
+   "app": "The Process Planner",
+   "appdesc": "Students write factory route cards: steps, tools, safety and quality points. All six material areas.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Processes-notes-sheet.pdf",
+    "deck": "Process-Planner.pptx",
+    "pack": "Process-Planner-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-2-7",
+   "codes": [
+    "3.2.7",
+    "3.3.8"
+   ],
+   "title": "Scales of production; tolerances and quality control",
+   "app": "The Production Manager",
+   "appdesc": "Students plan scale, production aids and quality checks, and pass or fail parts against tolerances. All six material areas.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Production-notes-sheet.pdf",
+    "deck": "Production-Manager.pptx",
+    "pack": "Production-Manager-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-2-9",
+   "codes": [
+    "3.2.9"
+   ],
+   "title": "Surface treatments and finishes",
+   "app": "The Finishing Shop",
+   "appdesc": "Students choose and justify finishes for client products. All six material areas.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Finishes-notes-sheet.pdf",
+    "deck": "Finishing-Shop.pptx",
+    "pack": "Finishing-Shop-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-3-1",
+   "codes": [
+    "3.3.1",
+    "3.3.2",
+    "3.3.3"
+   ],
+   "title": "Investigation, the environmental, social and economic challenge, and the work of others",
+   "app": "The Design Researcher",
+   "appdesc": "Students research real users, write measurable specification points and identify designers' styles.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Research-notes-sheet.pdf",
+    "deck": "Design-Researcher.pptx",
+    "pack": "Design-Researcher-print-pack.pdf"
+   }
+  },
+  {
+   "slug": "3-3-4",
+   "codes": [
+    "3.3.4",
+    "3.3.5",
+    "3.3.6"
+   ],
+   "title": "Design strategies, communication and prototype development",
+   "app": "The Junior Designer",
+   "appdesc": "Students pick the right drawing or model for each audience and iterate designs from client feedback.",
+   "workbooks": [],
+   "files": {
+    "lesson": "lesson.html",
+    "notes": "Strategies-notes-sheet.pdf",
+    "deck": "Junior-Designer.pptx",
+    "pack": "Junior-Designer-print-pack.pdf"
+   }
+  }
+ ]
+}

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forces and stresses lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a test rig: load it, watch it fail, then fix it
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Forces and stresses<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.2.2</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+const S=[
+{id:'five',t:'The five forces',c:'#C2410C',lead:'Every product is pushed, pulled or twisted when it is used. Designers must know which force acts, so they can stop the product failing. Tap a force button under the test rig to see it act.',
+ cards:[['Tension','A <em>pulling</em> force that stretches. Ropes, bag handles, guitar strings.'],['Compression','A <em>pushing</em> force that squashes. Table legs, stacked boxes, pillars.'],['Bending','Makes a part <em>curve</em>: one face stretched, the other squashed. Shelves, levers, diving boards.'],['Torsion','A <em>twisting</em> force. Screwdrivers, axles, keys.'],['Shear','Two forces <em>sliding past</em> each other. Scissors, bolts, rivets, racking frames.']],
+ demo:{type:'forces',title:'Test rig: which force?',q:'A diver stands on the end of a diving board. Which force acts on the board?',opts:['Tension','Bending','Torsion'],right:1,
+  res:'Bending. The top face is stretched (tension) and the bottom face is squashed (compression). That is why bending is the most common cause of failure: it attacks both ways at once. Try the other force buttons.'}},
+{id:'fold',t:'Folding and corrugation',c:'#2478B3',lead:'Folding or forming a sheet puts material further from the middle of the section, which makes it far stiffer without adding weight. Used in card, sheet metal and polymers.',
+ cards:[['Folding a flange','Fold the edges of a sheet down. Card shelves, sheet-metal panels, trays.'],['Box section','Fold into a closed box shape. Very stiff for bending and twisting.'],['Corrugation','Ridges or flutes: corrugated card, roofing sheet. Stiff and crush-resistant.'],['Why it works','The further material is from the centre line, the harder the part is to bend.']],
+ demo:{type:'sag',title:'Test rig: the same sheet, three shapes',q:'The same piece of card is used flat, folded and corrugated. Which bends the most under the coins?',opts:['Flat','Folded edges','Corrugated'],right:0,load:'coins',
+  beams:[['Flat card','#d8c49b',95,1,'flat'],['Folded edges','#d8c49b',28,0,'fold'],['Corrugated','#d8c49b',10,0,'corr']],
+  res:'The flat card sags and collapses. Folding the edges makes it many times stiffer, and corrugated card hardly moves. Same material, same weight: only the shape changed.'}},
+{id:'lam',t:'Lamination',c:'#8B5A2B',lead:'Laminating glues thin layers together. In timber it lets you make strong curves, because the grain follows the curve instead of running across it.',
+ cards:[['What it is','Thin layers (veneers, card, fibres) glued together, often bent round a former and clamped until the glue sets.'],['Short grain','A curve cut from solid wood has grain running across it. That short grain snaps easily.'],['Examples','Bent plywood chairs, skateboard decks, laminated beams, rocking chair runners, multi-layer card.'],['Also in','Paper and board (layered card), polymers (laminated sheets), GRP and CFRP layups.']],
+ demo:{type:'arc',title:'Test rig: two curved rockers',q:'A curve cut from solid wood and a laminated curve carry the same load. What happens?',opts:['Both hold','The solid one snaps along the short grain','The laminated one snaps'],right:1,
+  res:'Where the grain runs across the solid curve it is short and weak, so it splits. In the laminated curve every layer bends with the curve, so the grain is long all the way round and it holds.'}},
+{id:'tri',t:'Triangulation',c:'#5B6670',lead:'A square frame can lean sideways (rack). A triangle cannot change shape without one side changing length, so adding a diagonal brace makes a frame rigid.',
+ cards:[['Racking','A frame leaning sideways as its joints rotate. This is shear on the frame.'],['The fix','Add a diagonal brace, corner block, gusset or cross bracing to make triangles.'],['Examples','Bike frames, roof trusses, bridges, shelf brackets, table corner blocks, scaffolding.']],
+ demo:{type:'frame',title:'Test rig: a push from the side',q:'A square frame and a braced frame are pushed from the side. Which one racks?',opts:['The square frame','The braced frame','Both'],right:0,
+  res:'The square frame leans over because its corners can rotate. The diagonal brace splits the other frame into triangles, which cannot change shape, so it stays square.'}},
+{id:'web',t:'Webbing and ribs',c:'#7449B0',lead:'Thin walls (webs) or ribs moulded across a part stop it bending, without making the whole part thick and heavy. Common in moulded polymers and cast metal.',
+ cards:[['Ribs','Thin walls running along a part: stiffen panels, lids and casings.'],['Webs / gussets','A triangular web across a corner stops it opening up.'],['Why not just thicker?','Thick moulded plastic shrinks, warps and uses more material. Ribs stay thin.'],['Examples','Plastic crates, chair shells, phone case corners, shelf brackets.']],
+ demo:{type:'sag',title:'Test rig: two plastic shelf brackets',q:'Two moulded brackets carry the same load. One has a rib across the corner. Which bends?',opts:['The plain bracket','The ribbed bracket','Neither'],right:0,load:'weight',
+  beams:[['Plain bracket','#b9a3e3',70,0,'L'],['Ribbed bracket','#b9a3e3',6,0,'Lrib']],
+  res:'The plain bracket opens up at the corner and droops. The rib turns the corner into a triangle, so it barely moves, and it uses only a little more plastic.'}},
+{id:'tex',t:'Textiles: interfacing and webbing',c:'#BE3F66',lead:'Fabric is strong in tension but floppy. Interfacing adds stiffness where shape matters; webbing and dense stitching spread tension at load points.',
+ cards:[['Fabric interfacing','An extra layer sewn or fused inside: collars, cuffs, waistbands, bag panels.'],['Webbing','Strong woven tape for straps and handles.'],['Bar tacks','Dense zig-zag stitching at stress points (belt loops, strap joints).'],['Box-cross stitching','A stitched square with an X across it, spreading the pull on a strap.']],
+ demo:{type:'collar',title:'Test rig: two shirt collars',q:'Two collars are washed and hung up. One has interfacing. What happens?',opts:['Both stand up','Only the interfaced collar keeps its shape','Both go floppy'],right:1,
+  res:'Without interfacing the collar has no stiffness and bends over. The interfacing layer stiffens it, so it holds its shape wash after wash.'}},
+{id:'sum',t:'Spot the force',c:'#C99A06',lead:'Quick fire. Name the force before you tap. Then the exam question.',
+ cards:[['A tow rope pulling a car','<em>Tension</em>'],['A stool leg when you sit down','<em>Compression</em>'],['A shelf loaded with books','<em>Bending</em>'],['Turning a stiff screw','<em>Torsion</em>'],['Scissors cutting paper','<em>Shear</em>'],['A bookcase leaning sideways','<em>Shear (racking)</em>: fix with triangulation']],
+ exam:{q:'A pine shelf sags in the middle when loaded with books. Name the force and describe two ways to redesign the shelf so it does not sag. (3 marks)',a:'Bending (1). Any two: add a batten or rib under the front edge (1); use a thicker shelf or a laminated board such as plywood (1); add a central support so the span is shorter (1).'}}
+];
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">Run the test</button><button class="go sec" id="reset">Reset</button></div>${d.type==='forces'?`<div class="row" id="fbtn">${['Tension','Compression','Bending','Torsion','Shear'].map(f=>`<button class="opt" data-f="${f}">${f}</button>`).join('')}</div>`:''}<div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt[data-k]').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const AR=(x1,y1,x2,y2)=>{const a=Math.atan2(y2-y1,x2-x1),s=12;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#c2410c" stroke-width="5"/><polygon points="${x2},${y2} ${x2-s*Math.cos(a-.5)},${y2-s*Math.sin(a-.5)} ${x2-s*Math.cos(a+.5)},${y2-s*Math.sin(a+.5)}" fill="#c2410c"/>`};
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run');
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,f,done=finish)=>{cancelAnimationFrame(anim);const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);f(t);if(t<1)anim=requestAnimationFrame(step);else done()};anim=requestAnimationFrame(step)};
+ let draw;
+ if(d.type==='forces'){let mode='Bending';
+  draw=t=>{const e=Math.sin(Math.min(1,t)*Math.PI/2);let s=`<svg viewBox="0 0 600 300">`;
+   if(mode==='Tension'){const w=240+e*60;s+=`<rect x="${300-w/2}" y="125" width="${w}" height="${50-e*10}" rx="4" fill="#d8c49b" stroke="#1b2a33" stroke-width="2"/>`+AR(300-w/2,150,300-w/2-70,150)+AR(300+w/2,150,300+w/2+70,150)}
+   if(mode==='Compression'){const w=300-e*60,h=50+e*16;s+=`<rect x="${300-w/2}" y="${150-h/2}" width="${w}" height="${h}" rx="4" fill="#d8c49b" stroke="#1b2a33" stroke-width="2"/>`+AR(300-w/2-80,150,300-w/2-4,150)+AR(300+w/2+80,150,300+w/2+4,150)}
+   if(mode==='Bending'){const dd=e*60;s+=`<rect x="40" y="100" width="40" height="120" fill="#6f7a84"/><path d="M80 130 Q300 ${130+dd*.4} 520 ${130+dd}" stroke="#d8c49b" stroke-width="26" fill="none"/>`+AR(520,40+dd,520,110+dd)+T(170,110+dd*.15,'top face stretched (tension)','font-size="15" fill="#c2410c" opacity="'+e+'"')+T(170,175+dd*.25,'bottom face squashed (compression)','font-size="15" fill="#2478b3" opacity="'+e+'"')}
+   if(mode==='Torsion'){s+=`<rect x="150" y="125" width="300" height="50" rx="4" fill="#d8c49b" stroke="#1b2a33" stroke-width="2"/>`+[...Array(9)].map((_,k)=>`<line x1="${170+k*32}" y1="125" x2="${170+k*32+e*k*5}" y2="175" stroke="#1b2a33" stroke-width="2"/>`).join('')+`<path d="M135 110 a20 40 0 1 0 0 80" stroke="#c2410c" stroke-width="5" fill="none"/><path d="M465 190 a20 40 0 1 0 0 -80" stroke="#c2410c" stroke-width="5" fill="none"/>`}
+   if(mode==='Shear'){const off=e*40;s+=`<rect x="${150+off}" y="100" width="300" height="50" fill="#d8c49b" stroke="#1b2a33" stroke-width="2"/><rect x="${150-off}" y="150" width="300" height="50" fill="#bfa77a" stroke="#1b2a33" stroke-width="2"/>`+AR(170,80,330,80)+AR(430,220,270,220)}
+   st.innerHTML=s+T(20,285,mode,'font-size="22" font-weight="700"')+'</svg>'};
+  main.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{mode=b.dataset.f;play(1500,draw,()=>{})});
+  run.onclick=()=>{reset();mode='Bending';play(2000,draw)}}
+ if(d.type==='sag'){const n=d.beams.length,W=600,H=300,w=W/n-30;
+  const prof=(k,x,y)=>({flat:`<line x1="${x-26}" y1="${y}" x2="${x+26}" y2="${y}" stroke="#1b2a33" stroke-width="4"/>`,fold:`<polyline points="${x-26},${y+14} ${x-26},${y} ${x+26},${y} ${x+26},${y+14}" stroke="#1b2a33" stroke-width="4" fill="none"/>`,corr:`<polyline points="${x-30},${y} ${x-20},${y+12} ${x-10},${y} ${x},${y+12} ${x+10},${y} ${x+20},${y+12} ${x+30},${y}" stroke="#1b2a33" stroke-width="4" fill="none"/>`,L:'',Lrib:''})[k];
+  draw=t=>{let s=`<svg viewBox="0 0 ${W} ${H}">`;d.beams.forEach(([l,c,def,brk,p],k)=>{const x=20+k*(w+30),dd=Math.min(1,t*1.3)*def;
+   if(p==='L'||p==='Lrib'){const cx=x+20,cy=60;s+=`<rect x="${cx-8}" y="${cy-20}" width="16" height="200" fill="#9aa3ab"/>`;const ang=dd*.6;const ex=cx+150*Math.cos(ang*Math.PI/180),ey=cy+40+150*Math.sin(ang*Math.PI/180);
+    s+=`<line x1="${cx}" y1="${cy+40}" x2="${ex}" y2="${ey}" stroke="${c}" stroke-width="16" stroke-linecap="round"/><line x1="${cx}" y1="${cy+40}" x2="${cx}" y2="${cy+130}" stroke="${c}" stroke-width="16"/>`;
+    if(p==='Lrib')s+=`<polygon points="${cx},${cy+48} ${cx+90},${cy+48+90*Math.sin(ang*Math.PI/180)} ${cx},${cy+120}" fill="${c}" stroke="#7449b0" stroke-width="2"/>`;
+    s+=`<rect x="${ex-30}" y="${ey-44}" width="44" height="36" rx="4" fill="#1b2a33"/>`+T(x+20,H-14,l)}
+   else{const y=110;s+=`<rect x="${x}" y="${y+12}" width="12" height="70" fill="#6f7a84"/><rect x="${x+w-12}" y="${y+12}" width="12" height="70" fill="#6f7a84"/><path d="M${x} ${y+8} Q${x+w/2} ${y+8+dd*2} ${x+w} ${y+8}" stroke="${c}" stroke-width="10" fill="none"/>`;
+    s+=[0,1,2].map(m=>`<ellipse cx="${x+w/2-14+m*14}" cy="${y+dd-4-m*0}" rx="11" ry="5" fill="#c9a227" stroke="#8a6d10"/>`).join('');
+    s+=prof(p,x+w/2,y+110)+T(x+w/2,H-14,l,'text-anchor="middle"')}});st.innerHTML=s+'</svg>'};
+  run.onclick=()=>{reset();play(2600,draw)}}
+ if(d.type==='arc'){draw=t=>{let s=`<svg viewBox="0 0 600 300">`;[['Cut from solid wood',1],['Laminated layers',0]].forEach(([l,solid],k)=>{const x=40+k*290,crack=solid&&t>.55;
+   const arc=(r,o='')=>`<path d="M${x} 200 Q${x+120} ${140-r} ${x+240} 200" ${o}/>`;
+   if(solid){s+=`<g>${crack?`<path d="M${x} 200 Q${x+60} 166 ${x+112} 160" stroke="#d8b57a" stroke-width="34" fill="none"/><path d="M${x+128} 164 Q${x+180} 166 ${x+240} 200" stroke="#d8b57a" stroke-width="34" fill="none" transform="rotate(${t*8} ${x+240} 200)"/>`:arc(0,'stroke="#d8b57a" stroke-width="34" fill="none"')}${[...Array(9)].map((_,g)=>`<line x1="${x+10+g*26}" y1="150" x2="${x+10+g*26+20}" y2="${crack&&g>4?212:206}" stroke="#a77f45" stroke-width="2" opacity=".7"/>`).join('')}${crack?`<path d="M${x+116} 140 l6 22 -6 10 8 26" stroke="#c0392b" stroke-width="4" fill="none"/>`:''}</g>`}
+   else s+=[-12,-6,0,6,12].map((o,m)=>arc(o,`stroke="${m%2?'#c79a5c':'#e0c08a'}" stroke-width="7" fill="none" transform="translate(0 ${o})"`)).join('');
+   s+=`<rect x="${x+100}" y="${100-(solid&&crack?-20:0)}" width="40" height="30" rx="4" fill="#1b2a33" opacity="${Math.min(1,t*3)}"/>`+T(x+120,280,l,'text-anchor="middle"')});st.innerHTML=s+'</svg>'};
+  run.onclick=()=>{reset();play(3000,draw)}}
+ if(d.type==='frame'){draw=t=>{const e=Math.min(1,t*1.2);let s=`<svg viewBox="0 0 600 300">`;[[0,'Square frame'],[1,'Braced frame']].forEach(([br,l],k)=>{const x=70+k*280,y=60,sz=160,sh=br?3*e:60*e;
+   s+=`<polygon points="${x+sh},${y} ${x+sz+sh},${y} ${x+sz},${y+sz} ${x},${y+sz}" fill="none" stroke="#5b6670" stroke-width="14" stroke-linejoin="round"/>`;
+   if(br)s+=`<line x1="${x+sh}" y1="${y}" x2="${x+sz}" y2="${y+sz}" stroke="#2478b3" stroke-width="10"/>`;
+   s+=AR(x-60+sh,y+4,x-8+sh,y+4)+`<rect x="${x-20}" y="${y+sz}" width="${sz+40}" height="10" fill="#1b2a33"/>`+T(x+sz/2,285,l,'text-anchor="middle"')});st.innerHTML=s+'</svg>'};
+  run.onclick=()=>{reset();play(2500,draw)}}
+ if(d.type==='collar'){draw=t=>{const e=Math.min(1,t*1.2);let s=`<svg viewBox="0 0 600 300">`;[[0,'No interfacing'],[1,'With interfacing']].forEach(([inf,l],k)=>{const x=80+k*280,flop=inf?4*e:105*e;
+   s+=`<path d="M${x} 230 L${x} 110 Q${x+60} 90 ${x+120} 110 L${x+120} 230 Z" fill="#e8eef5" stroke="#9aa9b8" stroke-width="3"/>`;
+   s+=`<path d="M${x-10} 110 Q${x+60} ${80} ${x+130} 110 L${x+130+flop*.2} ${70+flop} Q${x+60} ${40+flop} ${x-10-flop*.2} ${70+flop} Z" fill="#f7fafc" stroke="#9aa9b8" stroke-width="3"/>`;
+   if(inf)s+=`<path d="M${x} 104 Q${x+60} 78 ${x+120} 104" stroke="#be3f66" stroke-width="3" stroke-dasharray="6 5" fill="none"/>`;
+   s+=T(x+60,280,l,'text-anchor="middle"')});st.innerHTML=s+'</svg>'};
+  run.onclick=()=>{reset();play(2500,draw)}}
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));draw(0)};
+ document.getElementById('reset').onclick=reset;draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+}
+</script>
+</body>
+</html>

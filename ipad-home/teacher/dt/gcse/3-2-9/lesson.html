@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Surface finishes lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a finishing workshop's test bench: try a finish, watch what happens
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Surface treatments &amp; finishes<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.2.9</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+const S=[
+{id:'why',t:'Why finish?',c:'#0f766e',lead:'Every finish does one or both of two jobs: it PROTECTS the material, or it DECORATES the product. Tap each product: which job does its finish do?',
+ cards:[['Garden gate','<em>Protect</em> from rain and rust or rot. <em>Decorate</em> with colour.'],['Cereal box','<em>Decorate</em>: printing sells the product. Little protection needed.'],['Bike chain','<em>Protect</em>: oil stops wear and rust. No decoration.'],['Kitchen worktop','<em>Protect</em> from heat, spills and scratches.'],['Football shirt','<em>Decorate</em> with team colours and logos.'],['Circuit board','<em>Protect</em> from damp and corrosion.']],
+ demo:{type:'drop',title:'Lab test: the water drop',q:'Water drops land on bare pine and on varnished pine. What will happen?',opts:['Both soak in','Bare soaks in, varnished beads up','Both bead up'],right:1,liquid:'#5fa8d3',
+  samples:[{l:'Bare pine',col:'#e9c98f',grain:1,b:'soak'},{l:'Varnished pine',col:'#dcb06a',grain:1,b:'bead',gloss:1}],
+  res:'Bare wood absorbs water, so it swells, stains and eventually rots. The varnish seals the surface, so water sits on top and can be wiped away. That is protection.'}},
+{id:'paper',t:'Papers and boards',c:'#2478B3',lead:'Card and paper finishes are mostly about how the product looks and feels on the shelf, with some protection from wear and moisture.',
+ cards:[['Offset lithography','<em>How:</em> ink passes from plates via rollers onto sheets.<br><em>Why:</em> high quality full colour, cheap per copy in big runs.'],['Embossing / debossing','<em>How:</em> card is pressed between two shaped dies.<br><em>Why:</em> a raised (or sunken) shape you can feel. No ink needed.'],['Spot UV varnish','<em>How:</em> clear varnish printed on chosen areas, cured by UV light.<br><em>Why:</em> glossy patches stand out on matt card.'],['Laminating','<em>How:</em> thin plastic film bonded over the surface.<br><em>Why:</em> waterproof, wipe-clean and stiffer.'],['Foil blocking','<em>How:</em> a heated die presses metallic foil on.<br><em>Why:</em> shiny gold or silver that looks expensive.']],
+ demo:{type:'press',title:'Lab test: embossing',q:'Card goes between a male and a female die. What happens to the card?',opts:['It is cut through','It is printed','It is pushed into a raised shape'],right:2,
+  res:'The dies push the card into a raised shape without cutting or printing it. Customers can feel it. Debossing is the same but pushed down into the card.'}},
+{id:'timber',t:'Timber',c:'#8B5A2B',lead:'Timber finishes protect against moisture, rot, insects and wear, and can change or show off the colour of the wood.',
+ cards:[['Paint','<em>How:</em> primer, undercoat, then top coats.<br><em>Why:</em> colour plus protection. Toy-safe paints exist.'],['Polyurethane varnish','<em>How:</em> thin coats brushed on, lightly sanded between.<br><em>Why:</em> hard clear coat; grain still shows.'],['Wood stain','<em>How:</em> brushed or wiped on, soaks into the surface.<br><em>Why:</em> changes colour; little protection on its own.'],['Oil','<em>How:</em> wiped on with a cloth, excess removed.<br><em>Why:</em> natural look; food-safe types. Needs re-applying.'],['Tanalising','<em>How:</em> preservative forced deep in under pressure.<br><em>Why:</em> resists rot and insects for decades, even in soil.']],
+ demo:{type:'time',title:'Lab test: fence posts in wet soil',q:'Three pine posts stand in wet soil for 20 years. Which one rots first?',opts:['Bare pine','Painted pine','Tanalised pine'],right:0,unit:'years',max:20,kind:'rot',
+  samples:[{l:'Bare pine',col:'#e9c98f',rate:1.6},{l:'Painted pine',col:'#3f7d5a',rate:.75},{l:'Tanalised pine',col:'#b8b57a',rate:.12}],
+  res:'Bare pine rots within a few years. Paint helps until it cracks, then water gets in underneath. Tanalising puts the preservative deep inside the wood, so the post lasts for decades.'}},
+{id:'metal',t:'Metal',c:'#5B6670',lead:'Most metal finishes stop corrosion, especially rust on steel. They can also add colour, grip or insulation.',
+ cards:[['Paint','<em>How:</em> brushed or sprayed over a primer.<br><em>Why:</em> cheap colour and rust protection. Chips easily.'],['Galvanising','<em>How:</em> steel dipped in molten zinc.<br><em>Why:</em> long-lasting rust protection outdoors. Dull grey.'],['Powder coating','<em>How:</em> charged powder sprayed on, then baked.<br><em>Why:</em> tough, thick, chip-resistant colour.'],['Dip coating','<em>How:</em> hot metal dipped in plastic powder that melts on.<br><em>Why:</em> soft grip and insulation, e.g. tool handles.'],['Anodising','<em>How:</em> electrolysis thickens the oxide layer on aluminium.<br><em>Why:</em> hard, coloured surface. Aluminium only.']],
+ demo:{type:'time',title:'Lab test: scratched steel outdoors',q:'Four steel plates are scratched and left outside for 20 years. Which one shows the LEAST rust?',opts:['Bare steel','Painted','Galvanised','Powder coated'],right:2,unit:'years',max:20,kind:'rust',scratch:1,
+  samples:[{l:'Bare steel',col:'#9aa3ab',rate:2.2},{l:'Painted',col:'#c0392b',rate:.9},{l:'Galvanised',col:'#b9c0c6',rate:.07},{l:'Powder coated',col:'#2471a3',rate:.4}],
+  res:'Rust starts wherever bare steel meets air and water. At a scratch, paint lets rust creep underneath. The zinc on galvanised steel corrodes first and protects the steel even at the scratch, so it lasts the longest.'}},
+{id:'poly',t:'Polymers',c:'#7449B0',lead:'Most moulded polymers are self-finishing: the colour and gloss come from the mould. Finishes are mainly for edges and graphics.',
+ cards:[['Polishing','<em>How:</em> edges buffed, flame polished or rubbed with fine abrasive.<br><em>Why:</em> clear, glossy acrylic edges after cutting.'],['Vinyl decals','<em>How:</em> printed self-adhesive vinyl applied by hand.<br><em>Why:</em> cheap logos for short runs.'],['Screen printing','<em>How:</em> ink pushed through a stencil mesh.<br><em>Why:</em> bold, durable graphics; cheap in big runs.'],['Self-finishing','<em>How:</em> colour and texture come from the mould.<br><em>Why:</em> no extra process or cost.']],
+ demo:{type:'wipe',title:'Lab test: polishing an acrylic edge',q:'A laser-cut acrylic edge looks cloudy. What does polishing change?',opts:['The colour','The clarity and shine','The thickness'],right:1,
+  res:'Cutting leaves tiny scratches that scatter light, so the edge looks cloudy. Polishing removes them, so light passes straight through and the edge looks clear and glossy.'}},
+{id:'tex',t:'Textiles',c:'#BE3F66',lead:'Textile finishes add colour and pattern, or change how the fabric behaves with liquids, dirt and fire.',
+ cards:[['Screen printing','<em>How:</em> ink pushed through a mesh stencil, one screen per colour.<br><em>Why:</em> bold flat colours, good for logos.'],['Sublimation printing','<em>How:</em> heat turns dye to gas, which bonds into polyester.<br><em>Why:</em> photo-quality, never cracks. Polyester only.'],['Dyeing','<em>How:</em> fabric soaked in dye: dip dye, tie dye, batik.<br><em>Why:</em> colours whole fabric or makes patterns and fades.'],['Stain protection','<em>How:</em> chemical coating applied to the fibres.<br><em>Why:</em> spills bead up and wipe off.'],['Water-repellent finish','<em>How:</em> coating makes fibres shed water.<br><em>Why:</em> rain runs off; fabric still breathes.']],
+ demo:{type:'drop',title:'Lab test: spilled juice',q:'Juice is spilled on plain cotton and on stain-protected cotton. What happens?',opts:['Both stain','Plain stains, protected beads up','Both bead up'],right:1,liquid:'#c2185b',
+  samples:[{l:'Plain cotton',col:'#f2efe6',weave:1,b:'soak'},{l:'Stain-protected cotton',col:'#f2efe6',weave:1,b:'bead'}],
+  res:'Untreated fibres soak the juice up, so it stains. The stain-protection coating stops liquid getting into the fibres, so it beads up and wipes off.'}},
+{id:'elec',t:'Electronic and mechanical',c:'#2E8B57',lead:'Finishes here stop circuits corroding, give moving parts an easy life, and make metal parts look good and conduct well.',
+ cards:[['PCB lacquering','<em>How:</em> clear lacquer sprayed or brushed over the board.<br><em>Why:</em> seals copper tracks against damp, dust and corrosion.'],['Electroplating','<em>How:</em> a thin metal layer (chrome, nickel, gold) added by electrolysis.<br><em>Why:</em> shiny, corrosion-resistant, good contacts.'],['Lubrication','<em>How:</em> oil or grease on moving parts.<br><em>Why:</em> less friction and wear; keeps water off.']],
+ demo:{type:'time',title:'Lab test: a circuit board in a damp shed',q:'Two circuit boards spend a year in a damp shed. One is lacquered. What happens?',opts:['Both corrode','Only the bare board corrodes','Neither corrodes'],right:1,unit:'months',max:12,kind:'corrode',pcb:1,
+  samples:[{l:'Bare PCB',col:'#2f6b3a',rate:1.7},{l:'Lacquered PCB',col:'#2f6b3a',rate:.06,gloss:1}],
+  res:'Damp air attacks the exposed copper tracks, which turn green and can break the circuit. The lacquer seals the board, so moisture cannot reach the copper.'}},
+{id:'sum',t:'Choose the finish',c:'#C99A06',lead:'Quick fire. Say the finish out loud before you tap. Then the exam question.',
+ cards:[['Steel playground railings','<em>Galvanising</em> (or powder coating): long rust protection outdoors.'],['Acrylic sign edges','<em>Polishing</em>: clear, glossy edges.'],['Wooden chopping board','<em>Food-safe oil</em>: safe with food, easy to re-apply.'],['Menu in a busy café','<em>Laminating</em>: waterproof and wipe-clean.'],['Polyester running top with a photo print','<em>Sublimation printing</em>: full colour that will not crack.'],['Pliers handles','<em>Dip coating</em>: grip and insulation.']],
+ exam:{q:'A company makes outdoor benches from softwood with a steel frame. Recommend a suitable finish for EACH part and justify your choices. (4 marks)',a:'Softwood: <em>tanalising</em> or exterior paint/varnish (1), so the wood resists rot and moisture outdoors (1). Steel frame: <em>galvanising</em> or powder coating (1), so the steel does not rust in rain (1).'}}
+];
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+const rnd=(seed=>()=>(seed=(seed*16807)%2147483647)/2147483647)(42);
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">Run the test</button><button class="go sec" id="reset">Reset</button>${d.type==='time'?`<input type="range" id="slider" min="0" max="1000" value="0" aria-label="Time"><span class="clock" id="clock">0 ${d.unit}</span>`:''}${d.type==='wipe'?`<input type="range" id="slider" min="0" max="100" value="0" aria-label="Polish amount">`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+const wood=(x,y,w,h,col,grain)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${col}"/>`+(grain?[...Array(7)].map((_,k)=>`<path d="M${x} ${y+8+k*h/7} q${w/3} ${k%2?6:-6} ${w} 0" stroke="#00000018" stroke-width="2" fill="none"/>`).join(''):'');
+const weave=(x,y,w,h,col)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${col}"/>`+[...Array(Math.floor(w/8))].map((_,k)=>`<line x1="${x+k*8}" y1="${y}" x2="${x+k*8}" y2="${y+h}" stroke="#0000000d"/>`).join('')+[...Array(Math.floor(h/8))].map((_,k)=>`<line x1="${x}" y1="${y+k*8}" x2="${x+w}" y2="${y+k*8}" stroke="#0000000d"/>`).join('');
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run');
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));draw(0)};
+ let draw;
+ if(d.type==='drop'){const n=d.samples.length,W=600,H=300,w=W/n-30;
+  draw=t=>{st.innerHTML=`<svg viewBox="0 0 ${W} ${H}">`+d.samples.map((s,k)=>{const x=20+k*(w+30),cx=x+w/2,sy=150,top=130;let g=s.weave?weave(x,sy,w,110,s.col):wood(x,sy,w,110,s.col,s.grain);if(s.gloss)g+=`<rect x="${x+8}" y="${sy+6}" width="${w-16}" height="8" rx="4" fill="#fff" opacity=".45"/>`;
+   const fall=Math.min(1,t/0.35),dy=20+fall*(top-20+18);let drop='';
+   if(t<0.35)drop=`<path d="M${cx} ${dy-22} q14 22 0 30 q-14 -8 0 -30z" fill="${d.liquid}"/>`;
+   else{const p=Math.min(1,(t-.35)/.65);if(s.b==='soak'){drop=`<ellipse cx="${cx}" cy="${sy+40}" rx="${16+p*70}" ry="${6+p*26}" fill="${d.liquid}" opacity="${.85-p*.5}"/>`}else{drop=`<ellipse cx="${cx}" cy="${sy-2}" rx="22" ry="${14-p*2}" fill="${d.liquid}"/><ellipse cx="${cx-7}" cy="${sy-7}" rx="6" ry="3" fill="#fff" opacity=".8"/>`}}
+   return g+drop+`<text x="${cx}" y="${H-14}" text-anchor="middle" font-size="20" font-family="Lexend" fill="#1b2a33">${s.l}</text>`}).join('')+`</svg>`};
+  run.onclick=()=>{reset();const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/3000);draw(t);if(t<1)anim=requestAnimationFrame(step);else finish()};anim=requestAnimationFrame(step)}}
+ if(d.type==='time'){const n=d.samples.length,W=640,H=300,w=W/n-24,dc={rust:['#8a3b12','#b5541c','#c8782f'],rot:['#3b3a2a','#4a4a33','#5b5a3e'],corrode:['#4fb3a0','#6cc5a8','#3c9c88']}[d.kind];
+  const blobs=d.samples.map(()=>[...Array(46)].map(()=>{const sc=d.scratch&&rnd()<.6;return {x:sc?rnd():rnd(),y:sc?.5+(rnd()-.5)*.25:rnd(),r:4+rnd()*10,th:sc?rnd()*.5:.25+rnd()*.75,c:dc[Math.floor(rnd()*3)]}}));
+  const sl=document.getElementById('slider'),ck=document.getElementById('clock');
+  draw=t=>{sl.value=Math.round(t*1000);ck.textContent=Math.round(t*d.max)+' '+d.unit;st.innerHTML=`<svg viewBox="0 0 ${W} ${H}">`+d.samples.map((s,k)=>{const x=14+k*(w+24),y=24,h=210;let g=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${s.col}"/>`;
+   if(d.kind==='rot')g+=`<rect x="${x-6}" y="${y+h-40}" width="${w+12}" height="46" fill="#5a4630" opacity=".9"/>`;
+   if(d.pcb)g+=[0,1,2,3,4].map(r=>`<path d="M${x+10} ${y+30+r*36} h${w*.45} v18 h${w*.35}" stroke="#d9a441" stroke-width="5" fill="none"/>`).join('');
+   if(d.scratch)g+=`<line x1="${x+8}" y1="${y+h*.5}" x2="${x+w-8}" y2="${y+h*.5+8}" stroke="#d7dde2" stroke-width="3"/>`;
+   if(s.gloss)g+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#fff" opacity=".12"/>`;
+   const v=t*s.rate;g+=blobs[k].filter(b=>b.th<v).map(b=>{const by=d.kind==='rot'?y+h-50*b.y-10:y+10+b.y*(h-20);return `<circle cx="${x+8+b.x*(w-16)}" cy="${by}" r="${b.r*Math.min(1.6,.5+(v-b.th)*2)}" fill="${b.c}" opacity=".85"/>`}).join('');
+   return g+`<text x="${x+w/2}" y="${H-16}" text-anchor="middle" font-size="18" font-family="Lexend" fill="#1b2a33">${s.l}</text>`}).join('')+`</svg>`};
+  sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/1000);if(sl.value>=1000)finish()};
+  run.onclick=()=>{reset();const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/7000);draw(t);if(t<1)anim=requestAnimationFrame(step);else finish()};anim=requestAnimationFrame(step)}}
+ if(d.type==='wipe'){const sl=document.getElementById('slider');
+  draw=p=>{sl.value=Math.round(p*100);const W=600,H=280,cut=60+p*480;st.innerHTML=`<svg viewBox="0 0 ${W} ${H}"><defs><linearGradient id="ac" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#bfe9ff"/><stop offset="1" stop-color="#7cc8ee"/></linearGradient><clipPath id="cl"><rect x="0" y="0" width="${cut}" height="${H}"/></clipPath><filter id="fz"><feTurbulence baseFrequency=".9" numOctaves="2"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0"/><feComposite in2="SourceGraphic" operator="in"/></filter></defs><rect x="40" y="60" width="520" height="70" rx="4" fill="url(#ac)"/><rect x="40" y="130" width="520" height="34" fill="#a6dcf5"/><rect x="40" y="130" width="520" height="34" fill="#fff" filter="url(#fz)"/><g clip-path="url(#cl)"><rect x="40" y="130" width="520" height="34" fill="#9fd8f3"/><rect x="40" y="134" width="520" height="6" fill="#fff" opacity=".85"/><rect x="40" y="150" width="520" height="3" fill="#fff" opacity=".5"/></g><line x1="${cut}" y1="40" x2="${cut}" y2="190" stroke="#1b2a33" stroke-width="3" stroke-dasharray="6 5"/><text x="60" y="220" font-size="18" font-family="Lexend" fill="#1b2a33">Polished edge: clear and glossy</text><text x="540" y="220" text-anchor="end" font-size="18" font-family="Lexend" fill="#1b2a33">Laser-cut edge: cloudy</text><text x="300" y="40" text-anchor="middle" font-size="16" font-family="Lexend" fill="#5b6670">Acrylic sheet, edge facing you</text></svg>`};
+  sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/100);if(sl.value>=100)finish()};
+  run.onclick=()=>{reset();const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/3500);draw(t);if(t<1)anim=requestAnimationFrame(step);else finish()};anim=requestAnimationFrame(step)}}
+ if(d.type==='press'){draw=t=>{const W=600,H=300,dn=Math.min(1,t/.45),up=t>.6?Math.min(1,(t-.6)/.3):0,top=40+dn*58-up*58,bump=Math.min(1,t/.45)*22;
+  st.innerHTML=`<svg viewBox="0 0 ${W} ${H}"><rect x="200" y="${top-30}" width="200" height="34" fill="#9aa3ab"/><path d="M200 ${top+4} H262 Q300 ${top+4-0} 300 ${top+4} H200z" fill="#9aa3ab"/><path d="M200 ${top+4} H260 Q300 ${top+4-26} 340 ${top+4} H400 V${top-30+34} " fill="#9aa3ab"/><text x="300" y="${top-8}" text-anchor="middle" font-size="15" font-family="Lexend" fill="#fff">Female die</text>
+   <rect x="200" y="176" width="200" height="40" fill="#6f7a84"/><path d="M262 176 Q300 ${176-bump-4} 338 176z" fill="#6f7a84"/><text x="300" y="203" text-anchor="middle" font-size="15" font-family="Lexend" fill="#fff">Male die</text>
+   <path d="M120 ${170} H262 Q300 ${170-bump} 338 170 H480" stroke="#c49a5a" stroke-width="7" fill="none"/><text x="125" y="160" font-size="16" font-family="Lexend" fill="#1b2a33">Card</text>
+   ${t>.85?`<g transform="translate(470 230)"><rect x="-80" y="-40" width="160" height="80" rx="6" fill="#e8d3a8"/><path d="M-30 10 l30 -36 30 36z" fill="#e8d3a8" stroke="#fff" stroke-width="3"/><path d="M-30 10 h60" stroke="#00000033" stroke-width="3"/><text x="0" y="56" text-anchor="middle" font-size="14" font-family="Lexend" fill="#1b2a33">Top view: raised logo</text></g>`:''}</svg>`};
+  run.onclick=()=>{reset();const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/3500);draw(t);if(t<1)anim=requestAnimationFrame(step);else finish()};anim=requestAnimationFrame(step)}}
+ document.getElementById('reset').onclick=reset;draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+}
+</script>
+</body>
+</html>

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Build the separate "iPad sites" website: only the open, no-data iPad versions of the student workbooks.
+"""Build the separate "iPad sites" website: the open, no-data iPad versions of the student workbooks, plus the
+front pages and teacher lesson files from ipad-home/ (run make_home.py first).
 
     python3 book-kit/tools/build_ipad_site.py /path/to/ipad-sites
 
 Copies every <activity>/ipad/ folder plus exactly the files each one uses (taken from its sw.js list), keeping the same
 folder layout so nothing needs rewriting. Results-server addresses and passwords are blanked in the copied settings.
-No teacher tools, no logged-in pages, no backend code. The list page becomes the site's home page.
+No teacher tools, no logged-in pages, no backend code. ipad-home/index.html becomes the site's home page.
 Run make_solo.py / make_solo_pages.py first if a workbook changed.
 """
 import json, pathlib, re, shutil, sys
@@ -45,8 +46,12 @@ def main(dest):
             out.write_text(t)
         else:
             shutil.copy2(f, out)
-    home = (SRC / 'ipad/index.html').read_text().replace('href="../', 'href="').replace('src="../', 'src="')
-    (dest / 'index.html').write_text(home)
+    # front pages (I'm a student / I'm a teacher, teacher lesson files): made by make_home.py, copied to the site root
+    for f in sorted((SRC / 'ipad-home').rglob('*')):
+        if f.is_file() and f.name != 'data.json':
+            out = dest / f.relative_to(SRC / 'ipad-home'); out.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(f, out)
+    for f in [SRC / 'fonts/lexend.css', *sorted((SRC / 'fonts/files').glob('lexend-*'))]:
+        out = dest / f.relative_to(SRC); out.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(f, out)
     (dest / '.nojekyll').write_text('')
     (dest / 'README.md').write_text(
         '# iPad sites (BSP D&T)\n\nOpen versions of the D&T student workbooks for iPads: no sign-in, nothing sent anywhere. '

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Properties lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a finishing workshop's test bench: try a finish, watch what happens
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Materials and their properties<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.1.6</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+
+const S=[
+{t:'Strength and hardness',c:'#5B6670',lead:'Working properties describe how a material behaves when forces act on it.',
+ cards:[['Strength','Resists a force without breaking: tension (pulling), compression (squashing), bending, shear, torsion.'],['Hardness','Resists scratching, wear and denting. Tool steel is very hard.'],['Example','A drill bit must be hard; a rope must have tensile strength.']],
+ demo:{type:'scratch',title:'Lab test: the scratch test',q:'A steel nail is dragged across three samples. Which shows the smallest scratch?',opts:['Pine','Acrylic','Tool steel'],right:2,ms:4500,
+  res:'Tool steel is hardest, so it barely marks. Acrylic scratches easily and softwood pine dents and scratches most. Hardness = resistance to scratching and wear.'}},
+{t:'Toughness and brittleness',c:'#C2410C',lead:'Toughness is the ability to absorb impact without breaking. The opposite is brittleness.',
+ cards:[['Tough','Absorbs a sudden blow: polypropylene, mild steel, nylon.'],['Brittle','Snaps or shatters: acrylic, glass, cast iron.'],['Hard but brittle','A material can be hard AND brittle, like glass.']],
+ demo:{type:'impact',title:'Lab test: the hammer test',q:'Which sample survives a sharp hammer blow?',opts:['Acrylic','Polypropylene','Glass'],right:1,ms:4500,
+  res:'Polypropylene flexes and absorbs the energy: it is tough. Acrylic and glass are brittle and crack. That is why lunch boxes are polypropylene.'}},
+{t:'Elasticity, plasticity, malleability, ductility',c:'#7449B0',lead:'How a material changes shape, and whether it comes back.',
+ cards:[['Elasticity','Returns to its original shape after being stretched or bent: elastic bands, spring steel.'],['Plasticity','Stays in its new shape: clay, hot thermoplastics.'],['Malleability','Can be hammered or pressed into shape without cracking: copper, lead, aluminium.'],['Ductility','Can be drawn out into a wire: copper.']],
+ demo:{type:'stretch',title:'Lab test: pull and let go',q:'A spring and a lump of modelling clay are pulled, then released. Which returns to its shape?',opts:['The spring','The clay','Both'],right:0,ms:5000,
+  res:'The spring is elastic and springs back. The clay is plastic and stays stretched. Copper wire is ductile: it can be drawn thin without snapping.'}},
+{t:'Conductivity',c:'#C99A06',lead:'Conductors let heat or electricity pass through easily. Insulators do not.',
+ cards:[['Thermal conductors','Metals, especially copper and aluminium: pans, heat sinks.'],['Thermal insulators','Wood, polymers, air in foams: pan handles, cool boxes.'],['Electrical conductors','Copper wires, gold contacts.'],['Electrical insulators','PVC cable sheathing, urea-formaldehyde plugs.']],
+ demo:{type:'heat',title:'Lab test: three rods in hot water',q:'Copper, steel and wooden rods stand in hot water. Which end gets hot first?',opts:['Copper','Steel','Wood'],right:0,ms:6000,
+  res:'Copper conducts heat fastest, then steel. Wood is an insulator and barely warms. That is why pans are metal and handles are wood or plastic.'}},
+{t:'Density, absorbency and fusibility',c:'#2478B3',lead:'Physical properties are what a material IS, rather than how it behaves when worked.',
+ cards:[['Density','Mass per volume. Low density = light for its size: balsa, aluminium, foam.'],['Absorbency','Soaks up liquid: cotton, paper, untreated timber.'],['Fusibility','Can be melted and joined or cast: metals, thermoplastics.'],['Why it matters','Light bikes use low-density aluminium; towels use absorbent cotton.']],
+ demo:{type:'float',title:'Lab test: the water tank',q:'Balsa, oak and steel blocks of the same size are dropped in water. Which sinks?',opts:['Balsa','Oak','Steel'],right:2,ms:5000,
+  res:'Steel (about 7.8 g/cm³) is much denser than water and sinks. Oak (about 0.75) floats low; balsa (about 0.15) floats high.'}},
+{t:'Quick fire',c:'#14213d',lead:'Name the property before you tap. Then the exam question.',
+ cards:[['Resists scratching','<em>Hardness</em>'],['Absorbs impact','<em>Toughness</em>'],['Returns to shape','<em>Elasticity</em>'],['Drawn into wire','<em>Ductility</em>'],['Lets heat pass','<em>Thermal conductivity</em>'],['Soaks up water','<em>Absorbency</em>']],
+ exam:{q:'A saucepan has a copper base and a polypropylene handle. Explain why each material was chosen. (4 marks)',a:'Copper is a good thermal conductor (1), so heat passes quickly to the food (1). Polypropylene is a thermal insulator (1), so the handle stays cool enough to hold safely; it is also tough (1).'}}
+];
+const DEMOS={
+scratch:(t)=>{const m=[['Pine','#d9b382',14],['Acrylic','#cfe8f3',7],['Tool steel','#9aa5ae',1.5]];let o='';const k=clamp(t*1.2);
+ m.forEach(([n,c,w],i)=>{const y=40+i*80;o+=`<rect x="60" y="${y}" width="420" height="56" rx="6" fill="${c}" stroke="#5b6670"/>`+T(500,y+34,n,'font-weight="700"');if(k>0)o+=`<line x1="80" y1="${y+28}" x2="${80+380*k}" y2="${y+28}" stroke="#1b2a33" stroke-width="${w}" stroke-linecap="round" opacity=".6"/>`});return o},
+impact:(t)=>{const hit=t>0.4,k=clamp((t-0.4)*2.5);let o='';const H=(x)=>`<g transform="translate(${x} ${hit?0:-60*(1-t/0.4)})"><rect x="-8" y="20" width="16" height="70" fill="#8b5a2b"/><rect x="-35" y="0" width="70" height="28" fill="#5b6670"/></g>`;
+ o+=H(170)+H(430);o+=`<rect x="90" y="${hit?90+20*k:90}" width="160" height="16" fill="#cfe8f3" stroke="#5b6670"/>`;
+ if(hit)o+=`<path d="M170 90 l-12 20 l15 6 l-18 22 M170 90 l14 18 l-10 10 l16 18" stroke="#c2410c" stroke-width="3" fill="none" opacity="${k}"/>`;
+ const bend=hit?Math.sin(k*Math.PI)*25:0;o+=`<path d="M350 98 Q430 ${98+bend} 510 98" stroke="#2e8b57" stroke-width="16" fill="none"/>`;
+ return o+T(170,240,'Acrylic',`text-anchor="middle" font-weight="700"`)+T(430,240,'Polypropylene','text-anchor="middle" font-weight="700"')+(k>=1?T(170,270,'cracked: brittle','text-anchor="middle" fill="#c2410c"')+T(430,270,'flexed back: tough','text-anchor="middle" fill="#2e8b57"'):'')},
+stretch:(t)=>{const pull=t<0.5?t*2:0,back=t>=0.5;const sx=120*(t<0.5?pull:0);let sp='';for(let i=0;i<=20;i++){const x=60+i*(9+sx/20);sp+=`${x},${80+(i%2?-14:14)} `}
+ const cl=t<0.5?pull*120:120;return `<rect x="40" y="55" width="16" height="50" fill="#5b6670"/><polyline points="${sp}" fill="none" stroke="#7449b0" stroke-width="4"/>`+T(300,140,back?'Spring: back to its shape (elastic)':'Pulling...','text-anchor="middle" font-weight="700" fill="#7449b0"')+
+ `<rect x="40" y="185" width="16" height="50" fill="#5b6670"/><path d="M56 195 L${150+cl} ${205} L${150+cl} ${215} L56 225Z" fill="#c2410c" opacity=".8"/>`+T(300,270,back?'Clay: stays stretched (plastic)':'','text-anchor="middle" font-weight="700" fill="#c2410c"')},
+heat:(t)=>{const r=[['Copper',1],['Steel',0.35],['Wood',0.04]];let o=`<rect x="60" y="200" width="480" height="80" fill="#2478b3" opacity=".35"/>`+T(300,270,'hot water','text-anchor="middle" fill="#2478b3"');
+ r.forEach(([n,s],i)=>{const x=130+i*170,h=clamp(t*1.3*s*1.4);for(let j=0;j<10;j++){const y=200-j*16,on=j/10<h;o+=`<rect x="${x}" y="${y-16}" width="40" height="16" fill="${on?'#c2410c':(i==2?'#d9b382':'#9aa5ae')}" opacity="${on?1-j*0.05:1}"/>`}o+=T(x+20,22,n,'text-anchor="middle" font-weight="700"')});return o},
+float:(t)=>{const b=[['Balsa',0.15,'#efe0b9'],['Oak',0.75,'#b98b52'],['Steel',7.8,'#9aa5ae']];let o=`<rect x="20" y="120" width="560" height="170" fill="#2478b3" opacity=".3"/>`;const k=clamp(t*1.3);
+ b.forEach(([n,d,c],i)=>{const x=80+i*170,target=d>1?220:120-60+60*d;const y=lerp(20,target,k);o+=`<rect x="${x}" y="${y}" width="60" height="60" fill="${c}" stroke="#5b6670"/>`+T(x+30,y-8,n+' '+d,'text-anchor="middle" font-weight="700" font-size="14"')});return o+T(560,110,'water 1.0','text-anchor="end" font-size="13" fill="#2478b3"')}
+};
+
+
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const AR=(x1,y1,x2,y2,c='#c2410c',w=5)=>{const a=Math.atan2(y2-y1,x2-x1),s=12;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/><polygon points="${x2},${y2} ${x2-s*Math.cos(a-.5)},${y2-s*Math.sin(a-.5)} ${x2-s*Math.cos(a+.5)},${y2-s*Math.sin(a+.5)}" fill="${c}"/>`};
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">${d.run||'Run the test'}</button><button class="go sec" id="reset">Reset</button>${(d.buttons||[]).map(b=>`<button class="opt" data-b="${b}">${b}</button>`).join('')}${d.slider?`<input type="range" id="slider" min="0" max="1000" value="0" aria-label="${d.slider}"><span class="clock" id="clock"></span>`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"${right?'':' style="grid-template-columns:1fr"'}><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt[data-k]').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run'),sl=document.getElementById('slider'),ck=document.getElementById('clock');
+ const D=DEMOS[d.type];let state={mode:d.mode0||(d.buttons||[])[0]};
+ const draw=t=>{st.innerHTML=`<svg viewBox="0 0 600 300">${D(t,state,d)}</svg>`;if(sl){sl.value=Math.round(t*1000);if(d.clock)ck.textContent=d.clock(t)}};
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,done=finish)=>{cancelAnimationFrame(anim);const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);draw(t);if(t<1)anim=requestAnimationFrame(step);else done()};anim=requestAnimationFrame(step)};
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));state.mode=d.mode0||(d.buttons||[])[0];draw(0)};
+ run.onclick=()=>{reset();if(d.runMode)state.mode=d.runMode;play(d.ms||3000)};
+ document.getElementById('reset').onclick=reset;
+ main.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.b;play(d.bms||1600,()=>{})});
+ if(sl)sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/1000);if(sl.value>=1000)finish()};
+ draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+
+}
+</script>
+</body>
+</html>

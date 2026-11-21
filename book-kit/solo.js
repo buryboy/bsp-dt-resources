@@ -11,6 +11,7 @@
   const KIT = new URL('.', document.currentScript.src).href; // …/book-kit/
   const VENDOR = new URL('../nea-kit/vendor/', KIT).href;
   { const s = document.createElement('script'); s.src = KIT + 'install-help.js'; document.head.appendChild(s); } // how to add it to the home screen
+  { const s = document.createElement('script'); s.src = KIT + 'updater.js'; document.head.appendChild(s); } // "Check for updates" button
   if ('serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

@@ -71,7 +71,7 @@ def main(folder):
     urls = ['./', 'app.webmanifest'] + sorted(local_html)
     for u in sorted(assets):
         urls.append(f'{u}?h={h8((src_dir / u[3:]).resolve())}')
-    for f in [ROOT / 'book-kit/install-help.js', ROOT / 'book-kit/solo-pages.js', ROOT / 'nea-kit/vendor/html2canvas.min.js', ROOT / 'nea-kit/vendor/jspdf.umd.min.js']:
+    for f in [ROOT / 'book-kit/install-help.js', ROOT / 'book-kit/updater.js', ROOT / 'book-kit/solo-pages.js', ROOT / 'nea-kit/vendor/html2canvas.min.js', ROOT / 'nea-kit/vendor/jspdf.umd.min.js']:
         u = '../../' + str(f.relative_to(ROOT))
         urls.append(u + (f'?h={h8(f)}' if f.name in ('solo-pages.js', 'gate.js') else ''))
     urls += ['../../' + str(f.relative_to(ROOT)) for f in sorted((ROOT / 'fonts/files').glob('*.woff2'))]

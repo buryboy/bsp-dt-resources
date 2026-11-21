@@ -81,7 +81,7 @@
   }
 
   window.BookSolo = {
-    savePage,
+    savePage, offer,
     // called by book.js after each page is built
     pageAdded(p, content) {
       if (p.solo && p.solo.noBox) return;

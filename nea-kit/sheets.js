@@ -8,6 +8,7 @@
   'use strict';
   const W = 1600, H = 1131, GX = 336, GY = 112, GW = W - GX - 28, GH = H - GY - 30, COLS = 12, ROWS = 9, GAP = 16;
   const C = window.BOOK_CONFIG || {};
+  const VENDOR = new URL('vendor/', document.currentScript.src).href; // …/nea-kit/vendor/
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const mk = (tag, cls, html, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; if (parent) parent.appendChild(e); return e; };
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -93,8 +94,8 @@
       pf.className = 'pf mosaic'; pf.style.setProperty('--cols', cols);
       pf.innerHTML = '';
       v.list.forEach((q) => {
-        const st = status[q.k] || (q.id ? 'ok' : 'wait');
-        const t = mk('div', 'tile', `<div class="ti"><img alt=""><span class="st ${st}">${{ ok: '✓', up: 'uploading…', wait: 'not uploaded yet' }[st]}</span><button class="tdel" title="Remove this photo">✕</button></div><input class="cap" placeholder="Caption: what does this show?">`, pf);
+        const st = !C.backend ? 'local' : status[q.k] || (q.id ? 'ok' : 'wait');
+        const t = mk('div', 'tile', `<div class="ti"><img alt=""><span class="st ${st}">${{ ok: '✓', up: 'uploading…', wait: 'not uploaded yet', local: '' }[st]}</span><button class="tdel" title="Remove this photo">✕</button></div><input class="cap" placeholder="Caption: what does this show?">`, pf);
         const cap = t.querySelector('.cap'); cap.value = q.cap || '';
         cap.addEventListener('change', () => { const v2 = val(), x = v2.list.find((y) => y.k === q.k); if (x) { x.cap = cap.value.trim(); store(v2); } });
         const img = t.querySelector('img');
@@ -108,6 +109,7 @@
       });
     };
     const send = async (k) => {
+      if (!C.backend) return; // iPad version: the photo stays on this device
       const data = await get('img:' + k); if (!data) return;
       status[k] = 'up'; paint();
       try { const id = await upload(data, label, ''); const v = val(), x = v.list.find((y) => y.k === k); if (x) { x.id = id; store(v); } status[k] = 'ok'; }
@@ -172,7 +174,7 @@
       io.set(Object.assign({}, v, { at: Date.now(), n: strokes.length })); clearTimeout(upT); upT = setTimeout(sendPng, 15000);
     };
     async function sendPng() {
-      if (!dirty) return; const v = io.get(); if (!v) return; dirty = false;
+      if (!dirty || !C.backend) return; const v = io.get(); if (!v) return; dirty = false;
       const data = cv.toDataURL('image/png'); const old = v.id;
       try { const id = await upload(data, label, ''); io.set(Object.assign({}, io.get(), { id })); if (old) drop(old); } catch (e) { dirty = true; }
     }
@@ -321,7 +323,7 @@
     // toolbar (stays put while the sheet zooms)
     const tb = mk('div', 'sheet-tools', `<button data-z="out" title="Zoom out">−</button><button data-z="fit" title="Fit the sheet">⤢</button><button data-z="in" title="Zoom in">+</button><span class="sep"></span>
       <button data-x="text" title="Add a text box">＋ Text</button><button data-x="photo" title="Add a photo">＋ Photo</button><button data-x="sketch" title="Add a sketch frame">＋ Sketch</button><span class="sep"></span>
-      <button data-m="arr" title="Move and resize things on this sheet">⤧ Arrange</button><button data-m="reset" class="only-arr" title="Put everything back where it started">Reset layout</button><span class="sep"></span><button data-m="pdf" title="Download your whole folder as an A3 PDF">⬇ PDF</button>`, root);
+      <button data-m="arr" title="Move and resize things on this sheet">⤧ Arrange</button><button data-m="reset" class="only-arr" title="Put everything back where it started">Reset layout</button><span class="sep"></span>${C.solo ? '<button data-m="sheetpdf" title="Save this sheet as a PDF for Showbie">📄 Save sheet</button>' : ''}<button data-m="pdf" title="Download your whole folder as an A3 PDF">⬇ ${C.solo ? 'Whole folder' : 'PDF'}</button>`, root);
     tb.setAttribute('data-noswipe', '');
     const z = zoomable(stage, board, root);
     arrangeable(board, () => z, (el) => { const k = el.dataset.key, x = sd.extra.find((q) => q.k === k); if (x) x.r = el._r.slice(); else sd.lay[k] = el._r.slice(); saveSheet(); });
@@ -339,6 +341,7 @@
       if (b.dataset.m === 'arr') { S.arranging = !S.arranging; document.querySelectorAll('.board').forEach((q) => q.classList.toggle('arranging', S.arranging)); document.querySelectorAll('.sheet-root').forEach((q) => q.classList.toggle('arr', S.arranging)); document.querySelectorAll('.sheet-tools [data-m=arr]').forEach((q) => q.classList.toggle('on', S.arranging)); }
       if (b.dataset.m === 'reset') { if (!b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = 'Reset? tap again'; setTimeout(() => { b.classList.remove('sure'); b.textContent = 'Reset layout'; }, 3000); return; } sd.lay = {}; saveSheet(); board.querySelectorAll('.it').forEach((el) => { const k = el.dataset.key; const it = sheet.items.find((q) => ({ text: 'f:' + (typeof q.f === 'string' ? q.f : q.f && q.f.id), photo: 'p:' + q.id, sketch: 's:' + q.id, scale: 'r:' + q.id }[q.t] === k)); if (it) { place(el, gridBox(it.at)); el._resize && el._resize(); } }); }
       if (b.dataset.m === 'pdf') S.exportPDF();
+      if (b.dataset.m === 'sheetpdf' && window.BookSolo) { document.querySelectorAll('.it-sketch').forEach((q) => q._flush && q._flush()); window.BookSolo.savePage(Book.pages.find((q) => q.id === 's-' + sheet.id)); }
     });
     // paste / drop pictures: onto a photo frame fills it; anywhere else adds an extra photo
     const takeFiles = (e, files) => {
@@ -388,28 +391,39 @@
     }
     return b;
   }
-  const loadScript = (src) => new Promise((res, rej) => { if ([...document.scripts].some((s) => s.src.endsWith(src))) return res(); const s = mk('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  const loadScript = (src) => new Promise((res, rej) => { if ([...document.scripts].some((s) => s.src === src)) return res(); const s = mk('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  const libs = () => Promise.all([loadScript(VENDOR + 'html2canvas.min.js'), loadScript(VENDOR + 'jspdf.umd.min.js')]);
+  // one sheet onto an A3 landscape PDF page
+  async function addSheet(pdf, i, first, host) {
+    const all = S.list, b = await staticBoard(all[i].sec, all[i].sheet, i + 1, all.length);
+    if (C.solo) { const who = student() || {}; b.querySelector('.b-num').textContent = `${who.name || ''}${who.cls ? ' · ' + who.cls : ''} · ${C.short || C.title} · sheet ${i + 1} of ${all.length} · saved ${new Date().toLocaleString([], { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`; }
+    host.innerHTML = ''; host.appendChild(b);
+    await Promise.all([...b.querySelectorAll('img')].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; }))));
+    const c = await window.html2canvas(b, { scale: 1.3, backgroundColor: null, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
+    if (!first) pdf.addPage('a3', 'landscape');
+    pdf.addImage(c.toDataURL('image/jpeg', 0.86), 'JPEG', 0, 0, 420, 297);
+  }
+  // iPad version: one sheet as its own PDF (used by "Save this sheet")
+  S.sheetPDF = async (i) => {
+    await libs(); if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3', compress: true });
+    const host = mk('div', 'pdf-host ' + document.body.className, '', document.body);
+    try { await addSheet(pdf, i, true, host); } finally { host.remove(); }
+    return pdf;
+  };
   S.exportPDF = async () => {
     if (!student()) return Book.toast('Sign in on the cover first');
     document.querySelectorAll('.it-sketch').forEach((s) => s._flush && s._flush());
     const ov = mk('div', 'pdf-ov', '<div><b>Making your PDF…</b><p>Keep this page open.</p><span></span></div>', document.body), msg = ov.querySelector('span');
     try {
-      await Promise.all([loadScript('../nea-kit/vendor/html2canvas.min.js'), loadScript('../nea-kit/vendor/jspdf.umd.min.js')]);
-      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      await libs(); if (document.fonts && document.fonts.ready) await document.fonts.ready;
       const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3', compress: true });
       const host = mk('div', 'pdf-host ' + document.body.className, '', document.body);
-      const all = S.list; let first = true;
-      for (let i = 0; i < all.length; i++) {
-        msg.textContent = `Sheet ${i + 1} of ${all.length}`;
-        const b = await staticBoard(all[i].sec, all[i].sheet, i + 1, all.length); host.innerHTML = ''; host.appendChild(b);
-        await Promise.all([...b.querySelectorAll('img')].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; }))));
-        const c = await window.html2canvas(b, { scale: 1.3, backgroundColor: null, logging: false, width: W, height: H, windowWidth: W, windowHeight: H });
-        if (!first) pdf.addPage('a3', 'landscape'); first = false;
-        pdf.addImage(c.toDataURL('image/jpeg', 0.86), 'JPEG', 0, 0, 420, 297);
-      }
+      for (let i = 0; i < S.list.length; i++) { msg.textContent = `Sheet ${i + 1} of ${S.list.length}`; await addSheet(pdf, i, i === 0, host); }
       host.remove();
-      const name = (student().name || 'folder').replace(/[^\w -]+/g, '').trim();
-      pdf.save(`${C.short || 'NEA'} - ${name}.pdf`);
+      const name = `${C.short || 'NEA'} - ${(student().name || 'folder').replace(/[^\w -]+/g, '').trim()} - whole folder.pdf`;
+      if (C.solo && window.BookSolo) { ov.remove(); return window.BookSolo.offer(new File([pdf.output('blob')], name, { type: 'application/pdf' }), pdf); }
+      pdf.save(name);
     } catch (e) { console.error(e); Book.toast('Sorry, the PDF could not be made: ' + (e.message || e)); }
     ov.remove();
   };
@@ -422,7 +436,7 @@
     NEA.sections.forEach((sec) => (sec.sheets || []).forEach((sheet) => list.push({ sec, sheet })));
     (o.outro || []).forEach((p) => list.push(p));
     S.list = list;
-    list.forEach((p, i) => Book.page({ id: 's-' + p.sheet.id, title: `${p.sec.col || p.sec.key}: ${p.sheet.title}`, build(ui) { live(ui, p.sec, p.sheet, i + 1, list.length); } }));
+    list.forEach((p, i) => Book.page({ id: 's-' + p.sheet.id, title: `${p.sec.col || p.sec.key}: ${p.sheet.title}`, solo: { noBox: true, sheetPDF: () => S.sheetPDF(i) }, build(ui) { live(ui, p.sec, p.sheet, i + 1, list.length); } }));
   };
   S.gridBox = gridBox;
   document.documentElement.classList.add('sheets-book');

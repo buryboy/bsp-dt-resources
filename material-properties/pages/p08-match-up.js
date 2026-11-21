@@ -4,7 +4,7 @@ Book.page({
   title: 'Match up',
   build(ui) {
     ui.h('Match up');
-    ui.p('Time to check you know the <b>definitions</b>. Tap a property, then tap its meaning. Try to get them all <b>first time</b>: your teacher can see the wrong tries!');
+    ui.p('Time to check you know the <b>definitions</b>. Tap a property, then tap its meaning. Try to get them all <b>first time</b>' + (BOOK_CONFIG.solo ? '!' : ': your teacher can see the wrong tries!'));
 
     // ---- physical properties ----
     ui.el('h2', '', 'Physical properties <span class="small">(what a material <i>is like</i>)</span>');

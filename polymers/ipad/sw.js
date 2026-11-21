@@ -1,9 +1,8 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-polymers-edf6993c2c0e';
+const CACHE = 'ipad-polymers-f0f5b1d51567';
 const FILES = [
  "./",
  "app.webmanifest",
- "../../gate.js?h=a98cbd18",
  "../../book-kit/icons/polymers-180.png",
  "../../book-kit/book.css?h=32238363",
  "../config.js?h=5c85c3fa",

@@ -1,9 +1,8 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-cams-gears-pulleys-5586a1b093e8';
+const CACHE = 'ipad-cams-gears-pulleys-bcd72ab29e74';
 const FILES = [
  "./",
  "app.webmanifest",
- "../../gate.js?h=a98cbd18",
  "../../book-kit/icons/cams-gears-pulleys-180.png",
  "../../book-kit/book.css?h=32238363",
  "../config.js?h=3fe5f71d",

@@ -31,6 +31,7 @@ def main(folder):
         return f'{attr}={q}../{path}?h={ver}{q}'  # content hash, so an iPad never runs a stale cached copy
 
     html = re.sub(r'\b(src|href)=(["\'])([^"\']+)\2', up, src)
+    html = re.sub(r'<script src="[^"]*gate\.js[^"]*"></script>\n?', '', html)  # open book: no site password
     cfg = re.search(r'<script src="\.\./config\.js[^"]*"></script>', html)
     solo_h = hashlib.sha256((ROOT / 'book-kit/solo.js').read_bytes()).hexdigest()[:8]
     if not cfg:

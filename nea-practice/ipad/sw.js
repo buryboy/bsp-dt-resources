@@ -1,9 +1,8 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-nea-practice-216208b51500';
+const CACHE = 'ipad-nea-practice-0e3958596bb5';
 const FILES = [
  "./",
  "app.webmanifest",
- "../../gate.js?h=a98cbd18",
  "../../book-kit/icons/nea-practice-180.png",
  "../../book-kit/book.css?h=32238363",
  "../sketchbook.css?h=59de1967",

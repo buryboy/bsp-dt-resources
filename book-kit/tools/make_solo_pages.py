@@ -44,13 +44,15 @@ def main(folder):
     name = folder.replace('-', ' ').title()
     for p in pages:
         html = re.sub(r'\b(src|href)=(["\'])([^"\']+)\2', up, p.read_text())
+        had_gate = 'gate.js' in html
+        html = re.sub(r'<script src="[^"]*gate\.js[^"]*"></script>\n?', '', html)  # open book: no site password
         t = re.search(r'<title>(.*?)</title>', html)
         if p.name == 'index.html' and t:
             name = t.group(1).split('·')[0].split('|')[0].strip()
         head = (f'<script src="../../book-kit/solo-pages.js?h={solo_h}"></script>\n<link rel="manifest" href="app.webmanifest">\n'
                 f'<link rel="apple-touch-icon" href="../../book-kit/icons/{ico}-180.png">\n<meta name="apple-mobile-web-app-capable" content="yes">\n'
                 f'<meta name="apple-mobile-web-app-title" content="{name}">\n<meta name="theme-color" content="#1f4d36">\n<meta name="robots" content="noindex">\n')
-        html = re.sub(r'(<script src="\.\./\.\./gate\.js[^"]*"></script>\n?)', lambda m: m.group(1) + head, html, count=1) if 'gate.js' in html else html.replace('<head>', '<head>\n' + head, 1)
+        html = re.sub(r'(<script src="\.\./\.\./gate\.js[^"]*"></script>\n?)', lambda m: m.group(1) + head, html, count=1) if False else html.replace('<head>', '<head>\n' + head, 1)
         # Woods & Timbers: no Microsoft Forms hand-off; save the quiz as a PDF instead
         html = re.sub(r"const FORM_TEMPLATE='[^']*';", "const FORM_TEMPLATE=''; /* iPad version: nothing is sent anywhere */", html)
         html = html.replace('Your answers will be sent to your teacher.', 'When you finish, save your answers as a PDF and hand it in on Showbie.')
@@ -59,6 +61,7 @@ def main(folder):
                             '<button class="cta" style="flex:2;width:auto" onclick="SoloPDF.saveEl(this.closest(\'.qc\'), \'Level ${level} quiz: ${esc(LEVEL_NAMES[level])}\')">📄 Save as PDF</button><button class="ghost" id="qc2">📋 Copy answers</button>')
         (out / p.name).write_text(html)
 
+    assets.discard('../../gate.js'); assets.discard('../gate.js')
     (out / 'app.webmanifest').write_text(json.dumps({
         'name': f'{name} · BSP D&T', 'short_name': name[:12], 'start_url': './', 'scope': './', 'display': 'standalone',
         'background_color': '#1f4d36', 'theme_color': '#1f4d36',
@@ -68,7 +71,7 @@ def main(folder):
     urls = ['./', 'app.webmanifest'] + sorted(local_html)
     for u in sorted(assets):
         urls.append(f'{u}?h={h8((src_dir / u[3:]).resolve())}')
-    for f in [ROOT / 'book-kit/install-help.js', ROOT / 'book-kit/solo-pages.js', ROOT / 'nea-kit/vendor/html2canvas.min.js', ROOT / 'nea-kit/vendor/jspdf.umd.min.js', ROOT / 'gate.js']:
+    for f in [ROOT / 'book-kit/install-help.js', ROOT / 'book-kit/solo-pages.js', ROOT / 'nea-kit/vendor/html2canvas.min.js', ROOT / 'nea-kit/vendor/jspdf.umd.min.js']:
         u = '../../' + str(f.relative_to(ROOT))
         urls.append(u + (f'?h={h8(f)}' if f.name in ('solo-pages.js', 'gate.js') else ''))
     urls += ['../../' + str(f.relative_to(ROOT)) for f in sorted((ROOT / 'fonts/files').glob('*.woff2'))]

@@ -1,9 +1,8 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-systems-electronics-8cb00a9d8b5d';
+const CACHE = 'ipad-systems-electronics-be3b078219f0';
 const FILES = [
  "./",
  "app.webmanifest",
- "../../gate.js?h=a98cbd18",
  "../../book-kit/icons/systems-electronics-180.png",
  "../../book-kit/book.css?h=32238363",
  "../config.js?h=6af61e12",

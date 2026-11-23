@@ -1,5 +1,5 @@
 // Offline cache for the iPad sound-circuit build guide. Bump CACHE when index.html changes.
-const CACHE = 'ipad-circuit-build-c8668958e61d';
+const CACHE = 'ipad-circuit-build-368c917227a7';
 const FILES = [
  "./",
  "app.webmanifest",

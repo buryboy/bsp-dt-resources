@@ -8,6 +8,7 @@ Interactive workbooks for The British School of Paris D&T department, hosted wit
 |---|---|
 | `woods-and-timbers/` | GCSE (AQA) Woods & Timbers – 8 levels |
 | `ks3-electronics/` | KS3 Circuit Lab – 13 levels |
+| `grooved-pine/` | Y12 A level (Edexcel) project booklet: The Grooved Pine Challenge, NEA grids 1–4 with hints. One self-contained page in `grooved-pine/ipad/` (draw, photos, resizable boxes, A3 PDF export) |
 | `lab-breakout/` | GCSE material properties escape room: team stations on computers plus a vault puzzle for the interactive whiteboard. Student access has no password; board and teacher menu use a teacher PIN (default 0000, see `TPIN` in the file). `team-sheets.pdf` is the printable answer sheet for each team |
 
 Each folder is self-contained. To add a new set, add a new folder with its own `index.html` and a card on the homepage (`index.html`).

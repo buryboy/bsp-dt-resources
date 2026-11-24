@@ -30,6 +30,7 @@ WORKBOOKS = [
     ('textiles', 'Textiles', 'ks4', '3.1.6'),
     ('nea-practice', 'NEA practice run', 'ks4', 'NEA'),
     ('nea-alevel', 'A level NEA practice', 'ks5', 'NEA'),
+    ('grooved-pine', 'The Grooved Pine Challenge', 'ks5', 'Y12 design & make · NEA grids 1–4'),
 ]
 WB = {w[0]: w for w in WORKBOOKS}
 NEA_GCSE = [('a', 'Identifying & investigating design possibilities'), ('b', 'Producing a design brief & specification'), ('c', 'Generating design ideas'), ('d', 'Developing design ideas'), ('e', 'Realising design ideas'), ('f', 'Analysing & evaluating')]
@@ -113,7 +114,7 @@ def main():
     b.append('<section id="ks5"><h2>Key Stage 5 · A level</h2><p class="sub">Edexcel Design &amp; Technology (Product Design)</p>'
              '<h3><span class="code">NEA</span>9DT0/02 Independent design and make project</h3><div class="spec">'
              + ''.join(f'<a class="row" href="nea/alevel-g{n}.html"><span class="code">Grid {n}</span><span class="t"><b>{E(t)}</b><small>Stage introduction slides</small></span><span class="go">›</span></a>' for n, t in NEA_ALEVEL)
-             + '</div><div class="wbs" style="margin-top:12px">' + wb_card('nea-alevel', '../../', 'NEA practice workbook') + '</div><p class="soon">More A level resources to come.</p></section>')
+             + '</div><div class="wbs" style="margin-top:12px">' + wb_card('nea-alevel', '../../', 'NEA practice workbook') + wb_card('grooved-pine', '../../', 'Y12 project booklet · grids 1–4, with hints') + '</div><p class="soon">More A level resources to come.</p></section>')
     page('teacher/dt/index.html', 'Design & Technology', [('Home', ''), ('Teachers', 'teacher/')], ''.join(b), 2)
 
     # teacher: one page per GCSE topic

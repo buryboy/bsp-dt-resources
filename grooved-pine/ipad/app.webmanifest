@@ -1,0 +1,21 @@
+{
+ "name": "Grooved Pine Challenge \u00b7 BSP D&T",
+ "short_name": "Grooved Pine",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#1f3448",
+ "theme_color": "#1f3448",
+ "icons": [
+  {
+   "src": "../../book-kit/icons/grooved-pine-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "../../book-kit/icons/grooved-pine-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}

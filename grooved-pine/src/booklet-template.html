@@ -479,7 +479,15 @@ async function exportPDF(){
       pdf.addImage(cv.toDataURL('image/jpeg',0.85),'JPEG',0,0,420,297);
     }
     const nm=((S.name||'My').trim().replace(/[^\w\- ]+/g,'')||'My');
-    pdf.save(`${nm} - Grooved Pine NEA booklet.pdf`);
+    const fname=`${nm} - Grooved Pine NEA booklet.pdf`;
+    const touch=navigator.maxTouchPoints>1;
+    let shared=false;
+    if(touch && navigator.canShare){
+      try{ const file=new File([pdf.output('blob')], fname, {type:'application/pdf'});
+        if(navigator.canShare({files:[file]})){ ov.style.display='none'; await navigator.share({files:[file], title:fname}); shared=true; } }
+      catch(e){ if(e && e.name==='AbortError') shared=true; }
+    }
+    if(!shared) pdf.save(fname);
   }catch(e){ alert('Sorry, the PDF could not be made: '+e.message); console.error(e); }
   finally{ ov.style.display='none'; fit(); }
 }

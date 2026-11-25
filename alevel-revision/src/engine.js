@@ -204,8 +204,10 @@ function blockHTML(bk, b, bi) {
   }
   if (b.match) {
     h += head(b.match.h || 'Match them up', b.match.q);
-    const rs = shuffle(b.match.pairs.map((p, i) => i), b.match.q);
-    h += `<table class="t mt"><tr><th style="width:36%">${b.match.lh || ''}</th><th>${b.match.rh || ''}</th></tr>${b.match.pairs.map(([l], i) => { const id = bk.id + ':p' + hsh(b.match.q + l); return `<tr><td><b>${l}</b></td><td><select class="f" data-u="${id}" data-a="${i}" data-kind="sel"><option value=""></option>${rs.map((r) => `<option value="${r}">${E(b.match.pairs[r][1])}</option>`).join('')}</select></td></tr>`; }).join('')}</table>`;
+    // options are de-duplicated by text, and an answer is right if its text matches (two rows may share an answer)
+    const first = (i) => b.match.pairs.findIndex((p) => p[1] === b.match.pairs[i][1]);
+    const rs = shuffle([...new Set(b.match.pairs.map((p, i) => first(i)))], b.match.q);
+    h += `<table class="t mt"><tr><th style="width:36%">${b.match.lh || ''}</th><th>${b.match.rh || ''}</th></tr>${b.match.pairs.map(([l], i) => { const id = bk.id + ':p' + hsh(b.match.q + l); return `<tr><td><b>${l}</b></td><td><select class="f" data-u="${id}" data-a="${first(i)}" data-kind="sel"><option value=""></option>${rs.map((r) => `<option value="${r}">${E(b.match.pairs[r][1])}</option>`).join('')}</select></td></tr>`; }).join('')}</table>`;
   }
   if (b.gap) {
     h += head(b.gap.h || 'Fill the gaps', b.gap.q || 'Choose the right word for each gap.');
@@ -321,7 +323,7 @@ function refreshProg() {
 
 /* ---------- SELF-CHECK (one topic) ---------- */
 function renderCheck() {
-  const t = V.t, list = SPEC.filter((s) => s[1] === t), bk = BOOKLETS.find((b) => b.topic === t && !b.soon);
+  const t = V.t, list = SPEC.filter((s) => s[1] === t), bk = BOOKLETS.find((b) => b.topic === t && b.pages);
   $('#barTitle').textContent = `Self-check · Topic ${t}`;
   let h = `<div class="kick">Self-check · Topic ${t}</div><h2>${E(TOPICS[t])}</h2>
    <p class="muted">Rate each spec point honestly. Tick <b>Confident</b> and an exam-style question opens: answer it, then mark yourself.${bk ? ' Not confident? The revision booklet covers it.' : ''}</p>`;

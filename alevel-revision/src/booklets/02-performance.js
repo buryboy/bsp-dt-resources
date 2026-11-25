@@ -121,6 +121,11 @@ BOOKLETS.push({ id: 't2', topic: 2, title: 'Performance characteristics', pages:
   ['A designer is choosing a material for the shaft of a screwdriver. **Explain** two performance characteristics it must have.', 4, ['Strength in torsion (1) so the shaft does not twist or shear when turning tight screws (1)', 'Hardness (1) so the tip does not wear or deform in the screw head (1)', 'Toughness (1) so it does not snap if used to lever (1)']],
  ] },
  { nea: 'Pick one part of your NEA prototype. Which forces will it face in use, and which performance characteristics does that mean the material must have? Could you test this in your evaluation?' },
+ { eh: 'Exam-style questions: the real paper’s tariffs', exam: [
+  ['**Explain** one reason why ductility is an important property of the copper used in electrical cables.', 3, ['Ductile materials can be drawn out without breaking (1), so copper can be pulled through dies into long, thin wire (1), and the finished cable can be bent around corners during installation without snapping (1)']],
+  ['**Explain** two performance characteristics of polycarbonate that make it a suitable material for the visor of a cycle helmet.', 6, ['Tough / high impact strength (1), so it absorbs the energy of a stone or a fall without shattering (1), protecting the rider’s eyes from fragments (1)', 'Good optical clarity / transparent (1), so the rider’s vision is not distorted (1), which is essential for safety on the road (1)', 'Durable / weather resistant with UV stabiliser (1) so it does not degrade outdoors (1) and keeps its clarity for longer (1)']],
+  ['Disposable cutlery can be made from the biodegradable polymer PLA instead of polystyrene. **Discuss** the factors a manufacturer should consider before making this change.', 6, ['Performance: PLA softens at a lower temperature, so hot food may be a problem; stiffness and toughness in use', 'Cost of material and whether existing injection moulds and machines can be used', 'End of life: PLA only composts in industrial conditions; contamination of plastic recycling', 'Source: renewable plant starch rather than oil; land use', 'Customer and legal pressure on single-use plastics; marketing value'],]
+ ] },
 ]},
 
 ]});

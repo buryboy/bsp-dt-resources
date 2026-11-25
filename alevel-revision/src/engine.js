@@ -163,11 +163,19 @@ $('#jump').onchange = (e) => go({ v: 'book', b: V.b, p: +e.target.value });
 $('#prev').onclick = () => { if (V.v === 'book' && V.p > 0) go({ v: 'book', b: V.b, p: V.p - 1 }); };
 $('#next').onclick = () => { if (V.v !== 'book') return; if (V.p < BK.pages.length - 1) go({ v: 'book', b: V.b, p: V.p + 1 }); else go({ v: 'home' }); };
 
-// 9-mark discuss/evaluate questions are marked by level in the real paper (see the Edexcel sample mark scheme); summarised here in our own words
-const LEVELS9 = `<p style="margin:10px 0 4px"><b>In the exam, 9-mark answers are given a level, then a mark within it:</b></p><table class="t" style="font-size:14.5px"><tr><th>Level</th><th>Marks</th><th>What the answer looks like</th></tr>
-<tr><td>1</td><td class="c">1–3</td><td>Basic understanding; few links between points; incomplete, with no real conclusion; judgements barely supported</td></tr>
-<tr><td>2</td><td class="c">4–6</td><td>Competent understanding; some clear links; one-sided or uneven; a generally sensible conclusion; some evidence</td></tr>
-<tr><td>3</td><td class="c">7–9</td><td>Thorough understanding; logical links throughout; balanced; a well-developed conclusion; judgements backed by evidence throughout</td></tr></table>`;
+// In the real paper (see the Edexcel sample mark scheme) Discuss and Evaluate questions are marked by LEVEL, not by
+// counting points; Explain questions are point + linked justification(s). Level summaries below are in our own words.
+const LV = {
+  6: [['1', '1–2', 'Superficial; a narrow range of factors; only partly applied to the product or situation in the question'], ['2', '3–4', 'Coherent; some relevant links between a fair range of factors; generally applied to the context'], ['3', '5–6', 'Comprehensive; effective links between a wide range of factors; applied thoughtfully to the context throughout']],
+  9: [['1', '1–3', 'Basic understanding; few links between points; incomplete, with no real conclusion; judgements barely supported'], ['2', '4–6', 'Competent understanding; some clear links; one-sided or uneven; a generally sensible conclusion; some evidence'], ['3', '7–9', 'Thorough understanding; logical links throughout; balanced; a well-developed conclusion; judgements backed by evidence throughout']],
+  12: [['1', '1–3', 'Basic understanding; few links; incomplete, with no real conclusion; judgements barely supported'], ['2', '4–6', 'Generally sound understanding; some clear links; uneven; a generally sensible conclusion; some evidence'], ['3', '7–9', 'Effective understanding; logical links; balanced; a considered conclusion; judgements mostly supported by evidence'], ['4', '10–12', 'Comprehensive understanding; insightful links throughout; thorough and balanced; a well-developed conclusion; pertinent evidence throughout']],
+};
+const levelled = (q, m) => /\*\*(Discuss|Evaluate)\*\*/i.test(q) && !!LV[m];
+function msHTML(q, m, ms) {
+  const lv = levelled(q, m);
+  const items = ms.map((x) => (lv ? x.replace(/\s*\((?:\d+[–-])?\d+\)/g, '') : x)).filter((x) => x.trim());
+  return `<div class="callout blue" style="margin-top:10px"><b>${lv ? 'Indicative content: points a good answer might include' : 'Mark scheme'}</b><ul style="margin:4px 0 0">${items.map((x) => `<li>${x}</li>`).join('')}</ul>${lv ? `<p style="margin:10px 0 4px"><b>This question is marked by level.</b> Decide which level describes your answer best, then choose a mark within it:</p><table class="t" style="font-size:14.5px"><tr><th>Level</th><th>Marks</th><th>What the answer looks like</th></tr>${LV[m].map((r) => `<tr><td>${r[0]}</td><td class="c">${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>` : ''}</div>`;
+}
 function blockHTML(bk, b, bi) {
   let h = '';
   const head = (t, sub) => `<h3>${t}</h3>${sub ? `<p class="muted">${sub}</p>` : ''}`;
@@ -217,11 +225,11 @@ function blockHTML(bk, b, bi) {
     h += b.calc.map(([q, a, tol, unit, work], i) => { const id = bk.id + ':c' + hsh(q); return `<div class="q" data-cu="${id}" data-a="${a}" data-tol="${tol || 0}"><span class="qn">${i + 1}</span>${q}<div class="row" style="margin-top:8px"><input type="number" step="any" style="width:160px" inputmode="decimal"> <span>${unit || ''}</span><button class="btn blue small">Check</button><span class="fb"></span></div><div class="why" style="display:none">${work}</div></div>`; }).join('');
   }
   if (b.exam) {
-    h += head(b.eh || 'Exam practice', 'Start with the command word (highlighted). Write your answer first: the mark scheme opens once you have written at least 15 characters. Then mark yourself honestly.');
-    h += b.exam.map(([q, m, ms], i) => { const id = bk.id + ':e' + hsh(q); return `<div class="q" data-eu="${id}"><span class="qn">Q${i + 1}</span>${cw(q)} <span class="tag">${m} mark${m > 1 ? 's' : ''}</span>
-      <textarea style="margin-top:8px;min-height:${m >= 6 ? 170 : m >= 4 ? 120 : 80}px" placeholder="Answer as you would in the exam."></textarea>
+    h += head(b.eh || 'Exam practice', 'Start with the command word (highlighted). Answer first: the mark scheme opens once you have written at least 15 characters. <b>Explain</b> = a point plus a linked reason for 2 marks, or two linked reasons for 3 marks. <b>Discuss</b> and <b>Evaluate</b> are marked by level. Then mark yourself honestly.');
+    h += b.exam.map(([q, m, ms, kind], i) => { const id = bk.id + ':e' + hsh(q); const sk = kind === 'sketch'; return `<div class="q" data-eu="${id}"${sk ? ' data-sk="1"' : ''}><span class="qn">Q${i + 1}</span>${cw(q)} <span class="tag">${m} mark${m > 1 ? 's' : ''}</span>
+      ${sk ? `<div class="tip" style="margin-top:8px"><b>On paper:</b> sketch and label your answer by hand, as you would in the exam. Labelled sketches earn the marks; neat drawing does not.</div><label class="chk"><input type="checkbox" data-skdone> I have sketched and labelled my answer on paper</label>` : `<textarea style="margin-top:8px;min-height:${m >= 9 ? 220 : m >= 6 ? 170 : m >= 4 ? 120 : 80}px" placeholder="Answer as you would in the exam."></textarea>`}
       <button class="btn ghost small" data-ms style="margin-top:8px">Show the mark scheme</button>
-      <div class="ms"><div class="callout blue" style="margin-top:10px"><b>Mark scheme (indicative content)</b><ul style="margin:4px 0 0">${ms.map((x) => `<li>${x}</li>`).join('')}</ul>${m === 9 ? LEVELS9 : ''}</div>
+      <div class="ms">${msHTML(q, m, ms)}
       <label class="key">My mark: <select class="f" style="width:auto;display:inline-block"><option value=""></option>${Array.from({ length: m + 1 }, (_, k) => `<option>${k}</option>`).join('')}</select> / ${m}</label></div></div>`; }).join('');
   }
   if (h.length > a1) h = h.slice(0, a1) + `<div class="actv" data-bi="${bi}">` + h.slice(a1) + '</div>';
@@ -289,11 +297,12 @@ function bindBook(bk, P) {
   });
   // exam questions
   $$('[data-eu]', view).forEach((q) => {
-    const id = q.dataset.eu, ta = $('textarea', q), btn = $('[data-ms]', q), ms = $('.ms', q), sel = $('.ms select', q), x = S.u[id] || {};
-    ta.value = x.a || ''; sel.value = x.s != null ? x.s : '';
-    const upd = () => { btn.disabled = ta.value.trim().length < 15; ms.classList.toggle('show', !!(S.u[id] || {}).o); };
+    const id = q.dataset.eu, sk = !!q.dataset.sk, ta = $('textarea', q), cb = $('[data-skdone]', q), btn = $('[data-ms]', q), ms = $('.ms', q), sel = $('.ms select', q), x = S.u[id] || {};
+    if (ta) ta.value = x.a || ''; if (cb) cb.checked = !!x.d; sel.value = x.s != null ? x.s : '';
+    const upd = () => { btn.disabled = sk ? !cb.checked : ta.value.trim().length < 15; ms.classList.toggle('show', !!(S.u[id] || {}).o); };
     upd();
-    ta.oninput = () => { U(id).a = ta.value; save(); upd(); updateLock(); };
+    if (ta) ta.oninput = () => { U(id).a = ta.value; save(); upd(); updateLock(); };
+    if (cb) cb.onchange = () => { if (cb.checked) U(id).d = 1; else delete U(id).d; save(); upd(); updateLock(); };
     btn.onclick = () => { U(id).o = 1; save(); upd(); };
     sel.onchange = () => { if (sel.value === '') delete U(id).s; else U(id).s = sel.value; after(); };
   });
@@ -324,7 +333,7 @@ function renderCheck() {
       <div class="xq" id="xq-${id}" style="display:none"><b>Prove it.</b> ${cw(q)} <span class="tag">${m} mark${m > 1 ? 's' : ''}</span>
        <textarea data-k="a.${id}" style="margin-top:8px" placeholder="Answer as you would in the exam."></textarea>
        <button class="btn ghost small msbtn" data-id="${id}" style="margin-top:8px">Show the mark scheme</button>
-       <div class="ms" id="ms-${id}"><div class="callout blue" style="margin-top:10px"><b>Mark scheme (indicative)</b><ul style="margin:4px 0 0">${ms.map((x) => `<li>${x}</li>`).join('')}</ul></div>
+       <div class="ms" id="ms-${id}">${msHTML(q, m, ms)}
        <label class="key">My mark: <select class="f" data-k="s.${id}" style="width:auto;display:inline-block"><option value=""></option>${Array.from({ length: m + 1 }, (_, k) => `<option>${k}</option>`).join('')}</select> / ${m}</label></div></div></div>`;
   });
   h += `<div class="row" style="margin-top:20px">${t > 1 ? `<button class="btn ghost" data-t="${t - 1}">‹ Topic ${t - 1}</button>` : ''}${t < 12 ? `<button class="btn ghost" data-t="${t + 1}">Topic ${t + 1} ›</button>` : ''}<button class="btn blue" id="toRes">My results ›</button></div>`;

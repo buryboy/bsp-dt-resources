@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Critical Path Analysis – Y13 revision</title>
+<style>
+/*FONTS*/
+:root{--paper:#f6f6f2;--ink:#1f2328;--soft:#5f6670;--acc:#b0402a;--acc2:#24539c;--ok:#2f7d4a;--line:rgba(31,35,40,.28);--card:#fff;--strip:#1f2328;
+ --sans:'IBM Plex Sans',-apple-system,Segoe UI,Arial,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#2a2e33;color:var(--ink);font:400 17px/1.5 var(--sans);-webkit-text-size-adjust:100%}
+.bar{position:sticky;top:0;z-index:50;display:flex;gap:12px;align-items:center;padding:10px 16px;background:var(--strip);color:#e9ebee;flex-wrap:wrap}
+.bar h1{font:600 17px var(--sans);margin:0;flex:1;min-width:220px}
+.bar select{font:500 15px var(--mono);padding:7px 10px;border-radius:6px;border:1px solid #4a5058;background:#2b3036;color:#e9ebee;max-width:300px}
+.btn{font:600 15px var(--sans);border:0;border-radius:8px;padding:9px 14px;background:var(--acc);color:#fff;cursor:pointer}
+.btn.ghost{background:#e7e9ec;color:var(--ink)}.btn.blue{background:var(--acc2)}.btn.small{padding:6px 10px;font-size:14px}
+.btn:disabled{opacity:.45}
+main{max-width:1180px;margin:0 auto;padding:18px 14px 90px}
+.page{display:none;background:var(--paper);border-radius:6px;padding:34px 40px 40px;box-shadow:0 18px 50px rgba(0,0,0,.35);
+ background-image:linear-gradient(rgba(36,83,156,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(36,83,156,.06) 1px,transparent 1px),linear-gradient(rgba(36,83,156,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(36,83,156,.11) 1px,transparent 1px);
+ background-size:20px 20px,20px 20px,100px 100px,100px 100px}
+.page.on{display:block}
+.kick{font:600 13px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+h2{font:600 32px/1.15 var(--sans);margin:6px 0 10px}
+h3{font:600 20px var(--sans);margin:26px 0 8px;display:flex;gap:10px;align-items:center}
+h3 .n{font:600 13px var(--mono);background:var(--ink);color:var(--paper);padding:3px 8px;border-radius:3px}
+p{margin:6px 0 12px} .lead{font-size:19px;max-width:880px}
+.muted{color:var(--soft);font-size:15px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+.callout{border-left:5px solid var(--acc);background:#fff;padding:12px 16px;border-radius:0 10px 10px 0;margin:12px 0}
+.callout.blue{border-color:var(--acc2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:820px){.grid2,.grid3{grid-template-columns:1fr}.page{padding:22px 18px}}
+textarea,input[type=text],input[type=number],select.f{font:400 16px var(--sans);width:100%;border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;background:#fffffe;color:var(--ink)}
+textarea{min-height:92px;resize:vertical;line-height:1.45}
+label.l{display:block;font:600 13px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:12px 0 5px}
+table.t{border-collapse:collapse;width:100%;background:#fff;font-size:15.5px}
+table.t th,table.t td{border:1.5px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+table.t th{font:600 13px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--acc2);background:#f2f4f7}
+table.t td.c{text-align:center} table.t input{padding:6px 8px;font-size:15px}
+.tag{display:inline-block;font:600 13px var(--mono);background:var(--ink);color:#fff;border-radius:4px;padding:1px 7px}
+/* flip cards */
+.flips{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.flip{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;min-height:96px;position:relative}
+.flip b{display:block;font-size:17px;color:var(--acc2)} .flip .d{display:none;margin-top:6px}
+.flip.open .d{display:block}.flip:not(.open)::after{content:'tap to reveal';position:absolute;right:12px;bottom:8px;font:500 12px var(--mono);color:var(--soft)}
+/* checks */
+.fb{margin:8px 0;font-weight:600;min-height:1.4em}.fb.good{color:var(--ok)}.fb.bad{color:var(--acc)}
+.right{border-color:var(--ok)!important;background:#eef8f1!important}.wrong{border-color:var(--acc)!important;background:#fbefec!important}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+/* network */
+.netwrap{position:relative;overflow:hidden;margin:10px 0;background:rgba(255,255,255,.6);border:1.5px solid var(--line);border-radius:10px}
+.net{position:absolute;left:0;top:0;width:960px;transform-origin:0 0}
+.net svg{position:absolute;left:0;top:0}
+.node{position:absolute;width:76px;height:76px;margin:-38px 0 0 -38px;border:2.5px solid var(--ink);border-radius:50%;background:#fff;overflow:hidden}
+.node .num{position:absolute;left:0;right:0;top:4px;text-align:center;font:600 17px var(--mono)}
+.node .hl{position:absolute;left:0;right:0;top:31px;border-top:2px solid var(--ink)}
+.node .vl{position:absolute;left:37px;top:31px;bottom:0;border-left:2px solid var(--ink)}
+.node input,.node .v{position:absolute;top:36px;width:30px;height:28px;border:0;border-radius:4px;padding:0;text-align:center;font:600 16px var(--mono);background:transparent;color:var(--ink)}
+.node .e{left:5px}.node .lf{right:5px}
+.node input:focus{background:#fff4c2;outline:none}
+.act{position:absolute;transform:translate(-50%,-50%);font:600 14px var(--mono);background:#fff;border:1.5px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap;cursor:default}
+.act.pick{cursor:pointer}.act.sel{background:var(--acc);color:#fff;border-color:var(--acc)}
+.key{font:500 13px var(--mono);color:var(--soft)}
+.nodekey{display:inline-flex;align-items:center;gap:10px}
+/* gantt */
+.gantt{overflow-x:auto;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:8px}
+/* sorter */
+.sort{display:flex;flex-direction:column;gap:8px}
+.sort .it{display:flex;gap:10px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px}
+.sort .it span{flex:1}
+.sort .it button{font:600 13px var(--sans);border:1.5px solid var(--line);background:#f4f5f7;border-radius:6px;padding:6px 9px;cursor:pointer}
+.sort .it button.on{background:var(--acc2);color:#fff;border-color:var(--acc2)}
+.ms{display:none}.ms.show{display:block}
+.savebox{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:30px;padding-top:16px;border-top:2px dashed var(--line);flex-wrap:wrap}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:center;gap:12px;padding:10px;background:linear-gradient(transparent,rgba(20,22,25,.85) 35%)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:99;color:#fff;font:600 20px var(--sans)}
+.lockmsg{padding:30px;text-align:center}
+.pdfmode .page{box-shadow:none;border-radius:0}
+.pdfmode .noprint{display:none!important}
+.pdfmode .flip .d{display:block}.pdfmode .flip::after{display:none}
+</style>
+</head><body>
+<div class="bar noprint">
+ <h1>Critical Path Analysis · Y13 revision</h1>
+ <select id="jump" aria-label="Go to page"></select>
+ <button class="btn" id="pdfBtn">Save as PDF</button>
+</div>
+<main id="main">
+
+<!-- 1 -->
+<section class="page" data-t="Why bother?">
+ <div class="kick">Page 1 · Start here · Edexcel 9DT0 topic 12.2</div>
+ <h2>Critical Path Analysis: why should you care?</h2>
+ <div class="grid2">
+  <div><label class="l">Your name</label><input type="text" data-k="name" placeholder="First name and surname"></div>
+  <div><label class="l">Class</label><input type="text" data-k="class" placeholder="e.g. 13P"></div>
+ </div>
+ <p class="lead" style="margin-top:18px">Your NEA hand-in is coming. Your components take <b>a week</b> to arrive. The 3D printer has a queue. Spray paint needs <b>a day to dry</b>. You still have to test with your client and write the evaluation. <b>Which jobs actually decide whether you finish on time?</b></p>
+ <p>That is the only question Critical Path Analysis (CPA) answers. Manufacturers use it to launch products on time, and it comes up in Paper 1. It is also exactly what you need right now: a realistic plan for finishing <b>your</b> prototype and folder (Grid 6 asks for one).</p>
+ <label class="l">Before you learn anything: what would you do first, and why?</label>
+ <textarea data-k="p1.first" placeholder="Be honest. There is no wrong answer yet."></textarea>
+ <div class="callout"><b>By the end of this workbook you can:</b>
+  <ul style="margin:6px 0 0">
+   <li>use the key words: activity, dependency, network, node, EST, LFT, float, critical path</li>
+   <li>draw and complete a network diagram, and find the critical path and the float</li>
+   <li>predict what happens when something is delayed</li>
+   <li>use CPA to plan the rest of your own NEA, and answer exam questions on it</li></ul></div>
+ <div class="savebox noprint"><span class="muted">Your answers save on this iPad as you type. Nothing is sent anywhere.</span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+<!-- 2 -->
+<section class="page" data-t="Key words">
+ <div class="kick">Page 2 · The language</div>
+ <h2>Eight words you need</h2>
+ <p>Tap each card to reveal it. Say the definition out loud before you tap.</p>
+ <div class="flips" id="flips"></div>
+ <h3><span class="n">TASK</span>Match them up</h3>
+ <p class="muted">Choose the word for each definition, then check.</p>
+ <table class="t" id="matchT"><tr><th style="width:62%">Definition</th><th>Word</th></tr></table>
+ <div class="row" style="margin-top:10px"><button class="btn blue" id="matchCheck">Check</button><span class="fb" id="matchFb"></span></div>
+ <div class="callout blue"><b>How to read a node.</b> In this workbook each node (circle) is an event: the moment some activities finish and others can start. Top: node number. Bottom left: <b>EST</b>, the earliest it can happen. Bottom right: <b>LFT</b>, the latest it can happen without delaying the whole project.
+  <div style="margin-top:10px" class="nodekey"><div style="position:relative;width:76px;height:76px"><div class="node" style="left:38px;top:38px"><div class="num">3</div><div class="hl"></div><div class="vl"></div><div class="v e">4</div><div class="v lf">6</div></div></div><span class="key">node 3 · EST 4 · LFT 6</span></div></div>
+ <div class="savebox noprint"><span class="muted">Saves as you go.</span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+<!-- 3 -->
+<section class="page" data-t="Worked example: a Y13 build">
+ <div class="kick">Page 3 · Worked example</div>
+ <h2>Finishing a Year 13 prototype</h2>
+ <p>Every NEA is different, but the last weeks of most look like this: order parts, make, finish, assemble, test with the client, and write it up. Here is one student's plan for a desk lamp with a CNC-cut body, 3D-printed parts and bought-in electronics. Durations are in school days.</p>
+ <table class="t" id="gpTable"></table>
+ <h3><span class="n">1</span>Spot the parallel jobs</h3>
+ <label class="l">Which activities could happen while the student waits for the components to arrive (B)? Why does that matter?</label>
+ <textarea data-k="p3.parallel" style="min-height:70px"></textarea>
+ <h3><span class="n">2</span>Forward pass: fill in the ESTs</h3>
+ <p>Start at node 1 with EST <b>0</b>. Move left to right. For each node: EST = the EST of the node before + the activity's duration. <b>If two arrows meet, take the bigger number</b> (you cannot start until everything feeding in is finished).</p>
+ <div class="netwrap" id="gpNetW"></div>
+ <div class="row"><button class="btn blue" id="gpEstCheck">Check my ESTs</button><span class="fb" id="gpEstFb"></span></div>
+ <h3><span class="n">3</span>Backward pass: fill in the LFTs</h3>
+ <p>Start at the last node: its LFT = its EST. Move right to left. For each node: LFT = the LFT of the next node − the activity's duration. <b>If two arrows leave a node, take the smaller number.</b></p>
+ <div class="row"><button class="btn blue" id="gpLftCheck">Check my LFTs</button><span class="fb" id="gpLftFb"></span></div>
+ <h3><span class="n">4</span>Find the critical path</h3>
+ <p>On the critical path, EST = LFT at every node and there is no slack. Tap the activity labels on the diagram that are on the critical path, then check.</p>
+ <div class="callout"><b>Careful:</b> an activity can join two nodes where EST = LFT and still <i>not</i> be critical. It is only critical if EST at its start + its duration = LFT at its end.</div>
+ <div class="row"><button class="btn blue" id="gpCritCheck">Check my critical path</button><span class="fb" id="gpCritFb"></span></div>
+ <h3><span class="n">5</span>Float</h3>
+ <p><b>Float = LFT at the end node − EST at the start node − duration.</b> It is how many days an activity can slip without delaying the project.</p>
+ <div class="grid2">
+  <div><label class="l">Float of E (3D print small parts), days</label><input type="number" data-k="p3.fE" id="gpFD" inputmode="numeric"></div>
+  <div><label class="l">Float of J (making pages for the folder), days</label><input type="number" data-k="p3.fJ" id="gpFH" inputmode="numeric"></div>
+ </div>
+ <div class="row" style="margin-top:10px"><button class="btn blue" id="gpFloatCheck">Check floats</button><span class="fb" id="gpFloatFb"></span></div>
+ <label class="l">So what? The 3D printer has a one-day queue, and B (ordering components) is on the critical path. What should this student do first on Monday, and what can wait? Use the critical path and float in your answer.</label>
+ <textarea data-k="p3.sowhat"></textarea>
+ <div class="savebox noprint"><span class="muted">Stuck? Re-read the rule above each step: bigger number going forwards, smaller going backwards.</span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+<!-- 4 -->
+<section class="page" data-t="What if…?">
+ <div class="kick">Page 4 · Things go wrong</div>
+ <h2>What if…?</h2>
+ <p>This is why CPA is worth the effort: it tells you which problems matter and which do not. Add delays to the lamp plan from page 3 and watch the finish day.</p>
+ <div id="wiLock" class="card lockmsg">Finish the checks on page 3 first: this page shows the answers.<br><br><button class="btn ghost small" id="wiOpen">I've finished page 3: open it</button></div>
+ <div id="wiBody" style="display:none">
+  <table class="t" id="wiTable"></table>
+  <div class="card"><b>Finish day: <span id="wiEnd" class="tag"></span></b> &nbsp; <span class="muted">(plan: 12)</span> &nbsp; Critical path: <span id="wiPath" style="font-family:var(--mono)"></span></div>
+  <div class="gantt" id="wiGantt"></div>
+  <p class="key">Red = critical · grey = float (slack) · reset the delays to 0 before each question</p>
+ </div>
+ <h3><span class="n">1</span>Year 12 are using the CNC router, so C takes 1 day longer. New finish day?</h3>
+ <input type="number" data-k="p4.q1" class="wiq" data-a="12" inputmode="numeric" style="max-width:160px">
+ <h3><span class="n">2</span>The components arrive 2 days late (B +2). New finish day?</h3>
+ <input type="number" data-k="p4.q2" class="wiq" data-a="14" inputmode="numeric" style="max-width:160px">
+ <h3><span class="n">3</span>Writing up the making pages (J) takes 6 days longer than planned. New finish day? Has the critical path changed?</h3>
+ <div class="grid2"><input type="number" data-k="p4.q3" class="wiq" data-a="13" inputmode="numeric"><input type="text" data-k="p4.q3b" placeholder="Has it changed? How?"></div>
+ <div class="row" style="margin-top:10px"><button class="btn blue" id="wiCheck">Check 1 to 3</button><span class="fb" id="wiFb"></span></div>
+ <h3><span class="n">4</span>Explain</h3>
+ <label class="l">Why did a 1-day delay to the CNC change nothing, but a 2-day delivery delay cost two days?</label>
+ <textarea data-k="p4.explain"></textarea>
+ <label class="l">Question 3 is the one that catches most Year 13s. What does it tell you about leaving the write-up until the end?</label>
+ <textarea data-k="p4.free"></textarea>
+ <div class="savebox noprint"><span class="muted"></span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+<!-- 5 -->
+<section class="page" data-t="Your own NEA">
+ <div class="kick">Page 5 · Your own project</div>
+ <h2>Plan the rest of your own NEA</h2>
+ <p>Everyone's project is different, so now use CPA on yours. List every job left between now and hand-in: making, finishing, ordering, waiting, testing with your client <b>and writing up the folder pages</b>. Give each a letter, a duration and the letters it depends on. The workbook works out your critical path, floats and Gantt chart.</p>
+ <div class="callout blue"><b>Tips.</b> Split big jobs ("CNC the base", not "make the base"). Include waiting time: deliveries, glue curing, paint drying, printer queues. Include the folder pages, client testing and the evaluation. Be honest about durations: the plan is only as good as your estimates. Aim for 8 to 16 activities.</div>
+ <table class="t" id="myTable"><tr><th style="width:52px">Letter</th><th>Activity</th><th style="width:100px">Duration</th><th style="width:130px">Depends on</th><th style="width:120px">If it goes wrong: +</th><th style="width:44px"></th></tr></table>
+ <div class="row" style="margin:10px 0"><button class="btn ghost small" id="myAdd">+ Add activity</button>
+  <label class="key">Time available: <input type="number" data-k="p6.deadline" id="myDeadline" inputmode="numeric" style="width:90px;display:inline-block"> </label>
+  <label class="key">Unit: <select class="f" data-k="p6.unit" id="myUnit" style="width:auto;display:inline-block"><option>lessons</option><option>days</option><option>weeks</option></select></label></div>
+ <div class="card" id="myResult"></div>
+ <div class="gantt" id="myGantt"></div>
+ <p class="muted">In the "If it goes wrong" column, add the extra time a job could take if your most likely problem happens (late delivery, a failed print, a machine queue). The result shows what that would do to your finish.</p>
+ <label class="l">Which of your activities are critical? What will you do this week to protect them?</label>
+ <textarea data-k="p6.protect"></textarea>
+ <label class="l">Which activities have float? What could you move into lessons when a machine is busy?</label>
+ <textarea data-k="p6.float"></textarea>
+ <label class="l">Your backup plan: if your most likely problem happens, what will you do?</label>
+ <textarea data-k="p6.backup"></textarea>
+ <div class="savebox noprint"><span class="muted">Save this page as PDF: it is ready-made evidence for Grid 6 (production plan) in your folder.</span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+<!-- 6 -->
+<section class="page" data-t="In industry: a kettle launch">
+ <div class="kick">Page 6 · In industry</div>
+ <h2>Getting a new kettle to the trade show</h2>
+ <p>A small appliance company has <b>16 weeks</b> until a trade show where it must show a pre-production batch of its new kettle. This is where CPA is used for real: tooling, suppliers and printers all run in parallel, and money goes where the critical path is. Durations are in <b>weeks</b>.</p>
+ <table class="t" id="kTable"></table>
+ <h3><span class="n">1</span>Complete the network</h3>
+ <p class="muted">Fill in every EST (forward pass) and LFT (backward pass).</p>
+ <div class="netwrap" id="kNetW"></div>
+ <div class="row"><button class="btn blue" id="kNodeCheck">Check ESTs and LFTs</button><span class="fb" id="kNodeFb"></span></div>
+ <h3><span class="n">2</span>Critical path and float</h3>
+ <p class="muted">Tap the critical activities on the diagram, then work out the floats.</p>
+ <div class="grid3">
+  <div><label class="l">Float of C (weeks)</label><input type="number" data-k="p5.fC" id="kFC" inputmode="numeric"></div>
+  <div><label class="l">Float of D (weeks)</label><input type="number" data-k="p5.fD" id="kFD" inputmode="numeric"></div>
+  <div><label class="l">Float of G (weeks)</label><input type="number" data-k="p5.fG" id="kFG" inputmode="numeric"></div>
+ </div>
+ <div class="row" style="margin-top:10px"><button class="btn blue" id="kCritCheck">Check critical path and floats</button><span class="fb" id="kCritFb"></span></div>
+ <h3><span class="n">3</span>Decisions</h3>
+ <div class="grid2">
+  <div><label class="l">How many weeks are spare before the show?</label><input type="number" data-k="p5.spare" id="kSpare" inputmode="numeric"></div>
+  <div><label class="l">The tool maker says the mould will take 10 weeks, not 8. Will they make the show?</label><input type="text" data-k="p5.tool" placeholder="Yes / no, and by how much"></div>
+ </div>
+ <div class="row" style="margin-top:10px"><button class="btn blue" id="kSpareCheck">Check spare weeks</button><span class="fb" id="kSpareFb"></span></div>
+ <label class="l">The finance director has money to speed up ONE activity. Which one would you choose, and why? Which would be a waste of money?</label>
+ <textarea data-k="p5.money"></textarea>
+ <div class="savebox noprint"><span class="muted"></span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+<!-- 7 -->
+<section class="page" data-t="Pros, cons and other methods">
+ <div class="kick">Page 7 · Evaluate it</div>
+ <h2>Is CPA worth it?</h2>
+ <h3><span class="n">1</span>Advantage or disadvantage?</h3>
+ <div class="sort" id="sorter"></div>
+ <div class="row" style="margin-top:10px"><button class="btn blue" id="sortCheck">Check</button><span class="fb" id="sortFb"></span></div>
+ <h3><span class="n">2</span>CPA and the other project management methods</h3>
+ <div class="grid3">
+  <div class="card"><b>Gantt chart</b><p>A bar chart of tasks against time. Easy to read and great for showing a plan to others, but it does not show dependencies as clearly as a network.</p></div>
+  <div class="card"><b>Scrum</b><p>A team-based, goal-driven, iterative and agile approach: short "sprints" with regular reviews. Suits design work where the plan changes as you learn.</p></div>
+  <div class="card"><b>Six Sigma</b><p>A short-term improvement project using DMAIC: Define, Measure, Analyse, Improve, Control. Aims to cut defects and variation.</p></div>
+ </div>
+ <label class="l">When would CPA be the best choice, and when would scrum suit a project better? Give an example of each.</label>
+ <textarea data-k="p7.compare"></textarea>
+ <div class="savebox noprint"><span class="muted"></span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+<!-- 8 -->
+<section class="page" data-t="Exam practice">
+ <div class="kick">Page 8 · Exam practice</div>
+ <h2>Exam practice</h2>
+ <p>Answer each question first. The mark scheme opens once you have written an answer. Mark yourself honestly.</p>
+ <div id="exam"></div>
+ <div class="card"><b>My score: <span id="examScore">0</span> / <span id="examMax"></span></b></div>
+ <div class="savebox noprint"><span class="muted"></span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+<!-- 9 -->
+<section class="page" data-t="Summary">
+ <div class="kick">Page 9 · Summary</div>
+ <h2>What you now know</h2>
+ <div class="grid2">
+  <div class="card"><b>The method</b><ol style="margin:6px 0 0;padding-left:20px"><li>List activities, durations, dependencies.</li><li>Draw the network.</li><li>Forward pass: ESTs (take the <b>bigger</b> number where arrows meet).</li><li>Backward pass: LFTs (take the <b>smaller</b> number where arrows split).</li><li>Critical path: nodes with EST = LFT, activities with zero float.</li><li>Float = LFT(end) − EST(start) − duration.</li></ol></div>
+  <div class="card"><b>Why it matters</b><ul style="margin:6px 0 0;padding-left:20px"><li>Shows the shortest possible project time.</li><li>Shows which delays matter (critical) and which do not (float).</li><li>Tells you where to put extra time, people or money.</li><li>Only as good as the duration estimates.</li></ul></div>
+ </div>
+ <label class="l">Rate your confidence now (1 = lost, 5 = could teach it)</label>
+ <select class="f" data-k="p9.conf" style="max-width:220px"><option></option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+ <label class="l">One thing I still need to practise</label>
+ <textarea data-k="p9.practise" style="min-height:70px"></textarea>
+ <div class="savebox noprint"><span class="muted">Hand in: tap <b>Save as PDF</b> (top) for the whole workbook, then Share → Showbie.</span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+</main>
+<div class="nav noprint"><button class="btn ghost" id="prev">‹ Back</button><button class="btn" id="next">Next ›</button></div>
+<div class="ov" id="ov">Making your PDF…</div>
+<script>/*LIBS*/</script>
+<script>
+'use strict';
+const STORE = 'cpa-y13-v1';
+let S = {}; try { S = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) { S = {}; }
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} };
+const $ = (q, el = document) => el.querySelector(q), $$ = (q, el = document) => [...el.querySelectorAll(q)];
+const E = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ---------- CPA engine (activity on arrow) ---------- */
+function solve(acts) { // acts: [{id,dur,deps:[]}] -> es, ef, ls, lf, float, end, critical ids
+  const by = {}; acts.forEach((a) => by[a.id] = a);
+  const es = {}, ef = {}, seen = {}, order = [];
+  function visit(id, stack) {
+    if (seen[id] === 2) return; if (seen[id] === 1) throw new Error('loop at ' + id);
+    seen[id] = 1; (by[id].deps || []).forEach((d) => { if (!by[d]) throw new Error('unknown ' + d); visit(d, stack); }); seen[id] = 2; order.push(id);
+  }
+  acts.forEach((a) => visit(a.id));
+  order.forEach((id) => { const a = by[id]; es[id] = Math.max(0, ...(a.deps || []).map((d) => ef[d])); ef[id] = es[id] + a.dur; });
+  const end = Math.max(0, ...acts.map((a) => ef[a.id]));
+  const lf = {}, ls = {};
+  [...order].reverse().forEach((id) => { const succ = acts.filter((x) => (x.deps || []).includes(id)); lf[id] = succ.length ? Math.min(...succ.map((x) => ls[x.id])) : end; ls[id] = lf[id] - by[id].dur; });
+  const fl = {}; acts.forEach((a) => fl[a.id] = ls[a.id] - es[a.id]);
+  return { es, ef, ls, lf, fl, end, crit: acts.filter((a) => fl[a.id] === 0).map((a) => a.id), order };
+}
+function nodeTimes(net, sol) { // node EST/LFT from activity results
+  const est = {}, lft = {};
+  net.nodes.forEach((n) => { est[n.n] = 0; lft[n.n] = sol.end; });
+  net.acts.forEach((a) => { est[a.to] = Math.max(est[a.to], sol.ef[a.id]); });
+  net.nodes.forEach((n) => { const out = net.acts.filter((a) => a.from === n.n); if (out.length) lft[n.n] = Math.min(...out.map((a) => sol.ls[a.id])); });
+  net.nodes.forEach((n) => { const ins = net.acts.filter((a) => a.to === n.n); if (!ins.length) est[n.n] = 0; });
+  return { est, lft };
+}
+
+/* ---------- network drawing (fixed 960 px board, scaled to fit) ---------- */
+function drawNet(wrapId, net, key, opts = {}) {
+  const W = 960, H = net.h || 400, wrap = document.getElementById(wrapId);
+  const P = {}; net.nodes.forEach((n) => P[n.n] = n);
+  let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><marker id="ah${key}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f2328"/></marker><marker id="ahr${key}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b0402a"/></marker></defs>`;
+  let labels = '';
+  net.acts.forEach((a) => {
+    const p = P[a.from], q = P[a.to], bend = a.bend || 0;
+    const dx = q.x - p.x, dy = q.y - p.y, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+    const x1 = p.x + ux * 40, y1 = p.y + uy * 40, x2 = q.x - ux * 42, y2 = q.y - uy * 42;
+    const mx = (x1 + x2) / 2 - uy * bend, my = (y1 + y2) / 2 + ux * bend;
+    let d = `M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`, lx = (x1 + 2 * mx + x2) / 4, ly = (y1 + 2 * my + y2) / 4;
+    if (a.top) { // loop over the top and drop into the end node from above
+      const sx = p.x + 38, sy = p.y - 8, ty = Math.min(p.y, q.y) - a.top, ex = q.x, ey = q.y - 42;
+      d = `M${sx} ${sy} C${sx + 160} ${ty}, ${ex} ${ty}, ${ex} ${ey}`; lx = (sx + ex) / 2 + 40; ly = ty + 22;
+    }
+    svg += `<path data-a="${a.id}" d="${d}" fill="none" stroke="#1f2328" stroke-width="2.5" marker-end="url(#ah${key})"/>`;
+    labels += `<div class="act${opts.pick ? ' pick' : ''}" data-a="${a.id}" style="left:${lx}px;top:${ly - 20}px">${a.id} · ${a.dur}</div>`;
+  });
+  svg += '</svg>';
+  const nodes = net.nodes.map((n) => `<div class="node" style="left:${n.x}px;top:${n.y}px"><div class="num">${n.n}</div><div class="hl"></div><div class="vl"></div>` +
+    (opts.values ? `<div class="v e" data-est="${n.n}"></div><div class="v lf" data-lft="${n.n}"></div>` :
+      `<input class="e" inputmode="numeric" data-k="${key}.e${n.n}" aria-label="EST node ${n.n}"><input class="lf" inputmode="numeric" data-k="${key}.l${n.n}" aria-label="LFT node ${n.n}">`) + `</div>`).join('');
+  wrap.innerHTML = `<div class="net" style="height:${H}px">${svg}${labels}${nodes}</div>`;
+  const fit = () => { const net = wrap.firstChild, s = Math.min(1, wrap.clientWidth / W); net.style.transform = `scale(${s})`; wrap.style.height = H * s + 'px'; };
+  fit(); addEventListener('resize', fit); wrap._fit = fit;
+  if (opts.pick) $$('.act', wrap).forEach((el) => {
+    const k = key + '.crit'; const cur = () => (S[k] || []);
+    if (cur().includes(el.dataset.a)) el.classList.add('sel');
+    el.onclick = () => { const c = cur(); const i = c.indexOf(el.dataset.a); if (i >= 0) c.splice(i, 1); else c.push(el.dataset.a); S[k] = c; el.classList.toggle('sel'); save(); };
+  });
+}
+function highlight(wrapId, ids) {
+  $$('#' + wrapId + ' path[data-a]').forEach((p) => { const on = ids.includes(p.dataset.a); p.setAttribute('stroke', on ? '#b0402a' : '#1f2328'); p.setAttribute('stroke-width', on ? 4.5 : 2.5); p.setAttribute('marker-end', p.getAttribute('marker-end').replace(/#ahr?/, on ? '#ahr' : '#ah')); });
+}
+
+/* ---------- Gantt ---------- */
+function gantt(el, acts, sol, unit, deadline) {
+  const rowH = 30, left = 230, W = 900, n = acts.length, span = Math.max(sol.end, deadline || 0, 1), k = (W - left - 20) / span;
+  let s = `<svg width="${W}" height="${n * rowH + 46}" viewBox="0 0 ${W} ${n * rowH + 46}" style="max-width:100%;height:auto;font-family:IBM Plex Sans,Arial">`;
+  for (let t = 0; t <= span; t++) { const x = left + t * k; s += `<line x1="${x}" y1="24" x2="${x}" y2="${n * rowH + 30}" stroke="#e1e4e8"/>` + (span <= 30 || t % 5 === 0 ? `<text x="${x}" y="16" font-size="11" text-anchor="middle" fill="#5f6670">${t}</text>` : ''); }
+  sol.order.slice().sort((a, b) => sol.es[a] - sol.es[b] || a.localeCompare(b)).forEach((id, i) => {
+    const a = acts.find((x) => x.id === id), y = 30 + i * rowH, crit = sol.fl[id] === 0;
+    s += `<text x="8" y="${y + 19}" font-size="13" fill="#1f2328">${E(id)} · ${E((a.name || '').slice(0, 26))}</text>`;
+    s += `<rect x="${left + sol.es[id] * k}" y="${y + 5}" width="${Math.max(2, a.dur * k)}" height="${rowH - 10}" rx="3" fill="${crit ? '#b0402a' : '#24539c'}"/>`;
+    if (sol.fl[id] > 0) s += `<rect x="${left + sol.ef[id] * k}" y="${y + 11}" width="${sol.fl[id] * k}" height="${rowH - 22}" fill="#c8ccd2"/>`;
+  });
+  if (deadline) { const x = left + deadline * k; s += `<line x1="${x}" y1="20" x2="${x}" y2="${n * rowH + 34}" stroke="#2f7d4a" stroke-width="3" stroke-dasharray="6 4"/><text x="${x - 4}" y="${n * rowH + 44}" font-size="12" text-anchor="end" fill="#2f7d4a">deadline</text>`; }
+  el.innerHTML = s + '</svg>';
+}
+
+/* ---------- data ---------- */
+const TERMS = [
+  ['Activity', 'One job in the project that takes time, e.g. "cut the pine to size".'],
+  ['Duration', 'How long an activity takes (lessons, days, weeks).'],
+  ['Dependency', 'An activity that must finish before another can start.'],
+  ['Network diagram', 'The drawing of activities (arrows) and events (nodes) in the order they must happen.'],
+  ['EST', 'Earliest start time: the earliest an event can happen, found by the forward pass.'],
+  ['LFT', 'Latest finish time: the latest an event can happen without delaying the project, found by the backward pass.'],
+  ['Float', 'How long an activity can be delayed without delaying the whole project.'],
+  ['Critical path', 'The chain of activities with zero float. It sets the shortest possible project time.'],
+];
+const GP = { h: 410,
+  rows: [['A', 'Final CAD tweaks and cutting list', 1, ''], ['B', 'Order electronic components (delivery time)', 5, 'A'], ['C', 'CNC cut the main body parts', 2, 'A'], ['D', 'Sand, spray and dry the body', 2, 'C'], ['E', '3D print the small parts', 2, 'A'], ['F', 'Test-fit and adjust printed parts', 1, 'E'], ['G', 'Final assembly and wiring', 2, 'B, D, F'], ['H', 'Test with the client and take photos', 1, 'G'], ['I', 'Write the testing and evaluation pages', 3, 'H'], ['J', 'Write up the making pages for the folder', 4, 'C']],
+  nodes: [{ n: 1, x: 55, y: 210 }, { n: 2, x: 170, y: 210 }, { n: 3, x: 330, y: 100 }, { n: 4, x: 330, y: 330 }, { n: 5, x: 520, y: 210 }, { n: 6, x: 650, y: 210 }, { n: 7, x: 775, y: 210 }, { n: 8, x: 905, y: 210 }],
+  links: { A: [1, 2], B: [2, 5], C: [2, 3], D: [3, 5], E: [2, 4], F: [4, 5], G: [5, 6], H: [6, 7], I: [7, 8], J: [3, 8, 0, 60] } };
+const KT = { h: 420,
+  rows: [['A', 'Final CAD and design sign-off', 2, ''], ['B', 'Make the injection mould tooling', 8, 'A'], ['C', 'Source and test the heating elements', 5, 'A'], ['D', 'Design the packaging', 3, 'A'], ['E', 'Trial mouldings and quality checks', 2, 'B'], ['F', 'Assemble the pre-production batch', 2, 'C, E'], ['G', 'Print the packaging', 3, 'D'], ['H', 'Pack and ship to the show', 1, 'F, G']],
+  nodes: [{ n: 1, x: 60, y: 210 }, { n: 2, x: 190, y: 210 }, { n: 3, x: 380, y: 85 }, { n: 4, x: 570, y: 210 }, { n: 5, x: 380, y: 340 }, { n: 6, x: 740, y: 210 }, { n: 7, x: 900, y: 210 }],
+  links: { A: [1, 2], B: [2, 3], C: [2, 4], D: [2, 5], E: [3, 4], F: [4, 6], G: [5, 6], H: [6, 7] } };
+function build(T) {
+  T.acts = T.rows.map(([id, name, dur, deps]) => ({ id, name, dur, deps: deps ? deps.split(/\s*,\s*/) : [] }));
+  T.net = { h: T.h, nodes: T.nodes, acts: T.acts.map((a) => ({ id: a.id, dur: a.dur, from: T.links[a.id][0], to: T.links[a.id][1], bend: T.links[a.id][2] || 0, top: T.links[a.id][3] || 0 })) };
+  T.sol = solve(T.acts); T.nt = nodeTimes(T.net, T.sol);
+}
+build(GP); build(KT);
+const tableHTML = (T, unit) => `<tr><th style="width:70px">Activity</th><th>What happens</th><th style="width:120px">Duration (${unit})</th><th style="width:150px">Depends on</th></tr>` +
+  T.rows.map(([id, n, d, dep]) => `<tr><td class="c"><span class="tag">${id}</span></td><td>${E(n)}</td><td class="c">${d}</td><td class="c">${dep || '–'}</td></tr>`).join('');
+
+/* ---------- pages, navigation, saving of inputs ---------- */
+const pages = $$('.page');
+const jump = $('#jump'); pages.forEach((p, i) => jump.insertAdjacentHTML('beforeend', `<option value="${i}">${i + 1}. ${p.dataset.t}</option>`));
+let cur = Math.min(+(S._page || 0), pages.length - 1);
+function show(i) { cur = Math.max(0, Math.min(pages.length - 1, i)); pages.forEach((p, k) => p.classList.toggle('on', k === cur)); jump.value = cur; S._page = cur; save(); scrollTo(0, 0); $$('.netwrap').forEach((w) => w._fit && w._fit()); $('#prev').disabled = cur === 0; $('#next').disabled = cur === pages.length - 1; }
+jump.onchange = () => show(+jump.value); $('#prev').onclick = () => show(cur - 1); $('#next').onclick = () => show(cur + 1);
+
+function bindInputs(root = document) {
+  $$('[data-k]', root).forEach((el) => {
+    if (el._b) return; el._b = 1; const k = el.dataset.k;
+    if (S[k] != null) el.value = S[k];
+    el.addEventListener('input', () => { S[k] = el.value; save(); el.classList.remove('right', 'wrong'); if (el.closest('#myTable') || el.id === 'myDeadline' || el.id === 'myUnit') myRun(); });
+    el.addEventListener('change', () => { S[k] = el.value; save(); });
+  });
+}
+
+/* page 2 */
+$('#flips').innerHTML = TERMS.map(([t, d]) => `<div class="flip"><b>${t}</b><div class="d">${d}</div></div>`).join('');
+$$('.flip').forEach((f) => f.onclick = () => f.classList.toggle('open'));
+const MORDER = [6, 2, 0, 7, 4, 1, 5, 3];
+$('#matchT').insertAdjacentHTML('beforeend', MORDER.map((i) => `<tr><td>${TERMS[i][1]}</td><td><select class="f" data-k="p2.m${i}"><option></option>${TERMS.map(([t]) => `<option>${t}</option>`).join('')}</select></td></tr>`).join(''));
+$('#matchCheck').onclick = () => { let ok = 0; MORDER.forEach((i) => { const s = $(`[data-k="p2.m${i}"]`), r = s.value === TERMS[i][0]; s.classList.toggle('right', r); s.classList.toggle('wrong', !r); ok += r; }); fb('#matchFb', ok, MORDER.length); };
+function fb(sel, ok, n, extra = '') { const el = $(sel); el.className = 'fb ' + (ok === n ? 'good' : 'bad'); el.textContent = ok === n ? `All ${n} correct. ${extra}` : `${ok} of ${n} correct. The red ones need another look.`; }
+
+/* page 3 */
+$('#gpTable').innerHTML = tableHTML(GP, 'days');
+drawNet('gpNetW', GP.net, 'gp', { pick: true });
+function checkNodes(T, key, kind) {
+  let ok = 0; T.nodes.forEach((n) => { const el = $(`[data-k="${key}.${kind}${n.n}"]`), want = kind === 'e' ? T.nt.est[n.n] : T.nt.lft[n.n], r = el.value.trim() !== '' && +el.value === want; el.classList.toggle('right', r); el.classList.toggle('wrong', !r); ok += r; }); return ok;
+}
+$('#gpEstCheck').onclick = () => fb('#gpEstFb', checkNodes(GP, 'gp', 'e'), GP.nodes.length, `The whole build takes ${GP.sol.end} days at the earliest.`);
+$('#gpLftCheck').onclick = () => fb('#gpLftFb', checkNodes(GP, 'gp', 'l'), GP.nodes.length);
+function checkCrit(T, key, fbSel, extraOk = 0, extraN = 0) {
+  const pick = (S[key + '.crit'] || []).slice().sort().join(''), want = T.sol.crit.slice().sort().join('');
+  const r = pick === want; const el = $(fbSel);
+  if (r) highlight(key === 'gp' ? 'gpNetW' : 'kNetW', T.sol.crit);
+  return r;
+}
+$('#gpCritCheck').onclick = () => { const r = checkCrit(GP, 'gp'); const el = $('#gpCritFb'); el.className = 'fb ' + (r ? 'good' : 'bad'); el.textContent = r ? `Correct: ${GP.sol.crit.join(' → ')}. These are the jobs that decide the hand-in date. Notice that waiting for a delivery is critical.` : 'Not yet. Critical activities join nodes where EST = LFT, and their duration exactly fills the gap.'; if (r) { S.p3done = 1; save(); wiShow(); } };
+function checkNum(el, want) { const r = el.value.trim() !== '' && +el.value === want; el.classList.toggle('right', r); el.classList.toggle('wrong', !r); return r; }
+$('#gpFloatCheck').onclick = () => { const ok = checkNum($('#gpFD'), GP.sol.fl.E) + checkNum($('#gpFH'), GP.sol.fl.J); fb('#gpFloatFb', ok, 2, `E can slip ${GP.sol.fl.E} days and J ${GP.sol.fl.J} days without changing the hand-in.`); };
+
+/* page 4 */
+const delay = () => S.wiDelay || (S.wiDelay = {});
+function wiRun() {
+  const acts = GP.acts.map((a) => ({ ...a, dur: a.dur + (+(delay()[a.id] || 0)) }));
+  const sol = solve(acts); $('#wiEnd').textContent = sol.end; $('#wiPath').textContent = sol.crit.join(' → ');
+  gantt($('#wiGantt'), acts, sol, 'days', 12);
+}
+function wiBuild() {
+  $('#wiTable').innerHTML = `<tr><th style="width:70px">Activity</th><th>What happens</th><th style="width:110px">Planned</th><th style="width:150px">Delay (days)</th></tr>` +
+    GP.rows.map(([id, n, d]) => `<tr><td class="c"><span class="tag">${id}</span></td><td>${E(n)}</td><td class="c">${d}</td><td><select class="f" data-d="${id}">${[0, 1, 2, 3, 4, 5, 6].map((v) => `<option ${+(delay()[id] || 0) === v ? 'selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('');
+  $$('#wiTable select').forEach((s) => s.onchange = () => { delay()[s.dataset.d] = +s.value; save(); wiRun(); });
+  wiRun();
+}
+function wiShow() { $('#wiLock').style.display = 'none'; $('#wiBody').style.display = ''; wiBuild(); }
+$('#wiOpen').onclick = () => { S.p3done = 1; save(); wiShow(); };
+if (S.p3done) wiShow();
+$('#wiCheck').onclick = () => { let ok = 0; $$('.wiq').forEach((el) => ok += checkNum(el, +el.dataset.a)); fb('#wiFb', ok, 3, 'Only delays on the critical path, or delays longer than the float, move the finish day.'); };
+
+/* page 5 */
+$('#kTable').innerHTML = tableHTML(KT, 'weeks');
+drawNet('kNetW', KT.net, 'k', { pick: true });
+$('#kNodeCheck').onclick = () => fb('#kNodeFb', checkNodes(KT, 'k', 'e') + checkNodes(KT, 'k', 'l'), KT.nodes.length * 2, `Pre-production batch ready in ${KT.sol.end} weeks.`);
+$('#kCritCheck').onclick = () => {
+  const r = checkCrit(KT, 'k'); const ok = r + checkNum($('#kFC'), KT.sol.fl.C) + checkNum($('#kFD'), KT.sol.fl.D) + checkNum($('#kFG'), KT.sol.fl.G);
+  const el = $('#kCritFb'); el.className = 'fb ' + (ok === 4 ? 'good' : 'bad');
+  el.textContent = ok === 4 ? `All correct. Critical path: ${KT.sol.crit.join(' → ')}. The tooling is what matters.` : `${ok} of 4 parts correct${r ? '' : ' (the critical path is not right yet)'}.`;
+};
+$('#kSpareCheck').onclick = () => { const r = checkNum($('#kSpare'), 16 - KT.sol.end); const el = $('#kSpareFb'); el.className = 'fb ' + (r ? 'good' : 'bad'); el.textContent = r ? 'Correct: one week. So a 2-week tooling delay (on the critical path) means missing the show by a week.' : 'Compare the project time with the 16 weeks available.'; };
+
+/* page 6: own plan */
+const my = () => { const r = S.myRows || (S.myRows = [['A', 'Order materials and components', '2', '', ''], ['B', '', '', 'A', ''], ['C', '', '', '', '']]); r.forEach((x) => { while (x.length < 5) x.push(''); }); return r; };
+function myBuild() {
+  const t = $('#myTable'); $$('tr.mr', t).forEach((r) => r.remove());
+  my().forEach((r, i) => t.insertAdjacentHTML('beforeend', `<tr class="mr"><td><input type="text" value="${E(r[0])}" data-i="${i}" data-c="0" style="text-align:center;font-family:var(--mono)"></td><td><input type="text" value="${E(r[1])}" data-i="${i}" data-c="1"></td><td><input type="number" inputmode="decimal" value="${E(r[2])}" data-i="${i}" data-c="2"></td><td><input type="text" value="${E(r[3])}" data-i="${i}" data-c="3" placeholder="e.g. A, C"></td><td><input type="number" inputmode="decimal" value="${E(r[4])}" data-i="${i}" data-c="4" placeholder="0"></td><td><button class="btn ghost small" data-del="${i}" aria-label="Remove">×</button></td></tr>`));
+  $$('tr.mr input', t).forEach((el) => el.oninput = () => { my()[+el.dataset.i][+el.dataset.c] = el.value; save(); myRun(); });
+  $$('[data-del]', t).forEach((b) => b.onclick = () => { my().splice(+b.dataset.del, 1); save(); myBuild(); });
+  myRun();
+}
+$('#myAdd').onclick = () => { const used = my().map((r) => r[0].toUpperCase()); let c = 'A'; while (used.includes(c)) c = String.fromCharCode(c.charCodeAt(0) + 1); my().push([c, '', '', '', '']); save(); myBuild(); };
+function myRun() {
+  const out = $('#myResult'), unit = $('#myUnit').value || 'lessons', dl = +($('#myDeadline').value || 0);
+  const rows = my().filter((r) => r[0].trim() && r[2] !== '' && !isNaN(+r[2]));
+  if (rows.length < 2) { out.innerHTML = '<span class="muted">Add at least two activities with a letter and a duration to see your critical path.</span>'; $('#myGantt').innerHTML = ''; return; }
+  const acts = rows.map((r) => ({ id: r[0].trim().toUpperCase(), name: r[1], dur: +r[2], deps: r[3].split(/[\s,;]+/).map((x) => x.trim().toUpperCase()).filter(Boolean) }));
+  const dup = acts.find((a, i) => acts.findIndex((b) => b.id === a.id) !== i);
+  if (dup) { out.innerHTML = `<b class="fb bad">Two activities are both called ${E(dup.id)}.</b>`; $('#myGantt').innerHTML = ''; return; }
+  let sol; try { sol = solve(acts); } catch (e) { out.innerHTML = `<b class="fb bad">${/loop/.test(e.message) ? 'Your dependencies go round in a circle (' + E(e.message.split(' ').pop()) + ' ends up depending on itself).' : 'Activity ' + E(e.message.split(' ').pop()) + ' is listed as a dependency but does not exist.'}</b>`; $('#myGantt').innerHTML = ''; return; }
+  const spare = dl ? dl - sol.end : null;
+  let risk = '';
+  if (rows.some((r) => +r[4] > 0)) {
+    const r2 = solve(acts.map((a, i) => ({ ...a, dur: a.dur + Math.max(0, +rows[i][4] || 0) })));
+    risk = `<br>If those things go wrong: <b>${r2.end} ${E(unit)}</b>` + (dl ? (r2.end > dl ? ` <span style="color:var(--acc);font-weight:600">(${r2.end - dl} over your time: plan a fix now)</span>` : ` <span style="color:var(--ok);font-weight:600">(still in time)</span>`) : '') + ` · critical path then: <b style="font-family:var(--mono)">${r2.crit.sort((a, b) => r2.es[a] - r2.es[b]).join(' → ')}</b>`;
+  }
+  out.innerHTML = `<b>Shortest possible time: <span class="tag">${sol.end} ${E(unit)}</span></b>` + (dl ? ` &nbsp; ${spare >= 0 ? `<span style="color:var(--ok);font-weight:600">${spare} ${E(unit)} spare</span>` : `<span style="color:var(--acc);font-weight:600">${-spare} ${E(unit)} too long: shorten a critical activity</span>`}` : '') +
+    `<br>Critical path: <b style="font-family:var(--mono)">${sol.crit.sort((a, b) => sol.es[a] - sol.es[b]).join(' → ')}</b><br>` +
+    `<span class="muted">Float: ${acts.filter((a) => sol.fl[a.id] > 0).map((a) => `${a.id} ${sol.fl[a.id]}`).join(' · ') || 'none: every activity is critical'}</span>` + risk;
+  gantt($('#myGantt'), acts, sol, unit, dl);
+}
+
+/* page 7 */
+const SORT = [['Shows the shortest possible time to finish the project', 'a'], ['Shows which activities can be delayed and by how much', 'a'], ['Helps decide where to put extra people, machines or money', 'a'], ['Only as accurate as the duration estimates', 'd'], ['Time-consuming to set up for a big project', 'd'], ['Becomes complicated and hard to read with many activities', 'd'], ['Lets you run activities in parallel, so the project finishes sooner', 'a'], ['Needs updating whenever the plan changes', 'd']];
+$('#sorter').innerHTML = SORT.map(([t], i) => `<div class="it"><span>${t}</span><button data-s="${i}" data-v="a">Advantage</button><button data-s="${i}" data-v="d">Disadvantage</button></div>`).join('');
+const sv = () => S.sort || (S.sort = {});
+$$('#sorter button').forEach((b) => { if (sv()[b.dataset.s] === b.dataset.v) b.classList.add('on'); b.onclick = () => { sv()[b.dataset.s] = b.dataset.v; save(); $$(`#sorter button[data-s="${b.dataset.s}"]`).forEach((x) => x.classList.toggle('on', x === b)); b.closest('.it').classList.remove('right', 'wrong'); }; });
+$('#sortCheck').onclick = () => { let ok = 0; SORT.forEach(([, v], i) => { const r = sv()[i] === v, it = $$('#sorter .it')[i]; it.classList.toggle('right', r); it.classList.toggle('wrong', !r); ok += r; }); fb('#sortFb', ok, SORT.length); };
+
+/* page 8 */
+const EXAM = [
+  { q: 'State what is meant by the critical path.', m: 2, ms: ['The sequence (chain) of activities that determines the shortest possible project time (1)', 'Activities on it have zero float / any delay to them delays the whole project (1)'] },
+  { q: 'Using the kettle network on page 6, calculate the float for activity C. Show your working.', m: 2, ms: ['LFT of node 4 (12) − EST of node 2 (2) − duration of C (5) (1)', '= 5 weeks (1)'] },
+  { q: 'Explain two benefits to a manufacturer of using critical path analysis when planning the launch of a new product.', m: 4, ms: ['Identifies the critical activities (1) so resources/money/management attention can be focused on them to meet the launch date (1)', 'Shows which activities have float (1) so staff or machines can be moved from them without delaying the launch (1)', 'Also accept: shows shortest completion time (1) so realistic launch dates can be promised to customers/retailers (1); allows parallel activities (1) reducing time to market (1)'] },
+  { q: 'Discuss the limitations of critical path analysis for a designer planning the manufacture of a one-off prototype.', m: 6, ms: ['Durations are estimates; a first-time process (e.g. new CNC setup) is hard to estimate, so the plan may be inaccurate (1–2)', 'Design changes during prototyping change activities and dependencies, so the network needs redrawing (1–2)', 'For a small project it may take longer to set up than it saves; a simple Gantt chart may be enough (1–2)', 'Does not account for resources, e.g. shared machines/workshop access, unless added (1–2)', 'Balanced conclusion: still useful to identify critical tasks such as drying times and ordering (1)'] },
+];
+$('#examMax').textContent = EXAM.reduce((s, e) => s + e.m, 0);
+$('#exam').innerHTML = EXAM.map((e, i) => `<div class="card"><b>Q${i + 1}.</b> ${e.q} <span class="tag">${e.m} mark${e.m > 1 ? 's' : ''}</span>
+  <textarea data-k="p8.a${i}" data-q="${i}" style="margin-top:8px"></textarea>
+  <button class="btn ghost small msbtn" data-q="${i}" style="margin-top:8px">Show the mark scheme</button>
+  <div class="ms" id="ms${i}"><div class="callout blue" style="margin-top:10px"><b>Mark scheme</b><ul style="margin:4px 0 0">${e.ms.map((x) => `<li>${x}</li>`).join('')}</ul></div>
+  <label class="key">My mark: <select class="f" data-k="p8.s${i}" style="width:auto;display:inline-block">${Array.from({ length: e.m + 1 }, (_, k) => `<option>${k}</option>`).join('')}</select> / ${e.m}</label></div></div>`).join('');
+function examUpdate() {
+  EXAM.forEach((e, i) => { const t = (S['p8.a' + i] || '').trim(), b = $(`.msbtn[data-q="${i}"]`); b.disabled = t.length < 15; if (S['p8.open' + i]) $('#ms' + i).classList.add('show'); });
+  $('#examScore').textContent = EXAM.reduce((s, e, i) => s + (S['p8.open' + i] ? +(S['p8.s' + i] || 0) : 0), 0);
+}
+$$('.msbtn').forEach((b) => b.onclick = () => { S['p8.open' + b.dataset.q] = 1; save(); examUpdate(); });
+document.addEventListener('input', (e) => { if (e.target.closest('#exam')) examUpdate(); });
+document.addEventListener('change', (e) => { if (e.target.closest('#exam')) examUpdate(); });
+
+/* ---------- PDF (A4 landscape, share sheet on iPad) ---------- */
+async function pdfOf(list, fname) {
+  const ov = $('#ov'); ov.style.display = 'flex';
+  const { jsPDF } = window.jspdf; const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const PW = 297, PH = 210, M = 8, first = { v: true };
+  document.body.classList.add('pdfmode');
+  const keep = cur;
+  try {
+    for (const p of list) {
+      pages.forEach((x) => x.classList.toggle('on', x === p)); $$('.netwrap').forEach((w) => w._fit && w._fit());
+      const c = await html2canvas(p, { scale: 1.6, backgroundColor: '#f6f6f2', useCORS: true, windowWidth: 1180 });
+      const wmm = PW - 2 * M, pxPerMm = c.width / wmm, slice = Math.floor((PH - 2 * M) * pxPerMm);
+      for (let y = 0; y < c.height; y += slice) {
+        const h = Math.min(slice, c.height - y), cv = document.createElement('canvas'); cv.width = c.width; cv.height = h;
+        cv.getContext('2d').drawImage(c, 0, y, c.width, h, 0, 0, c.width, h);
+        if (!first.v) pdf.addPage(); first.v = false;
+        pdf.addImage(cv.toDataURL('image/jpeg', 0.86), 'JPEG', M, M, wmm, h / pxPerMm);
+      }
+    }
+  } finally { document.body.classList.remove('pdfmode'); show(keep); }
+  const touch = navigator.maxTouchPoints > 1; let shared = false;
+  if (touch && navigator.canShare) {
+    try { const file = new File([pdf.output('blob')], fname, { type: 'application/pdf' }); if (navigator.canShare({ files: [file] })) { ov.style.display = 'none'; await navigator.share({ files: [file], title: fname }); shared = true; } }
+    catch (e) { if (e && e.name === 'AbortError') shared = true; }
+  }
+  if (!shared) pdf.save(fname);
+  ov.style.display = 'none';
+}
+const who = () => (S.name || 'My').trim() || 'My';
+$('#pdfBtn').onclick = () => pdfOf(pages, `${who()} - Critical path analysis workbook.pdf`);
+$$('.savepg').forEach((b) => b.onclick = () => { const p = b.closest('.page'); pdfOf([p], `${who()} - CPA page ${pages.indexOf(p) + 1}.pdf`); });
+
+bindInputs(); myBuild(); examUpdate(); show(cur);
+</script>
+</body></html>

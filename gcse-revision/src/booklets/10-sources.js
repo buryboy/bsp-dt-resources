@@ -79,7 +79,7 @@ BOOKLETS.push({ id: 'g10', topic: 10, title: 'Sources and origins', pages: [
  { notes: `<p>Most polymers are <b>synthetic</b> and come from <b>crude oil</b>, a finite fossil fuel found underground and under the sea bed.</p>
  <p><b>1. Extraction.</b> Crude oil is reached by <b>drilling</b> and pumped out, then taken to a refinery by pipeline or tanker.</p>
  <p><b>2. Fractional distillation.</b> Crude oil is a mixture. It is heated until it turns to vapour and fed into a tall <b>fractionating column</b>, hot at the bottom and cooler at the top. The vapour rises, and each part (<b>fraction</b>) condenses back to a liquid at a different height, where it is collected. One of the fractions is <b>naphtha</b>, which is the one used to make polymers.</p>
- <p><b>3. Cracking.</b> The molecules in naphtha are long. Heat, pressure and a catalyst <b>crack</b> them into small molecules called <b>monomers</b>, such as ethene and propene.</p>
+ <p><b>3. Cracking.</b> The molecules in naphtha are long. Very high heat (often with steam or a catalyst) <b>cracks</b> them into small molecules called <b>monomers</b>, such as ethene and propene.</p>
  <p><b>4. Polymerisation.</b> Thousands of monomers are joined end to end into long chains: <b>polymers</b>. Ethene becomes poly(ethene), or polythene. Propene becomes polypropylene.</p>
  <p><b>5.</b> The polymer is made into <b>granules, powder, sheet, rod or film</b>. Additives such as pigments (colour), plasticisers (flexibility) and stabilisers (resistance to sunlight) are mixed in.</p>
  <p><b>Bio-based polymers</b> are made from plants instead of oil: PLA, used in 3D printing, comes from corn starch. They are renewable and some will biodegrade.</p>
@@ -98,7 +98,7 @@ BOOKLETS.push({ id: 'g10', topic: 10, title: 'Sources and origins', pages: [
  <tr><td><b>Vegetable</b></td><td>Cotton (also linen from flax)</td><td>Cotton bolls are picked, then <b>ginned</b> to remove the seeds, and baled</td></tr>
  <tr><td><b>Chemical</b></td><td>Polyester, polyamide (nylon), elastane</td><td>Chemicals from crude oil are polymerised. The molten polymer is forced through tiny holes in a <b>spinneret</b> to make continuous filaments, which cool and harden</td></tr></table>
  <h4>Processing and spinning</h4>
- <p>Natural fibres are short (<b>staple</b> fibres), so they are <b>cleaned</b>, then <b>carded</b> (brushed so they are untangled and lie the same way), and finally <b>spun</b>: drawn out and twisted together to make a continuous <b>yarn</b>. More twist gives a stronger, smoother yarn. Synthetic filaments can be used as they are or chopped into staple lengths and spun, often blended with cotton or wool.</p>
+ <p>Most natural fibres, such as cotton and wool, are short (<b>staple</b> fibres; silk is the exception), so they are <b>cleaned</b>, then <b>carded</b> (brushed so they are untangled and lie the same way), and finally <b>spun</b>: drawn out and twisted together to make a continuous <b>yarn</b>. More twist gives a stronger, smoother yarn. Synthetic filaments can be used as they are or chopped into staple lengths and spun, often blended with cotton or wool.</p>
  <p>Yarns are then woven or knitted into fabric, which is dyed, printed and finished.</p>
  <h4>Life cycle assessment (LCA)</h4>
  <p>An LCA looks at the environmental impact of a material or product at <b>every stage of its life</b>:</p>

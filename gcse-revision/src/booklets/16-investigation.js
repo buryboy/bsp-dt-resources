@@ -67,7 +67,7 @@ BOOKLETS.push({ id: 'g16', topic: 16, title: 'Investigation, primary and seconda
  <tr><td><b>Reach</b></td><td>5th percentile</td><td>If the smallest users can reach it, everyone can</td><td>Height of a shelf, a car pedal, a light switch</td></tr>
  <tr><td><b>Clearance</b></td><td>95th percentile</td><td>If the largest users fit, everyone does</td><td>Door height, leg room, the opening of a helmet</td></tr>
  <tr><td><b>Fit for everyone</b></td><td>Make it <b>adjustable</b> from 5th to 95th</td><td>Each user sets it for themselves</td><td>Office chair, bike saddle, rucksack straps</td></tr>
- <tr><td><b>One size, used briefly</b></td><td>50th percentile</td><td>A compromise that suits the average</td><td>The height of a kitchen worktop or door handle</td></tr></table>` },
+ <tr><td><b>One fixed size that cannot be adjusted</b></td><td>50th percentile</td><td>A compromise that suits the average</td><td>The height of a kitchen worktop or door handle</td></tr></table>` },
  { tip: '<b>Do not mix them up.</b> <b>Anthropometrics</b> is the <b>data</b> (measurements). <b>Ergonomics</b> is <b>using</b> the data to make the product fit. In an answer, quote a body measurement, then say how the design uses it.' },
  { sort: { q: 'Which percentile should the designer use?', cats: ['5th percentile', '95th percentile'], items: [['The height of a doorway', 1], ['How high a top shelf can be', 0], ['The leg room under a desk', 1], ['The distance to an emergency stop button', 0], ['The width of a seat', 1], ['The force needed to squeeze a trigger', 0]] } },
  { mcq: [

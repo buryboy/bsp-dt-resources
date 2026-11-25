@@ -37,11 +37,11 @@ BOOKLETS.push({ id: 'g9', topic: 9, title: 'Ecological and social footprint', pa
  <tr><td><b>Drilling</b></td><td>Crude oil and gas, for polymers, synthetic fibres and fuel</td><td>Oil spills kill wildlife; a finite resource is used up; burning releases carbon dioxide</td></tr>
  <tr><td><b>Farming</b></td><td>Cotton, wool, leather, crops for bio-based polymers</td><td>Cotton needs huge amounts of water, pesticides and fertiliser; land is cleared; chemicals run off into rivers</td></tr></table>
  <h4>Product miles</h4>
- <p>Count the distance at every stage: <b>raw material source → manufacture → distribution → user location → final disposal</b>. A T-shirt may be grown in India, woven in China, sewn in Bangladesh and sold in France. Every journey burns fuel and releases carbon dioxide.</p>
+ <p>Count the distance at every stage: <b>raw material source → manufacture → distribution → user location → final disposal</b>. The cotton for a T-shirt may be grown in India, knitted into fabric in China, sewn in Bangladesh and sold in France. Every journey burns fuel and releases carbon dioxide.</p>
  <p><b>To reduce it:</b> source materials locally, make the product near where it is sold, ship flat-packed so more fit in each lorry, and use sea or rail instead of air.</p>
  <h4>Carbon produced during manufacture</h4>
  <p>Extracting, refining and processing materials uses a lot of energy, mostly from fossil fuels. Making new aluminium or steel, firing bricks and making cement are among the worst. <b>To reduce it:</b> use recycled material (recycled aluminium needs only about 5% of the energy of new), use renewable energy in the factory, and choose efficient processes.</p>` },
- { match: { q: 'Match each raw material to how it is obtained.', lh: 'Material', rh: 'Obtained by', pairs: [['Aluminium', 'Mining bauxite ore'], ['Polypropylene', 'Drilling for crude oil'], ['Cotton', 'Farming'], ['Pine', 'Felling trees'], ['Wool', 'Rearing sheep']] } },
+ { match: { q: 'Match each raw material to how it is obtained.', lh: 'Material', rh: 'Obtained by', pairs: [['Aluminium', 'Mining bauxite ore'], ['Polypropylene', 'Drilling for crude oil'], ['Cotton', 'Growing a plant crop'], ['Pine', 'Felling trees'], ['Wool', 'Rearing sheep']] } },
  { order: { q: 'Put the stages that add to a product’s mileage in order.', steps: ['Raw material source', 'Manufacture', 'Distribution to shops or warehouses', 'User location', 'Final disposal'] } },
  { mcq: [
   ['Which change would most reduce the carbon footprint of an aluminium can?', ['Painting it a different colour', 'Making it from recycled aluminium', 'Making it heavier', 'Shipping it by air'], 1, 'Recycling aluminium uses about 5% of the energy of making it from ore.'],

@@ -15,7 +15,7 @@ BOOKLETS.push({ id: 'g11', topic: 11, title: 'Using and working with materials',
  <p>The specification gives two <b>commercial products</b> for each material area. Learn the pair for the area you will write about, and be able to explain why each material suits them.</p>` },
  { keys: [
   ['Physical property', 'What a material is like, such as its density or conductivity'],
-  ['Mechanical property', 'How a material behaves under a force, such as its strength or toughness'],
+  ['Working (mechanical) property', 'How a material behaves under a force, such as its strength or toughness'],
   ['Additive', 'A substance mixed into a material to change its properties'],
   ['Annealing', 'Heating a metal and cooling it slowly to make it softer and easier to shape'],
   ['Work hardening', 'A metal becoming harder and more brittle as it is bent or hammered'],
@@ -51,7 +51,7 @@ BOOKLETS.push({ id: 'g11', topic: 11, title: 'Using and working with materials',
 ]},
 
 { t: 'Modification of properties', spec: '3.2.5', blocks: [
- { notes: `<p>A material's properties can be <b>changed</b> to suit a purpose. The specification gives one example for each area.</p>
+ { notes: `<p>A material's properties can be <b>changed</b> to suit a purpose. The specification gives one example for each area (two for systems).</p>
  <table><tr><th>Material area</th><th>Modification</th><th>What it does and why</th></tr>
  <tr><td><b>Papers and boards</b></td><td><b>Additives to prevent moisture transfer</b></td><td>“Sizing” agents such as starch or resin are added to the pulp, or a wax or polymer coating is applied. The fibres absorb less, so ink does not spread and the board resists water and grease: cups, food cartons</td></tr>
  <tr><td><b>Timber</b></td><td><b>Seasoning to reduce moisture content</b></td><td>Drying in air or a kiln makes timber stronger, more stable and less likely to warp, split or rot</td></tr>
@@ -83,7 +83,7 @@ BOOKLETS.push({ id: 'g11', topic: 11, title: 'Using and working with materials',
  <tr><td><b>Systems</b></td><td>Cut, drill, solder</td><td>PCB shears or saw, PCB drill, soldering iron</td></tr></table>
  <h4>Some terms to be sure of</h4>
  <ul><li><b>Crease / score:</b> a line pressed or part-cut into card so that it folds neatly. <b>Perforate:</b> a row of small holes so that it tears off.</li>
- <li><b>Turn:</b> the work spins in a lathe and a tool cuts it, making round parts. <b>Mill:</b> a spinning cutter removes material from work that is held still, making flat faces and slots.</li>
+ <li><b>Turn:</b> the work spins in a lathe and a tool cuts it, making round parts. <b>Mill:</b> a spinning cutter removes material from work that is clamped to a moving table, making flat faces and slots.</li>
  <li><b>Braze:</b> join steel or copper with a melted brass filler rod. <b>Weld:</b> melt the edges of the parts themselves so they fuse.</li>
  <li><b>Pleat:</b> fold fabric back on itself and stitch it. <b>Gather:</b> draw fabric up along a thread to add fullness. <b>Quilt:</b> stitch through two layers with wadding between for warmth and padding. <b>Pipe:</b> insert a covered cord into a seam to strengthen and decorate the edge.</li></ul>` },
  { sort: { q: 'Is the process cutting or abrasion (removing material), or addition (adding or joining)?', cats: ['Cutting or abrasion', 'Addition'], items: [['Planing', 0], ['Welding', 1], ['Drilling', 0], ['Soldering', 1], ['Sanding', 0], ['Sewing', 1], ['Milling', 0], ['3D printing', 1], ['Brazing', 1], ['Chiselling', 0]] } },

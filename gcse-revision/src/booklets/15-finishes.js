@@ -47,7 +47,7 @@ BOOKLETS.push({ id: 'g15', topic: 15, title: 'Surface treatments and finishes', 
  <tr><td><b>Varnishing</b></td><td>Two or three thin coats of a clear coating (polyurethane or water-based), rubbed down between coats</td><td>A hard, clear, waterproof layer that shows the grain; gloss, satin or matt</td><td>Furniture, floors, boats (yacht varnish)</td></tr>
  <tr><td><b>Tanalising</b></td><td>Done industrially: timber is put in a pressure tank and a copper-based preservative is forced deep into it</td><td>Long-lasting protection against rot, fungus and insects, right through the wood; gives a green tint</td><td>Fence posts, decking, sheds, playground equipment</td></tr></table>
  <p>Others worth knowing: <b>oil</b> (soaks in, easy to renew, food safe for chopping boards), <b>wax</b> (soft sheen, little protection), <b>wood stain</b> (changes the colour but does not protect unless it is a combined stain and preservative).</p>` },
- { order: { q: 'Put the stages of painting a pine shelf in order.', steps: ['Sand with the grain using coarse then fine glass paper', 'Remove the dust and seal any knots', 'Apply a coat of primer', 'Apply an undercoat and let it dry', 'Rub down lightly with fine glass paper', 'Apply the top coat'] } },
+ { order: { q: 'Put the stages of painting a pine shelf in order.', steps: ['Sand with the grain using coarse then fine glass paper', 'Remove the dust and seal any knots', 'Apply a coat of primer', 'Apply an undercoat and let it dry', 'Rub down the dry undercoat lightly with fine glass paper', 'Apply the top coat'] } },
  { mcq: [
   ['Which finish would be chosen for an oak table to protect it while showing the grain?', ['Gloss paint', 'Clear varnish', 'Tanalising', 'Powder coating'], 1, 'Varnish is clear and hard-wearing.'],
   ['Why is fence timber tanalised rather than painted?', ['Paint is too expensive', 'The preservative goes deep into the wood, so it lasts for years in the ground with no upkeep', 'It makes the wood stronger', 'It makes the wood lighter'], 1, 'Paint is only a surface coating that cracks and peels outdoors.'],
@@ -78,7 +78,7 @@ BOOKLETS.push({ id: 'g15', topic: 15, title: 'Surface treatments and finishes', 
   ['Most polymer products need painting to protect them.', false, 'Polymers are self-finishing and do not corrode.'],
  ] },
  { exam: [
-  ['**Explain** why the handles of a pair of pliers are dip coated.', 2, ['The thick polymer layer is soft and gives a comfortable, non-slip grip (1)', 'and it insulates the user from electricity / protects the steel from rust (1)']],
+  ['**Explain** why the handles of a pair of pliers are dip coated.', 2, ['The thick polymer layer is soft and gives a comfortable, non-slip grip (1)', 'and it protects the steel from rust and feels warmer to hold than bare metal (1)']],
  ] },
 ]},
 

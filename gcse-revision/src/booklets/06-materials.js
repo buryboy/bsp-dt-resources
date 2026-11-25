@@ -2,7 +2,7 @@
 SPEC.push(
  ['q6a', 6, '3.1.6', 'Properties of materials', 'Physical: absorbency, density, fusibility, electrical and thermal conductivity · working: strength, hardness, toughness, malleability, ductility, elasticity', '**Describe** what is meant by (a) malleability and (b) ductility.', 2, ['(a) Malleability: can be hammered, pressed or rolled into shape without cracking (1)', '(b) Ductility: can be drawn or stretched out into a wire without breaking (1)']],
  ['q6b', 6, '3.1.6', 'Papers and boards', 'Bleed proof, cartridge, grid, layout and tracing paper · corrugated card, duplex board, foil lined board, foam core board, ink jet card, solid white board', '**Explain** why corrugated card is used for boxes that protect products in the post.', 2, ['The fluted (wavy) middle layer traps air and makes the board stiff for its weight (1)', 'so it absorbs knocks and protects the contents while adding little to the postage weight (1)']],
- ['q6c', 6, '3.1.6', 'Timbers: natural and manufactured', 'Hardwoods: ash, beech, mahogany, oak, balsa · softwoods: larch, pine, spruce · manufactured boards: MDF, plywood, chipboard', '**Explain** two reasons why MDF is often used instead of solid timber for flat-pack furniture.', 4, ['It comes in large, flat sheets with no grain or knots (1) so wide panels can be cut without joining boards and will not warp or split (1)', 'It is made from waste wood fibres (1) so it is cheaper than solid timber / makes use of material that would be wasted (1)', 'Accept: smooth surface (1) that is easy to paint, veneer or laminate (1)']],
+ ['q6c', 6, '3.1.6', 'Timbers: natural and manufactured', 'Hardwoods: ash, beech, mahogany, oak, balsa · softwoods: larch, pine, spruce · manufactured boards: MDF, plywood, chipboard', '**Explain** two reasons why MDF is often used instead of solid timber for flat-pack furniture.', 4, ['It comes in large, flat sheets with no grain or knots (1) so wide panels can be cut without joining boards and will not warp or split (1)', 'It is made from wood fibres, including waste and low-grade wood (1) so it is cheaper than solid timber / makes use of material that would be wasted (1)', 'Accept: smooth surface (1) that is easy to paint, veneer or laminate (1)']],
  ['q6d', 6, '3.1.6', 'Metals and alloys', 'Ferrous: low carbon steel, cast iron, high carbon steel · non-ferrous: aluminium, copper, tin, zinc · alloys: brass, stainless steel, high speed steel', '**Explain** what an alloy is. Name one alloy and the metals it is made from.', 3, ['A mixture of two or more metals (or a metal with another element) (1)', 'made to give improved properties, e.g. harder, stronger or more resistant to corrosion (1)', 'Brass = copper and zinc / stainless steel = iron (steel) with chromium (and nickel) (1)']],
  ['q6e', 6, '3.1.6', 'Polymers: thermoforming and thermosetting', 'Thermoforming: acrylic, HIPS, HDPE, PP, PVC, PET · thermosetting: epoxy resin, melamine formaldehyde, phenol formaldehyde, polyester resin, urea formaldehyde', '**Explain** why urea formaldehyde, a thermosetting polymer, is used for electrical plug sockets.', 2, ['It is an electrical insulator, so the user cannot get a shock from the casing (1)', 'and because it is thermosetting it will not soften or melt if the socket gets hot (1)']],
  ['q6f', 6, '3.1.6', 'Textiles: fibres and fabrics', 'Natural: cotton, wool, silk · synthetic: polyester, polyamide (nylon), elastane (lycra) · blended and mixed: cotton/polyester · woven (plain weave), non-woven (bonded, felted), knitted', '**Explain** why a cotton/polyester blend is often used for school shirts.', 2, ['Cotton makes the fabric soft, breathable and absorbent, so it is comfortable (1)', 'Polyester adds strength and crease resistance and dries quickly, so the shirt lasts and needs little ironing (1)']],
@@ -23,7 +23,7 @@ BOOKLETS.push({ id: 'g6', topic: 6, title: 'Materials and their working properti
  { tip: '<b>The answer that always scores:</b> name the <b>material</b>, name the <b>property</b>, and link it to the <b>product</b>. “Beech (material) is hard and does not splinter (property), so it is safe for a child’s toy (product).” Never just write “strong”.' },
  { keys: [
   ['Hardwood', 'Timber from a deciduous (broad-leaved) tree, such as oak or beech'],
-  ['Softwood', 'Timber from a coniferous (evergreen, needle-leaved) tree, such as pine'],
+  ['Softwood', 'Timber from a coniferous (cone-bearing, needle-leaved) tree, such as pine'],
   ['Manufactured board', 'A sheet material made from wood veneers, chips or fibres glued together'],
   ['Ferrous metal', 'A metal that contains iron; most are magnetic and rust'],
   ['Non-ferrous metal', 'A metal that contains no iron, so it does not rust'],
@@ -41,7 +41,7 @@ BOOKLETS.push({ id: 'g6', topic: 6, title: 'Materials and their working properti
  { notes: `<h4>Physical properties: what the material is like</h4>
  <table><tr><th>Property</th><th>Meaning</th><th>Example</th></tr>
  <tr><td><b>Absorbency</b></td><td>How well it soaks up moisture (the opposite is resistance to moisture)</td><td>Cotton towels are very absorbent; polymers are not</td></tr>
- <tr><td><b>Density</b></td><td>The mass of a material for its volume: how heavy it is for its size</td><td>Balsa and aluminium have a low density; steel and oak are dense</td></tr>
+ <tr><td><b>Density</b></td><td>The mass of a material for its volume: how heavy it is for its size</td><td>Balsa is a very low-density timber and aluminium is a low-density metal; steel and lead are dense</td></tr>
  <tr><td><b>Fusibility</b></td><td>How easily it melts to a liquid when heated, so it can be cast or joined</td><td>Solder and zinc have good fusibility (low melting points)</td></tr>
  <tr><td><b>Electrical conductivity</b></td><td>How well it lets electricity flow through it</td><td>Copper is an excellent conductor; polymers are insulators</td></tr>
  <tr><td><b>Thermal conductivity</b></td><td>How well it lets heat pass through it</td><td>Aluminium and copper pans conduct heat; timber and polymer handles insulate</td></tr></table>
@@ -87,7 +87,7 @@ BOOKLETS.push({ id: 'g6', topic: 6, title: 'Materials and their working properti
 
 { t: 'Timbers: natural and manufactured', spec: '3.1.6', blocks: [
  { notes: `<table><tr><th></th><th>Hardwoods</th><th>Softwoods</th></tr>
- <tr><td><b>Trees</b></td><td>Deciduous: broad leaves that fall in autumn</td><td>Coniferous: evergreen, with needles and cones</td></tr>
+ <tr><td><b>Trees</b></td><td>Deciduous: broad leaves that fall in autumn</td><td>Coniferous: needles and cones; nearly all are evergreen (larch is the exception: it loses its needles)</td></tr>
  <tr><td><b>Growth</b></td><td>Slow (often 80 to 100 years), so more expensive</td><td>Fast (about 30 years), so cheaper and easier to replace</td></tr>
  <tr><td><b>In general</b></td><td>Denser, harder, close grained</td><td>Lighter, easier to work, more knots</td></tr></table>
  <p>The names describe the <b>tree</b>, not the wood: <b>balsa is a hardwood</b> even though it is very soft.</p>
@@ -130,7 +130,7 @@ BOOKLETS.push({ id: 'g6', topic: 6, title: 'Materials and their working properti
  <tr><td><b>Brass</b></td><td>Alloy: copper + zinc</td><td>Resists corrosion; casts and machines well; gold colour; good conductor</td><td>Taps, door handles, musical instruments, plug pins</td></tr>
  <tr><td><b>Stainless steel</b></td><td>Alloy: steel + chromium (and nickel)</td><td>Hard and tough; does not rust; shiny; difficult to cut</td><td>Cutlery, sinks, surgical instruments</td></tr>
  <tr><td><b>High speed steel</b></td><td>Alloy: steel + tungsten, chromium and vanadium</td><td>Very hard; stays hard and sharp even when it gets very hot</td><td>Drill bits, lathe tools, milling cutters</td></tr></table>` },
- { sort: { q: 'Ferrous, non-ferrous or alloy? (Choose alloy for the three named alloys.)', cats: ['Ferrous metal', 'Non-ferrous metal', 'Alloy'], items: [['Cast iron', 0], ['Copper', 1], ['Brass', 2], ['Low carbon steel', 0], ['Aluminium', 1], ['Stainless steel', 2], ['Zinc', 1], ['High speed steel', 2], ['Tin', 1]] } },
+ { sort: { q: 'Ferrous, non-ferrous or alloy? (Use the groups AQA puts them in: the three alloys are brass, stainless steel and high speed steel.)', cats: ['Ferrous metal', 'Non-ferrous metal', 'Alloy'], items: [['Cast iron', 0], ['Copper', 1], ['Brass', 2], ['Low carbon steel', 0], ['Aluminium', 1], ['Stainless steel', 2], ['Zinc', 1], ['High speed steel', 2], ['Tin', 1]] } },
  { match: { q: 'Match each metal to a typical use.', lh: 'Metal', rh: 'Use', pairs: [['Copper', 'Electrical wiring'], ['Aluminium', 'Drinks cans'], ['Cast iron', 'A bench vice'], ['Stainless steel', 'Cutlery'], ['High speed steel', 'Drill bits'], ['Brass', 'Door handles and taps'], ['Zinc', 'Galvanising steel']] } },
  { tf: [
   ['Aluminium rusts.', false, 'Only ferrous metals rust. Aluminium forms a thin oxide layer that protects it.'],
@@ -197,10 +197,10 @@ BOOKLETS.push({ id: 'g6', topic: 6, title: 'Materials and their working properti
   ['Which is a thermosetting polymer?', ['PET', 'HIPS', 'Melamine formaldehyde', 'Polypropylene'], 2, 'The resins and the formaldehydes are thermosetting.'],
   ['Which board would be used for the lid of a foil takeaway tray?', ['Foam core board', 'Foil lined board', 'Ink jet card', 'Duplex board'], 1, 'It keeps the heat in and is a barrier to grease.'],
   ['Which property describes a material that can be drawn into a wire?', ['Malleable', 'Ductile', 'Elastic', 'Tough'], 1, 'Ductile: drawn out. Malleable: pressed or hammered.'],
-  ['Which fabric is non-woven?', ['Plain weave cotton', 'Knitted polyester', 'Felt', 'Denim'], 2, 'Felt is made of matted fibres, not yarns.'],
+  ['Which fabric is non-woven?', ['Plain weave cotton', 'Cotton canvas', 'Felt', 'Denim'], 2, 'Felt is made of matted fibres, not yarns.'],
  ] },
  { exam: [
-  ['**Name** a suitable manufactured board for a kitchen worktop and **give** one reason for your choice.', 2, ['Chipboard (with a melamine laminate surface) (1)', 'Cheap and available in long, wide, flat lengths / the laminate gives a hard, heat- and water-resistant surface (1)', 'Accept MDF or plywood with a valid linked reason']],
+  ['**Name** a suitable manufactured board for a kitchen worktop and **give** one reason for your choice.', 2, ['Chipboard (with a melamine laminate surface) (1)', 'Costs less than solid timber for a long, wide, flat panel / the laminate gives a hard, heat- and water-resistant surface (1)', 'Accept MDF or plywood with a valid linked reason']],
   ['**Describe** two differences between thermoforming and thermosetting polymers.', 2, ['Thermoforming polymers soften when heated and can be reshaped; thermosetting polymers cannot be softened once set (1)', 'Thermoforming polymers can be recycled by melting; thermosetting polymers cannot (1)']],
   ['**Explain** why aluminium is used for drinks cans.', 3, ['It is malleable, so it can be pressed and drawn into a thin-walled can (1)', 'It has a low density, so cans are light to transport (1)', 'It does not rust / is non-toxic / is easily recycled, so it is safe for drinks and can be reused (1)']],
   ['**Explain** two properties of oak that make it suitable for a garden bench.', 4, ['It is hard and strong (1) so it carries the weight of several people and resists knocks and wear (1)', 'It is durable (1) so it resists rot outdoors for many years with little treatment (1)', 'Accept: attractive grain (1) so it suits a quality product (1)']],

@@ -64,7 +64,7 @@ BOOKLETS.push({ id: 'g7', topic: 7, title: 'Selection of materials or components
  <tr><td><b>Ethical</b></td><td>Buy from <b>ethical sources</b></td><td><b>FSC</b> timber and paper from managed forests; Fairtrade cotton; metals that are not from mines using child labour</td></tr></table>
  <h4>End of life disposal</h4>
  <p>The specification links material choice to what happens when the product is thrown away. Ask: can it be <b>recycled</b>, will it <b>biodegrade</b>, or will it sit in <b>landfill</b>? Thermoforming polymers and metals can be recycled; thermosetting polymers and composites are very hard to recycle; untreated timber and paper biodegrade.</p>` },
- { match: { q: 'Match each choice to the factor it shows.', lh: 'Choice', rh: 'Factor', pairs: [['Using recycled aluminium for the casing', 'Environmental'], ['Buying timber with the FSC logo', 'Ethical'], ['Offering a version with no leather', 'Cultural'], ['Checking that factory workers are safe and fairly paid', 'Social']] } },
+ { match: { q: 'Match each choice to the factor it shows.', lh: 'Choice', rh: 'Factor', pairs: [['Using recycled aluminium for the casing', 'Environmental'], ['Buying timber with the FSC logo', 'Ethical'], ['Offering a version with no leather', 'Cultural'], ['Choosing a material that does not give off harmful fumes for the people who make or use it', 'Social']] } },
  { tf: [
   ['FSC timber comes from forests where felled trees are replaced.', true, 'The forest is managed responsibly.'],
   ['Thermosetting polymers are easy to recycle.', false, 'They cannot be remelted.'],

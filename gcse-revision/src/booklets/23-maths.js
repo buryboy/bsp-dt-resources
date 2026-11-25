@@ -45,7 +45,7 @@ BOOKLETS.push({ id: 'gmaths', topic: 'Maths', tag: 'Maths', title: 'Maths for De
   ['A jacket costs £45.00 to make and is sold with a 40% mark-up. What is the selling price, in pounds?', 63, 0.001, '£', '45 × 1.40 = £63.00.'],
  ] },
  { mcq: [
-  ['Which is 0.000 25 in standard form?', ['2.5 × 10⁴', '2.5 × 10⁻⁴', '25 × 10⁻⁵', '2.5 × 10⁻³'], 1, 'The point moves four places to the right, so the power is −4.'],
+  ['Which is 0.000 25 in standard form?', ['2.5 × 10⁴', '2.5 × 10⁻⁴', '25 × 10⁻⁵', '2.5 × 10⁻³'], 1, 'The point moves four places to the right, so the power is −4. 25 × 10⁻⁵ has the same value but is not standard form, because 25 is not between 1 and 10.'],
   ['Which is 6.2 × 10³ as an ordinary number?', ['62', '620', '6200', '62 000'], 2, 'Move the point three places: 6200.'],
   ['What is ⅗ as a percentage?', ['35%', '53%', '60%', '65%'], 2, '3 ÷ 5 = 0.6 = 60%.'],
  ] },
@@ -159,7 +159,7 @@ BOOKLETS.push({ id: 'gmaths', topic: 'Maths', tag: 'Maths', title: 'Maths for De
  ] },
  { exam: [
   ['A sheet of plywood is 1200 mm × 600 mm. A student cuts four panels from it, each 500 mm × 250 mm. **Calculate** the percentage of the sheet that is wasted. Give your answer to 1 decimal place.', 4, ['Sheet area = 1200 × 600 = 720 000 mm² (1)', 'Panels = 4 × 500 × 250 = 500 000 mm² (1)', 'Waste = 720 000 − 500 000 = 220 000 mm² (1)', '220 000 ÷ 720 000 × 100 = 30.6% (1)']],
-  ['A survey of 80 students asked which colour they preferred for a product: red 20, blue 36, green 16, yellow 8. **Calculate** the angle of each sector for a pie chart.', 4, ['360 ÷ 80 = 4.5° per student (1)', 'Red = 90° and blue = 162° (1)', 'Green = 72° and yellow = 36° (1)', 'Check: 90 + 162 + 72 + 36 = 360° (1)']],
+  ['A survey of 80 students asked which colour they preferred for a product: red 20, blue 36, green 16, yellow 8. **Calculate** the angle of each sector for a pie chart.', 4, ['Method: 360 ÷ 80 = 4.5° per student, or value ÷ 80 × 360 (1)', 'Red = 90° (1)', 'Blue = 162° (1)', 'Green = 72° and yellow = 36° (1)']],
   ['A hole is specified as 25 mm ± 0.5 mm in diameter. **State** the minimum and maximum acceptable diameters of the hole.', 1, ['Minimum 24.5 mm and maximum 25.5 mm (1) (both needed)']],
   ['A cylindrical candle mould has an internal diameter of 60 mm and a height of 100 mm. **Calculate** the volume of wax needed to fill it, in cm³. Use π = 3.14.', 3, ['Radius = 3 cm and height = 10 cm (or 30 mm and 100 mm) (1)', 'Volume = 3.14 × 3² × 10 (1)', '= 282.6 cm³ (1)']],
   ['A company makes 400 wooden toys. Each uses 0.02 m² of beech at £45.00 per m², four wheels at £0.12 each and paint costing £0.25. **Calculate** the total material cost of the batch.', 4, ['Beech: 0.02 × 45.00 = £0.90 (1)', 'Wheels: 4 × 0.12 = £0.48 (1)', 'One toy: 0.90 + 0.48 + 0.25 = £1.63 (1)', 'Batch: 1.63 × 400 = £652.00 (1)']],

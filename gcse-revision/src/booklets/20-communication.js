@@ -51,7 +51,7 @@ BOOKLETS.push({ id: 'g20', topic: 20, title: 'Communication of design ideas', pa
  <p>Adding tone, colour and texture makes a drawing look solid and shows the material: darker on the side away from the light, a highlight on shiny surfaces, grain lines for wood. A thicker outline round the outside makes the object stand out.</p>` },
  { sort: { q: 'Isometric or perspective?', cats: ['Isometric', 'Perspective'], items: [['Lines are drawn at 30° to the horizontal', 0], ['Lines meet at a vanishing point', 1], ['Parallel edges stay parallel', 0], ['Objects look smaller the further away they are', 1], ['Can be drawn to scale and measured', 0], ['Uses a horizon line', 1]] } },
  { mcq: [
-  ['At what angle are the sloping lines drawn in an isometric drawing?', ['15°', '30°', '45°', '60°'], 1, '30° to the horizontal, on both sides.'],
+  ['At what angle to the horizontal are the sloping lines drawn in an isometric drawing?', ['15°', '30°', '45°', '60°'], 1, '30° to the horizontal, on both sides.'],
   ['How many vanishing points does a two-point perspective drawing have?', ['None', 'One', 'Two', 'Three'], 2, 'One to the left and one to the right, on the horizon line.'],
   ['Which is the best annotation?', ['“Handle”', '“Looks good”', '“Rubber grip, 30 mm diameter, so it is comfortable and does not slip in a wet hand”', '“Blue”'], 2, 'It names the feature, gives a size and justifies it.'],
  ] },
@@ -66,7 +66,7 @@ BOOKLETS.push({ id: 'g20', topic: 20, title: 'Communication of design ideas', pa
  <ul><li><b>Front view</b> (front elevation) in the lower left.</li>
  <li><b>Plan</b> (the view from above) <b>directly above</b> the front view.</li>
  <li><b>Side view</b> (end elevation) <b>beside</b> the front view, on the side it is seen from.</li></ul>
- <p>The symbol for third angle projection is a <b>truncated cone</b> seen from the side, with <b>two circles</b> to its left.</p>
+ <p>The symbol for third angle projection is a <b>truncated cone</b> seen from the side, with <b>two concentric circles</b> (one inside the other) to its left.</p>
  <h4>Line conventions (British Standards)</h4>
  <table><tr><th>Line</th><th>Looks like</th><th>Used for</th></tr>
  <tr><td>Outline</td><td>Thick, continuous</td><td>Edges you can see</td></tr>

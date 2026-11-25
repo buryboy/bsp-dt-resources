@@ -50,11 +50,11 @@ BOOKLETS.push({ id: 'g13', topic: 13, title: 'Scales of production', pages: [
  { notes: `<h4>Mass production</h4>
  <p>One product is made in very large numbers on a <b>production line</b>. The product moves from one stage to the next; each worker or robot does one task.</p>
  <table><tr><th>Features</th><th>Advantages</th><th>Disadvantages</th><th>Examples</th></tr>
- <tr><td>Specialised machines and expensive tooling (moulds, dies); a lot of automation and robots; mostly unskilled or semi-skilled workers; standard components bought in</td><td>Very low cost for each product (<b>economies of scale</b>); fast; consistent quality</td><td>Very high set-up cost; inflexible, so a design change is expensive; a breakdown stops the whole line; repetitive work</td><td>Cars, phones, washing machines, trainers, injection-moulded toys</td></tr></table>
+ <tr><td>Specialised machines and expensive tooling (moulds, dies); a lot of automation and robots; mostly unskilled or semi-skilled workers; standard components bought in</td><td>Very low cost for each product (<b>economies of scale</b>); fast; consistent quality</td><td>Very high set-up cost; inflexible, so a design change is expensive; a breakdown stops the whole line; repetitive work</td><td>Cars, phones, washing machines, trainers, drinks cans, injection-moulded toys</td></tr></table>
  <h4>Continuous production</h4>
  <p>The process <b>never stops</b>: 24 hours a day, 7 days a week, often for years. It is used for products in constant, huge demand and for processes that are too costly to stop and restart.</p>
  <table><tr><th>Features</th><th>Advantages</th><th>Disadvantages</th><th>Examples</th></tr>
- <tr><td>Fully automated; a few highly trained staff monitor and maintain it; workers on shifts</td><td>The lowest cost for each product; maximum output</td><td>The highest set-up cost; no flexibility at all; stopping the plant is very expensive</td><td>Steel, oil refining and polymer granules, paper, float glass, extruded pipe, drinks cans, screws</td></tr></table>
+ <tr><td>Fully automated; a few highly trained staff monitor and maintain it; workers on shifts</td><td>The lowest cost for each product; maximum output</td><td>The highest set-up cost; no flexibility at all; stopping the plant is very expensive</td><td>Steel, oil refining and polymer granules, paper, float glass, extruded pipe, wire, screws</td></tr></table>
  <h4>Comparing the four</h4>
  <table><tr><th></th><th>Prototype</th><th>Batch</th><th>Mass</th><th>Continuous</th></tr>
  <tr><td>Number made</td><td>1</td><td>10s to 1000s</td><td>1000s to millions</td><td>Non-stop</td></tr>
@@ -72,7 +72,7 @@ BOOKLETS.push({ id: 'g13', topic: 13, title: 'Scales of production', pages: [
 ]},
 
 { t: 'Exam practice', spec: '3.2.7', blocks: [
- { tip: '<b>Link the scale to the process.</b> Injection moulding and die casting only make sense for mass production because the tooling costs thousands of pounds. Laser cutting, 3D printing and hand tools suit one-off and small batches because there is no tooling to pay for.' },
+ { tip: '<b>Link the scale to the process.</b> Injection moulding and die casting only make sense for very large quantities (large batch or mass production) because the tooling costs many thousands of pounds. Laser cutting, 3D printing and hand tools suit one-off and small batches because there is no tooling to pay for.' },
  { mcq: [
   ['Which scale of production would be used to make polymer granules?', ['One-off', 'Batch', 'Mass', 'Continuous'], 3, 'Refining and polymer production run non-stop.'],
   ['Which scale of production has the highest cost for each product?', ['One-off', 'Batch', 'Mass', 'Continuous'], 0, 'All the cost falls on a single product.'],

@@ -46,7 +46,7 @@ BOOKLETS.push({ id: 'g22', topic: 22, title: 'Making: materials, tolerances, too
  <tr><td>Electric current</td><td>ampere (amp)</td><td>A</td></tr>
  <tr><td>Voltage</td><td>volt</td><td>V</td></tr>
  <tr><td>Resistance</td><td>ohm</td><td>Ω</td></tr>
- <tr><td>Temperature</td><td>degree Celsius (kelvin in science)</td><td>°C, K</td></tr>
+ <tr><td>Temperature</td><td>kelvin (degree Celsius in everyday and D&T use)</td><td>K, °C</td></tr>
  <tr><td>Area and volume</td><td>square and cubic metres or millimetres</td><td>m², mm², m³, mm³</td></tr></table>
  <p><b>Prefixes:</b> kilo (k) = × 1000; milli (m) = ÷ 1000; micro (µ) = ÷ 1 000 000; mega (M) = × 1 000 000. So 1 kΩ = 1000 Ω and 1 mm = 0.001 m.</p>
  <h4>Alloys you should be able to select</h4>
@@ -99,7 +99,7 @@ BOOKLETS.push({ id: 'g22', topic: 22, title: 'Making: materials, tolerances, too
  { match: { q: 'Match each marking-out tool to its job.', lh: 'Tool', rh: 'Job', pairs: [['Try square', 'Marking a line at 90° to an edge'], ['Marking gauge', 'Marking a line parallel to an edge on timber'], ['Scriber', 'Scratching a fine line on metal'], ['Centre punch', 'Making a dent to start a drill accurately'], ['Dividers', 'Marking circles and arcs on metal'], ['Tailor’s chalk', 'Marking fabric']] } },
  { calc: [
   ['Four parts, each 120 mm long, are cut from a length of bar. Each saw cut removes 2 mm. What is the minimum length of bar needed, in mm? (Three cuts are needed.)', 486, 0, 'mm', '4 × 120 = 480 mm, plus 3 cuts × 2 mm = 6 mm. Total 486 mm.'],
-  ['Triangular parts tessellate perfectly on a sheet 500 mm × 300 mm. Each triangle has a base of 100 mm and a height of 50 mm. How many can be cut?', 60, 0, '', 'Sheet area = 150 000 mm². Triangle area = ½ × 100 × 50 = 2500 mm². 150 000 ÷ 2500 = 60.'],
+  ['Right-angled triangular parts tessellate perfectly, in pairs that make rectangles, on a sheet 500 mm × 300 mm. Each triangle has a base of 100 mm and a height of 50 mm. How many can be cut?', 60, 0, '', 'Sheet area = 150 000 mm². Triangle area = ½ × 100 × 50 = 2500 mm². 150 000 ÷ 2500 = 60.'],
   ['A hole must be drilled at the coordinates (40, 25) measured in mm from the bottom-left corner of a plate. A second hole is at (100, 25). How far apart are the centres of the holes, in mm?', 60, 0, 'mm', 'Both are 25 mm up, so they are on the same horizontal line. 100 − 40 = 60 mm.'],
  ] },
  { tf: [
@@ -126,9 +126,9 @@ BOOKLETS.push({ id: 'g22', topic: 22, title: 'Making: materials, tolerances, too
  <tr><td>Burns from hot metal, polymer and tools</td><td>Heat-proof gloves and tongs; a stand for the soldering iron; label hot work</td></tr>
  <tr><td>Trips and collisions</td><td>Clear floor and bench; bags stored away; one person at a machine; no running</td></tr></table>
  <p>Know where the <b>emergency stop</b> buttons are. Only use a machine you have been trained on and have permission to use. Report damage and accidents.</p>
- <p>A <b>risk assessment</b> names the <b>hazard</b>, the <b>risk</b> (who could be hurt and how badly) and the <b>control measure</b>.</p>` },
+ <p>A <b>risk assessment</b> names the <b>hazard</b>, the <b>risk</b> (who could be hurt, how likely it is and how badly) and the <b>control measure</b>.</p>` },
  { tip: '<b>Safety answers must be specific.</b> “Wear goggles” scores less than “wear goggles <b>because</b> chips of acrylic can fly up from the drill”. “Be careful” scores nothing. Read whether the question wants precautions for <b>cutting</b>, for <b>heat</b>, or in general.' },
- { match: { q: 'Match each hazard to the best control measure.', lh: 'Hazard', rh: 'Control', pairs: [['Long hair near a pillar drill', 'Tie it back'], ['Fumes when soldering', 'Use extraction'], ['Dust from sanding MDF', 'Extraction and a dust mask'], ['A small workpiece being drilled', 'Hold it in a machine vice'], ['Hot acrylic from the line bender', 'Wear heat-proof gloves'], ['Chips flying from a lathe', 'Eye protection and the guard in place']] } },
+ { match: { q: 'Match each hazard to the best control measure.', lh: 'Hazard', rh: 'Control', pairs: [['Long hair near a pillar drill', 'Tie it back'], ['Fumes when soldering', 'Fume extraction at the bench'], ['Dust from sanding MDF', 'Dust extraction and a dust mask'], ['A small workpiece being drilled', 'Hold it in a machine vice'], ['Hot acrylic from the line bender', 'Wear heat-proof gloves'], ['Chips flying from a lathe', 'Eye protection and the guard in place']] } },
  { sort: { q: 'Hand tool, machine or digital manufacture?', cats: ['Hand tool', 'Machine', 'Digital manufacture'], items: [['Coping saw', 0], ['Pillar drill', 1], ['Laser cutter', 2], ['Bevel-edge chisel', 0], ['Band saw', 1], ['3D printer', 2], ['File', 0], ['CNC router', 2]] } },
  { mcq: [
   ['Why should gloves not be worn when using a pillar drill?', ['They make hands too warm', 'They can be caught by the rotating chuck and drag the hand in', 'They are too expensive', 'They stop you seeing the work'], 1, 'Entanglement is the main risk on rotating machines.'],
@@ -140,8 +140,8 @@ BOOKLETS.push({ id: 'g22', topic: 22, title: 'Making: materials, tolerances, too
  { notes: `<p>You should be able to choose techniques that suit the <b>material</b> and the <b>task</b>, and carry them out to the <b>level of accuracy</b> needed. The three groups are the same as in 3.2.8.</p>
  <table><tr><th>Group</th><th>Timber</th><th>Metal</th><th>Polymer</th><th>Papers and boards</th><th>Textiles</th></tr>
  <tr><td><b>Wastage</b></td><td>Saw, plane, chisel, drill, sand, turn, rout</td><td>Saw, file, drill, turn, mill, shear</td><td>Saw, file, drill, laser cut</td><td>Cut, score, perforate, die cut</td><td>Cut with shears or a rotary cutter</td></tr>
- <tr><td><b>Addition</b></td><td>Glue (PVA), screw, nail, dowel; joints such as butt, lap, housing, mortise and tenon, dovetail</td><td>Solder, braze, weld, rivet, nut and bolt</td><td>Solvent cement, epoxy, 3D print, heat weld</td><td>Glue, tape, tabs and slots, laminate</td><td>Sew seams, bond, appliqué, embroider</td></tr>
- <tr><td><b>Deforming and reforming</b></td><td>Laminate, steam bend, kerf bend</td><td>Bend, fold, press, beat, cast</td><td>Line bend, vacuum form, drape form, press form, cast resin</td><td>Fold, crease, emboss</td><td>Pleat, gather, dart, press</td></tr></table>
+ <tr><td><b>Addition</b></td><td>Glue (PVA), laminate, screw, nail, dowel; joints such as butt, lap, housing, mortise and tenon, dovetail</td><td>Solder, braze, weld, rivet, nut and bolt</td><td>Solvent cement, epoxy, 3D print, heat weld</td><td>Glue, tape, tabs and slots, laminate</td><td>Sew seams, bond, appliqué, embroider</td></tr>
+ <tr><td><b>Deforming and reforming</b></td><td>Steam bend, kerf bend, bend glued laminates round a former</td><td>Bend, fold, press, beat, cast</td><td>Line bend, vacuum form, drape form, press form, cast resin</td><td>Fold, crease, emboss</td><td>Pleat, gather, dart, press</td></tr></table>
  <h4>Choosing a joint or joining method</h4>
  <ul><li>Does it need to be <b>permanent</b> (glue, weld, rivet) or <b>temporary</b> (screws, bolts, KD fittings, zips)?</li>
  <li>How <b>strong</b> must it be, and which way is the force?</li>

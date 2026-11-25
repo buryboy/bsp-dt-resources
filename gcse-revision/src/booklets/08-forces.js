@@ -12,7 +12,7 @@ BOOKLETS.push({ id: 'g8', topic: 8, title: 'Forces and stresses', pages: [
  <tr><td><b>Compression</b></td><td>Pushes together; squashes</td><td>The legs of a chair being sat on</td></tr>
  <tr><td><b>Bending</b></td><td>Makes it curve: one side is stretched and the other is squashed</td><td>A shelf loaded with books</td></tr>
  <tr><td><b>Torsion</b></td><td>Twists</td><td>A screwdriver being turned</td></tr>
- <tr><td><b>Shear</b></td><td>Two forces slide past each other in opposite directions, trying to cut</td><td>Scissors cutting paper; a rivet holding two plates that are pulled apart</td></tr></table>` },
+ <tr><td><b>Shear</b></td><td>Two forces act in opposite directions, side by side, trying to slide one part of the material past the other (cut it)</td><td>Scissors cutting paper; a rivet holding two overlapping plates that are pulled in opposite directions</td></tr></table>` },
  { keys: [
   ['Tension', 'A pulling force that stretches a material'],
   ['Compression', 'A pushing force that squashes a material'],
@@ -33,7 +33,7 @@ BOOKLETS.push({ id: 'g8', topic: 8, title: 'Forces and stresses', pages: [
  { notes: `<table><tr><th>Force</th><th>Where you find it</th><th>Materials and shapes that resist it</th></tr>
  <tr><td><b>Tension</b></td><td>Guitar strings, suspension bridge cables, a bag strap, a tent guy rope</td><td>Steel cable, rope, nylon webbing, Kevlar. Fibres and wires are strong in tension</td></tr>
  <tr><td><b>Compression</b></td><td>Table and chair legs, building columns, the sole of a shoe, a car jack</td><td>Concrete, brick, cast iron, timber along the grain. Thick, short columns resist best</td></tr>
- <tr><td><b>Bending</b></td><td>A shelf, a diving board, a bridge deck, a fishing rod</td><td>Deep sections (an I-beam, a plank on edge), plywood, laminated beams. The top is in compression and the bottom is in tension</td></tr>
+ <tr><td><b>Bending</b></td><td>A shelf, a diving board, a bridge deck, a fishing rod</td><td>Deep sections (an I-beam, a plank on edge), plywood, laminated beams. In a beam supported at both ends, the top is in compression and the bottom is in tension (a diving board, fixed at one end, is the other way round)</td></tr>
  <tr><td><b>Torsion</b></td><td>A screwdriver shaft, a drive shaft, a door handle, wringing out a cloth</td><td>Round bar and tube; tough steels</td></tr>
  <tr><td><b>Shear</b></td><td>Rivets and bolts in a joint, scissors, a guillotine, a hole punch</td><td>Hard, strong steel pins; larger cross-section fixings</td></tr></table>
  <p>Most products feel <b>several forces at once</b>. On a bicycle: the frame tubes are in compression and tension, the pedal cranks are bending, the handlebar stem is in torsion when you steer, and the bolt holding the wheel is in shear.</p>
@@ -41,7 +41,7 @@ BOOKLETS.push({ id: 'g8', topic: 8, title: 'Forces and stresses', pages: [
  <p><b>Working with forces.</b> Sometimes the designer <b>uses</b> a force: a spring stores energy when compressed, scissors use shear to cut, and a clothes peg uses torsion in its spring.</p>` },
  { match: { q: 'Which force is acting?', lh: 'Situation', rh: 'Force', pairs: [['The cable holding up a lift', 'Tension'], ['The legs of a stool with someone sitting on it', 'Compression'], ['A plank used as a bridge across a stream', 'Bending'], ['The shaft of a screwdriver being turned', 'Torsion'], ['A bolt joining two plates that are pulled in opposite directions', 'Shear']] } },
  { mcq: [
-  ['When a shelf bends under a load, what happens to its top surface?', ['It is in tension', 'It is in compression', 'It is in torsion', 'Nothing'], 1, 'The top is squashed and the bottom is stretched.'],
+  ['A shelf is supported at both ends. When it bends under a load, what happens to its top surface?', ['It is in tension', 'It is in compression', 'It is in torsion', 'Nothing'], 1, 'The top is squashed and the bottom is stretched.'],
   ['Which is the best example of a dynamic load?', ['A lamp standing on a table', 'A roof covered in snow', 'A person bouncing on a trampoline', 'Books on a shelf'], 2, 'The force keeps changing.'],
   ['Which force does a pair of tin snips use to cut sheet metal?', ['Tension', 'Torsion', 'Shear', 'Compression'], 2, 'The two blades slide past each other.'],
  ] },
@@ -63,7 +63,7 @@ BOOKLETS.push({ id: 'g8', topic: 8, title: 'Forces and stresses', pages: [
  <ul><li><b>Kerfing:</b> a row of saw cuts part-way through timber or MDF lets it bend into a curve.</li>
  <li>Adding a <b>plasticiser</b> to PVC, or <b>elastane</b> to a fabric.</li>
  <li>A thin <b>living hinge</b> moulded into polypropylene.</li></ul>` },
- { match: { q: 'Match each product to the way it has been strengthened or stiffened.', lh: 'Product', rh: 'Method', pairs: [['A shirt collar that keeps its shape', 'Fabric interfacing'], ['A skateboard deck made from thin veneers', 'Lamination'], ['A cardboard box with a wavy middle layer', 'Folding (corrugating)'], ['A rucksack strap', 'Webbing'], ['A metal shelf bracket with a diagonal strut', 'Triangulation']] } },
+ { match: { q: 'Match each product to the way it has been strengthened or stiffened.', lh: 'Product', rh: 'Method', pairs: [['A shirt collar that keeps its shape', 'Fabric interfacing'], ['A skateboard deck made from thin veneers', 'Lamination'], ['The wavy (fluted) layer inside the wall of a cardboard box', 'Folding (corrugating)'], ['A rucksack strap', 'Webbing'], ['A metal shelf bracket with a diagonal strut', 'Triangulation']] } },
  { tf: [
   ['A flat sheet of steel is stiffer than the same sheet folded into an L shape.', false, 'Folding gives it depth, which resists bending.'],
   ['Laminating thin layers of wood allows a strong curved shape to be made.', true, 'Each thin layer bends easily; glued together they hold the curve.'],
@@ -81,8 +81,8 @@ BOOKLETS.push({ id: 'g8', topic: 8, title: 'Forces and stresses', pages: [
   ['Which method stiffens a textile product?', ['Kerfing', 'Interfacing', 'Galvanising', 'Annealing'], 1, 'A layer added inside the fabric.'],
  ] },
  { exam: [
-  ['**Describe** what happens to a beam when it bends under a load.', 2, ['The top surface is squashed: it is in compression (1)', 'The bottom surface is stretched: it is in tension (1)']],
-  ['**Explain** two ways that a thin sheet material can be made stiffer without making it thicker.', 4, ['Folding or corrugating it (1) so the folds act like small beams and resist bending (1)', 'Laminating it to other layers (1) so the bonded layers share the load and cannot slide over each other (1)', 'Accept: bending into a curve or tube; adding ribs; forming a rolled or folded edge']],
+  ['**Describe** what happens to a beam, supported at both ends, when it bends under a load.', 2, ['The top surface is squashed: it is in compression (1)', 'The bottom surface is stretched: it is in tension (1)']],
+  ['**Explain** two ways that a thin sheet material can be made stiffer.', 4, ['Folding or corrugating it (1) so the folds act like small beams and resist bending (1)', 'Laminating it to other layers (1) so the bonded layers share the load and cannot slide over each other (1)', 'Accept: bending into a curve or tube; adding ribs; forming a rolled or folded edge']],
   ['A designer is developing a folding camping chair with a metal tube frame and a fabric seat. **Explain** the forces acting on the chair when it is in use and how the design resists them.', 6, ['The legs are in compression from the person’s weight; tube is used because it resists compression and bending for little weight', 'The fabric seat is in tension; a strong woven fabric such as polyester or nylon is used, with the weave resisting stretch', 'Seams and edges are reinforced with webbing or double stitching where the load is concentrated', 'The pivots (rivets or bolts) are in shear; steel fixings of a large enough diameter are used', 'Crossed legs form triangles, so the frame cannot fold or sway sideways in use', 'A dynamic load when someone drops into the chair is much larger than the static load, so there must be a safety margin']],
  ] },
  { nea: 'On your NEA drawings, mark where each force acts on your product with labelled arrows, and say how your design resists it. It is quick to do and shows real technical understanding.' },

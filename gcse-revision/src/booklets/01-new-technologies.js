@@ -83,7 +83,7 @@ BOOKLETS.push({ id: 'g1', topic: 1, title: 'New and emerging technologies', page
   ['Continuous improvement means redesigning the whole product once every ten years.', false, 'It means many small improvements, all the time.'],
  ] },
  { exam: [
-  ['**Describe** two problems caused by sending polymer products to landfill.', 2, ['Polymers do not biodegrade, so they stay in the ground for hundreds of years (1)', 'Landfill uses up land / the finite oil used to make them is lost (1)', 'Accept: can pollute soil and water (1)']],
+  ['**Describe** two problems caused by sending polymer products to landfill.', 2, ['Most polymers do not biodegrade, so they stay in the ground for hundreds of years (1)', 'Landfill uses up land / the finite oil used to make them is lost (1)', 'Accept: can pollute soil and water (1)']],
  ] },
 ]},
 
@@ -91,7 +91,7 @@ BOOKLETS.push({ id: 'g1', topic: 1, title: 'New and emerging technologies', page
  { notes: `<h4>People: why new products appear</h4>
  <table><tr><th></th><th>Technology push</th><th>Market pull</th></tr>
  <tr><td><b>What starts it</b></td><td>A new technology, material or process is invented first</td><td>Customers want something new or better</td></tr>
- <tr><td><b>Example</b></td><td>Touchscreens led to smartphones and tablets; lithium batteries led to cordless tools and e-bikes</td><td>Demand for less plastic waste led to reusable cups and bottles; drivers wanted better fuel economy</td></tr></table>
+ <tr><td><b>Example</b></td><td>Touchscreens led to smartphones and tablets; lithium-ion batteries led to lighter, more powerful cordless tools and to e-bikes</td><td>Demand for less plastic waste led to reusable cups and bottles; drivers wanted better fuel economy</td></tr></table>
  <p><b>Changing job roles.</b> New ways of working mean fewer manual jobs and more technical ones: programmers, CNC operators, maintenance technicians. Many people can now work from home.</p>
  <h4>Culture</h4>
  <ul><li><b>Fashion and trends</b> change faster because of social media and online shopping. “Fast fashion” copies a trend in weeks, which means more products are thrown away.</li>

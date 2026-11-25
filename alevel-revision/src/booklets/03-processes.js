@@ -252,7 +252,7 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <tr><td>PVA</td><td>Wood and manufactured boards; water-based; clamp until set</td></tr>
  <tr><td>Epoxy resin (two-part)</td><td>Strong; joins dissimilar materials (metal, wood, polymers, ceramics)</td></tr>
  <tr><td>Contact adhesive</td><td>Apply to both surfaces, leave touch-dry, press together: laminates, fabrics, leather</td></tr>
- <tr><td>Solvent cement (e.g. Tensol)</td><td>Acrylic: dissolves the surfaces so they fuse</td></tr>
+ <tr><td>Acrylic cement (solvent cement, e.g. Tensol)</td><td>Acrylic: dissolves the surfaces so they fuse</td></tr>
  <tr><td>Cyanoacrylate (superglue)</td><td>Instant bonds on small parts, many materials</td></tr>
  <tr><td>Polystyrene cement</td><td>Solvent that fuses polystyrene (HIPS) parts: models, vacuum-formed parts</td></tr>
  <tr><td>Hot melt glue</td><td>Quick, low strength: models, card, prototypes</td></tr></table>
@@ -280,7 +280,7 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <tr><td>Mitre</td><td>Hides end grain, weak unless reinforced: picture frames</td></tr>
  <tr><td>Halving / lap</td><td>Simple, strong-ish frame joints</td></tr></table>` },
  { sort: { h: 'Permanent or temporary?', q: 'Sort each joining method.', cats: ['Permanent', 'Temporary'], items: [['MIG welding', 0], ['Nut and bolt', 1], ['Pop rivet', 0], ['Cam lock fitting', 1], ['Epoxy resin', 0], ['Machine screw into threaded insert', 1], ['Brazing', 0], ['Wood screws', 1]] } },
- { match: { q: 'Choose the best joining method.', lh: 'Job', rh: 'Method', pairs: [['Joining two pieces of acrylic invisibly', 'Solvent cement (Tensol)'], ['Fixing sheet aluminium when you can only reach one side', 'Pop rivets'], ['Strong drawer front joint that shows craftsmanship', 'Dovetail joint'], ['Shelves in a flat-pack bookcase that can be taken apart', 'Knock-down fittings'], ['Car body panels on a robot line', 'Spot welding'], ['Components onto a circuit board', 'Soft soldering'], ['Laminate onto a worktop', 'Contact adhesive']] } },
+ { match: { q: 'Choose the best joining method.', lh: 'Job', rh: 'Method', pairs: [['Joining two pieces of acrylic invisibly', 'Acrylic cement (Tensol)'], ['Fixing sheet aluminium when you can only reach one side', 'Pop rivets'], ['Strong drawer front joint that shows craftsmanship', 'Dovetail joint'], ['Shelves in a flat-pack bookcase that can be taken apart', 'Knock-down fittings'], ['Car body panels on a robot line', 'Spot welding'], ['Components onto a circuit board', 'Soft soldering'], ['Laminate onto a worktop', 'Contact adhesive']] } },
  { mcq: [
   ['How does brazing differ from welding?', ['Brazing uses no heat', 'In brazing the parent metal does not melt; a lower-melting filler flows into the joint', 'Brazing is stronger', 'Welding uses flux'], 1, 'Welding melts and fuses the parent metals; brazing and soldering do not.'],
   ['What does the shielding gas do in MIG welding?', ['Cools the weld', 'Keeps oxygen and nitrogen away from the molten weld to stop it becoming porous and weak', 'Adds filler metal', 'Lights the arc'], 1, 'Protects the weld pool from the atmosphere.'],

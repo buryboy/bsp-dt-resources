@@ -163,6 +163,11 @@ $('#jump').onchange = (e) => go({ v: 'book', b: V.b, p: +e.target.value });
 $('#prev').onclick = () => { if (V.v === 'book' && V.p > 0) go({ v: 'book', b: V.b, p: V.p - 1 }); };
 $('#next').onclick = () => { if (V.v !== 'book') return; if (V.p < BK.pages.length - 1) go({ v: 'book', b: V.b, p: V.p + 1 }); else go({ v: 'home' }); };
 
+// 9-mark discuss/evaluate questions are marked by level in the real paper (see the Edexcel sample mark scheme); summarised here in our own words
+const LEVELS9 = `<p style="margin:10px 0 4px"><b>In the exam, 9-mark answers are given a level, then a mark within it:</b></p><table class="t" style="font-size:14.5px"><tr><th>Level</th><th>Marks</th><th>What the answer looks like</th></tr>
+<tr><td>1</td><td class="c">1–3</td><td>Basic understanding; few links between points; incomplete, with no real conclusion; judgements barely supported</td></tr>
+<tr><td>2</td><td class="c">4–6</td><td>Competent understanding; some clear links; one-sided or uneven; a generally sensible conclusion; some evidence</td></tr>
+<tr><td>3</td><td class="c">7–9</td><td>Thorough understanding; logical links throughout; balanced; a well-developed conclusion; judgements backed by evidence throughout</td></tr></table>`;
 function blockHTML(bk, b, bi) {
   let h = '';
   const head = (t, sub) => `<h3>${t}</h3>${sub ? `<p class="muted">${sub}</p>` : ''}`;
@@ -216,7 +221,7 @@ function blockHTML(bk, b, bi) {
     h += b.exam.map(([q, m, ms], i) => { const id = bk.id + ':e' + hsh(q); return `<div class="q" data-eu="${id}"><span class="qn">Q${i + 1}</span>${cw(q)} <span class="tag">${m} mark${m > 1 ? 's' : ''}</span>
       <textarea style="margin-top:8px;min-height:${m >= 6 ? 170 : m >= 4 ? 120 : 80}px" placeholder="Answer as you would in the exam."></textarea>
       <button class="btn ghost small" data-ms style="margin-top:8px">Show the mark scheme</button>
-      <div class="ms"><div class="callout blue" style="margin-top:10px"><b>Mark scheme (indicative content)</b><ul style="margin:4px 0 0">${ms.map((x) => `<li>${x}</li>`).join('')}</ul></div>
+      <div class="ms"><div class="callout blue" style="margin-top:10px"><b>Mark scheme (indicative content)</b><ul style="margin:4px 0 0">${ms.map((x) => `<li>${x}</li>`).join('')}</ul>${m === 9 ? LEVELS9 : ''}</div>
       <label class="key">My mark: <select class="f" style="width:auto;display:inline-block"><option value=""></option>${Array.from({ length: m + 1 }, (_, k) => `<option>${k}</option>`).join('')}</select> / ${m}</label></div></div>`; }).join('');
   }
   if (h.length > a1) h = h.slice(0, a1) + `<div class="actv" data-bi="${bi}">` + h.slice(a1) + '</div>';

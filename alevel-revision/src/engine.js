@@ -291,7 +291,7 @@ function renderCheck() {
   let h = `<div class="kick">Self-check · Topic ${t}</div><h2>${E(TOPICS[t])}</h2>
    <p class="muted">Rate each spec point honestly. Tick <b>Confident</b> and an exam-style question opens: answer it, then mark yourself.${bk ? ' Not confident? The revision booklet covers it.' : ''}</p>`;
   list.forEach(([id, , code, title, pts, q, m, ms]) => {
-    const pg = bk && bk.pages ? bk.pages.findIndex((p) => p.spec && p.spec.split(/[ ,–]/)[0] === code.split('–')[0]) : -1;
+    const pg = bk && bk.pages ? findPage(bk, code, title) : -1;
     h += `<div class="item" id="it-${id}"><div class="top"><div class="ttl"><span class="code">${code}</span><b>${title}</b><div class="pts">${pts}</div>
       ${bk ? `<button class="btn ghost small" style="margin-top:6px" data-rev="${bk.id}" data-pg="${pg}">Revise this ›</button>` : ''}</div>
       <div class="rate">${LAB.map((l, v) => `<button class="v${v}" data-id="${id}" data-v="${v}">${l}</button>`).join('')}</div></div>
@@ -310,6 +310,13 @@ function renderCheck() {
   $$('[data-t]', view).forEach((b) => b.onclick = () => go({ v: 'check', t: +b.dataset.t }));
   $('#toRes').onclick = () => go({ v: 'results' });
   chkRefresh(list);
+}
+function findPage(bk, code, title) { // the booklet page that best matches a self-check row
+  const c = code.split('–')[0], w = title.toLowerCase().split(/[^a-z]+/).filter((x) => x.length > 2)[0] || '';
+  let i = w ? bk.pages.findIndex((p) => p.spec && p.t.toLowerCase().includes(w)) : -1;
+  if (i < 0) i = bk.pages.findIndex((p) => p.spec && p.spec.split(/[ ,–]/)[0] === c);
+  if (i < 0) i = bk.pages.findIndex((p) => p.spec && p.spec.startsWith(c + '.'));
+  return i;
 }
 function chkRefresh(list) {
   list.forEach(([id]) => {

@@ -123,7 +123,7 @@ BOOKLETS.push({ id: 't9', topic: 9, title: 'Designing for maintenance and the cl
  <tr><td>Lower fuel use, emissions and congestion; lower transport cost per product</td><td>Electric and hydrogen vehicles are expensive, with limited range and charging or refuelling networks</td></tr>
  <tr><td>Less packaging to buy and to dispose of</td><td>Too little packaging risks damage and returns</td></tr>
  <tr><td>Flat-pack lowers storage costs for manufacturer and retailer</td><td>Flat-pack moves assembly to the customer; biofuels compete with food crops for land</td></tr></table>` },
- { sort: { h: 'Which strategy?', q: 'Sort each action.', cats: ['Efficient packaging', 'Reducing transport', 'Alternative to fossil fuels'], items: [['Replacing polystyrene inserts with moulded card pulp', 0], ['Designing furniture to be flat-packed', 1], ['Delivering by electric van', 2], ['Making the product in the country where it is sold', 1], ['Using returnable plastic crates instead of single-use boxes', 0], ['Running lorries on biomethane', 2], ['Resizing a box so 20% more fit on a pallet', 1]] } },
+ { sort: { h: 'Which strategy?', q: 'Sort each action.', cats: ['Efficient packaging', 'Reducing transport', 'Alternative to fossil fuels'], items: [['Replacing polystyrene inserts with moulded card pulp', 0], ['Designing furniture to be flat-packed', 1], ['Delivering by electric van', 2], ['Making the product in the country where it is sold', 1], ['Using returnable plastic crates instead of single-use boxes', 0], ['Running lorries on biomethane', 2], ['Planning delivery routes so lorries never return empty', 1]] } },
  { calc: [
   ['A lorry carries 120 assembled chairs. Flat-packed, it carries 480. By what factor has the number of chairs per journey increased?', 4, 0, 'times', '480 ÷ 120 = 4 times, so a quarter of the journeys are needed.'],
   ['A pallet holds 48 boxes. Redesigning the box lets it hold 60. How many fewer pallets are needed to ship 4,800 boxes?', 20, 0, 'pallets', 'Before: 4,800 ÷ 48 = 100. After: 4,800 ÷ 60 = 80. Saving: 20 pallets.'],
@@ -180,7 +180,7 @@ BOOKLETS.push({ id: 't9', topic: 9, title: 'Designing for maintenance and the cl
  <table><tr><th>Method</th><th>Separates</th></tr>
  <tr><td>Magnets</td><td>Steel and iron</td></tr>
  <tr><td>Eddy current separators</td><td>Aluminium and other non-ferrous metals</td></tr>
- <tr><td>Near-infrared (optical) sorters with air jets</td><td>Different polymers; colours of glass</td></tr>
+ <tr><td>Near-infrared (optical) sorters with air jets</td><td>Different polymers (separate optical colour sorters split glass by colour)</td></tr>
  <tr><td>Float–sink tanks</td><td>Polymers by density</td></tr>
  <tr><td>Screens, air blowers, hand picking</td><td>Paper, card, film; contamination</td></tr></table>
  <h4>Re-processing</h4>

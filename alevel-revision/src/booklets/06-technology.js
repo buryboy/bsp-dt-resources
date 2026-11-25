@@ -67,7 +67,7 @@ BOOKLETS.push({ id: 't6', topic: 6, title: 'Effects of technological development
 { t: 'Built-in obsolescence', spec: '6.1a', blocks: [
  { notes: `<p><b>Built-in (planned) obsolescence</b> means deliberately designing a product so that it becomes out of date, unfashionable or unusable after a limited time, so that the customer buys a replacement.</p>
  <table><tr><th>Type</th><th>How it works</th><th>Examples</th></tr>
- <tr><td><b>Functional (physical)</b></td><td>The product is designed to wear out or fail, or cannot be repaired: weak parts, sealed or glued casings, batteries that cannot be replaced, no spare parts</td><td>Light bulbs limited to about 1,000 hours by the 1920s Phoebus cartel; sealed phone batteries; printer cartridges with chips; disposable vapes</td></tr>
+ <tr><td><b>Functional (physical)</b></td><td>The product is designed to wear out or fail, or cannot be repaired: weak parts, sealed or glued casings, batteries that cannot be replaced, no spare parts</td><td>Light bulbs limited to about 1,000 hours by the 1920s Phoebus cartel; sealed phone batteries; printer cartridges with chips; disposable vapes (banned from sale in the UK and France in 2025)</td></tr>
  <tr><td><b>Technological</b></td><td>New technology makes the old product out of date or incompatible; software updates stop</td><td>Phones that no longer receive updates; changing connectors; DVD replaced by streaming</td></tr>
  <tr><td><b>Style (perceived)</b></td><td>The product still works, but fashion and marketing make it feel old</td><td>Fast fashion; yearly phone colours and styling; 1950s American cars restyled every year</td></tr></table>
  <h4>For and against</h4>
@@ -165,7 +165,7 @@ BOOKLETS.push({ id: 't6', topic: 6, title: 'Effects of technological development
  <h4>Products from innovative applications</h4>
  <p>New products often come from using a technology or material in a <b>new context</b> (technology transfer):</p>
  <ul><li><b>GPS</b>: military navigation → satnav, phones, fitness trackers.</li>
- <li><b>Kevlar</b> and <b>carbon fibre</b>: aerospace and defence → sports equipment, phone cases, prosthetics.</li>
+ <li><b>Kevlar</b> (developed to reinforce tyres) and <b>carbon fibre</b> (aerospace) → body armour, sports equipment, phone cases, prosthetics.</li>
  <li><b>Memory foam</b>: developed for aircraft seats → mattresses and trainers.</li>
  <li><b>Touchscreens, LEDs, lithium batteries</b>: enabled e-bikes, drones, cordless tools, electric cars.</li>
  <li><b>3D printing</b>: prototyping → custom medical implants and hearing aids.</li></ul>

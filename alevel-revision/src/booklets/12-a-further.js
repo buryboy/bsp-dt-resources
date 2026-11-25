@@ -168,7 +168,7 @@ BOOKLETS.push({ id: 't12', topic: 12, title: 'Further processes and techniques',
 ]},
 
 { t: 'Scrum', spec: '12.2b', blocks: [
- { notes: `<p>The spec: scrum is “how <b>flexible, holistic product development</b> is achieved”. It is an <b>agile</b> method that began in software and is now used for developing physical products too. Instead of planning everything at the start, the team works in short cycles and adapts as it learns.</p>
+ { notes: `<p>The spec: scrum is “how <b>flexible, holistic product development</b> is achieved”. It is an <b>agile</b> method. The idea came from a 1986 study of how manufacturers developed new products; it was then formalised for software and is now widely used for physical products too. Instead of planning everything at the start, the team works in short cycles and adapts as it learns.</p>
  <h4>The team</h4>
  <table><tr><th>Role</th><th>Responsibility</th></tr>
  <tr><td><b>Product owner</b></td><td>Represents the customer and the business; decides what is most valuable; manages and prioritises the product backlog</td></tr>

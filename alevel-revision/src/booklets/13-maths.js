@@ -64,6 +64,7 @@ BOOKLETS.push({ id: 'maths', topic: 'Maths', tag: 'Maths', title: 'Maths for Pro
  <h4>Percentiles</h4>
  <p>The <b>n</b>th percentile is the value below which <b>n%</b> of the sample falls. Designers usually design for the <b>5th to 95th percentile</b>: the middle <b>90%</b>.</p>
  <p>To find a percentile from a frequency table: work out which person it is (5% of 200 people = the 10th person), then add up the frequencies (a <b>cumulative frequency</b>) until you reach that person.</p>
+ <p><b>Exam note:</b> the sample mark scheme for the 5th to 95th percentile question uses a quicker method: find the range (largest − smallest), take 5% of it, then add that to the smallest size and subtract it from the largest. For the table below that gives 16 × 0.05 = 0.8, so 40.8 mm and 55.2 mm. It accepts other methods too, so show your working whichever you use.</p>
  <h4>Data for the questions below: hand-grip sizes of 200 people</h4>
  <table><tr><th>Grip size (mm)</th><td>40</td><td>42</td><td>44</td><td>46</td><td>48</td><td>50</td><td>52</td><td>54</td><td>56</td></tr>
  <tr><th>Number of people</th><td>6</td><td>10</td><td>24</td><td>40</td><td>50</td><td>36</td><td>20</td><td>10</td><td>4</td></tr>
@@ -144,7 +145,7 @@ BOOKLETS.push({ id: 'maths', topic: 'Maths', tag: 'Maths', title: 'Maths for Pro
  <p><b>Significant figures:</b> 17.354° to 2 significant figures is 17°.</p>` },
  { calc: [
   ['A rectangular frame is 600 mm wide and 800 mm high. What length of diagonal brace is needed?', 1000, 0.5, 'mm', '√(600² + 800²) = √1,000,000 = 1000 mm.'],
-  ['A ramp rises 250 mm over a horizontal distance of 800 mm. What angle does it make with the ground, to 2 significant figures?', 17, 0.5, '°', 'tan θ = 250 ÷ 800. θ = tan⁻¹(0.3125) = 17.35° = 17° (2 s.f.).'],
+  ['A ramp rises 250 mm over a horizontal distance of 800 mm. What angle does it make with the ground, to 2 significant figures?', 17, 0.4, '°', 'tan θ = 250 ÷ 800. θ = tan⁻¹(0.3125) = 17.35° = 17° (2 s.f.).'],
   ['A table leg is splayed at 12° from the vertical. The table top is 450 mm above the floor. How long is the leg, to the nearest mm?', 460, 0.6, 'mm', 'The vertical height is adjacent to the 12° angle; the leg is the hypotenuse. hyp = 450 ÷ cos 12° = 460 mm.'],
   ['A 300 mm strut is fixed at 35° to the horizontal. What vertical height does it reach, to the nearest mm?', 172, 0.6, 'mm', 'opp = hyp × sin θ = 300 × sin 35° = 172 mm.'],
   ['A lamp arm 400 mm long is set at 40° above the horizontal. What is its horizontal reach, to the nearest mm?', 306, 0.6, 'mm', 'adj = hyp × cos θ = 400 × cos 40° = 306 mm.'],
@@ -234,7 +235,7 @@ BOOKLETS.push({ id: 'maths', topic: 'Maths', tag: 'Maths', title: 'Maths for Pro
  { calc: [
   ['A block of beech measures 180 mm × 60 mm × 40 mm. A rectangular slot 120 mm × 20 mm is cut right through the 40 mm thickness, and two holes of diameter 20 mm are drilled right through the 40 mm thickness. Calculate the percentage of the block removed as waste. Give your answer to 1 decimal place.', 28, 0.06, '%', 'Block: 180 × 60 × 40 = 432,000 mm³. Slot: 120 × 20 × 40 = 96,000 mm³. One hole: π × 10² × 40 = 12,566 mm³; two holes: 25,133 mm³. Removed: 96,000 + 25,133 = 121,133 mm³. 121,133 ÷ 432,000 × 100 = 28.0%.'],
   ['A batch of 250 stools is made. Each stool uses 0.35 m² of plywood at €18.40 per m², four legs at €1.15 each and €6.20 of labour. Overheads for the batch are €900. The company adds 35% profit. Calculate the selling price of one stool, to the nearest cent.', 28.13, 0.006, '€', 'Plywood: 0.35 × 18.40 = 6.44. Legs: 4 × 1.15 = 4.60. Labour: 6.20. Overheads: 900 ÷ 250 = 3.60. Cost = 20.84. Selling price = 20.84 × 1.35 = €28.13.'],
-  ['A welding jig must hold a tube so that its end is 250 mm higher over a horizontal distance of 420 mm. Calculate the angle of the tube to the horizontal. Give your answer to 2 significant figures.', 31, 0.5, '°', 'tan θ = 250 ÷ 420 = 0.5952. θ = tan⁻¹(0.5952) = 30.76° = 31° (2 s.f.).'],
+  ['A welding jig must hold a tube so that its end is 250 mm higher over a horizontal distance of 420 mm. Calculate the angle of the tube to the horizontal. Give your answer to 2 significant figures.', 31, 0.4, '°', 'tan θ = 250 ÷ 420 = 0.5952. θ = tan⁻¹(0.5952) = 30.76° = 31° (2 s.f.).'],
   ['An acrylic rod has a diameter of 25 mm and a length of 2 m. The density of acrylic is 1.18 g/cm³. Calculate the mass of the rod in kg, to 2 decimal places.', 1.16, 0.006, 'kg', 'r = 1.25 cm; length = 200 cm. Volume = π × 1.25² × 200 = 981.7 cm³. Mass = 981.7 × 1.18 = 1158 g = 1.16 kg.'],
   ['On a 1 : 50 floor plan, a workshop measures 84 mm × 62 mm. Calculate the real floor area in m².', 13.02, 0.005, 'm²', 'Real size: 84 × 50 = 4200 mm = 4.2 m; 62 × 50 = 3100 mm = 3.1 m. Area = 4.2 × 3.1 = 13.02 m².'],
   ['A product has fixed costs of €18,000, a variable cost of €7.50 per unit and sells for €19.50. Calculate the profit if 2,400 units are sold.', 10800, 0.01, '€', 'Contribution per unit = 19.50 − 7.50 = 12.00. 2,400 × 12 = 28,800. Profit = 28,800 − 18,000 = €10,800. (Break-even is 1,500 units.)'],

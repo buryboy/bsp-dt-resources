@@ -34,7 +34,7 @@ BOOKLETS.push({ id: 't10', topic: 10, title: 'Current legislation', pages: [
  <h4>What goods must be</h4>
  <table><tr><th>Requirement</th><th>Meaning</th><th>Example of a breach</th></tr>
  <tr><td><b>Of satisfactory quality</b></td><td>Free from faults, safe, durable and with an acceptable appearance and finish, taking the price and description into account</td><td>A scooter whose handlebar clamp cracks after a month</td></tr>
- <tr><td><b>Fit for purpose</b></td><td>Fit for the purpose goods of that kind are normally used for, and for any particular purpose the buyer made known</td><td>A “waterproof” jacket that leaks; a drill sold for masonry that cannot drill brick</td></tr>
+ <tr><td><b>Fit for purpose</b></td><td>Fit for the purpose goods of that kind are normally used for, and for any particular purpose the buyer made known</td><td>A buyer says they need a drill for brick; the one the shop recommends can only drill wood</td></tr>
  <tr><td><b>As described</b></td><td>Matching the description, photos, sample or display model</td><td>A table advertised as solid oak that is veneered chipboard</td></tr></table>
  <p>Goods must also be installed correctly if installation is part of the contract, and the seller must have the right to sell them.</p>
  <h4>The consumer’s remedies</h4>
@@ -49,7 +49,7 @@ BOOKLETS.push({ id: 't10', topic: 10, title: 'Current legislation', pages: [
  <ul><li><b>Digital content</b> (apps, downloads, games, e-books) must also be of satisfactory quality, fit for purpose and as described; the consumer can have it repaired or replaced, and be compensated if it damages their device.</li>
  <li><b>Services</b> (e.g. fitting a kitchen) must be carried out with <b>reasonable care and skill</b>, in a reasonable time and for a reasonable price.</li></ul>
  <p>The Act does not cover fair wear and tear, accidental damage, faults pointed out before purchase, or simply changing your mind (in a shop).</p>` },
- { match: { q: 'Which requirement of the Consumer Rights Act has been broken?', lh: 'Situation', rh: 'Requirement', pairs: [['A kettle’s lid hinge snaps after two weeks of normal use', 'Satisfactory quality'], ['Walking boots sold as waterproof let in water', 'Fit for purpose'], ['A phone case arrives in blue when the listing showed red', 'As described'], ['A fitter installs a worktop that is not level', 'Service with reasonable care and skill']] } },
+ { match: { q: 'Which requirement of the Consumer Rights Act has been broken?', lh: 'Situation', rh: 'Requirement', pairs: [['A kettle’s lid hinge snaps after two weeks of normal use', 'Satisfactory quality'], ['A customer asks for a drill bit to drill brick; the bit the shop recommends only cuts wood', 'Fit for purpose'], ['A phone case arrives in blue when the listing showed red', 'As described'], ['A fitter installs a worktop that is not level', 'Service with reasonable care and skill']] } },
  { order: { q: 'Put the consumer’s remedies for a faulty product in the order they apply.', steps: ['Within 30 days: reject the goods for a full refund', 'After 30 days: the retailer gets one chance to repair or replace', 'If the repair or replacement fails: price reduction, or final right to reject'] } },
  { tf: [
   ['Under the Consumer Rights Act, the consumer’s claim is against the manufacturer.', false, 'The contract is with the retailer who sold the goods.'],
@@ -64,7 +64,7 @@ BOOKLETS.push({ id: 't10', topic: 10, title: 'Current legislation', pages: [
  ] },
  { exam: [
   ['**State** two requirements of the Consumer Rights Act 2015 that apply to the sale of a bicycle.', 2, ['Any two: of satisfactory quality; fit for purpose; as described (1)(1)']],
-  ['**Explain** the rights of a consumer who buys a faulty product under the Consumer Rights Act 2015.', 3, ['Goods must be of satisfactory quality, fit for purpose and as described (1)', 'Full refund if rejected within 30 days (1)', 'After that, the retailer gets one chance to repair or replace before a refund or price reduction (1)']],
+  ['**Describe** the rights of a consumer who buys a faulty product under the Consumer Rights Act 2015.', 3, ['Goods must be of satisfactory quality, fit for purpose and as described (1)', 'Full refund if rejected within 30 days (1)', 'After that, the retailer gets one chance to repair or replace before a refund or price reduction (1)']],
  ] },
 ]},
 
@@ -220,7 +220,7 @@ BOOKLETS.push({ id: 't10', topic: 10, title: 'Current legislation', pages: [
   ['Leftover thinners can safely be poured down the sink.', false, 'They must be disposed of as hazardous waste.'],
  ] },
  { exam: [
-  ['**Explain** how COSHH regulations affect the use of solvent-based finishes in a school workshop.', 3, ['The risks of the substance, e.g. VOC fumes, must be assessed (1)', 'Stored in a labelled, locked, fire-resistant cupboard (1)', 'Used with ventilation or extraction and PPE such as gloves and a mask (1)', 'Accept: substitute a water-based / low-VOC finish where possible (1)']],
+  ['**Describe** how COSHH regulations affect the use of solvent-based finishes in a school workshop.', 3, ['The risks of the substance, e.g. VOC fumes, must be assessed (1)', 'Stored in a labelled, locked, fire-resistant cupboard (1)', 'Used with ventilation or extraction and PPE such as gloves and a mask (1)', 'Accept: substitute a water-based / low-VOC finish where possible (1)']],
   ['**Explain** two hazards of using solvent-based adhesives that contain VOCs.', 4, ['Vapour is breathed in (1), causing headaches and dizziness, and long-term organ damage (1)', 'Vapour is highly flammable (1), so a spark or flame could cause a fire or explosion (1)', 'Accept environmental harm: VOCs contribute to ground-level ozone/smog (1)(1)']],
   ['A manufacturer of wooden toys sprays its products with a solvent-based lacquer. **Discuss** how the company could meet its responsibilities under the COSHH regulations.', 6, ['COSHH assessment using safety data sheets: who is exposed and how', 'Prevent: change to water-based lacquer, which also suits toy safety standards', 'Control: enclosed or automated spray booth with extraction; ventilation; limited exposure time', 'Storage: locked, fire-resistant, ventilated cabinet; minimum stock; labelled containers', 'PPE: respirators, gloves, overalls; training; health surveillance; maintenance and testing of extraction; safe disposal'],],
  ] },
@@ -243,7 +243,7 @@ BOOKLETS.push({ id: 't10', topic: 10, title: 'Current legislation', pages: [
  <tr><td><b>The company</b></td><td>HSE improvement or prohibition notices; production stopped; <b>prosecution</b> with <b>unlimited fines</b>; compensation claims; higher insurance premiums; lost orders and <b>damaged reputation</b>; difficulty recruiting; in the worst cases closure, or a charge of corporate manslaughter</td></tr>
  <tr><td><b>Directors and managers</b></td><td>Personal prosecution; fines; <b>imprisonment</b>; disqualification from being a director</td></tr>
  <tr><td><b>Society</b></td><td>Cost of healthcare and benefits; harm to families and communities; environmental damage from spills and emissions</td></tr></table>` },
- { sort: { h: 'Who bears the consequence?', q: 'Sort each consequence of ignoring health and safety law.', cats: ['Employee', 'Company', 'Director or manager'], items: [['Long-term lung damage from dust', 0], ['An unlimited fine after prosecution', 1], ['A prison sentence for gross negligence', 2], ['Production halted by a prohibition notice', 1], ['Loss of earnings while injured', 0], ['Disqualification from running a company', 2], ['Higher insurance premiums', 1]] } },
+ { sort: { h: 'Who bears the consequence?', q: 'Sort each consequence of ignoring health and safety law.', cats: ['Employee', 'Company', 'Director or manager'], items: [['Long-term lung damage from dust', 0], ['An unlimited fine imposed on the business after prosecution', 1], ['A prison sentence for gross negligence', 2], ['Production halted by a prohibition notice', 1], ['Loss of earnings while injured', 0], ['Disqualification from running a company', 2], ['Higher insurance premiums', 1]] } },
  { mcq: [
   ['How can health and safety law influence a designer’s choice of finish?', ['It cannot', 'A water-based or powder finish may be chosen to avoid VOCs and the controls they need', 'Only solvent-based finishes are legal', 'Finishes are not covered by the law'], 1, 'Substitution is the preferred control under COSHH.'],
   ['Which is a benefit to a company of following health and safety law?', ['Slower production with no gain', 'Fewer accidents, less lost time and lower insurance and legal costs', 'Fewer orders', 'Higher fines'], 1, 'Good safety is good business.'],

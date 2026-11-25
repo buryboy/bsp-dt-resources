@@ -3,7 +3,7 @@
 
     python3 book-kit/tools/make_home.py
 
-Writes ipad-home/index.html (I'm a student / I'm a teacher), student/, teacher/, teacher/dt/ and one page per GCSE
+Writes ipad-home/index.html (the one home page: tools, then workbooks by key stage), teacher/, teacher/dt/ (not linked from home) and one page per GCSE
 topic in teacher/dt/gcse/<slug>/. The lesson files themselves (board page, notes sheet, PowerPoint, print pack without
 its answer key) already sit in each topic folder. build_ipad_site.py copies the whole ipad-home folder to the site root.
 No logins, no forms, nothing sent anywhere: plain pages and files.
@@ -73,24 +73,26 @@ def main():
     topics = data['topics']
     by_code = {c: t for t in topics for c in t['codes']}
 
-    # landing
-    page('index.html', 'Welcome', [], '''
-<h1 class="big">Hello. Who are you?</h1>
-<div class="two">
- <a class="choice stu" href="student/"><span class="ic">🎒</span><b>I'm a student</b><small>Workbooks for your iPad</small></a>
- <a class="choice tea" href="teacher/"><span class="ic">📚</span><b>I'm a teacher</b><small>Lessons and resources by subject</small></a>
-</div>''', 0)
-
-    # student
-    body = ['<h1>Workbooks for your iPad</h1>',
-            '<ol class="how"><li>Tap your workbook.</li><li>Follow the steps it shows to add it to your Home Screen. It works without Wi-Fi.</li>'
-            '<li>Always open it from that icon so your work stays together. Tap <b>⟳ Check for updates</b> when your teacher adds new pages: your answers are kept.</li>'
-            '<li>At the end of each page, tap <b>Save this page as PDF</b> and hand it in on Showbie.</li></ol>',
-            '<div class="tabs">' + ''.join(f'<a href="#{k}">{E(n)}</a>' for k, n, _ in STAGES) + '</div>']
-    for k, n, sub in STAGES:
-        cards = ''.join(wb_card(w[0], '../', ('AQA ' + w[3]) if w[2] == 'ks4' and w[3][0].isdigit() else '') for w in WORKBOOKS if w[2] == k)
+    # landing: one page for everyone. Tools on top, then workbooks by key stage. The teacher pages stay at
+    # teacher/ but nothing here links to them.
+    ks = [x for x in STAGES if x[0] != 'tools']
+    tools = ''.join(wb_card(w[0], '', w[3]) for w in WORKBOOKS if w[2] == 'tools')
+    body = ['<h1>Design &amp; Technology</h1>'
+            '<p class="sub">Workbooks, revision and handy apps for your iPad. Tap one to open it.</p>',
+            f'<section id="tools" class="toolbar"><h2>Tools</h2><p class="sub">Small apps that run on your iPad. Nothing is uploaded.</p><div class="wbs">{tools}</div></section>',
+            '<div class="tabs">' + ''.join(f'<a href="#{k}">{E(n)}</a>' for k, n, _ in ks) + '</div>']
+    for k, n, sub in ks:
+        cards = ''.join(wb_card(w[0], '', ('AQA ' + w[3]) if w[2] == 'ks4' and w[3][0].isdigit() else '') for w in WORKBOOKS if w[2] == k)
         body.append(f'<section id="{k}"><h2>{E(n)}</h2><p class="sub">{E(sub)}</p><div class="wbs">{cards}</div></section>')
-    page('student/index.html', 'Students', [('Home', '')], ''.join(body), 1)
+    body.append('<details class="howto"><summary>How to keep a workbook on your iPad</summary><ol>'
+                '<li>Tap your workbook.</li><li>Follow the steps it shows to add it to your Home Screen. It works without Wi-Fi.</li>'
+                '<li>Always open it from that icon so your work stays together. Tap <b>⟳ Check for updates</b> when your teacher adds new pages: your answers are kept.</li>'
+                '<li>At the end of each page, tap the save button and hand the page in on Showbie.</li></ol></details>')
+    page('index.html', 'Design & Technology', [], ''.join(body), 0)
+    # the old student page now just sends people to the home page
+    (HOME / 'student').mkdir(exist_ok=True)
+    (HOME / 'student/index.html').write_text('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>BSP Design &amp; Technology</title>'
+                                             '<meta http-equiv="refresh" content="0;url=../"><a href="../">Go to the home page</a>\n')
 
     # teacher: subjects
     page('teacher/index.html', 'Teachers', [('Home', '')], '''

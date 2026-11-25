@@ -44,4 +44,10 @@ section{background:var(--card);border-radius:18px;padding:22px;margin:16px 0;box
 .btn.ghost{background:#e4efe8;color:var(--g)}
 .how{background:#fff;border-radius:14px;padding:14px 14px 14px 36px;color:#3d4b42;box-shadow:0 4px 14px #1f4d3612}
 .how li{margin:4px 0}
+.toolbar{background:linear-gradient(135deg,#1f4d36,#2e7d55);color:#fff}
+.toolbar .sub{color:#d5e6dc}
+.toolbar .wb{background:#ffffff;color:var(--ink);border-color:transparent}
+.howto{background:#fff;border-radius:14px;padding:14px 18px;color:#3d4b42;box-shadow:0 4px 14px #1f4d3612;margin-top:18px}
+.howto summary{font-weight:600;cursor:pointer}
+.howto li{margin:4px 0}
 @media (max-width:640px){.two{grid-template-columns:1fr}.part{padding-left:22px;padding-top:66px}h1.big{font-size:28px}}

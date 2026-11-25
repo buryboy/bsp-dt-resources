@@ -32,6 +32,7 @@ jobs:
           python3 book-kit/tools/build_ipad_site.py "$RUNNER_TEMP/site"
           cp book-kit/hostinger/htaccess "$RUNNER_TEMP/site/.htaccess"
           rm -f "$RUNNER_TEMP/site/README.md"
+          find "$RUNNER_TEMP/site" -type f -size 0 -print -delete   # empty files (.nojekyll) make Hostinger's FTPS fail with 425
           echo "files: $(find "$RUNNER_TEMP/site" -type f | wc -l)"
       - name: Tidy the FTP host (allow "ftp://…" or spaces pasted from hPanel)
         if: env.FTP_HOST != ''

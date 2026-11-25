@@ -129,12 +129,12 @@ canvas.ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:
 <div id="bar">
   <h1>My Upcycled Tin Can Lamp · Year 9</h1>
   <select id="jump" aria-label="Go to sheet"></select>
-  <label><input type="checkbox" id="hintsPdf"> Hints in PDF</label>
+  <label><input type="checkbox" id="hintsPdf"> Hints in screenshots</label>
   <span id="saved"></span>
-  <button class="primary" id="pdfBtn">Save as PDF</button>
+  <button class="primary" id="pdfBtn">📸 Screenshot all pages</button>
 </div>
 <main id="main"></main>
-<div id="overlay"><div id="ovmsg">Making your PDF…</div></div>
+<div id="overlay"><div id="ovmsg">Taking your screenshot…</div></div>
 <script>/*LIBS*/</script>
 <script>
 'use strict';
@@ -146,7 +146,7 @@ const SHEETS = [
   ['Your project','You are turning an old tin can into a working lamp inspired by an era of design: the 1960s or the 1980s.'],
   ['How this workbook works','<ul><li>Tap a box to type.</li><li>Tap 📷 to add photos from your iPad or take one with the camera.</li><li>Tap ✏️ to draw, then <b>Done</b>.</li><li>Drag ⠿ to move a box. Drag the round handle to resize it.</li></ul>'],
   ['A lamp you like','Find a lamp you like, at home, in a shop or online. Take or save a photo, add it with 📷, then explain what you like about it.'],
-  ['Saving','Your work saves on this iPad. At the end of each lesson, tap <b>Save page</b> or <b>Save as PDF</b> and upload it to Showbie.']],
+  ['Saving','Your work saves on this iPad. At the end of each lesson, tap <b>📸 Screenshot page</b> (or <b>Screenshot all pages</b>) and upload the pictures to Showbie.']],
   boxes:[
   {id:'name',type:'name',label:'Your name',x:410,y:120,w:800,h:100},
   {id:'form',type:'text',label:'Class',x:1230,y:120,w:420,h:100,ph:'e.g. 9P'},
@@ -196,7 +196,7 @@ function save(){ clearTimeout(saveT); $('#saved').textContent='Saving…'; saveT
 async function persist(){
   const data=JSON.stringify(S);
   try{ const db=await idb(); await new Promise((res,rej)=>{const t=db.transaction('kv','readwrite'); t.objectStore('kv').put(data,'state'); t.oncomplete=res; t.onerror=()=>rej(t.error);}); $('#saved').textContent='Saved ✓'; return; }catch(e){}
-  try{ localStorage.setItem(STORE,data); $('#saved').textContent='Saved ✓'; }catch(e){ $('#saved').textContent='Not saved! Save a PDF'; }
+  try{ localStorage.setItem(STORE,data); $('#saved').textContent='Saved ✓'; }catch(e){ $('#saved').textContent='Not saved! Take a screenshot'; }
 }
 
 /* ---------- helpers ---------- */
@@ -218,7 +218,7 @@ function build(){
     tools.innerHTML=`<span class="nm">Page ${i+1} · ${esc(sh.title)}</span>`;
     const addT=el('button',null,'+ Text box'), addD=el('button',null,'+ Sketch / photo');
     addT.onclick=()=>addBox(sh,'text'); addD.onclick=()=>addBox(sh,'draw');
-    const savP=el('button',null,'Save page'); savP.onclick=()=>exportPDF([i]);
+    const savP=el('button',null,'📸 Screenshot page'); savP.onclick=()=>exportPDF([i]);
     tools.append(addT,addD,savP);
     tools.id='s-'+sh.id;
     const frame=el('div','frame');
@@ -415,17 +415,16 @@ function shrink(file){
   });
 }
 
-/* ---------- PDF ---------- */
+/* ---------- screenshots (one JPEG per page) ---------- */
 async function exportPDF(only){
   setActive(null);
   const ov=$('#overlay'), msg=$('#ovmsg'); ov.style.display='flex';
   const withHints=$('#hintsPdf').checked;
   try{
-    const { jsPDF } = window.jspdf;
-    const pdf=new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
-    const list=only||frames.map((_,k)=>k); let first=true;
+    const nm=((S.name||'My').trim().replace(/[^\w\- ]+/g,'')||'My');
+    const list=only||frames.map((_,k)=>k); const files=[];
     for(const i of list){
-      msg.textContent=`Making your PDF… page ${i+1}`;
+      msg.textContent=`Taking your screenshot… page ${i+1}`;
       await new Promise(r=>setTimeout(r,30));
       const sh=frames[i].sheet; const prev=sh.style.transform; sh.style.transform='none';
       let cv;
@@ -441,20 +440,19 @@ async function exportPDF(only){
             c.querySelectorAll('input.nm').forEach(inp=>{ const d=doc.createElement('div'); d.className='tacopy'; d.style.fontSize='26px'; d.style.fontWeight='600'; d.style.padding='4px 14px'; d.textContent=S.name||''; inp.replaceWith(d); });
           }});
       } finally { sh.style.transform=prev; }
-      if(!first) pdf.addPage('a4','landscape'); first=false;
-      pdf.addImage(cv.toDataURL('image/jpeg',0.85),'JPEG',0,0,297,210);
+      const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.9));
+      files.push(new File([blob], `${nm} - Tin Can Lamp - page ${i+1}.jpg`, {type:'image/jpeg'}));
     }
-    const nm=((S.name||'My').trim().replace(/[^\w\- ]+/g,'')||'My');
-    const fname=only?`${nm} - Tin Can Lamp - page ${only[0]+1}.pdf`:`${nm} - Tin Can Lamp workbook.pdf`;
     const touch=navigator.maxTouchPoints>1;
     let shared=false;
-    if(touch && navigator.canShare){
-      try{ const file=new File([pdf.output('blob')], fname, {type:'application/pdf'});
-        if(navigator.canShare({files:[file]})){ ov.style.display='none'; await navigator.share({files:[file], title:fname}); shared=true; } }
+    if(touch && navigator.canShare && navigator.canShare({files})){
+      try{ ov.style.display='none'; await navigator.share({files, title:'Tin Can Lamp'}); shared=true; }
       catch(e){ if(e && e.name==='AbortError') shared=true; }
     }
-    if(!shared) pdf.save(fname);
-  }catch(e){ alert('Sorry, the PDF could not be made: '+e.message); console.error(e); }
+    if(!shared){
+      for(const f of files){ const a=document.createElement('a'); a.href=URL.createObjectURL(f); a.download=f.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); await new Promise(r=>setTimeout(r,350)); }
+    }
+  }catch(e){ alert('Sorry, the screenshot could not be made: '+e.message); console.error(e); }
   finally{ ov.style.display='none'; fit(); }
 }
 

@@ -5,3 +5,5 @@ Students rate every Paper 1 spec point (Don't understand / Understand a little /
 Edit `template.html`, then put `jspdf.umd.min.js` (2.5.2) and `html2canvas.min.js` (1.4.1) next to `build.py` and run it. Copy the result to `../ipad/index.html` with the manifest, icon, service-worker and updater lines, and bump the cache name in `../ipad/sw.js`.
 
 Answers are kept in localStorage key `pd-selfcheck-9dt0-v1`. Nothing is sent anywhere.
+
+**Replaced.** The self-check now lives inside `alevel-revision/` (the A level revision app). `ipad/index.html` here just redirects there; the app copies students’ ratings across on first run. This template is kept for reference only.

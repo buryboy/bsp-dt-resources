@@ -1,5 +1,5 @@
 // Offline cache for the Year 9 tin can lamp workbook (one self-contained page). Bump CACHE when index.html changes.
-const CACHE = 'ipad-tin-can-lamp-dbc01caf37e5';
+const CACHE = 'ipad-tin-can-lamp-912d31efff76';
 const FILES = [
  "./",
  "app.webmanifest",

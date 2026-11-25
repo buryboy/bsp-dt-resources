@@ -5,3 +5,5 @@ jsPDF 2.5.2 (`jspdf.umd.min.js`) and html2canvas 1.4.1 (download both next to it
 self-contained file that can be sent through Showbie. The website copy in `../ipad/index.html` is that file plus the
 manifest/icon links, service-worker registration and `book-kit/updater.js`. Bump the cache name in `../ipad/sw.js`
 when the page changes. Answers are stored on the iPad (localStorage key `cpa-y13-v1`); nothing is sent anywhere.
+
+The iPad copy also has a "‹ Revision app" link in the top bar, back to `alevel-revision/ipad/` (add it again after rebuilding).

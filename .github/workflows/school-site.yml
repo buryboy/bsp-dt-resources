@@ -37,6 +37,7 @@ jobs:
         if: env.FTP_HOST != ''
         run: |
           host=$(printf '%s' "$FTP_HOST" | sed -E 's#^[a-zA-Z]+://##; s#[/:].*$##' | LC_ALL=C tr -cd 'A-Za-z0-9.-')
+          n=${#host}; if [ $((n % 2)) -eq 0 ] && [ "${host:0:n/2}" = "${host:n/2}" ]; then host=${host:0:n/2}; echo "Host was pasted twice; using it once."; fi
           echo "FTP host shape: $(printf '%s' "$host" | sed 's/[0-9]/9/g; s/[A-Za-z]/a/g') (raw length ${#FTP_HOST})"
           echo "::add-mask::$host"
           echo "FTP_SERVER=$host" >> "$GITHUB_ENV"

@@ -1,5 +1,5 @@
 // Offline cache for the iPad version of this activity. Made by book-kit/tools/make_solo_pages.py: do not edit by hand.
-const CACHE = 'ipad-woods-and-timbers-2d73ee71cfeb';
+const CACHE = 'ipad-woods-and-timbers-5baec946e5f8';
 const FILES = [
  "./",
  "app.webmanifest",

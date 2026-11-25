@@ -107,7 +107,7 @@ table.tb td:first-child div{font-weight:600}
   <select id="jump" aria-label="Go to sheet"></select>
   <label><input type="checkbox" id="hintsPdf" checked> Hints in PDF</label>
   <span id="saved"></span>
-  <button class="primary" id="pdfBtn">Save as PDF</button>
+  <button class="primary" id="pdfBtn" data-upd-before data-upd-class="plain">Save as PDF</button>
 </div>
 <main id="main"></main>
 <div id="overlay"><div id="ovmsg">Making your PDF…</div></div>
@@ -920,5 +920,6 @@ document.addEventListener('pointerdown',e=>{ if(activeBox && !activeBox.contains
 (async()=>{ const v=await loadState(); if(v) S=Object.assign(S,v); build(); })();
 </script>
 <script>if('serviceWorker' in navigator && location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{});}</script>
+<script src="../../book-kit/updater.js"></script>
 </body>
 </html>

@@ -97,7 +97,7 @@ button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
 <header>
  <h1>Sound circuit</h1>
  <div class="prog" id="prog" aria-hidden="true"></div>
- <button class="ib" id="menuBtn" aria-label="All steps">All steps</button>
+ <button class="ib" id="menuBtn" data-upd-before aria-label="All steps">All steps</button>
 </header>
 <main>
  <section class="stage">
@@ -386,5 +386,6 @@ card();render();
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 }
 </script>
+<script src="../../book-kit/updater.js"></script>
 </body>
 </html>

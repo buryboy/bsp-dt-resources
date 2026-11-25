@@ -1,8 +1,9 @@
 // Offline cache for the Grooved Pine Challenge booklet (one self-contained page). Bump CACHE when index.html changes.
-const CACHE = 'ipad-grooved-pine-720d81fe074c';
+const CACHE = 'ipad-grooved-pine-f80f95d89606';
 const FILES = [
  "./",
  "app.webmanifest",
+ "../../book-kit/updater.js",
  "../../book-kit/icons/grooved-pine-180.png",
  "../../book-kit/icons/grooved-pine-192.png",
  "../../book-kit/icons/grooved-pine-512.png"

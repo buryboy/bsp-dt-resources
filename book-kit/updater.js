@@ -54,7 +54,7 @@
     } catch (e) {
       note('<b>Could not check right now</b><p>Try again in a minute. Your answers are safe.</p>');
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = '⟳ Check for updates'; }
+      if (btn) { btn.disabled = false; btn.textContent = btn.dataset.label || '⟳ Check for updates'; }
     }
   }
 
@@ -73,6 +73,12 @@
   // workbooks: a chip in the bottom bar next to the name; other activities: a small floating button
   function addButton(tries) {
     if (document.querySelector('.upd-btn, .upd-chip')) return;
+    // a page can choose where the button goes: put data-upd-before on the element it should sit in front of
+    const anchor = document.querySelector('[data-upd-before]');
+    if (anchor) {
+      const a = document.createElement('button'); a.type = 'button'; a.className = (anchor.dataset.updClass != null ? anchor.dataset.updClass : (anchor.className || '')) + ' upd-chip'; a.textContent = a.dataset.label = anchor.dataset.updClass === 'plain' ? '⟳' : '⟳ Updates'; a.title = 'Check for updates';
+      a.onclick = () => { if (!a.disabled) check(a); }; anchor.parentNode.insertBefore(a, anchor); return;
+    }
     const bar = document.getElementById('topbar'), at = document.getElementById('savechip');
     if (!bar && (tries || 0) < 20) return setTimeout(() => addButton((tries || 0) + 1), 250);
     const b = document.createElement(bar ? 'span' : 'button');
@@ -86,6 +92,7 @@
   .upd-btn { position: fixed; left: 10px; bottom: 10px; z-index: 250; font: 600 13px system-ui, -apple-system, sans-serif; padding: 7px 11px; border-radius: 999px; border: 1px solid #1f4d3655; background: #ffffffe6; color: #1f4d36; box-shadow: 0 2px 8px #0002; opacity: .85; }
   .upd-btn:disabled { opacity: .6; }
   .upd-chip[disabled] { opacity: .6; }
+  .upd-chip.plain { background: transparent !important; border: 1px solid rgba(255,255,255,.45) !important; color: inherit !important; padding: 6px 9px !important; border-radius: 6px !important; font: inherit; font-size: 13px !important; white-space: nowrap; cursor: pointer; min-width: 0 !important; }
   .upd-note { position: fixed; left: 50%; bottom: 56px; transform: translateX(-50%); z-index: 320; width: min(420px, calc(100% - 24px)); background: #fffdf7; color: #1d2b24; border-radius: 14px; padding: 16px 18px; box-shadow: 0 14px 36px rgba(0,0,0,.3); font: 400 16px/1.4 system-ui, -apple-system, sans-serif; }
   .upd-note b { font-size: 18px; } .upd-note p { margin: 6px 0 0; }
   .upd-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }

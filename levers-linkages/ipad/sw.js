@@ -1,5 +1,5 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-levers-linkages-49962bda85db';
+const CACHE = 'ipad-levers-linkages-c58dc032d4d0';
 const FILES = [
  "./",
  "app.webmanifest",

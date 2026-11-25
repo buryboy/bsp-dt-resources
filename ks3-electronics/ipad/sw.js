@@ -1,5 +1,5 @@
 // Offline cache for the iPad version of this activity. Made by book-kit/tools/make_solo_pages.py: do not edit by hand.
-const CACHE = 'ipad-ks3-electronics-d757942057c9';
+const CACHE = 'ipad-ks3-electronics-a34728a057b9';
 const FILES = [
  "./",
  "app.webmanifest",

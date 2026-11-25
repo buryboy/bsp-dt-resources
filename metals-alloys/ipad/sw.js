@@ -1,5 +1,5 @@
 // Offline cache for the iPad version of this workbook. Made by book-kit/tools/make_solo.py: do not edit by hand.
-const CACHE = 'ipad-metals-alloys-8703c963a006';
+const CACHE = 'ipad-metals-alloys-e7a5984f018e';
 const FILES = [
  "./",
  "app.webmanifest",

@@ -1,5 +1,5 @@
 // Offline cache for the Y13 critical path analysis workbook (one self-contained page). Bump CACHE when index.html changes.
-const CACHE = 'ipad-critical-path-777466ca1461';
+const CACHE = 'ipad-critical-path-fe35b3a827c9';
 const FILES = [
  "./",
  "app.webmanifest",

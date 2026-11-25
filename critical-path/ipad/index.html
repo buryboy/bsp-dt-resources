@@ -63,11 +63,11 @@ table.t td.c{text-align:center} table.t input{padding:6px 8px;font-size:15px}
 .net{position:absolute;left:0;top:0;width:960px;transform-origin:0 0}
 .net svg{position:absolute;left:0;top:0}
 .node{position:absolute;width:76px;height:76px;margin:-38px 0 0 -38px;border:2.5px solid var(--ink);border-radius:50%;background:#fff;overflow:hidden}
-.node .num{position:absolute;left:0;right:0;top:4px;text-align:center;font:600 17px var(--mono)}
-.node .hl{position:absolute;left:0;right:0;top:31px;border-top:2px solid var(--ink)}
-.node .vl{position:absolute;left:37px;top:31px;bottom:0;border-left:2px solid var(--ink)}
-.node input,.node .v{position:absolute;top:36px;width:30px;height:28px;border:0;border-radius:4px;padding:0;text-align:center;font:600 16px var(--mono);background:transparent;color:var(--ink)}
-.node .e{left:5px}.node .lf{right:5px}
+.node .num{position:absolute;left:0;width:36px;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font:600 18px var(--mono)}
+.node .vl{position:absolute;left:36px;top:0;bottom:0;border-left:2px solid var(--ink)}
+.node .hl{position:absolute;left:36px;right:0;top:35px;border-top:2px solid var(--ink)}
+.node input,.node .v{position:absolute;left:40px;width:28px;height:26px;border:0;border-radius:4px;padding:0;text-align:center;font:600 15px var(--mono);background:transparent;color:var(--ink)}
+.node .e{top:7px}.node .lf{bottom:7px}
 .node input:focus{background:#fff4c2;outline:none}
 .act{position:absolute;transform:translate(-50%,-50%);font:600 14px var(--mono);background:#fff;border:1.5px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap;cursor:default}
 .act.pick{cursor:pointer}.act.sel{background:var(--acc);color:#fff;border-color:var(--acc)}
@@ -129,8 +129,8 @@ table.t td.c{text-align:center} table.t input{padding:6px 8px;font-size:15px}
  <p class="muted">Choose the word for each definition, then check.</p>
  <table class="t" id="matchT"><tr><th style="width:62%">Definition</th><th>Word</th></tr></table>
  <div class="row" style="margin-top:10px"><button class="btn blue" id="matchCheck">Check</button><span class="fb" id="matchFb"></span></div>
- <div class="callout blue"><b>How to read a node.</b> In this workbook each node (circle) is an event: the moment some activities finish and others can start. Top: node number. Bottom left: <b>EST</b>, the earliest it can happen. Bottom right: <b>LFT</b>, the latest it can happen without delaying the whole project.
-  <div style="margin-top:10px" class="nodekey"><div style="position:relative;width:76px;height:76px"><div class="node" style="left:38px;top:38px"><div class="num">3</div><div class="hl"></div><div class="vl"></div><div class="v e">4</div><div class="v lf">6</div></div></div><span class="key">node 3 · EST 4 · LFT 6</span></div></div>
+ <div class="callout blue"><b>How to read a node.</b> In this workbook each node (circle) is an event: the moment some activities finish and others can start. Left: node number. Top right: <b>EST</b>, the earliest it can happen. Bottom right: <b>LFT</b>, the latest it can happen without delaying the whole project.
+  <div style="margin-top:10px" class="nodekey"><div style="position:relative;width:76px;height:76px"><div class="node" style="left:38px;top:38px"><div class="num">3</div><div class="vl"></div><div class="hl"></div><div class="v e">4</div><div class="v lf">6</div></div></div><span class="key">node 3 · EST 4 · LFT 6</span></div></div>
  <div class="savebox noprint"><span class="muted">Saves as you go.</span><button class="btn small savepg">Save this page as PDF</button></div>
 </section>
 

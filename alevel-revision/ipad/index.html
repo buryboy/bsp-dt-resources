@@ -3955,7 +3955,13 @@ BOOKLETS.push({ id: 'maths', topic: 'Maths', tag: 'Maths', title: 'Maths for Pro
 /* ===== A level Product Design revision app: engine =====
    Views: home (always first), booklet, self-check (per topic), results.
    Everything saves in localStorage on this device only. */
-const STORE = 'pd-revision-9dt0-v1', OLD = 'pd-selfcheck-9dt0-v1';
+// The same engine runs the A level app and the GCSE app. A course can set its own details in a global APP object
+// (see gcse-revision/src/spec.js); anything it leaves out falls back to the A level values below.
+const CFG = Object.assign({ store: 'pd-revision-9dt0-v1', old: 'pd-selfcheck-9dt0-v1', title: 'A level Product Design revision',
+  kick: 'Edexcel 9DT0 · Paper 1 · Principles of Design and Technology', cls: '13P', file: 'Product Design revision',
+  subject: '9DT0 revision list', listHead: 'A level Product Design (9DT0) self-check', lab: null, groups: null, word: 'Topic' }, typeof APP !== 'undefined' ? APP : {});
+const TL = (t) => (CFG.lab && CFG.lab[t]) || t; // what a topic is called on screen (A level: its number; GCSE: its spec code)
+const STORE = CFG.store, OLD = CFG.old;
 let S = {};
 try { S = JSON.parse(localStorage.getItem(STORE) || 'null') || {}; } catch (e) { S = {}; }
 if (!S._v) { // first run: bring over self-check ratings from the old self-check page
@@ -4019,15 +4025,15 @@ function render() {
 
 /* ---------- HOME ---------- */
 function renderHome() {
-  $('#barTitle').textContent = 'A level Product Design revision';
+  $('#barTitle').textContent = CFG.title;
   const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
   const live = BOOKLETS.filter((b) => !b.soon);
   const allU = live.filter((b) => !b.href).flatMap(bookUnits), st = stats(allU);
   const conf = SPEC.filter((s) => rating(s[0]) === 2).length, rated = SPEC.filter((s) => rating(s[0]) >= 0).length;
   const bp = live.length ? live.reduce((a, b) => a + bkStats(b).p, 0) / live.length : 0;
-  let h = `<div class="kick">Edexcel 9DT0 · Paper 1 · Principles of Design and Technology</div>
-  <h2>A level Product Design revision</h2>
-  <div class="grid2"><div><label class="l">Your name</label><input type="text" id="nm" value="${E(S.name || '')}" placeholder="First name and surname"></div><div><label class="l">Class</label><input type="text" id="cl" value="${E(S.class || '')}" placeholder="e.g. 13P"></div></div>
+  let h = `<div class="kick">${E(CFG.kick)}</div>
+  <h2>${E(CFG.title)}</h2>
+  <div class="grid2"><div><label class="l">Your name</label><input type="text" id="nm" value="${E(S.name || '')}" placeholder="First name and surname"></div><div><label class="l">Class</label><input type="text" id="cl" value="${E(S.class || '')}" placeholder="e.g. ${E(CFG.cls)}"></div></div>
   ${standalone ? '' : `<div class="tip noprint"><b>Do this first:</b> tap the Share button in Safari, then <b>Add to Home Screen</b>. The app then works offline, and your progress is safe over the holidays: iPads can clear saved work from websites that haven't been opened for a few weeks.</div>`}
   <div class="big">
    <div class="card"><b>${Math.round(bp * 100)}%</b><span class="muted">of the revision booklets done</span>${progHTML(bp)}</div>
@@ -4036,11 +4042,13 @@ function renderHome() {
   </div>
   <p class="muted">Pick any topic, in any order. Each booklet remembers where you got to. The bars go <b style="color:#c0392b">red</b>, <b style="color:#b07210">amber</b>, then <b style="color:#2f7d4a">green</b> as you work through them.</p>
   <div class="topics">`;
+  const groupOf = {}; (CFG.groups || []).forEach((g) => { groupOf[g[1][0]] = g[0]; });
   Object.keys(TOPICS).forEach((t) => {
     t = +t;
+    if (groupOf[t]) h += `</div><h3 style="margin-top:22px">${E(groupOf[t])}</h3><div class="topics">`;
     const bks = BOOKLETS.filter((b) => b.topic === t), sl = SPEC.filter((s) => s[1] === t);
     const c = [0, 1, 2].map((v) => sl.filter((s) => rating(s[0]) === v).length);
-    h += `<div class="tc"><h4><span class="n">${t}</span>${E(TOPICS[t])}</h4>`;
+    h += `<div class="tc"><h4><span class="n">${TL(t)}</span>${E(TOPICS[t])}</h4>`;
     if (!bks.length) h += `<div class="ln"><span class="lb">Booklet</span><span class="soon">Coming soon</span><span></span><span></span></div>`;
     bks.forEach((b) => {
       if (b.soon) { h += `<div class="ln"><span class="lb">Booklet</span><span class="soon">${E(b.title)} · coming soon</span><span></span><span></span></div>`; return; }
@@ -4049,7 +4057,9 @@ function renderHome() {
     });
     h += `<div class="ln"><span class="lb">Self-check</span><div class="prog">${c.map((x, v) => `<i class="c${v}" style="width:${x / sl.length * 100}%"></i>`).join('')}</div><span class="pct">${c[2]}/${sl.length}</span><button class="btn small ghost" data-check="${t}">Rate ›</button></div></div>`;
   });
-  BOOKLETS.filter((b) => !TOPICS[b.topic] && !b.soon).forEach((b) => { const st2 = bkStats(b);
+  const extras = BOOKLETS.filter((b) => !TOPICS[b.topic] && !b.soon);
+  if (CFG.groups && extras.length) h += `</div><h3 style="margin-top:22px">Skills</h3><div class="topics">`;
+  extras.forEach((b) => { const st2 = bkStats(b);
     h += `<div class="tc"><h4><span class="n">${E(b.tag || 'Skills')}</span>${E(b.title)}</h4><div class="ln"><span class="lb">Booklet</span>${progHTML(st2.p)}<span class="pct">${Math.round(st2.p * 100)}%</span><button class="btn small ${st2.p >= .67 ? '' : 'blue'}" data-open="${b.id}">${st2.p ? 'Continue' : 'Start'} ›</button></div><div class="soon">${E(b.blurb || '')}</div></div>`; });
   h += `</div>
   <div class="row" style="margin-top:22px"><button class="btn blue" id="resBtn">My results and revision list ›</button></div>
@@ -4074,7 +4084,7 @@ function openBook(id, page) {
 async function backup() {
   const nm = ((S.name || 'My').trim().replace(/[^\w\- ]+/g, '') || 'My'), d = new Date().toISOString().slice(0, 10);
   const data = JSON.stringify({ app: STORE, saved: new Date().toISOString(), S, cpa: localStorage.getItem('cpa-y13-v1') });
-  const file = new File([data], `${nm} - Product Design revision backup ${d}.json`, { type: 'application/json' });
+  const file = new File([data], `${nm} - ${CFG.file} backup ${d}.json`, { type: 'application/json' });
   const fb = $('#bkFb');
   try { if (navigator.maxTouchPoints > 1 && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: file.name }); fb.className = 'fb good'; fb.textContent = 'Backup made.'; return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
@@ -4095,12 +4105,12 @@ $('#restoreIn').onchange = (e) => {
 let BK = null;
 function renderBook() {
   BK = BOOKLETS.find((x) => x.id === V.b); const P = BK.pages[V.p]; S.lp[BK.id] = V.p; save();
-  $('#barTitle').textContent = TOPICS[BK.topic] ? `${BK.topic}. ${BK.title}` : BK.title;
+  $('#barTitle').textContent = TOPICS[BK.topic] ? `${TL(BK.topic)}${CFG.lab ? '' : '.'} ${BK.title}` : BK.title;
   const j = $('#jump'); j.innerHTML = BK.pages.map((p, i) => `<option value="${i}">${i + 1}. ${E(p.t)}</option>`).join(''); j.value = V.p;
   const bs = stats(bookUnits(BK));
   let h = `<div class="bkbar noprint">${progHTML(bs.p)}<span class="pct">${Math.round(bs.p * 100)}%</span></div>
    <div class="pnav noprint">${BK.pages.map((p, i) => { const s = stats(pageUnits(BK, p)); return `<button data-pg="${i}" class="${i === V.p ? 'cur' : ''} ${s.n && s.done === s.n ? 'd2' : s.done ? 'd1' : ''}" title="${E(p.t)}">${i + 1}</button>`; }).join('')}</div>
-   <div class="kick">${TOPICS[BK.topic] ? 'Topic ' + BK.topic : E(BK.tag || 'Skills')}${P.spec ? ' · ' + P.spec : ''} · page ${V.p + 1} of ${BK.pages.length}</div><h2>${E(P.t)}</h2>
+   <div class="kick">${TOPICS[BK.topic] ? (CFG.lab ? TL(BK.topic) : 'Topic ' + BK.topic) : E(BK.tag || 'Skills')}${P.spec && String(P.spec) !== String(TL(BK.topic)) ? ' · ' + P.spec : ''} · page ${V.p + 1} of ${BK.pages.length}</div><h2>${E(P.t)}</h2>
    <div id="lockNote" class="locknote noprint" style="display:none">Notes and key words are hidden while you answer. They come back when you finish the activity (all right, or three tries at each).</div>`;
   P.blocks.forEach((b, bi) => { h += blockHTML(BK, b, bi); });
   const ps = stats(pageUnits(BK, P));
@@ -4121,16 +4131,16 @@ $('#next').onclick = () => { if (V.v !== 'book') return; if (V.p < BK.pages.leng
 
 // In the real paper (see the Edexcel sample mark scheme) Discuss and Evaluate questions are marked by LEVEL, not by
 // counting points; Explain questions are point + linked justification(s). Level summaries below are in our own words.
-const LV = {
+const LV = CFG.LV || {
   6: [['1', '1–2', 'Superficial; a narrow range of factors; only partly applied to the product or situation in the question'], ['2', '3–4', 'Coherent; some relevant links between a fair range of factors; generally applied to the context'], ['3', '5–6', 'Comprehensive; effective links between a wide range of factors; applied thoughtfully to the context throughout']],
   9: [['1', '1–3', 'Basic understanding; few links between points; incomplete, with no real conclusion; judgements barely supported'], ['2', '4–6', 'Competent understanding; some clear links; one-sided or uneven; a generally sensible conclusion; some evidence'], ['3', '7–9', 'Thorough understanding; logical links throughout; balanced; a well-developed conclusion; judgements backed by evidence throughout']],
   12: [['1', '1–3', 'Basic understanding; few links; incomplete, with no real conclusion; judgements barely supported'], ['2', '4–6', 'Generally sound understanding; some clear links; uneven; a generally sensible conclusion; some evidence'], ['3', '7–9', 'Effective understanding; logical links; balanced; a considered conclusion; judgements mostly supported by evidence'], ['4', '10–12', 'Comprehensive understanding; insightful links throughout; thorough and balanced; a well-developed conclusion; pertinent evidence throughout']],
 };
-const levelled = (q, m) => /\*\*(Discuss|Evaluate)\*\*/i.test(q) && !!LV[m];
+const levelled = CFG.levelled ? (q, m) => CFG.levelled(q, m) && !!LV[m] : (q, m) => /\*\*(Discuss|Evaluate)\*\*/i.test(q) && !!LV[m];
 function msHTML(q, m, ms) {
   const lv = levelled(q, m);
   const items = ms.map((x) => (lv ? x.replace(/\s*\((?:\d+[–-])?\d+\)/g, '') : x)).filter((x) => x.trim());
-  return `<div class="callout blue" style="margin-top:10px"><b>${lv ? 'Indicative content: points a good answer might include' : 'Mark scheme'}</b><ul style="margin:4px 0 0">${items.map((x) => `<li>${x}</li>`).join('')}</ul>${lv ? `<p style="margin:10px 0 4px"><b>This question is marked by level.</b> Decide which level describes your answer best, then choose a mark within it:</p><table class="t" style="font-size:14.5px"><tr><th>Level</th><th>Marks</th><th>What the answer looks like</th></tr>${LV[m].map((r) => `<tr><td>${r[0]}</td><td class="c">${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>` : ''}</div>`;
+  return `<div class="callout blue" style="margin-top:10px"><b>${lv ? 'Indicative content: points a good answer might include' : 'Mark scheme'}</b><ul style="margin:4px 0 0">${items.map((x) => `<li>${x}</li>`).join('')}</ul>${lv ? `<p style="margin:10px 0 4px"><b>This question is marked by ${CFG.lvWord || 'level'}.</b> Decide which ${CFG.lvWord || 'level'} describes your answer best, then choose a mark within it:</p><table class="t" style="font-size:14.5px"><tr><th>${CFG.lvWord ? 'Band' : 'Level'}</th><th>Marks</th><th>What the answer looks like</th></tr>${LV[m].map((r) => `<tr><td>${r[0]}</td><td class="c">${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>` : ''}</div>`;
 }
 function blockHTML(bk, b, bi) {
   let h = '';
@@ -4183,7 +4193,7 @@ function blockHTML(bk, b, bi) {
     h += b.calc.map(([q, a, tol, unit, work], i) => { const id = bk.id + ':c' + hsh(q); return `<div class="q" data-cu="${id}" data-a="${a}" data-tol="${tol || 0}"><span class="qn">${i + 1}</span>${q}<div class="row" style="margin-top:8px"><input type="number" step="any" style="width:160px" inputmode="decimal"> <span>${unit || ''}</span><button class="btn blue small">Check</button><span class="fb"></span></div><div class="why" style="display:none">${work}</div></div>`; }).join('');
   }
   if (b.exam) {
-    h += head(b.eh || 'Exam practice', 'Start with the command word (highlighted). Answer first: the mark scheme opens once you have written at least 15 characters. <b>Explain</b> = a point plus a linked reason for 2 marks, or two linked reasons for 3 marks. <b>Discuss</b> and <b>Evaluate</b> are marked by level. Then mark yourself honestly.');
+    h += head(b.eh || 'Exam practice', CFG.examIntro || 'Start with the command word (highlighted). Answer first: the mark scheme opens once you have written at least 15 characters. <b>Explain</b> = a point plus a linked reason for 2 marks, or two linked reasons for 3 marks. <b>Discuss</b> and <b>Evaluate</b> are marked by level. Then mark yourself honestly.');
     h += b.exam.map(([q, m, ms, kind], i) => { const id = bk.id + ':e' + hsh(q); const sk = kind === 'sketch'; return `<div class="q" data-eu="${id}"${sk ? ' data-sk="1"' : ''}><span class="qn">Q${i + 1}</span>${cw(q)} <span class="tag">${m} mark${m > 1 ? 's' : ''}</span>
       ${sk ? `<div class="tip" style="margin-top:8px"><b>On paper:</b> sketch and label your answer by hand, as you would in the exam. Labelled sketches earn the marks; neat drawing does not.</div><label class="chk"><input type="checkbox" data-skdone> I have sketched and labelled my answer on paper</label>` : `<textarea style="margin-top:8px;min-height:${m >= 9 ? 220 : m >= 6 ? 170 : m >= 4 ? 120 : 80}px" placeholder="Answer as you would in the exam."></textarea>`}
       <button class="btn ghost small" data-ms style="margin-top:8px">Show the mark scheme</button>
@@ -4280,8 +4290,9 @@ function refreshProg() {
 /* ---------- SELF-CHECK (one topic) ---------- */
 function renderCheck() {
   const t = V.t, list = SPEC.filter((s) => s[1] === t), bk = BOOKLETS.find((b) => b.topic === t && b.pages);
-  $('#barTitle').textContent = `Self-check · Topic ${t}`;
-  let h = `<div class="kick">Self-check · Topic ${t}</div><h2>${E(TOPICS[t])}</h2>
+  const tn = (x) => (CFG.lab ? TL(x) : 'Topic ' + x), nT = Object.keys(TOPICS).length;
+  $('#barTitle').textContent = `Self-check · ${tn(t)}`;
+  let h = `<div class="kick">Self-check · ${tn(t)}</div><h2>${E(TOPICS[t])}</h2>
    <p class="muted">Rate each spec point honestly. Tick <b>Confident</b> and an exam-style question opens: answer it, then mark yourself.${bk ? ' Not confident? The revision booklet covers it.' : ''}</p>`;
   list.forEach(([id, , code, title, pts, q, m, ms]) => {
     const pg = bk && bk.pages ? findPage(bk, code, title) : -1;
@@ -4294,7 +4305,7 @@ function renderCheck() {
        <div class="ms" id="ms-${id}">${msHTML(q, m, ms)}
        <label class="key">My mark: <select class="f" data-k="s.${id}" style="width:auto;display:inline-block"><option value=""></option>${Array.from({ length: m + 1 }, (_, k) => `<option>${k}</option>`).join('')}</select> / ${m}</label></div></div></div>`;
   });
-  h += `<div class="row" style="margin-top:20px">${t > 1 ? `<button class="btn ghost" data-t="${t - 1}">‹ Topic ${t - 1}</button>` : ''}${t < 12 ? `<button class="btn ghost" data-t="${t + 1}">Topic ${t + 1} ›</button>` : ''}<button class="btn blue" id="toRes">My results ›</button></div>`;
+  h += `<div class="row" style="margin-top:20px">${t > 1 ? `<button class="btn ghost" data-t="${t - 1}">‹ ${tn(t - 1)}</button>` : ''}${t < nT ? `<button class="btn ghost" data-t="${t + 1}">${tn(t + 1)} ›</button>` : ''}<button class="btn blue" id="toRes">My results ›</button></div>`;
   view.innerHTML = h;
   $$('[data-k]', view).forEach((el) => { const k = el.dataset.k; if (S[k] != null) el.value = S[k]; const up = () => { S[k] = el.value; save(); chkRefresh(list); }; el.addEventListener('input', up); el.addEventListener('change', up); });
   $$('.rate button', view).forEach((b) => b.onclick = () => { const k = 'r.' + b.dataset.id; if (S[k] === +b.dataset.v) delete S[k]; else S[k] = +b.dataset.v; save(); chkRefresh(list); });
@@ -4340,10 +4351,10 @@ function renderResults() {
   view.innerHTML = `<div class="kick">My results</div><h2>Where am I, and what next?</h2>
    <p class="muted">${E((S.name || '').trim())}${S.class ? ' · ' + E(S.class) : ''} · ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
    <h3>Revision booklets</h3>
-   <div class="bars card">${BOOKLETS.filter((b) => !b.soon).map((b) => { const s = bkStats(b); return `<div class="br"><span><b>${TOPICS[b.topic] ? b.topic : ''}</b> ${E(b.title)}</span>${progHTML(s.p)}<span class="pct">${Math.round(s.p * 100)}%${s.max ? ` · ${s.got}/${s.max}` : ''}</span></div>`; }).join('')}</div>
+   <div class="bars card">${BOOKLETS.filter((b) => !b.soon).map((b) => { const s = bkStats(b); return `<div class="br"><span><b>${TOPICS[b.topic] ? TL(b.topic) : ''}</b> ${E(b.title)}</span>${progHTML(s.p)}<span class="pct">${Math.round(s.p * 100)}%${s.max ? ` · ${s.got}/${s.max}` : ''}</span></div>`; }).join('')}</div>
    <h3>Self-check</h3>
    <div class="legend"><span style="--c:#c0392b">Don't understand</span><span style="--c:#d9901a">Understand a little</span><span style="--c:#2f7d4a">Confident</span><span style="--c:#e4e6ea">Not rated yet</span></div>
-   <div class="bars card">${Object.keys(TOPICS).map((t) => { const l = SPEC.filter((s) => s[1] === +t), c = [0, 1, 2].map((v) => l.filter((s) => rating(s[0]) === v).length); return `<div class="br"><span><b>${t}</b> ${TOPICS[t]}</span><div class="prog">${c.map((x, v) => `<i class="c${v}" style="width:${x / l.length * 100}%"></i>`).join('')}</div><span class="pct">${c[2]}/${l.length}</span></div>`; }).join('')}</div>
+   <div class="bars card">${Object.keys(TOPICS).map((t) => { const l = SPEC.filter((s) => s[1] === +t), c = [0, 1, 2].map((v) => l.filter((s) => rating(s[0]) === v).length); return `<div class="br"><span><b>${TL(t)}</b> ${TOPICS[t]}</span><div class="prog">${c.map((x, v) => `<i class="c${v}" style="width:${x / l.length * 100}%"></i>`).join('')}</div><span class="pct">${c[2]}/${l.length}</span></div>`; }).join('')}</div>
    <p class="muted">${conf} of ${SPEC.length} spec points confident.</p>
    <h3>My revision list</h3>
    <div class="rl card">${(sec("Don't understand: start here", '#c0392b', L.red) + sec('Understand a little', '#b07210', L.amb) + sec('Confident, but under half marks on the question', '#24539c', L.low, 'Know it, but the exam answer needs work.') + sec('Confident, question not tried yet', '#5f6670', L.notyet) + (L.unr.length ? `<p class="muted">${L.unr.length} spec points not rated yet.</p>` : '')) || '<p class="muted">Nothing yet. Rate the topics from the Home page.</p>'}</div>
@@ -4358,16 +4369,16 @@ function renderResults() {
   $$('[data-h]', view).forEach((c) => { c.checked = !!(S.helps || {})[c.dataset.h]; c.onchange = () => { (S.helps = S.helps || {})[c.dataset.h] = c.checked; save(); }; });
   $('#cmt').oninput = (e) => { S.comment = e.target.value; save(); };
   $('#tem').oninput = (e) => { S.temail = e.target.value; save(); };
-  $('#mailBtn').onclick = () => { const n = (S.name || '').trim(); location.href = `mailto:${encodeURIComponent((S.temail || '').trim())}?subject=${encodeURIComponent('9DT0 revision list' + (n ? ' – ' + n : ''))}&body=${encodeURIComponent(listText())}`; };
+  $('#mailBtn').onclick = () => { const n = (S.name || '').trim(); location.href = `mailto:${encodeURIComponent((S.temail || '').trim())}?subject=${encodeURIComponent(CFG.subject + (n ? ' – ' + n : ''))}&body=${encodeURIComponent(listText())}`; };
   $('#copyBtn').onclick = async () => { const t = listText(), f = $('#copyFb'); try { await navigator.clipboard.writeText(t); } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } f.className = 'fb good'; f.textContent = 'Copied. Paste it into Showbie or an email.'; };
-  $('#savePg').onclick = () => pdfOf([() => {}], `${who()} - Product Design revision results.pdf`);
+  $('#savePg').onclick = () => pdfOf([() => {}], `${who()} - ${CFG.file} results.pdf`);
 }
 function listText() { // the first line is what the teacher tally page looks for: keep it
   const L = lists(), name = (S.name || '').trim() || '(no name)', cls = (S.class || '').trim();
   const sec = (t, l) => l.length ? `${t}:\n${l.map((s) => ' - ' + L.lab(s)).join('\n')}\n\n` : '';
   const helps = HELPS.filter((_, i) => (S.helps || {})[i]);
-  const bk = BOOKLETS.filter((b) => !b.soon).map((b) => ` - ${TOPICS[b.topic] ? b.topic + ' ' : ''}${b.title}: ${Math.round(bkStats(b).p * 100)}%`).join('\n');
-  return `A level Product Design (9DT0) self-check\n${name}${cls ? ' · ' + cls : ''} · ${new Date().toLocaleDateString('en-GB')}\n\n` +
+  const bk = BOOKLETS.filter((b) => !b.soon).map((b) => ` - ${TOPICS[b.topic] ? TL(b.topic) + ' ' : ''}${b.title}: ${Math.round(bkStats(b).p * 100)}%`).join('\n');
+  return `${CFG.listHead}\n${name}${cls ? ' · ' + cls : ''} · ${new Date().toLocaleDateString('en-GB')}\n\n` +
     sec("Don't understand", L.red) + sec('Understand a little', L.amb) + sec('Confident but under half marks on the exam question', L.low) +
     `Confident: ${SPEC.filter((s) => rating(s[0]) === 2).length} of ${SPEC.length} topics. Not rated: ${L.unr.length}.\n\n` +
     `Booklet progress:\n${bk}\n\n` +
@@ -4407,7 +4418,7 @@ async function pdfOf(steps, fname) {
 }
 $('#pdfBtn').onclick = () => {
   if (V.v === 'book') { const id = V.b, n = BK.pages.length; pdfOf(Array.from({ length: n }, (_, i) => () => { V = { v: 'book', b: id, p: i }; render(); }), `${who()} - ${BK.title} booklet.pdf`); }
-  else pdfOf([() => {}], `${who()} - Product Design revision.pdf`);
+  else pdfOf([() => {}], `${who()} - ${CFG.file}.pdf`);
 };
 $('#pdfBtn').textContent = 'Save as PDF';
 

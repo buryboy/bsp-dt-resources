@@ -1,0 +1,21 @@
+{
+ "name": "GCSE D&T revision \u00b7 BSP",
+ "short_name": "GCSE revision",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#1f4d36",
+ "theme_color": "#1f4d36",
+ "icons": [
+  {
+   "src": "../../book-kit/icons/gcse-revision-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "../../book-kit/icons/gcse-revision-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}

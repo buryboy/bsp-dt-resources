@@ -1,5 +1,5 @@
 // Offline cache for the A level Product Design revision app (one self-contained page). Bump CACHE when index.html changes.
-const CACHE = 'ipad-alevel-revision-d8fcb192df5c';
+const CACHE = 'ipad-alevel-revision-2250efe893cc';
 const FILES = [
  "./",
  "app.webmanifest",

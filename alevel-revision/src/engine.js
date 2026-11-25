@@ -95,6 +95,8 @@ function renderHome() {
     });
     h += `<div class="ln"><span class="lb">Self-check</span><div class="prog">${c.map((x, v) => `<i class="c${v}" style="width:${x / sl.length * 100}%"></i>`).join('')}</div><span class="pct">${c[2]}/${sl.length}</span><button class="btn small ghost" data-check="${t}">Rate ›</button></div></div>`;
   });
+  BOOKLETS.filter((b) => !TOPICS[b.topic] && !b.soon).forEach((b) => { const st2 = bkStats(b);
+    h += `<div class="tc"><h4><span class="n">${E(b.tag || 'Skills')}</span>${E(b.title)}</h4><div class="ln"><span class="lb">Booklet</span>${progHTML(st2.p)}<span class="pct">${Math.round(st2.p * 100)}%</span><button class="btn small ${st2.p >= .67 ? '' : 'blue'}" data-open="${b.id}">${st2.p ? 'Continue' : 'Start'} ›</button></div><div class="soon">${E(b.blurb || '')}</div></div>`; });
   h += `</div>
   <div class="row" style="margin-top:22px"><button class="btn blue" id="resBtn">My results and revision list ›</button></div>
   <h3>Keep your work safe</h3>
@@ -139,12 +141,12 @@ $('#restoreIn').onchange = (e) => {
 let BK = null;
 function renderBook() {
   BK = BOOKLETS.find((x) => x.id === V.b); const P = BK.pages[V.p]; S.lp[BK.id] = V.p; save();
-  $('#barTitle').textContent = `${BK.topic}. ${BK.title}`;
+  $('#barTitle').textContent = TOPICS[BK.topic] ? `${BK.topic}. ${BK.title}` : BK.title;
   const j = $('#jump'); j.innerHTML = BK.pages.map((p, i) => `<option value="${i}">${i + 1}. ${E(p.t)}</option>`).join(''); j.value = V.p;
   const bs = stats(bookUnits(BK));
   let h = `<div class="bkbar noprint">${progHTML(bs.p)}<span class="pct">${Math.round(bs.p * 100)}%</span></div>
    <div class="pnav noprint">${BK.pages.map((p, i) => { const s = stats(pageUnits(BK, p)); return `<button data-pg="${i}" class="${i === V.p ? 'cur' : ''} ${s.n && s.done === s.n ? 'd2' : s.done ? 'd1' : ''}" title="${E(p.t)}">${i + 1}</button>`; }).join('')}</div>
-   <div class="kick">Topic ${BK.topic}${P.spec ? ' · ' + P.spec : ''} · page ${V.p + 1} of ${BK.pages.length}</div><h2>${E(P.t)}</h2>
+   <div class="kick">${TOPICS[BK.topic] ? 'Topic ' + BK.topic : E(BK.tag || 'Skills')}${P.spec ? ' · ' + P.spec : ''} · page ${V.p + 1} of ${BK.pages.length}</div><h2>${E(P.t)}</h2>
    <div id="lockNote" class="locknote noprint" style="display:none">Notes and key words are hidden while you answer. They come back when you finish the activity (all right, or three tries at each).</div>`;
   P.blocks.forEach((b, bi) => { h += blockHTML(BK, b, bi); });
   const ps = stats(pageUnits(BK, P));
@@ -384,7 +386,7 @@ function renderResults() {
   view.innerHTML = `<div class="kick">My results</div><h2>Where am I, and what next?</h2>
    <p class="muted">${E((S.name || '').trim())}${S.class ? ' · ' + E(S.class) : ''} · ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
    <h3>Revision booklets</h3>
-   <div class="bars card">${BOOKLETS.filter((b) => !b.soon).map((b) => { const s = bkStats(b); return `<div class="br"><span><b>${b.topic}</b> ${E(b.title)}</span>${progHTML(s.p)}<span class="pct">${Math.round(s.p * 100)}%${s.max ? ` · ${s.got}/${s.max}` : ''}</span></div>`; }).join('')}</div>
+   <div class="bars card">${BOOKLETS.filter((b) => !b.soon).map((b) => { const s = bkStats(b); return `<div class="br"><span><b>${TOPICS[b.topic] ? b.topic : ''}</b> ${E(b.title)}</span>${progHTML(s.p)}<span class="pct">${Math.round(s.p * 100)}%${s.max ? ` · ${s.got}/${s.max}` : ''}</span></div>`; }).join('')}</div>
    <h3>Self-check</h3>
    <div class="legend"><span style="--c:#c0392b">Don't understand</span><span style="--c:#d9901a">Understand a little</span><span style="--c:#2f7d4a">Confident</span><span style="--c:#e4e6ea">Not rated yet</span></div>
    <div class="bars card">${Object.keys(TOPICS).map((t) => { const l = SPEC.filter((s) => s[1] === +t), c = [0, 1, 2].map((v) => l.filter((s) => rating(s[0]) === v).length); return `<div class="br"><span><b>${t}</b> ${TOPICS[t]}</span><div class="prog">${c.map((x, v) => `<i class="c${v}" style="width:${x / l.length * 100}%"></i>`).join('')}</div><span class="pct">${c[2]}/${l.length}</span></div>`; }).join('')}</div>
@@ -410,7 +412,7 @@ function listText() { // the first line is what the teacher tally page looks for
   const L = lists(), name = (S.name || '').trim() || '(no name)', cls = (S.class || '').trim();
   const sec = (t, l) => l.length ? `${t}:\n${l.map((s) => ' - ' + L.lab(s)).join('\n')}\n\n` : '';
   const helps = HELPS.filter((_, i) => (S.helps || {})[i]);
-  const bk = BOOKLETS.filter((b) => !b.soon).map((b) => ` - ${b.topic} ${b.title}: ${Math.round(bkStats(b).p * 100)}%`).join('\n');
+  const bk = BOOKLETS.filter((b) => !b.soon).map((b) => ` - ${TOPICS[b.topic] ? b.topic + ' ' : ''}${b.title}: ${Math.round(bkStats(b).p * 100)}%`).join('\n');
   return `A level Product Design (9DT0) self-check\n${name}${cls ? ' · ' + cls : ''} · ${new Date().toLocaleDateString('en-GB')}\n\n` +
     sec("Don't understand", L.red) + sec('Understand a little', L.amb) + sec('Confident but under half marks on the exam question', L.low) +
     `Confident: ${SPEC.filter((s) => rating(s[0]) === 2).length} of ${SPEC.length} topics. Not rated: ${L.unr.length}.\n\n` +

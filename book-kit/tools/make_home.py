@@ -18,6 +18,7 @@ E = html.escape
 WORKBOOKS = [
     ('ks3-electronics', 'Circuit Lab: electronics', 'ks3', 'KS3 electronics'),
     ('circuit-build', 'Sound circuit build guide', 'ks3', 'Year 8 electronics'),
+    ('tin-can-lamp', 'Upcycled tin can lamp', 'ks3', 'Year 9 · 1960s or 1980s lamp'),
     ('smart-modern-composite', 'Smart, modern & composite materials', 'ks4', '3.1.3'),
     ('systems-electronics', 'Systems & electronics', 'ks4', '3.1.4'),
     ('levers-linkages', 'Levers & linkages', 'ks4', '3.1.5'),
@@ -79,7 +80,7 @@ def main():
     # student
     body = ['<h1>Workbooks for your iPad</h1>',
             '<ol class="how"><li>Tap your workbook.</li><li>Follow the steps it shows to add it to your Home Screen. It works without Wi-Fi.</li>'
-            '<li>Always open it from that icon so your work stays together. Tap <b>Check for updates</b> (bottom left) when your teacher adds new pages: your answers are kept.</li>'
+            '<li>Always open it from that icon so your work stays together. Tap <b>⟳ Check for updates</b> when your teacher adds new pages: your answers are kept.</li>'
             '<li>At the end of each page, tap <b>Save this page as PDF</b> and hand it in on Showbie.</li></ol>',
             '<div class="tabs">' + ''.join(f'<a href="#{k}">{E(n)}</a>' for k, n, _ in STAGES) + '</div>']
     for k, n, sub in STAGES:
@@ -95,7 +96,7 @@ def main():
     # teacher: DT
     b = ['<h1>Design &amp; Technology</h1>',
          '<div class="tabs">' + ''.join(f'<a href="#{k}">{E(n)}</a>' for k, n, _ in STAGES) + '</div>',
-         '<section id="ks3"><h2>Key Stage 3</h2><p class="sub">Years 7 to 9</p><div class="wbs">' + wb_card('ks3-electronics', '../../') + wb_card('circuit-build', '../../') + '</div><p class="soon">More KS3 projects to come.</p></section>',
+         '<section id="ks3"><h2>Key Stage 3</h2><p class="sub">Years 7 to 9</p><div class="wbs">' + wb_card('ks3-electronics', '../../') + wb_card('circuit-build', '../../') + wb_card('tin-can-lamp', '../../') + '</div><p class="soon">More KS3 projects to come.</p></section>',
          '<section id="ks4"><h2>Key Stage 4 · GCSE</h2><p class="sub">AQA Design &amp; Technology 8552. Each topic has a taught lesson (board page and notes sheet), an application lesson (PowerPoint and print pack) and links to the student workbooks.</p>']
     for code, name, rows in data['spec']:
         b.append(f'<h3><span class="code">{code}</span>{E(name)}</h3><div class="spec">')

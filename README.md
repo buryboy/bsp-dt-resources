@@ -10,6 +10,7 @@ Interactive workbooks for The British School of Paris D&T department, hosted wit
 | `ks3-electronics/` | KS3 Circuit Lab – 13 levels |
 | `tin-can-lamp/` | Year 9 upcycled tin can lamp workbook (student picks a 1960s or 1980s theme). Self-contained page in `tin-can-lamp/ipad/` |
 | `critical-path/` | Y13 A level revision workbook: critical path analysis (Edexcel 9DT0 topic 12.2a), worked example, what-if delays, kettle launch case, plan your own NEA with CPA, exam practice. Self-contained page in `critical-path/ipad/` |
+| `alevel-self-check/` | A level Product Design self-check (Edexcel 9DT0 Component 1, topics 1–12): rate every spec point, exam question for each confident topic, revision list to PDF/email. Teacher tally page at `ipad-home/teacher/dt/self-check-tally.html`. |
 | `grooved-pine/` | Y12 A level (Edexcel) project booklet: The Grooved Pine Challenge, NEA grids 1–4 with hints. One self-contained page in `grooved-pine/ipad/` (draw, photos, resizable boxes, A3 PDF export) |
 | `lab-breakout/` | GCSE material properties escape room: team stations on computers plus a vault puzzle for the interactive whiteboard. Student access has no password; board and teacher menu use a teacher PIN (default 0000, see `TPIN` in the file). `team-sheets.pdf` is the printable answer sheet for each team |
 

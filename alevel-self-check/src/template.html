@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Product Design self-check – A level revision</title>
+<style>
+/*FONTS*/
+:root{--paper:#f6f6f2;--ink:#1f2328;--soft:#5f6670;--acc:#b0402a;--acc2:#24539c;--ok:#2f7d4a;--line:rgba(31,35,40,.28);--card:#fff;--strip:#1f2328;
+ --sans:'IBM Plex Sans',-apple-system,Segoe UI,Arial,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#2a2e33;color:var(--ink);font:400 17px/1.5 var(--sans);-webkit-text-size-adjust:100%}
+.bar{position:sticky;top:0;z-index:50;display:flex;gap:12px;align-items:center;padding:10px 16px;background:var(--strip);color:#e9ebee;flex-wrap:wrap}
+.bar h1{font:600 17px var(--sans);margin:0;flex:1;min-width:220px}
+.bar select{font:500 15px var(--mono);padding:7px 10px;border-radius:6px;border:1px solid #4a5058;background:#2b3036;color:#e9ebee;max-width:300px}
+.btn{font:600 15px var(--sans);border:0;border-radius:8px;padding:9px 14px;background:var(--acc);color:#fff;cursor:pointer}
+.btn.ghost{background:#e7e9ec;color:var(--ink)}.btn.blue{background:var(--acc2)}.btn.small{padding:6px 10px;font-size:14px}
+.btn:disabled{opacity:.45}
+main{max-width:1180px;margin:0 auto;padding:18px 14px 90px}
+.page{display:none;background:var(--paper);border-radius:6px;padding:34px 40px 40px;box-shadow:0 18px 50px rgba(0,0,0,.35);
+ background-image:linear-gradient(rgba(36,83,156,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(36,83,156,.06) 1px,transparent 1px),linear-gradient(rgba(36,83,156,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(36,83,156,.11) 1px,transparent 1px);
+ background-size:20px 20px,20px 20px,100px 100px,100px 100px}
+.page.on{display:block}
+.kick{font:600 13px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+h2{font:600 32px/1.15 var(--sans);margin:6px 0 10px}
+h3{font:600 20px var(--sans);margin:26px 0 8px;display:flex;gap:10px;align-items:center}
+h3 .n{font:600 13px var(--mono);background:var(--ink);color:var(--paper);padding:3px 8px;border-radius:3px}
+p{margin:6px 0 12px} .lead{font-size:19px;max-width:880px}
+.muted{color:var(--soft);font-size:15px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+.callout{border-left:5px solid var(--acc);background:#fff;padding:12px 16px;border-radius:0 10px 10px 0;margin:12px 0}
+.callout.blue{border-color:var(--acc2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:820px){.grid2,.grid3{grid-template-columns:1fr}.page{padding:22px 18px}}
+textarea,input[type=text],input[type=number],select.f{font:400 16px var(--sans);width:100%;border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;background:#fffffe;color:var(--ink)}
+textarea{min-height:92px;resize:vertical;line-height:1.45}
+label.l{display:block;font:600 13px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:12px 0 5px}
+table.t{border-collapse:collapse;width:100%;background:#fff;font-size:15.5px}
+table.t th,table.t td{border:1.5px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+table.t th{font:600 13px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--acc2);background:#f2f4f7}
+table.t td.c{text-align:center} table.t input{padding:6px 8px;font-size:15px}
+/* checks */
+.fb{margin:8px 0;font-weight:600;min-height:1.4em}.fb.good{color:var(--ok)}.fb.bad{color:var(--acc)}
+.right{border-color:var(--ok)!important;background:#eef8f1!important}.wrong{border-color:var(--acc)!important;background:#fbefec!important}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.savebox{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:30px;padding-top:16px;border-top:2px dashed var(--line);flex-wrap:wrap}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:center;gap:12px;padding:10px;background:linear-gradient(transparent,rgba(20,22,25,.85) 35%)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:99;color:#fff;font:600 20px var(--sans)}
+.lockmsg{padding:30px;text-align:center}
+.pdfmode .page{box-shadow:none;border-radius:0}
+.pdfmode .noprint{display:none!important}
+.ms{display:none}.ms.show{display:block}
+mark.cw{background:#ffe9a8;color:var(--ink);padding:0 4px;border-radius:3px;font-weight:600}
+.topic{margin:26px 0 6px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.topic h3{margin:0}
+.item{background:#fff;border:1.5px solid var(--line);border-left-width:6px;border-radius:10px;padding:12px 14px;margin:9px 0}
+.item.r0{border-left-color:#c0392b}.item.r1{border-left-color:#d9901a}.item.r2{border-left-color:#2f7d4a}
+.item .top{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.item .ttl{flex:1;min-width:260px}
+.item .ttl b{font-size:17px}.item .code{font:600 13px var(--mono);color:var(--acc2);margin-right:6px}
+.item .pts{font-size:14.5px;color:var(--soft);margin-top:2px}
+.rate{display:flex;gap:6px}
+.rate button{font:600 13.5px var(--sans);border:1.5px solid var(--line);background:#f4f5f7;color:var(--ink);border-radius:7px;padding:8px 10px;cursor:pointer;min-width:106px}
+.rate button.on.v0{background:#c0392b;border-color:#c0392b;color:#fff}
+.rate button.on.v1{background:#d9901a;border-color:#d9901a;color:#fff}
+.rate button.on.v2{background:#2f7d4a;border-color:#2f7d4a;color:#fff}
+.xq{margin-top:10px;border-top:1.5px dashed var(--line);padding-top:10px}
+.prog{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#e4e6ea;min-width:140px;flex:1}
+.prog i{display:block;height:100%}.prog .c0{background:#c0392b}.prog .c1{background:#d9901a}.prog .c2{background:#2f7d4a}
+.ptxt{font:500 13px var(--mono);color:var(--soft)}
+.bars .br{display:grid;grid-template-columns:260px 1fr 120px;gap:12px;align-items:center;margin:6px 0}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;margin:6px 0}.legend span::before{content:'';display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.rl h4{margin:14px 0 4px;font:600 15px var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.rl ul{margin:2px 0 8px}
+.chk{display:flex;gap:8px;align-items:center;margin:4px 0;font-size:16px}.chk input{width:20px;height:20px}
+@media(max-width:820px){.bars .br{grid-template-columns:1fr}.rate button{min-width:0;flex:1}.rate{width:100%}}
+.pdfmode .item .xq.closed{display:none}
+</style>
+</head><body>
+<div class="bar noprint">
+ <h1>Product Design self-check · A level 9DT0</h1>
+ <select id="jump" aria-label="Go to page"></select>
+ <button class="btn" id="pdfBtn">Save as PDF</button>
+</div>
+<main id="main">
+
+<section class="page" data-t="Start here">
+ <div class="kick">Page 1 · Start here · Edexcel 9DT0 Component 1</div>
+ <h2>How well do you know Paper 1?</h2>
+ <div class="grid2">
+  <div><label class="l">Your name</label><input type="text" data-k="name" placeholder="First name and surname"></div>
+  <div><label class="l">Class</label><input type="text" data-k="class" placeholder="e.g. 13P"></div>
+ </div>
+ <p class="lead" style="margin-top:18px">Every topic in the Paper 1 specification is listed over the next five pages. Be honest: this is for you and your teacher, not a test.</p>
+ <div class="grid3">
+  <div class="card" style="border-left:6px solid #c0392b"><b>Don't understand</b><p class="muted">I couldn't explain this to someone else, or I've never really got it.</p></div>
+  <div class="card" style="border-left:6px solid #d9901a"><b>Understand a little</b><p class="muted">I know roughly what it is, but I'd struggle with a 4 or 6 mark question.</p></div>
+  <div class="card" style="border-left:6px solid #2f7d4a"><b>Confident</b><p class="muted">I could answer an exam question on it now. Prove it: an exam question opens.</p></div>
+ </div>
+ <div class="callout"><b>How it works</b>
+  <ol style="margin:6px 0 0">
+   <li>Rate every topic on pages 2 to 6.</li>
+   <li>Tick <b>Confident</b> and an exam-style question appears. Answer it, then open the mark scheme and mark yourself honestly.</li>
+   <li>Page 7 builds your <b>revision list</b>. Save it as a PDF for Showbie, and email the list to your teacher so they can make resources for the topics the class finds hardest.</li>
+  </ol></div>
+ <div class="callout blue">The command word in each question is highlighted. Not sure what <i>explain</i> or <i>discuss</i> needs? See the Command words page in the Critical path workbook.</div>
+ <div class="savebox noprint"><span class="muted">Your answers save on this iPad as you go. Nothing is sent anywhere unless you choose to email your list.</span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+<section class="page" data-t="Topics 1–2: materials" data-topics="1,2"></section>
+<section class="page" data-t="Topic 3: processes" data-topics="3"></section>
+<section class="page" data-t="Topics 4–7: digital, design, society, safety" data-topics="4,5,6,7"></section>
+<section class="page" data-t="Topics 8–10: industry, environment, law" data-topics="8,9,10"></section>
+<section class="page" data-t="Topics 11–12: planning and strategies" data-topics="11,12"></section>
+
+<section class="page" data-t="My results">
+ <div class="kick">Page 7 · My results</div>
+ <h2>Where am I, and what next?</h2>
+ <p class="muted" id="resWho"></p>
+ <div class="legend"><span style="--c:#c0392b">Don't understand</span><span style="--c:#d9901a">Understand a little</span><span style="--c:#2f7d4a">Confident</span><span style="--c:#e4e6ea">Not rated yet</span></div>
+ <div class="bars card" id="bars"></div>
+ <div class="grid3" id="totals"></div>
+ <h3><span class="n">1</span>My revision list</h3>
+ <div class="rl card" id="revList"></div>
+ <h3><span class="n">2</span>What would help me most?</h3>
+ <div id="helps"></div>
+ <label class="l">Anything else your teacher should know?</label>
+ <textarea data-k="comment" placeholder="e.g. I get the theory of injection moulding but not how to write the 6 mark answer."></textarea>
+ <h3><span class="n">3</span>Send it</h3>
+ <div class="grid2">
+  <div><label class="l">Teacher's email</label><input type="text" data-k="temail" placeholder="your teacher's school email"></div>
+  <div class="row" style="align-items:flex-end;padding-bottom:2px"><button class="btn blue" id="mailBtn">Email my list to my teacher</button><button class="btn ghost" id="copyBtn">Copy the list</button></div>
+ </div>
+ <p class="muted">The email button opens your own email app with the list filled in; you check it and press send. It contains your name and your ratings only. You can copy the list instead and paste it into Showbie.</p>
+ <span class="fb" id="copyFb"></span>
+ <div class="savebox noprint"><span class="muted">Hand in: save this page (or the whole workbook) as a PDF and upload it to Showbie.</span><button class="btn small savepg">Save this page as PDF</button></div>
+</section>
+
+</main>
+<div class="nav noprint"><button class="btn ghost" id="prev">‹ Back</button><button class="btn" id="next">Next ›</button></div>
+<div class="ov" id="ov">Making your PDF…</div>
+<script>/*LIBS*/</script>
+<script>
+'use strict';
+const STORE = 'pd-selfcheck-9dt0-v1';
+let S = {}; try { S = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) { S = {}; }
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} };
+const $ = (q, el = document) => el.querySelector(q), $$ = (q, el = document) => [...el.querySelectorAll(q)];
+const E = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ---------- specification (Edexcel 9DT0 Component 1, topics 1–12) ---------- */
+const TOPICS = { 1: 'Materials', 2: 'Performance characteristics of materials', 3: 'Processes, techniques and specialist tools', 4: 'Digital technologies', 5: 'Factors influencing the development of products', 6: 'Effects of technological developments', 7: 'Safe working practices and risk assessment', 8: 'Features of manufacturing industries', 9: 'Designing for maintenance and the cleaner environment', 10: 'Current legislation', 11: 'Information handling, modelling and forward planning', 12: 'Further processes and techniques' };
+// [id, topic, code, title, spec points, question, marks, mark scheme, optional link]
+const SPEC = [
+ ['m1', 1, '1.1', 'Woods', 'Hardwoods: oak, mahogany, beech, jelutong, balsa · softwoods: pine, cedar, larch, redwood · their properties and uses', '**Explain** why beech is often used for children\'s wooden toys.', 2, ['Close grained, hard and tough (1) so it resists dents and splinters when dropped or chewed (1)', 'Or: smooth, non-toxic and takes a safe finish well (1) so it is safe for young children (1)']],
+ ['m2', 1, '1.2', 'Metals', 'Ferrous: mild steel, carbon steels, cast iron · non-ferrous: aluminium, copper, zinc, tin · alloys: stainless steel, duralumin, brass', '**Explain** two reasons why aluminium alloy is used for bicycle frames rather than mild steel.', 4, ['Lower density / good strength-to-weight ratio (1) so the bike is lighter to ride and carry (1)', 'Resists corrosion (1) so it does not need a coating to stop rust when used outdoors (1)', 'Accept: easily extruded into tubes (1) so frames are cheaper to manufacture (1)']],
+ ['m3', 1, '1.3', 'Polymers', 'Thermoplastics: acrylic, polyethylene, PET, PVC, PP, ABS · thermosets: epoxy resin, urea formaldehyde, polyester resin · elastomers', '**Explain** why urea formaldehyde is used for electrical plug casings rather than a thermoplastic.', 2, ['It is a thermoset: cross-linked, so it will not soften when heated (1) so the plug stays safe and keeps its shape if it gets hot (1)', 'Or: good electrical insulator and rigid (1) so it protects the user and holds the pins in place (1)']],
+ ['m4', 1, '1.4', 'Composites', 'CFRP, GRP, MDF, hardboard, chipboard, plywood', '**Explain** two advantages of using plywood rather than solid timber for a large table top.', 4, ['Layers glued with the grain at 90° (1) so it is stable and resists warping and splitting (1)', 'Available in large standard sheets (1) so narrow boards do not need joining (1)', 'Accept: cheaper / makes better use of timber (1) with a reason (1)']],
+ ['m5', 1, '1.5', 'Papers and boards', 'Layout, tracing, copier, cartridge, bond and coated papers · mounting, corrugated, foam, folding box and foil-lined boards', '**Name** a suitable board for a takeaway hot-food box and **explain** your choice.', 3, ['Foil-lined board (1)', 'Foil reflects heat so food stays hot (1)', 'Grease and moisture resistant, so the box does not go soggy (1)', 'Accept corrugated board (1) with a reason, e.g. rigid and insulating (1)(1)']],
+ ['m6', 1, '1.6', 'Textiles', 'Cotton, linen, wool · nylon, polypropylene, polyester · flame-resistant and PTFE treatments', '**Explain** why a PTFE coating is applied to fabric used for outdoor jackets.', 2, ['Makes the fabric water-repellent / waterproof (1)', 'while letting water vapour (sweat) escape, so it is breathable (1)', 'Accept: stain resistant so easier to keep clean (1)']],
+ ['m7', 1, '1.7', 'Smart and modern materials', 'Thermo-ceramics, shape memory alloys, reactive glass, LCDs, photochromic, thermochromic, quantum tunnelling composite', '**Explain** how a shape memory alloy could be used in glasses frames.', 3, ['SMA such as nitinol returns to a programmed shape (1)', 'when heated / is superelastic at room temperature (1)', 'so bent or sat-on frames spring back to their original shape and are not damaged (1)']],
+ ['p1', 2, '2', 'Performance characteristics', 'Conductivity, strength, elasticity, plasticity, malleability, ductility, hardness, toughness, durability, biodegradability', '**Explain** the difference between hardness and toughness. Give a material example for each.', 4, ['Hardness: resistance to scratching, wear or indentation (1), e.g. high carbon steel file, ceramic (1)', 'Toughness: ability to absorb impact energy without breaking (1), e.g. polycarbonate safety glasses, mild steel (1)']],
+ ['r1', 3, '3.1', 'Heat treatment and alloying', 'Hardening and tempering, case hardening, annealing, normalising · alloying', '**Describe** how a carbon steel chisel is hardened and tempered.', 4, ['Heat to cherry red, above the upper critical temperature (1), and quench in water or oil: hard but brittle (1)', 'Clean the blade to bright metal and reheat gently until the right oxide colour shows, e.g. purple/brown for a chisel (1)', 'Quench again: brittleness reduced and toughness increased while keeping a hard edge (1)']],
+ ['r2', 3, '3.1', 'Printing', 'Offset lithography, flexography, screen printing, gravure', '**Explain** why offset lithography is used to print magazines.', 2, ['Fast with cheap plates, so low unit cost on long runs (1)', 'High quality, consistent colour on coated paper (1)']],
+ ['r3', 3, '3.1', 'Casting', 'Sand (including investment), die, resin and plaster of Paris casting', '**Describe** the process of sand casting an aluminium part.', 4, ['Pattern placed in the drag and sand rammed round it; cope added with sprue and riser pins (1)', 'Pattern and pins removed, runner cut, cope and drag joined (1)', 'Molten aluminium poured into the sprue until it appears in the riser (1)', 'Left to cool, sand broken away, sprue and riser cut off and the casting fettled (1)']],
+ ['r4', 3, '3.1', 'Machining', 'Milling and routing, drilling, turning, stamping, pressing', '**Explain** one difference between turning and milling.', 2, ['Turning: the workpiece rotates against a fixed tool, making cylindrical parts (1)', 'Milling: the cutter rotates and the work is moved under it, making flat faces, slots and pockets (1)']],
+ ['r5', 3, '3.1', 'Moulding, extrusion and lamination', 'Blow, injection, vacuum forming, extrusion, rotational moulding · lamination', '**Explain** why injection moulding is used to make high volumes of phone cases.', 4, ['Mould is expensive but its cost is spread over many units (1) giving a low unit cost (1)', 'Short, automated cycle time (1) so very high output (1)', 'Accurate, repeatable and can mould complex details such as clips (1) with a good finish so little finishing is needed (1)']],
+ ['r6', 3, '3.1–3.2', 'Marking out and measuring', 'Marking out woods, metals, polymers and boards · marking, cutting and mortise gauges, callipers, squares, micrometer, vernier, densitometer, dividers, jigs and fixtures, go/no-go gauges', '**Explain** how a go/no-go gauge is used to check parts in batch production.', 3, ['Two ends made to the upper and lower tolerance limits (1)', 'A good part fits the “go” end and does not fit the “no-go” end (1)', 'Quick check with no reading needed, so many parts can be checked fast by any worker (1)']],
+ ['r7', 3, '3.3', 'Communicating design', 'Isometric and 2-point perspective · 3rd angle orthographic, triangulation · nets · translating between drawings · report writing', '**Explain** why a manufacturer needs a third angle orthographic drawing rather than a perspective sketch.', 2, ['It shows the true shape and size of each view, with dimensions, to a standard convention (1)', 'so the part can be made accurately and read by anyone in the supply chain (1)']],
+ ['r8', 3, '3.4', 'Joining', 'Adhesives · screws, nuts, bolts, rivets · oxy-acetylene, MIG, brazing, soldering · wood joints and knock-down fittings', '**Explain** one advantage of using knock-down fittings in flat-pack furniture.', 2, ['The furniture can be sold flat-packed (1) so it is cheaper and easier to store and transport (1)', 'Or: assembled with simple tools by the user / taken apart to move (1)(1)']],
+ ['r9', 3, '3.5', 'Finishing and preservation', 'Paints, varnishes, preservatives, anodising, electroplating, powder coating, oiling, galvanising, cathodic protection · laminating, varnishing, foil blocking, embossing', '**Explain** how galvanising protects mild steel.', 3, ['Steel is dipped in molten zinc, which forms a coating (1)', 'The coating is a barrier that keeps air and water off the steel (1)', 'Zinc is more reactive, so it corrodes sacrificially even when scratched (1)']],
+ ['d1', 4, '4', 'CAD', '2D and 3D CAD, modifying designs, simulation, virtual modelling', '**Explain** two benefits of using CAD simulation before a product is manufactured.', 4, ['Stress, flow or heat can be tested virtually (1) so weak points are found before expensive tooling is made (1)', 'Fewer physical prototypes are needed (1) saving time, material and cost (1)', 'Accept: easy to change and re-test (1) shortening development time (1)']],
+ ['d2', 4, '4', 'CAM and rapid prototyping', 'CNC lathes, routers and milling machines, laser and vinyl cutters, rapid prototyping / 3D printing', '**Discuss** the use of 3D printing to make final products rather than prototypes.', 6, ['For: no tooling, so economic for one-offs, customised or low-volume parts (1–2)', 'For: complex shapes such as lattices or internal channels that cannot be moulded (1–2)', 'Against: slow per part so high unit cost at volume; layer lines, weaker or anisotropic parts; limited materials (1–2)', 'Relevant example, e.g. hearing aids, dental aligners, aerospace brackets (1)']],
+ ['u1', 5, '5.1', 'User-centred design', 'User needs, wants and values · purpose, functionality, innovation, authenticity', '**Explain** why designers involve users throughout the design process.', 2, ['Users give feedback at each stage (1)', 'so problems are found early and the product meets real needs, avoiding costly late changes (1)']],
+ ['u2', 5, '5.2', 'Anthropometrics and ergonomics', 'Sources and uses of anthropometric data, percentiles · ergonomic factors in products and environments', '**Explain** why a designer uses 5th and 95th percentile data for an adjustable office chair.', 4, ['The range covers the middle 90% of users (1)', '5th percentile sets the lower limit so smaller users can reach the floor and controls (1)', '95th percentile sets the upper limit so larger users fit and have clearance (1)', 'Designing for the extremes would be too costly or impractical (1)']],
+ ['u3', 5, '5.3', 'Form and function', 'Form over function · form follows function', '**Explain** what is meant by “form follows function”. Use an example.', 2, ['The shape of a product should come from its purpose and how it works, not from decoration (1)', 'Valid example, e.g. a Bauhaus lamp or a tool whose shape gives grip and balance (1)']],
+ ['u4', 5, '5.4', 'Design movements and designers', 'Arts and Crafts (Morris), Art Nouveau (Mackintosh), Bauhaus (Brandt), Art Deco (Gray), Post Modernism (Starck), Streamlining (Loewy), Memphis (Sottsass)', '**Describe** two features of Memphis design. Refer to Ettore Sottsass.', 4, ['Bright, clashing colours and bold patterns (1), e.g. Sottsass’s Carlton room divider (1)', 'Playful, irregular geometric forms that rejected modernist “good taste” (1), using plastic laminates decoratively (1)']],
+ ['t1', 6, '6', 'Mass production and obsolescence', 'Consumer society, built-in obsolescence, effects on employment', '**Discuss** the effects of built-in obsolescence on consumers and the environment.', 6, ['Consumers replace products more often, so higher long-term cost (1–2); but get newer technology and lower prices (1)', 'More waste and e-waste to landfill; more resources and energy used (1–2)', 'Manufacturers gain repeat sales and jobs, but risk reputation and right-to-repair rules (1)', 'Balanced judgement (1)']],
+ ['t2', 6, '6', 'High-technology production', 'Computers, miniaturisation, smart materials, innovative applications', '**Explain** how miniaturisation of electronics has changed product design.', 2, ['Smaller, lighter components (1)', 'so products can be portable or wearable with more functions, e.g. smartwatch (1)']],
+ ['t3', 6, '6', 'The global marketplace', 'Multinationals, offshore manufacturing, local and global production', '**Explain** two reasons why a UK company might manufacture its products overseas.', 4, ['Lower labour costs (1) so lower unit cost and higher profit (1)', 'Closer to materials, suppliers or the target market (1) reducing transport cost and time (1)', 'Accept: specialist factories or skills, fewer regulations (1) with a reason (1)']],
+ ['s1', 7, '7', 'Safe working and risk assessment', 'Safe practice for self and others, machinery and tools · identify hazards and people at risk, evaluate, control, record', '**Describe** the stages of carrying out a risk assessment for using a pillar drill.', 4, ['Identify the hazards, e.g. entanglement, swarf, work spinning (1)', 'Decide who could be harmed and how (1)', 'Evaluate the risk and put controls in place, e.g. guard, clamp the work, goggles, tie hair back (1)', 'Record the findings and review them regularly (1)']],
+ ['f1', 8, '8.1', 'Production methods', 'One-off, batch, high-volume', '**Explain** why batch production suits a manufacturer of seasonal garden furniture.', 2, ['A set quantity is made, then machines and jigs are changed over (1)', 'so output can follow seasonal demand and the range can change each year (1)']],
+ ['f2', 8, '8.2', 'Quality', 'Quality control, quality assurance, Total Quality Management, ISO 9000', '**Explain** the difference between quality control and quality assurance.', 4, ['QC: inspecting and testing products at set stages (1) to find faults and reject parts out of tolerance (1)', 'QA: a system covering the whole process (1) to stop faults happening, e.g. procedures, training, ISO 9000 (1)']],
+ ['f3', 8, '8.3', 'Lean manufacturing and JIT', 'Production scheduling and logistics · lean manufacturing · just-in-time', '**Discuss** the advantages and disadvantages of just-in-time for a manufacturer.', 6, ['Adv: little stock, so less storage space and money tied up (1–2); less waste and obsolete stock (1)', 'Disadv: depends on reliable suppliers, so one late delivery stops production (1–2); hard to meet sudden demand; more frequent deliveries (1)', 'Judgement (1)']],
+ ['f4', 8, '8.3', 'Automation', 'Robotics in lines and cells · ASRS, AGVs · flexible manufacturing systems, modular/cell production', '**Explain** one benefit of using robots on a car production line.', 2, ['Robots work continuously and consistently (1) so output is higher and quality repeatable (1)', 'Or: they do dangerous or repetitive jobs such as welding and spraying (1), improving safety (1)']],
+ ['f5', 8, '8.3', 'Modern manufacturing systems', 'Standardised parts and bought-in components · QRM · PDM and ERP · concurrent manufacturing', '**Explain** how concurrent manufacturing reduces the time to market.', 2, ['Design, tooling and production planning run at the same time, not one after another (1)', 'so stages overlap, problems are found earlier and the product launches sooner (1)']],
+ ['e1', 9, '9.1', 'Life cycle: materials, making and distribution', 'Material source, quantity, recyclability · energy use, simplifying processes, optimising material · packaging, transport, alternatives to fossil fuels', '**Explain** two ways a designer could reduce the environmental impact of distributing a product.', 4, ['Reduce packaging or design it to flat-pack (1) so more fit in each load and fewer journeys are needed (1)', 'Make it lighter or make it closer to the market (1) cutting fuel use and emissions (1)', 'Accept recyclable/biodegradable packaging (1) with reason (1)']],
+ ['e2', 9, '9.1', 'Life cycle: use, repair and end of life', 'Energy efficiency, repair vs replace · standardisation, modular construction · design for disassembly, recycling, energy recovery, landfill', '**Explain** how designing for disassembly reduces environmental impact.', 3, ['Parts are held with mechanical fixings rather than glue, so they can be separated (1)', 'Materials can be sorted and recycled, or parts reused (1)', 'Faulty parts can be replaced, so the product lasts longer and less goes to landfill (1)']],
+ ['e3', 9, '9.2', 'Cost and sustainability', 'Cost implications for consumers and manufacturers · sustainability', '**Discuss** the cost implications for a manufacturer of making its products more sustainable.', 6, ['Higher costs: recycled or certified materials, new tooling, testing (1–2)', 'Savings: less material and energy, less waste and disposal cost (1–2)', 'Market: green image can justify a higher price; legislation may require it anyway (1–2)', 'Judgement (1)']],
+ ['l1', 10, '10.1', 'Consumer rights', 'Consumer Rights Act 2015 · Sale of Goods Act 1979', '**Explain** the rights of a consumer who buys a faulty product under the Consumer Rights Act 2015.', 3, ['Goods must be of satisfactory quality, fit for purpose and as described (1)', 'Full refund if rejected within 30 days (1)', 'After that, the retailer gets one chance to repair or replace before a refund or price reduction (1)']],
+ ['l2', 10, '10.2', 'Health and safety law', 'HSE and regulations · Health and Safety at Work Act 1974, PPE, signage · COSHH, VOCs', '**Explain** how COSHH regulations affect the use of solvent-based finishes in a school workshop.', 3, ['The risks of the substance, e.g. VOC fumes, must be assessed (1)', 'Stored in a labelled, locked, fire-resistant cupboard (1)', 'Used with ventilation or extraction and PPE such as gloves and a mask (1)']],
+ ['i1', 11, '11.1', 'Information for decisions', 'Marketing analysis and research · innovation management · feasibility studies', '**Explain** the purpose of a feasibility study.', 2, ['To check whether a product is technically possible and can be made and sold at a profit (1)', 'before large sums are invested, reducing risk (1)']],
+ ['i2', 11, '11.2', 'Costing and planning', 'Budgets and forecasts · staff, materials and scale of production · selecting tools, machines and processes', '**Explain** two factors a manufacturer considers when selecting a production process.', 4, ['Scale of production (1), e.g. injection moulding is only economic at high volume (1)', 'Material used (1), e.g. only thermoplastics can be injection moulded (1)', 'Accept: tooling cost, skills, accuracy or finish needed (1) with reason (1)']],
+ ['i3', 11, '11.3', 'Intellectual property', 'Patents, copyright, design rights, registered designs, trademarks', '**Explain** the difference between a patent and a registered design.', 4, ['A patent protects a new invention: how it works (1); it must be applied for and lasts up to 20 years (1)', 'A registered design protects the appearance or shape (1); up to 25 years with renewals (1)']],
+ ['i4', 11, '11.4', 'Standards', 'BSI and Kitemark · CEN and CE marking · ISO', '**Explain** one benefit to a consumer of buying a product with the BSI Kitemark.', 2, ['The product has been independently tested to a British Standard (1)', 'so the consumer can trust that it is safe and good quality (1)']],
+ ['x1', 12, '12.1', 'Design strategies', 'User-centred design · circular economy · systems thinking', '**Explain** how a circular economy differs from a linear economy.', 3, ['Linear: take, make, use, throw away (1)', 'Circular: materials kept in use through reuse, repair, remanufacture and recycling (1)', 'Waste and pollution are designed out; biological materials return safely to nature (1)']],
+ ['x2', 12, '12.2', 'Project management', 'Critical path analysis · Scrum · Six Sigma', '**Explain** how Six Sigma benefits a manufacturer.', 2, ['Uses data to reduce defects and variation (1)', 'so less waste and fewer returns, lowering costs and raising customer satisfaction and profit (1)'], ['Critical path workbook', '../../critical-path/ipad/']],
+ ['x3', 12, '12.3', 'Product life cycle', 'Introduction, growth, maturity, decline · cost, sales, profit and market implications', '**Describe** what happens to sales and profit at the maturity stage, and **explain** one action a company could take.', 4, ['Sales peak and level off (1)', 'Profit is high as development costs are paid back, but competition grows and prices may fall (1)', 'Action: restyle, add features, cut price or market to new users (1) to extend the life cycle and delay decline (1)']],
+];
+const LAB = ["Don't understand", 'Understand a little', 'Confident'];
+const rating = (id) => (S['r.' + id] == null ? -1 : +S['r.' + id]);
+const cw = (q) => q.replace(/\*\*(.+?)\*\*/g, '<mark class="cw">$1</mark>');
+
+/* ---------- build the topic pages ---------- */
+$$('.page[data-topics]').forEach((pg, pi) => {
+  const ts = pg.dataset.topics.split(',').map(Number);
+  let h = `<div class="kick">Page ${pi + 2} · ${ts.length > 1 ? 'Topics ' + ts[0] + '–' + ts[ts.length - 1] : 'Topic ' + ts[0]}</div><h2>${pg.dataset.t.replace(/^Topics? [\d–]+: /, '').replace(/^./, (c) => c.toUpperCase())}</h2>
+   <div class="row"><div class="prog" data-prog="${ts.join(',')}"></div><span class="ptxt" data-ptxt="${ts.join(',')}"></span></div>`;
+  ts.forEach((t) => {
+    h += `<div class="topic"><h3><span class="n">Topic ${t}</span>${TOPICS[t]}</h3></div>`;
+    SPEC.filter((s) => s[1] === t).forEach(([id, , code, title, pts, q, m, ms, link]) => {
+      h += `<div class="item" id="it-${id}"><div class="top"><div class="ttl"><span class="code">${code}</span><b>${title}</b><div class="pts">${pts}${link ? ` · <a href="${link[1]}">${link[0]}</a>` : ''}</div></div>
+        <div class="rate">${LAB.map((l, v) => `<button class="v${v}" data-id="${id}" data-v="${v}">${l}</button>`).join('')}</div></div>
+        <div class="xq closed" id="xq-${id}" style="display:none"><b>Prove it.</b> ${cw(q)} <span class="tag">${m} mark${m > 1 ? 's' : ''}</span>
+         <textarea data-k="a.${id}" style="margin-top:8px" placeholder="Answer as you would in the exam."></textarea>
+         <button class="btn ghost small msbtn" data-id="${id}" style="margin-top:8px">Show the mark scheme</button>
+         <div class="ms" id="ms-${id}"><div class="callout blue" style="margin-top:10px"><b>Mark scheme (indicative)</b><ul style="margin:4px 0 0">${ms.map((x) => `<li>${x}</li>`).join('')}</ul></div>
+         <label class="key">My mark: <select class="f" data-k="s.${id}" style="width:auto;display:inline-block"><option value=""></option>${Array.from({ length: m + 1 }, (_, k) => `<option>${k}</option>`).join('')}</select> / ${m}</label>
+         <span class="muted" id="mk-${id}"></span></div></div></div>`;
+    });
+  });
+  h += `<div class="savebox noprint"><span class="muted">Ratings save on this iPad as you go.</span><button class="btn small savepg">Save this page as PDF</button></div>`;
+  pg.innerHTML = h;
+});
+
+/* ---------- pages, navigation, saving of inputs ---------- */
+const pages = $$('.page');
+const jump = $('#jump'); pages.forEach((p, i) => jump.insertAdjacentHTML('beforeend', `<option value="${i}">${i + 1}. ${p.dataset.t}</option>`));
+let cur = Math.min(+(S._page || 0), pages.length - 1);
+function show(i) { cur = Math.max(0, Math.min(pages.length - 1, i)); pages.forEach((p, k) => p.classList.toggle('on', k === cur)); jump.value = cur; S._page = cur; save(); scrollTo(0, 0); $('#prev').disabled = cur === 0; $('#next').disabled = cur === pages.length - 1; if (pages[cur].dataset.t === 'My results') results(); }
+jump.onchange = () => show(+jump.value); $('#prev').onclick = () => show(cur - 1); $('#next').onclick = () => show(cur + 1);
+$$('[data-k]').forEach((el) => {
+  const k = el.dataset.k; if (S[k] != null) el.value = S[k];
+  const up = () => { S[k] = el.value; save(); refresh(); };
+  el.addEventListener('input', up); el.addEventListener('change', up);
+});
+$$('.rate button').forEach((b) => b.onclick = () => {
+  const k = 'r.' + b.dataset.id;
+  if (S[k] === +b.dataset.v) delete S[k]; else S[k] = +b.dataset.v;
+  save(); refresh();
+  if (S[k] === 2) { const ta = $(`[data-k="a.${b.dataset.id}"]`); if (!ta.value) ta.focus({ preventScroll: true }); }
+});
+$$('.msbtn').forEach((b) => b.onclick = () => { S['o.' + b.dataset.id] = 1; save(); refresh(); });
+
+function refresh() {
+  SPEC.forEach(([id, , , , , , m]) => {
+    const r = rating(id), it = $('#it-' + id), xq = $('#xq-' + id);
+    it.classList.remove('r0', 'r1', 'r2'); if (r >= 0) it.classList.add('r' + r);
+    $$('.rate button', it).forEach((b) => b.classList.toggle('on', +b.dataset.v === r));
+    const open = r === 2; xq.style.display = open ? '' : 'none'; xq.classList.toggle('closed', !open);
+    const ans = (S['a.' + id] || '').trim();
+    $(`.msbtn[data-id="${id}"]`).disabled = ans.length < 15;
+    $('#ms-' + id).classList.toggle('show', !!S['o.' + id]);
+    const sc = S['s.' + id]; const low = S['o.' + id] && sc !== '' && sc != null && +sc < m / 2;
+    $('#mk-' + id).textContent = low ? '  Under half marks: this goes on your revision list to check.' : '';
+  });
+  $$('[data-prog]').forEach((el) => { const ts = el.dataset.prog.split(',').map(Number); el.innerHTML = progHTML(SPEC.filter((s) => ts.includes(s[1]))); });
+  $$('[data-ptxt]').forEach((el) => { const ts = el.dataset.ptxt.split(',').map(Number), l = SPEC.filter((s) => ts.includes(s[1])); el.textContent = `${l.filter((s) => rating(s[0]) >= 0).length} of ${l.length} rated`; });
+  if (pages[cur] && pages[cur].dataset.t === 'My results') results();
+}
+function progHTML(list) { const n = list.length || 1, c = [0, 1, 2].map((v) => list.filter((s) => rating(s[0]) === v).length); return c.map((x, v) => `<i class="c${v}" style="width:${x / n * 100}%"></i>`).join(''); }
+
+/* ---------- results ---------- */
+const HELPS = ['A re-teach in class', 'Worked exam answers to copy the structure of', 'More practice exam questions', 'A short video or animation', 'A revision worksheet or knowledge organiser', 'Seeing it in the workshop'];
+$('#helps').innerHTML = HELPS.map((h, i) => `<label class="chk"><input type="checkbox" data-h="${i}"> ${h}</label>`).join('');
+$$('[data-h]').forEach((c) => { c.checked = !!(S.helps || {})[c.dataset.h]; c.onchange = () => { (S.helps = S.helps || {})[c.dataset.h] = c.checked; save(); }; });
+function lists() {
+  const lab = (s) => `${s[2]} ${s[3]}`;
+  const red = SPEC.filter((s) => rating(s[0]) === 0), amb = SPEC.filter((s) => rating(s[0]) === 1);
+  const low = SPEC.filter((s) => rating(s[0]) === 2 && S['o.' + s[0]] && S['s.' + s[0]] !== '' && S['s.' + s[0]] != null && +S['s.' + s[0]] < s[6] / 2);
+  const notyet = SPEC.filter((s) => rating(s[0]) === 2 && !S['o.' + s[0]]);
+  const unr = SPEC.filter((s) => rating(s[0]) < 0);
+  return { lab, red, amb, low, notyet, unr };
+}
+function results() {
+  const name = (S.name || '').trim(), cls = (S.class || '').trim();
+  $('#resWho').textContent = (name ? name + (cls ? ' · ' + cls : '') + ' · ' : '') + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  $('#bars').innerHTML = Object.keys(TOPICS).map((t) => { const l = SPEC.filter((s) => s[1] === +t), c2 = l.filter((s) => rating(s[0]) === 2).length; return `<div class="br"><span><b>${t}</b> ${TOPICS[t]}</span><div class="prog">${progHTML(l)}</div><span class="ptxt">${c2}/${l.length} confident</span></div>`; }).join('');
+  const L = lists(), conf = SPEC.filter((s) => rating(s[0]) === 2).length;
+  const tried = SPEC.filter((s) => S['o.' + s[0]] && S['s.' + s[0]] !== '' && S['s.' + s[0]] != null);
+  const got = tried.reduce((a, s) => a + +S['s.' + s[0]], 0), max = tried.reduce((a, s) => a + s[6], 0);
+  $('#totals').innerHTML = `<div class="card"><b style="font-size:28px">${conf} / ${SPEC.length}</b><div class="muted">topics confident</div></div>
+   <div class="card"><b style="font-size:28px">${L.red.length + L.amb.length + L.low.length}</b><div class="muted">topics on my revision list</div></div>
+   <div class="card"><b style="font-size:28px">${got} / ${max}</b><div class="muted">exam marks (${tried.length} question${tried.length === 1 ? '' : 's'} self-marked)</div></div>`;
+  const sec = (title, col, l, note) => l.length ? `<h4 style="color:${col}">${title} (${l.length})</h4>${note ? `<div class="muted">${note}</div>` : ''}<ul>${l.map((s) => `<li>${L.lab(s)}</li>`).join('')}</ul>` : '';
+  $('#revList').innerHTML = (sec("Don't understand: start here", '#c0392b', L.red) + sec('Understand a little', '#b07210', L.amb) + sec('Confident, but under half marks on the question', '#24539c', L.low, 'Know it, but the exam answer needs work.') + sec('Confident, question not tried yet', '#5f6670', L.notyet) + (L.unr.length ? `<p class="muted">${L.unr.length} topic${L.unr.length === 1 ? '' : 's'} not rated yet.</p>` : '')) || '<p class="muted">Nothing on your list yet. Rate the topics on pages 2 to 6.</p>';
+}
+function listText() {
+  const L = lists(), name = (S.name || '').trim() || '(no name)', cls = (S.class || '').trim();
+  const sec = (t, l) => l.length ? `${t}:\n${l.map((s) => ' - ' + L.lab(s)).join('\n')}\n\n` : '';
+  const helps = HELPS.filter((_, i) => (S.helps || {})[i]);
+  return `A level Product Design (9DT0) self-check\n${name}${cls ? ' · ' + cls : ''} · ${new Date().toLocaleDateString('en-GB')}\n\n` +
+    sec("Don't understand", L.red) + sec('Understand a little', L.amb) + sec('Confident but under half marks on the exam question', L.low) +
+    `Confident: ${SPEC.filter((s) => rating(s[0]) === 2).length} of ${SPEC.length} topics. Not rated: ${L.unr.length}.\n\n` +
+    (helps.length ? `What would help me:\n${helps.map((h) => ' - ' + h).join('\n')}\n\n` : '') +
+    ((S.comment || '').trim() ? `Comment: ${S.comment.trim()}\n` : '');
+}
+$('#mailBtn').onclick = () => {
+  const name = (S.name || '').trim();
+  location.href = `mailto:${encodeURIComponent((S.temail || '').trim())}?subject=${encodeURIComponent('9DT0 revision list' + (name ? ' – ' + name : ''))}&body=${encodeURIComponent(listText())}`;
+};
+$('#copyBtn').onclick = async () => {
+  const t = listText(), f = $('#copyFb');
+  try { await navigator.clipboard.writeText(t); f.className = 'fb good'; f.textContent = 'Copied. Paste it into Showbie or an email.'; }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); f.className = 'fb good'; f.textContent = 'Copied.'; }
+};
+/* ---------- PDF (A4 landscape, share sheet on iPad) ---------- */
+async function pdfOf(list, fname) {
+  const ov = $('#ov'); ov.style.display = 'flex';
+  const { jsPDF } = window.jspdf; const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const PW = 297, PH = 210, M = 8, first = { v: true };
+  document.body.classList.add('pdfmode');
+  const keep = cur;
+  try {
+    for (const p of list) {
+      pages.forEach((x) => x.classList.toggle('on', x === p)); 
+      const c = await html2canvas(p, { scale: 1.6, backgroundColor: '#f6f6f2', useCORS: true, windowWidth: 1180 });
+      const wmm = PW - 2 * M, pxPerMm = c.width / wmm, slice = Math.floor((PH - 2 * M) * pxPerMm);
+      for (let y = 0; y < c.height; y += slice) {
+        const h = Math.min(slice, c.height - y), cv = document.createElement('canvas'); cv.width = c.width; cv.height = h;
+        cv.getContext('2d').drawImage(c, 0, y, c.width, h, 0, 0, c.width, h);
+        if (!first.v) pdf.addPage(); first.v = false;
+        pdf.addImage(cv.toDataURL('image/jpeg', 0.86), 'JPEG', M, M, wmm, h / pxPerMm);
+      }
+    }
+  } finally { document.body.classList.remove('pdfmode'); show(keep); }
+  const touch = navigator.maxTouchPoints > 1; let shared = false;
+  if (touch && navigator.canShare) {
+    try { const file = new File([pdf.output('blob')], fname, { type: 'application/pdf' }); if (navigator.canShare({ files: [file] })) { ov.style.display = 'none'; await navigator.share({ files: [file], title: fname }); shared = true; } }
+    catch (e) { if (e && e.name === 'AbortError') shared = true; }
+  }
+  if (!shared) pdf.save(fname);
+  ov.style.display = 'none';
+}
+const who = () => (S.name || 'My').trim() || 'My';
+$('#pdfBtn').onclick = () => { results(); pdfOf(pages, `${who()} - Product Design self-check.pdf`); };
+$$('.savepg').forEach((b) => b.onclick = () => { const p = b.closest('.page'); pdfOf([p], `${who()} - self-check page ${pages.indexOf(p) + 1}.pdf`); });
+
+refresh(); show(cur);
+</script>
+</body></html>

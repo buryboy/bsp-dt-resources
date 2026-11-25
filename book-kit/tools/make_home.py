@@ -34,11 +34,13 @@ WORKBOOKS = [
     ('grooved-pine', 'The Grooved Pine Challenge', 'ks5', 'Y12 design & make · NEA grids 1–4'),
     ('critical-path', 'Critical path analysis', 'ks5', 'Y13 revision · Edexcel topic 12.2'),
     ('alevel-revision', 'Product Design revision', 'ks5', 'Paper 1 revision app · booklets and self-check'),
+    ('heic-to-jpeg', 'HEIC to JPEG', 'tools', 'Turn iPad photos into ordinary JPEGs'),
+    ('drawing-to-svg', 'Drawing to SVG', 'tools', 'Pen drawing photo to vector file'),
 ]
 WB = {w[0]: w for w in WORKBOOKS}
 NEA_GCSE = [('a', 'Identifying & investigating design possibilities'), ('b', 'Producing a design brief & specification'), ('c', 'Generating design ideas'), ('d', 'Developing design ideas'), ('e', 'Realising design ideas'), ('f', 'Analysing & evaluating')]
 NEA_ALEVEL = [(1, 'Identification & investigation of a design possibility'), (2, 'Investigation of needs & research'), (3, 'Specification'), (4, 'Design ideas'), (5, 'Development of design ideas'), (6, 'Final design solution'), (7, 'Review of development & final design'), (8, 'Communication of design ideas'), (9, 'Tools & equipment'), (10, 'Quality & accuracy'), (11, 'Testing & evaluation')]
-STAGES = [('ks3', 'Key Stage 3', 'Years 7 to 9'), ('ks4', 'Key Stage 4', 'GCSE · AQA Design & Technology 8552'), ('ks5', 'Key Stage 5', 'A level · Edexcel Design & Technology (Product Design)')]
+STAGES = [('ks3', 'Key Stage 3', 'Years 7 to 9'), ('ks4', 'Key Stage 4', 'GCSE · AQA Design & Technology 8552'), ('ks5', 'Key Stage 5', 'A level · Edexcel Design & Technology (Product Design)'), ('tools', 'Tools', 'Small apps that run on your iPad. Nothing is uploaded.')]
 
 
 def page(path, title, crumbs, body, depth):
@@ -119,6 +121,7 @@ def main():
              + ''.join(f'<a class="row" href="nea/alevel-g{n}.html"><span class="code">Grid {n}</span><span class="t"><b>{E(t)}</b><small>Stage introduction slides</small></span><span class="go">›</span></a>' for n, t in NEA_ALEVEL)
              + '</div><div class="wbs" style="margin-top:12px">' + wb_card('nea-alevel', '../../', 'NEA practice workbook') + wb_card('grooved-pine', '../../', 'Y12 project booklet · grids 1–4, with hints') + wb_card('critical-path', '../../', 'Y13 revision · topic 12.2, uses your own NEA') + wb_card('alevel-revision', '../../', 'Paper 1 revision app · topic booklets, self-check, revision list to email') + '</div>'
              '<div class="spec" style="margin-top:12px"><a class="row" href="self-check-tally.html"><span class="code">Tally</span><span class="t"><b>Self-check tally</b><small>Paste the students\' emailed lists to see which topics the class finds hardest</small></span><span class="go">›</span></a></div>' + '<p class="soon">More A level resources to come.</p></section>')
+    b.append('<section id="tools"><h2>Tools</h2><p class="sub">Small apps that run on the iPad or a computer. Nothing is uploaded and no AI is used.</p><div class="wbs">' + wb_card('heic-to-jpeg', '../../', 'Turn HEIC photos into ordinary JPEGs') + wb_card('drawing-to-svg', '../../', 'Black and red pen drawing to SVG for the laser or vinyl cutter') + '</div></section>')
     page('teacher/dt/index.html', 'Design & Technology', [('Home', ''), ('Teachers', 'teacher/')], ''.join(b), 2)
 
     # teacher: self-check tally (adds up students' emailed revision lists; nothing stored)

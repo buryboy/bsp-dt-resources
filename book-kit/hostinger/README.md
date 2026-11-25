@@ -3,7 +3,7 @@
 Every push to `main` runs `.github/workflows/school-site.yml`. It builds the open student-facing site
 (`make_home.py` + `build_ipad_site.py`, plus `htaccess` here as `.htaccess`) and:
 
-1. **Uploads it to `public_html` by FTPS**, using the repository secrets (GitHub → Settings → Secrets and
+1. **Uploads it to `public_html` by FTPS** (the FTP login already starts inside `public_html`, so `server-dir` is `./`), using the repository secrets (GitHub → Settings → Secrets and
    variables → Actions) `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD` (from hPanel → Files → FTP Accounts). After the
    first run only changed files are sent (the action keeps `.ftp-deploy-sync-state.json` on the server). Files
    are never deleted from the server. If the secrets are missing the step is skipped.

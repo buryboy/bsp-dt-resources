@@ -52,7 +52,7 @@ jobs:
           protocol: ftps
           security: loose
           local-dir: ${{ runner.temp }}/site/
-          server-dir: public_html/
+          server-dir: ./
       - name: Publish to the hostinger-site branch
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,13 +1,14 @@
 # School site: dt.bsphosted.fr (Hostinger)
 
-Every push to `main` runs `.github/workflows/school-site.yml`, which builds the open student-facing site
-(`make_home.py` + `build_ipad_site.py`, plus `htaccess` here as `.htaccess`) and force-pushes it to the
-`hostinger-site` branch. Hostinger's Git deployment pulls that branch into the subdomain's `public_html`.
+Every push to `main` runs `.github/workflows/school-site.yml`. It builds the open student-facing site
+(`make_home.py` + `build_ipad_site.py`, plus `htaccess` here as `.htaccess`) and:
 
-One-time setup in hPanel (Websites → dt.bsphosted.fr → Advanced → Git):
-1. Empty the subdomain's `public_html` first (Hostinger only deploys into an empty folder). Download a backup zip of it if you like.
-2. Repository: `https://github.com/buryboy/bsp-dt-resources.git` · Branch: `hostinger-site` · Directory: leave empty (public_html).
-3. Click Create, then Deploy once.
-4. Turn on Auto Deployment and copy the webhook URL it shows.
-5. GitHub → buryboy/bsp-dt-resources → Settings → Webhooks → Add webhook: paste the URL, content type `application/json`, "Just the push event", Add.
-After that, each push to `main` is live on dt.bsphosted.fr about a minute later. If the site uses Hostinger's CDN, purge it when a change doesn't show.
+1. **Uploads it to `public_html` by FTPS**, using the repository secrets (GitHub → Settings → Secrets and
+   variables → Actions) `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD` (from hPanel → Files → FTP Accounts). After the
+   first run only changed files are sent (the action keeps `.ftp-deploy-sync-state.json` on the server). Files
+   are never deleted from the server. If the secrets are missing the step is skipped.
+2. Keeps a copy of the built site on the `hostinger-site` branch.
+
+Hostinger's Git deployment (hPanel → Advanced → Git) is blocked when hPanel is opened as a managed client, so it
+is not used. If FTPS will not connect, change `protocol: ftps` to `protocol: ftp` in the workflow.
+If a change does not show, purge Hostinger's CDN cache (Websites → Performance → CDN) if it is on.

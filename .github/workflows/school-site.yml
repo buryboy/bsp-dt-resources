@@ -1,5 +1,6 @@
-# Builds the student-facing site for dt.bsphosted.fr (Hostinger) on every push to main and puts it on the
-# `hostinger-site` branch. Hostinger's Git deployment pulls that branch into public_html (auto-deploy webhook).
+# Builds the student-facing site for dt.bsphosted.fr (Hostinger) on every push to main, uploads it to
+# public_html over FTPS (repository secrets FTP_HOST / FTP_USER / FTP_PASSWORD), and keeps a copy on the
+# `hostinger-site` branch. Hostinger's own Git deployment is blocked for managed-client hPanel logins.
 # Only the open iPad workbooks, front pages and teacher lesson files go there: no admin tools, no backend code.
 name: School site (dt.bsphosted.fr)
 
@@ -18,6 +19,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FTP_HOST: ${{ secrets.FTP_HOST }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -30,6 +33,18 @@ jobs:
           cp book-kit/hostinger/htaccess "$RUNNER_TEMP/site/.htaccess"
           rm -f "$RUNNER_TEMP/site/README.md"
           echo "files: $(find "$RUNNER_TEMP/site" -type f | wc -l)"
+      - name: Upload to dt.bsphosted.fr by FTP
+        if: env.FTP_HOST != ''
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftps
+          security: loose
+          local-dir: ${{ runner.temp }}/site/
+          server-dir: public_html/
       - name: Publish to the hostinger-site branch
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}

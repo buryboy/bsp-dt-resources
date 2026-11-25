@@ -63,6 +63,16 @@ mark.cw{background:#ffe9a8;color:var(--ink);padding:0 4px;border-radius:3px;font
 .pdfmode .page{box-shadow:none;border-radius:0}
 .pdfmode .noprint{display:none!important}
 .pdfmode .flip .d{display:block}.pdfmode .flip::after{display:none}
+/* key-word cards: tap to reveal, one at a time */
+.flips{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.flip{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;min-height:96px;position:relative;transition:box-shadow .2s,border-color .2s}
+.flip b{display:block;font-size:17px;color:var(--acc2)} .flip .d{display:none;margin-top:6px}
+.flip.open{border-color:var(--acc2);box-shadow:0 0 0 3px rgba(36,83,156,.15)}.flip.open .d{display:block}
+.flip:not(.open)::after{content:'tap to reveal';position:absolute;right:12px;bottom:8px;font:500 12px var(--mono);color:var(--soft)}
+/* notes hidden while an activity is in progress (same as the GCSE booklets) */
+.peek-lock{filter:blur(7px);opacity:.55;pointer-events:none;user-select:none;-webkit-user-select:none;transition:filter .4s,opacity .4s}
+.locknote{position:sticky;top:58px;z-index:30;background:#fff4c2;border:1.5px solid #d9901a;border-radius:8px;padding:8px 12px;font-size:15px;margin:6px 0 10px}
+.pdfmode .peek-lock{filter:none;opacity:1}
 /* app */
 .page{display:block}
 .prog{display:flex;height:14px;border-radius:7px;overflow:hidden;background:#e4e6ea;flex:1;min-width:120px}

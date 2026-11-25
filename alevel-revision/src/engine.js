@@ -25,17 +25,18 @@ const rating = (id) => (S['r.' + id] == null ? -1 : +S['r.' + id]);
 // returns [{id, auto, done, ok, marks, got}]
 function blockUnits(bk, b) {
   const U = [], u = (id) => S.u[id] || {};
-  const add = (id, auto, done, ok, extra) => U.push(Object.assign({ id, auto, done, ok }, extra || {}));
-  if (b.keys) b.keys.forEach(([t]) => { const id = bk.id + ':k' + hsh(t), x = u(id); add(id, 1, x.v != null, x.ok); });
-  if (b.mcq) b.mcq.forEach(([q]) => { const id = bk.id + ':m' + hsh(q), x = u(id); add(id, 1, x.v != null, x.ok); });
-  if (b.tf) b.tf.forEach(([q]) => { const id = bk.id + ':t' + hsh(q), x = u(id); add(id, 1, x.v != null, x.ok); });
-  if (b.sort) b.sort.items.forEach(([t]) => { const id = bk.id + ':s' + hsh(b.sort.q + t), x = u(id); add(id, 1, x.v != null, x.ok); });
-  if (b.match) b.match.pairs.forEach(([l]) => { const id = bk.id + ':p' + hsh(b.match.q + l), x = u(id); add(id, 1, x.v != null && x.v !== '', x.ok); });
-  if (b.gap) { const n = (b.gap.text.match(/\{\{/g) || []).length; for (let i = 0; i < n; i++) { const id = bk.id + ':g' + hsh(b.gap.text) + '.' + i, x = u(id); add(id, 1, x.v != null && x.v !== '', x.ok); } }
-  if (b.order) { const id = bk.id + ':o' + hsh(b.order.q), x = u(id); add(id, 1, !!x.chk, x.ok); }
-  if (b.calc) b.calc.forEach(([q]) => { const id = bk.id + ':c' + hsh(q), x = u(id); add(id, 1, x.chk === 1, x.ok); });
-  if (b.exam) b.exam.forEach(([q, m]) => { const id = bk.id + ':e' + hsh(q), x = u(id); add(id, 0, x.s != null && x.s !== '', null, { marks: m, got: +x.s || 0 }); });
-  if (b.nea) { const id = bk.id + ':n' + hsh(b.nea), x = u(id); add(id, 0, (x.v || '').trim().length >= 20, null); }
+  const add = (id, auto, done, ok, extra) => U.push(Object.assign({ id, auto, done, ok, started: Object.keys(S.u[id] || {}).length > 0 }, extra || {}));
+  const tries = (id) => (S.u[id] || {}).n || 0;
+  if (b.keys) b.keys.forEach(([t]) => { const id = bk.id + ':k' + hsh(t), x = u(id); add(id, 1, x.v != null, x.ok, { res: !!x.ok || tries(id) >= 3 }); });
+  if (b.mcq) b.mcq.forEach(([q]) => { const id = bk.id + ':m' + hsh(q), x = u(id); add(id, 1, x.v != null, x.ok, { res: x.v != null }); });
+  if (b.tf) b.tf.forEach(([q]) => { const id = bk.id + ':t' + hsh(q), x = u(id); add(id, 1, x.v != null, x.ok, { res: x.v != null }); });
+  if (b.sort) b.sort.items.forEach(([t]) => { const id = bk.id + ':s' + hsh(b.sort.q + t), x = u(id); add(id, 1, x.v != null, x.ok, { res: !!x.ok || tries(id) >= 3 }); });
+  if (b.match) b.match.pairs.forEach(([l]) => { const id = bk.id + ':p' + hsh(b.match.q + l), x = u(id); add(id, 1, x.v != null && x.v !== '', x.ok, { res: !!x.ok || tries(id) >= 3 }); });
+  if (b.gap) { const n = (b.gap.text.match(/\{\{/g) || []).length; for (let i = 0; i < n; i++) { const id = bk.id + ':g' + hsh(b.gap.text) + '.' + i, x = u(id); add(id, 1, x.v != null && x.v !== '', x.ok, { res: !!x.ok || tries(id) >= 3 }); } }
+  if (b.order) { const id = bk.id + ':o' + hsh(b.order.q), x = u(id); add(id, 1, !!x.chk, x.ok, { res: (!!x.chk && !!x.ok) || tries(id) >= 3 }); }
+  if (b.calc) b.calc.forEach(([q]) => { const id = bk.id + ':c' + hsh(q), x = u(id); add(id, 1, x.chk === 1, x.ok, { res: (x.chk === 1 && !!x.ok) || tries(id) >= 3 }); });
+  if (b.exam) b.exam.forEach(([q, m]) => { const id = bk.id + ':e' + hsh(q), x = u(id); add(id, 0, x.s != null && x.s !== '', null, { marks: m, got: +x.s || 0, res: x.s != null && x.s !== '' }); });
+  if (b.nea) { const id = bk.id + ':n' + hsh(b.nea), x = u(id); add(id, 0, (x.v || '').trim().length >= 20, null, { nea: 1 }); }
   return U;
 }
 const pageUnits = (bk, p) => p.blocks.flatMap((b) => blockUnits(bk, b));
@@ -143,16 +144,19 @@ function renderBook() {
   const bs = stats(bookUnits(BK));
   let h = `<div class="bkbar noprint">${progHTML(bs.p)}<span class="pct">${Math.round(bs.p * 100)}%</span></div>
    <div class="pnav noprint">${BK.pages.map((p, i) => { const s = stats(pageUnits(BK, p)); return `<button data-pg="${i}" class="${i === V.p ? 'cur' : ''} ${s.n && s.done === s.n ? 'd2' : s.done ? 'd1' : ''}" title="${E(p.t)}">${i + 1}</button>`; }).join('')}</div>
-   <div class="kick">Topic ${BK.topic}${P.spec ? ' · ' + P.spec : ''} · page ${V.p + 1} of ${BK.pages.length}</div><h2>${E(P.t)}</h2>`;
+   <div class="kick">Topic ${BK.topic}${P.spec ? ' · ' + P.spec : ''} · page ${V.p + 1} of ${BK.pages.length}</div><h2>${E(P.t)}</h2>
+   <div id="lockNote" class="locknote noprint" style="display:none">Notes and key words are hidden while you answer. They come back when you finish the activity (all right, or three tries at each).</div>`;
   P.blocks.forEach((b, bi) => { h += blockHTML(BK, b, bi); });
   const ps = stats(pageUnits(BK, P));
   h += `<div class="savebox noprint"><span class="muted">${ps.n ? `This page: ${ps.done} of ${ps.n} done${ps.auto ? ` · ${ps.ok}/${ps.auto} right` : ''}.` : ''} Saved on this iPad as you go.</span>
    <span class="row">${ps.n ? '<button class="btn small ghost" id="resetPg">Reset this page</button>' : ''}<button class="btn small" id="savePg">Save this page as PDF</button></span></div>`;
   view.innerHTML = h;
+  if (lastPg !== BK.id + ':' + V.p) { touched = new Set(); lastPg = BK.id + ':' + V.p; }
   bindBook(BK, P);
+  updateLock();
   $$('[data-pg]').forEach((b) => b.onclick = () => go({ v: 'book', b: BK.id, p: +b.dataset.pg }));
   $('#prev').disabled = V.p === 0; $('#next').textContent = V.p === BK.pages.length - 1 ? 'Back to Home ›' : 'Next ›';
-  if ($('#resetPg')) $('#resetPg').onclick = () => { pageUnits(BK, P).forEach((x) => delete S.u[x.id]); save(); render(); };
+  if ($('#resetPg')) $('#resetPg').onclick = () => { pageUnits(BK, P).forEach((x) => delete S.u[x.id]); touched = new Set(); save(); render(); };
   $('#savePg').onclick = () => pdfOf([() => {}], `${who()} - ${BK.title} page ${V.p + 1}.pdf`);
 }
 $('#jump').onchange = (e) => go({ v: 'book', b: V.b, p: +e.target.value });
@@ -163,14 +167,15 @@ function blockHTML(bk, b, bi) {
   let h = '';
   const head = (t, sub) => `<h3>${t}</h3>${sub ? `<p class="muted">${sub}</p>` : ''}`;
   if (b.h) h += `<h3>${b.h}</h3>`;
-  if (b.notes) h += `<div class="notes">${b.notes}</div>`;
-  if (b.tip) h += `<div class="tip">${b.tip}</div>`;
+  if (b.notes) h += `<div class="notes ref">${b.notes}</div>`;
+  if (b.tip) h += `<div class="tip ref">${b.tip}</div>`;
   if (b.keys) {
-    h += head('Key words', 'Tap a card to check yourself, then match each word to its meaning below.');
-    h += `<div class="flips">${b.keys.map(([t, d]) => `<div class="flip"><b>${t}</b><div class="d">${d}</div></div>`).join('')}</div>`;
+    h += head('Key words', 'Tap a card to read what it means; tapping another card closes the last one. When you start the matching below, the cards blur until you have finished it.');
+    h += `<div class="flips ref">${b.keys.map(([t, d]) => `<div class="flip"><b>${t}</b><div class="d">${d}</div></div>`).join('')}</div>`;
     const defs = shuffle(b.keys.map((k, i) => i), bk.id + b.keys[0][0]);
-    h += `<table class="t mt" style="margin-top:12px"><tr><th style="width:28%">Word</th><th>Meaning</th></tr>${b.keys.map(([t], i) => { const id = bk.id + ':k' + hsh(t); return `<tr><td><b>${t}</b></td><td><select class="f" data-u="${id}" data-a="${i}" data-kind="sel"><option value=""></option>${defs.map((d) => `<option value="${d}">${E(b.keys[d][1].replace(/<[^>]+>/g, ''))}</option>`).join('')}</select></td></tr>`; }).join('')}</table>`;
+    h += `<div class="actv" data-bi="${bi}"><h3 style="margin-top:18px">Match them up</h3><table class="t mt"><tr><th style="width:28%">Word</th><th>Meaning</th></tr>${b.keys.map(([t], i) => { const id = bk.id + ':k' + hsh(t); return `<tr><td><b>${t}</b></td><td><select class="f" data-u="${id}" data-a="${i}" data-kind="sel"><option value=""></option>${defs.map((d) => `<option value="${d}">${E(b.keys[d][1].replace(/<[^>]+>/g, ''))}</option>`).join('')}</select></td></tr>`; }).join('')}</table></div>`;
   }
+  const a1 = h.length;
   if (b.mcq) {
     h += head(b.mh || 'Quick quiz', 'Tap an answer. You will see straight away if it is right, and why.');
     h += b.mcq.map(([q, o, a, why], i) => { const id = bk.id + ':m' + hsh(q); const ord = shuffle(o.map((x, k) => k), q); return `<div class="q" data-mq="${id}" data-a="${a}"><span class="qn">Q${i + 1}</span>${q}<div class="opts">${ord.map((k) => `<button class="opt" data-k="${k}">${o[k]}</button>`).join('')}</div><div class="why" style="display:none">${why || ''}</div></div>`; }).join('');
@@ -214,6 +219,7 @@ function blockHTML(bk, b, bi) {
       <div class="ms"><div class="callout blue" style="margin-top:10px"><b>Mark scheme (indicative content)</b><ul style="margin:4px 0 0">${ms.map((x) => `<li>${x}</li>`).join('')}</ul></div>
       <label class="key">My mark: <select class="f" style="width:auto;display:inline-block"><option value=""></option>${Array.from({ length: m + 1 }, (_, k) => `<option>${k}</option>`).join('')}</select> / ${m}</label></div></div>`; }).join('');
   }
+  if (h.length > a1) h = h.slice(0, a1) + `<div class="actv" data-bi="${bi}">` + h.slice(a1) + '</div>';
   if (b.nea) {
     const id = bk.id + ':n' + hsh(b.nea);
     h += `<div class="nea" data-nu="${id}"><b>Link it to your NEA.</b> ${b.nea}<textarea style="margin-top:8px" placeholder="A few sentences about your own project."></textarea></div>`;
@@ -221,15 +227,30 @@ function blockHTML(bk, b, bi) {
   return h;
 }
 
+/* ---------- hide the notes while an activity is being done (as in the GCSE booklets) ---------- */
+// Once a student starts an activity, the notes and key-word cards on that page blur until the activity is
+// finished: every item right (or 3 tries at it); multiple choice answered; exam question self-marked.
+let touched = new Set(), lastPg = '';
+function updateLock() {
+  if (V.v !== 'book') return;
+  const P = BK.pages[V.p];
+  const locked = P.blocks.some((b, bi) => { const U = blockUnits(BK, b).filter((x) => !x.nea); if (!U.length) return false; const started = touched.has(bi) || U.some((x) => x.started); return started && !U.every((x) => x.res); });
+  $$('.ref', view).forEach((e) => e.classList.toggle('peek-lock', locked));
+  const n = $('#lockNote', view); if (n) n.style.display = locked ? '' : 'none';
+  if (locked) $$('.flip.open', view).forEach((f) => f.classList.remove('open'));
+}
+
 function bindBook(bk, P) {
   const U = (id) => (S.u[id] = S.u[id] || {});
-  const after = () => { save(); refreshProg(); };
+  const after = () => { save(); refreshProg(); updateLock(); };
+  const miss = (id, ok) => { if (!ok) S.u[id].n = ((S.u[id] || {}).n || 0) + 1; };
+  $$('.actv', view).forEach((a) => { const t = () => { touched.add(+a.dataset.bi); updateLock(); }; a.addEventListener('pointerdown', t, { passive: true }); a.addEventListener('focusin', t); });
   // selects: key words, match, gap
   $$('select[data-u]', view).forEach((s) => {
     const id = s.dataset.u, x = S.u[id];
     const judge = () => { const v = s.value; if (v === '') { s.classList.remove('right', 'wrong'); return; } const ok = s.dataset.kind === 'gap' ? v === s.dataset.ans : v === s.dataset.a; s.classList.toggle('right', ok); s.classList.toggle('wrong', !ok); };
     if (x && x.v != null) s.value = x.v; judge();
-    s.onchange = () => { const v = s.value; if (v === '') delete S.u[id]; else { const ok = s.dataset.kind === 'gap' ? v === s.dataset.ans : v === s.dataset.a; S.u[id] = { v, ok }; } judge(); after(); };
+    s.onchange = () => { const v = s.value; const n = (S.u[id] || {}).n || 0; if (v === '') { if (S.u[id]) delete S.u[id].v; } else { const ok = s.dataset.kind === 'gap' ? v === s.dataset.ans : v === s.dataset.a; S.u[id] = { v, ok, n }; miss(id, ok); } judge(); after(); };
   });
   // multiple choice + true/false
   $$('[data-mq],[data-tq]', view).forEach((q) => {
@@ -243,7 +264,7 @@ function bindBook(bk, P) {
     const id = it.dataset.su, a = it.dataset.a;
     const show = (v) => { $$('button', it).forEach((b) => b.classList.toggle('on', b.dataset.k === v)); it.classList.toggle('right', v != null && v === a); it.classList.toggle('wrong', v != null && v !== a); };
     show(S.u[id] ? S.u[id].v : null);
-    $$('button', it).forEach((b) => b.onclick = () => { S.u[id] = { v: b.dataset.k, ok: b.dataset.k === a }; show(b.dataset.k); after(); });
+    $$('button', it).forEach((b) => b.onclick = () => { const ok = b.dataset.k === a; S.u[id] = { v: b.dataset.k, ok, n: (S.u[id] || {}).n || 0 }; miss(id, ok); show(b.dataset.k); after(); });
   });
   // ordering
   $$('[data-ou]', view).forEach((o) => {
@@ -252,14 +273,14 @@ function bindBook(bk, P) {
     const mark = () => { let ok = true; sts.forEach((st) => { const r = +$('select', st).value === +st.dataset.i + 1; st.classList.toggle('right', r); st.classList.toggle('wrong', !r); ok = ok && r; }); fb.className = 'fb ' + (ok ? 'good' : 'bad'); fb.textContent = ok ? 'All in the right order.' : 'Not quite: the red ones are in the wrong place.'; return ok; };
     if (x.chk) mark();
     sts.forEach((st) => $('select', st).onchange = () => { const v = {}; sts.forEach((s2) => v[s2.dataset.i] = $('select', s2).value); U(id).v = v; save(); });
-    $('[data-ochk]', o).onclick = () => { const v = {}; sts.forEach((s2) => v[s2.dataset.i] = $('select', s2).value); S.u[id] = { v, chk: 1, ok: mark() }; after(); };
+    $('[data-ochk]', o).onclick = () => { const v = {}; sts.forEach((s2) => v[s2.dataset.i] = $('select', s2).value); const ok = mark(); S.u[id] = { v, chk: 1, ok, n: (S.u[id] || {}).n || 0 }; miss(id, ok); after(); };
   });
   // calculations
   $$('[data-cu]', view).forEach((q) => {
     const id = q.dataset.cu, a = +q.dataset.a, tol = +q.dataset.tol, inp = $('input', q), fb = $('.fb', q), why = $('.why', q), x = S.u[id] || {};
     const mark = () => { const v = parseFloat(inp.value); const ok = !isNaN(v) && Math.abs(v - a) <= tol + 1e-9; fb.className = 'fb ' + (ok ? 'good' : 'bad'); fb.textContent = ok ? 'Correct.' : 'Not quite. Check the working.'; why.style.display = ''; return ok; };
     if (x.v != null) inp.value = x.v; if (x.chk) mark();
-    $('button', q).onclick = () => { if (inp.value === '') return; S.u[id] = { v: inp.value, chk: 1, ok: mark() }; after(); };
+    $('button', q).onclick = () => { if (inp.value === '') return; const ok = mark(); S.u[id] = { v: inp.value, chk: 1, ok, n: (S.u[id] || {}).n || 0 }; miss(id, ok); after(); };
   });
   // exam questions
   $$('[data-eu]', view).forEach((q) => {
@@ -267,14 +288,14 @@ function bindBook(bk, P) {
     ta.value = x.a || ''; sel.value = x.s != null ? x.s : '';
     const upd = () => { btn.disabled = ta.value.trim().length < 15; ms.classList.toggle('show', !!(S.u[id] || {}).o); };
     upd();
-    ta.oninput = () => { U(id).a = ta.value; save(); upd(); };
+    ta.oninput = () => { U(id).a = ta.value; save(); upd(); updateLock(); };
     btn.onclick = () => { U(id).o = 1; save(); upd(); };
     sel.onchange = () => { if (sel.value === '') delete U(id).s; else U(id).s = sel.value; after(); };
   });
   // NEA prompts
   $$('[data-nu]', view).forEach((n) => { const id = n.dataset.nu, ta = $('textarea', n); ta.value = (S.u[id] || {}).v || ''; ta.oninput = () => { U(id).v = ta.value; after(); }; });
   // flip cards
-  $$('.flip', view).forEach((f) => f.onclick = () => f.classList.toggle('open'));
+  $$('.flip', view).forEach((f) => f.onclick = () => { const was = f.classList.contains('open'); $$('.flip.open', view).forEach((x) => x.classList.remove('open')); if (!was) f.classList.add('open'); });
 }
 function refreshProg() {
   if (V.v !== 'book') return;

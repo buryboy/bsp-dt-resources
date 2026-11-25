@@ -40,7 +40,7 @@ BOOKLETS.push({ id: 't5', topic: 5, title: 'Factors influencing the development 
  <li><b>Making:</b> prototypes and models tested by users; iterating (design → test → improve → test).</li>
  <li><b>Evaluating:</b> user trials, feedback, testing against the specification, after-sales reviews and returns data.</li></ul>
  <h4>Why it matters</h4><p>Fewer costly changes late in development; products that sell; better safety and accessibility; inclusive design for users with different abilities. Risks of ignoring users: products that fail in the market, are hard to use or unsafe.</p>` },
- { sort: { h: 'Need or want?', q: 'For a commuter’s bicycle helmet, is each a need or a want?', cats: ['Need', 'Want'], items: [['Meets the safety standard for impact', 0], ['Available in matt teal', 1], ['Fits the user’s head securely', 0], ['Built-in Bluetooth speakers', 1], ['Ventilated so the rider does not overheat', 0], ['A magnetic buckle', 1]] } },
+ { sort: { h: 'Need or want?', q: 'For a commuter’s bicycle helmet, is each a need or a want?', cats: ['Need', 'Want'], items: [['Meets the safety standard for impact', 0], ['Available in matt teal', 1], ['Fits the user’s head securely', 0], ['Built-in Bluetooth speakers', 1], ['Has adjustable straps so it stays on in a fall', 0], ['A magnetic buckle', 1]] } },
  { match: { q: 'Which factor from 5.1 does each statement describe?', lh: 'Statement', rh: 'Factor', pairs: [['“I only buy products with recycled packaging.”', 'User values'], ['“The bottle must not leak in my bag.”', 'Functionality'], ['A tool for removing splinters from small children’s fingers', 'Purpose'], ['The first phone to unlock by face recognition', 'Innovation'], ['A leather bag made by the original family firm, using traditional methods', 'Authenticity']] } },
  { mcq: [
   ['What is a persona?', ['A famous designer', 'A detailed profile of a typical user, used to keep their needs in mind', 'A type of prototype', 'A design movement'], 1, 'Personas help a team design for a specific person rather than “everyone”.'],
@@ -71,7 +71,7 @@ BOOKLETS.push({ id: 't5', topic: 5, title: 'Factors influencing the development 
  <h4>Static and dynamic data</h4><p><b>Static (structural)</b> data: body measured still (stature, hand length, sitting height). <b>Dynamic (functional)</b> data: body measured while moving or working (reach, grip span, range of movement).</p>` },
  { match: { q: 'Which percentile would you design for?', lh: 'Dimension', rh: 'Percentile', pairs: [['Height of a doorway', '95th percentile stature (clearance)'], ['Height of an emergency stop button above the floor', '5th percentile reach'], ['Width of a cinema seat', '95th percentile hip width'], ['Distance from a car seat to the pedals', 'Adjustable: 5th to 95th leg length'], ['Gap between the bars of a baby’s cot', 'Smaller than the smallest baby’s head (safety)']] } },
  { calc: [
-  ['A sample of hand lengths gives a 5th percentile of 165 mm and a 95th percentile of 205 mm. What range of handle grip length would an adjustable product need to cover, in mm?', 40, 0, 'mm', '205 − 165 = 40 mm range.'],
+  ['A sample of hand lengths gives a 5th percentile of 165 mm and a 95th percentile of 205 mm. How many millimetres of adjustment are needed to cover the 5th to the 95th percentile?', 40, 0, 'mm', '205 − 165 = 40 mm range.'],
   ['What percentage of users is accommodated by designing from the 5th to the 95th percentile?', 90, 0, '%', '95 − 5 = 90% of users. 5% are smaller and 5% larger.'],
   ['95th percentile male stature is 1855 mm. Allowing 25 mm for shoes and 100 mm clearance for headroom, what is the minimum doorway height, in mm?', 1980, 0, 'mm', '1855 + 25 + 100 = 1980 mm.'],
  ] },
@@ -142,7 +142,7 @@ BOOKLETS.push({ id: 't5', topic: 5, title: 'Factors influencing the development 
  <ul><li><b>Context:</b> a reaction against the poor quality, over-decorated, machine-made goods of the Industrial Revolution and the poor conditions of factory workers.</li>
  <li><b>Ideas:</b> return to <b>handcraft</b> and the skilled craftsperson; honest construction (visible joints); natural materials; beauty in everyday objects. Morris’s rule: have nothing in your house that you do not know to be useful or believe to be beautiful.</li>
  <li><b>Style:</b> natural forms (flowers, birds, leaves, vines), rich colours, repeating patterns, medieval influences.</li>
- <li><b>William Morris:</b> designer of wallpapers and textiles such as <b>“Strawberry Thief”</b> and <b>“Trellis”</b>; founded <b>Morris & Co.</b>; the Red House; the Kelmscott Press.</li>
+ <li><b>William Morris:</b> designer of wallpapers and textiles such as <b>“Strawberry Thief”</b> and <b>“Trellis”</b>; founded <b>Morris & Co.</b>; lived at the Red House (designed for him by Philip Webb); founded the Kelmscott Press.</li>
  <li><b>Irony:</b> hand-made goods were expensive, so only the wealthy could afford them.</li>
  <li><b>Influence today:</b> craft revival, bespoke and hand-made products, natural motifs, valuing quality and authenticity.</li></ul>
  <h4>Art Nouveau: Charles Rennie Mackintosh (about 1890–1910)</h4>
@@ -169,7 +169,7 @@ BOOKLETS.push({ id: 't5', topic: 5, title: 'Factors influencing the development 
 ]},
 
 { t: 'Design movements 2: Art Deco, Streamlining, Post Modernism, Memphis', spec: '5.4', blocks: [
- { notes: `<h4>Art Deco: Eileen Gray (about 1920–1940)</h4>
+ { notes: `<h4>Art Deco: Eileen Gray (about 1925–1939)</h4>
  <ul><li><b>Style:</b> glamour and luxury; bold geometric shapes, <b>zigzags, chevrons, sunbursts</b>, stepped forms; luxury materials (lacquer, exotic woods, chrome, glass, ivory); influenced by the machine age, ancient Egypt (Tutankhamun’s tomb, 1922) and jazz.</li>
  <li><b>Eileen Gray:</b> Irish designer and architect working in Paris; expert in <b>lacquer work</b>; <b>Bibendum chair</b> (1926, rounded tyre-like rolls); <b>E-1027 adjustable table</b> (1927, tubular steel and glass, height adjustable, designed so it could slide over a bed); designed the villa E-1027. Her work bridges Art Deco and Modernism.</li></ul>
  <h4>Streamlining: Raymond Loewy (about 1930–1955, USA)</h4>
@@ -187,7 +187,7 @@ BOOKLETS.push({ id: 't5', topic: 5, title: 'Factors influencing the development 
  <li><b>Influence:</b> bold colour and pattern in fashion, graphics and interiors; designers making statement pieces; regular revivals.</li></ul>` },
  { match: { q: 'Match the work to its movement.', lh: 'Work', rh: 'Movement and designer', pairs: [['E-1027 adjustable table', 'Art Deco, Eileen Gray'], ['Coldspot refrigerator', 'Streamlining, Raymond Loewy'], ['Juicy Salif lemon squeezer', 'Post Modernism, Philippe Starck'], ['Carlton room divider', 'Memphis, Ettore Sottsass'], ['Louis Ghost chair', 'Post Modernism, Philippe Starck'], ['Bibendum chair', 'Art Deco, Eileen Gray']] } },
  { sort: { h: 'Which movement?', q: 'Sort each feature.', cats: ['Art Deco', 'Streamlining', 'Post Modernism', 'Memphis'], items: [['Zigzags, sunbursts and lacquer', 0], ['Teardrop shapes and speed lines', 1], ['Witty, ironic reworking of a historic chair shape', 2], ['Clashing laminate patterns that reject good taste', 3], ['MAYA: most advanced yet acceptable', 1], ['Luxury materials and chrome glamour of the 1920s', 0], ['Founded in Milan in 1981', 3]] } },
- { order: { h: 'Timeline', q: 'Put the movements in order of when they began, earliest first.', steps: ['Arts and Crafts', 'Art Nouveau', 'Bauhaus', 'Art Deco', 'Streamlining', 'Post Modernism', 'Memphis'] } },
+ { order: { h: 'Timeline', q: 'Put the movements in order using these start dates: Arts and Crafts c.1860, Art Nouveau c.1890, Bauhaus 1919, Art Deco c.1925, Streamlining c.1930, Post Modernism c.1970, Memphis 1981.', steps: ['Arts and Crafts', 'Art Nouveau', 'Bauhaus', 'Art Deco', 'Streamlining', 'Post Modernism', 'Memphis'] } },
  { mcq: [
   ['Why did streamlining become popular in the 1930s?', ['It reduced material costs', 'Styling made products look modern and helped sales during the Depression', 'It was required by law', 'It came from the Bauhaus'], 1, 'Applied to static objects too, so it was often styling rather than function.'],
   ['What does MAYA stand for?', ['Make All Your Assets', 'Most Advanced Yet Acceptable', 'Modern And Young Aesthetic', 'Mass Assembly Yields Advantage'], 1, 'Loewy’s idea: push design forward, but only as far as buyers will accept.'],

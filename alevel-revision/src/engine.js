@@ -333,8 +333,8 @@ function renderCheck() {
   chkRefresh(list);
 }
 function findPage(bk, code, title) { // the booklet page that best matches a self-check row
-  const c = code.split('–')[0], w = title.toLowerCase().split(/[^a-z]+/).filter((x) => x.length > 2)[0] || '';
-  const same = (p) => p.spec && p.spec.split(/[ ,–]/)[0] === c;
+  const c = code.split('–')[0], w = title.toLowerCase().split(/[^a-z]+/).filter((x) => x.length > 2 && !['the','and','for','with','from'].includes(x))[0] || '';
+  const same = (p) => { const k = p.spec ? p.spec.split(/[ ,–]/)[0] : ''; return k === c || (k.startsWith(c) && /^[a-z]$/.test(k.slice(c.length))); };
   let i = w ? bk.pages.findIndex((p) => same(p) && p.t.toLowerCase().includes(w)) : -1;
   if (i < 0 && w) i = bk.pages.findIndex((p) => p.spec && p.t.toLowerCase().includes(w));
   if (i < 0) i = bk.pages.findIndex(same);

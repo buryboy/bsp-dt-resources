@@ -37,6 +37,7 @@ BOOKLETS.push({ id: 't11', topic: 11, title: 'Information, modelling and forward
  <tr><td>Observation / user trials</td><td>See what people actually do, not what they say</td><td>Time consuming; behaviour may change when watched</td></tr></table>
  <h4>Secondary research</h4><p>Market reports (e.g. Mintel), sales figures, government statistics, trade journals, competitor websites and reviews, patents. Quick and cheap, but may be out of date, not specific, or biased.</p>
  <h4>Quantitative and qualitative</h4><p><b>Quantitative</b> data is numbers (68% would pay over £30) and is easy to chart. <b>Qualitative</b> data is opinions and feelings (“the handle feels cheap”) and explains <i>why</i>.</p>
+ <p><b>Raw data</b> is the unprocessed results (individual questionnaire answers, tally charts). <b>Analysed data</b> has been processed into totals, percentages, averages, charts and conclusions that decisions can be based on.</p>
  <h4>Marketing analysis</h4>
  <ul><li><b>Market segmentation:</b> by age, gender, income, location, lifestyle, values.</li>
  <li><b>Competitor / product analysis:</b> compare existing products on price, function, quality, aesthetics.</li>
@@ -62,7 +63,8 @@ BOOKLETS.push({ id: 't11', topic: 11, title: 'Information, modelling and forward
  <li><b>Stage-gate process:</b> development is split into stages (idea → concept → development → testing → launch); at each gate managers decide go, kill, hold or recycle. This stops money being wasted on weak ideas.</li>
  <li><b>Incremental innovation:</b> small improvements to existing products (a new phone model). <b>Radical / disruptive innovation:</b> a completely new product or way of doing things (the first smartphone).</li>
  <li><b>Open innovation:</b> using ideas from outside the company: customers, universities, start-ups, crowdsourcing.</li>
- <li>Encouraging creativity: cross-functional teams, design thinking, prototyping early and often, accepting some failure.</li></ul>
+ <li><b>Cooperation between management, designers and production engineers</b> (cross-functional teams, concurrent working), so that designs can be made, costed and resourced from the start.</li>
+ <li><b>Encouraging creativity:</b> design thinking, time and budget for ideas, prototyping early and often, accepting some failure.</li></ul>
  <h4>Feasibility studies</h4><p>Before committing large amounts of money, a feasibility study asks whether the product <b>can</b> and <b>should</b> be made. One way to remember the areas is <b>TELOS</b>:</p>
  <table><tr><th>Area</th><th>Question</th></tr>
  <tr><td><b>T</b>echnical</td><td>Can it be made with available materials, technology, skills and processes?</td></tr>
@@ -78,7 +80,7 @@ BOOKLETS.push({ id: 't11', topic: 11, title: 'Information, modelling and forward
  ] },
  { exam: [
   ['**Explain** the purpose of a feasibility study.', 2, ['Checks whether a product is technically possible and can be made and sold at a profit (1)', 'before large sums are invested, reducing risk (1)']],
-  ['**Explain** two ways a company can manage innovation effectively.', 4, ['Stage-gate reviews (1) so resources only go to promising ideas (1)', 'Invest in R&D / cross-functional teams (1) so new ideas are generated and developed quickly (1)', 'Open innovation / user involvement (1) brings in outside ideas, reduces risk (1)']],
+  ['**Explain** two ways a company can manage innovation effectively.', 4, ['Stage-gate reviews (1) so resources only go to promising ideas (1)', 'Invest in R&D / cross-functional teams (1) so new ideas are generated and developed quickly (1)', 'Open innovation / user involvement (1) brings in outside ideas, reduces risk (1)', 'Managers, designers and production engineers working together from the start (1) so designs are manufacturable and fewer late changes are needed (1)']],
  ] },
 ]},
 
@@ -103,7 +105,7 @@ BOOKLETS.push({ id: 't11', topic: 11, title: 'Information, modelling and forward
   ['Using the same figures, what profit is made if 1,500 are sold?', 12000, 0, '£', 'Income £40 × 1,500 = £60,000. Total cost £24,000 + (£16 × 1,500) = £48,000. Profit = £12,000. (Or: 500 units past break-even × £24 contribution = £12,000.)'],
   ['A mould costs £30,000. Each part costs £0.40 in material. What is the unit cost if 50,000 parts are made?', 1, 0.001, '£', '(£30,000 + £0.40 × 50,000) ÷ 50,000 = £50,000 ÷ 50,000 = £1.00 per part.'],
   ['The same mould, but only 5,000 parts are made. What is the unit cost?', 6.4, 0.001, '£', '(£30,000 + £2,000) ÷ 5,000 = £6.40. This is why moulding only pays at high volume.'],
-  ['A stool costs £18 to make. The company adds 40% profit. What is the selling price before VAT?', 25.2, 0.001, '£', '£18 × 1.4 = £25.20.'],
+  ['A stool costs £18 to make. The company adds a 40% mark-up on cost. What is the selling price before VAT?', 25.2, 0.001, '£', '£18 × 1.4 = £25.20.'],
  ] },
  { mcq: [
   ['Why does unit cost fall as production volume rises?', ['Materials get cheaper every year', 'Fixed costs are spread over more units (and bulk buying lowers material cost)', 'Workers work faster', 'VAT is lower'], 1, 'Economies of scale.'],
@@ -127,7 +129,7 @@ BOOKLETS.push({ id: 't11', topic: 11, title: 'Information, modelling and forward
  <tr><td><b>Time</b></td><td>Production schedules, Gantt charts and critical path analysis to plan the order of tasks and meet deadlines</td></tr>
  <tr><td><b>Quality</b></td><td>Where quality control checks happen; tolerances; quality assurance systems</td></tr></table>
  <h4>Selecting a process: the key questions</h4>
- <ol><li>What material is it? (Only thermoplastics can be injection moulded; die casting needs non-ferrous metals.)</li>
+ <ol><li>What material is it? (Injection moulding is used mainly for thermoplastics; pressure die casting is used for non-ferrous alloys.)</li>
  <li>How many? (High tooling cost only pays at high volume.)</li>
  <li>What shape and size? (Hollow → blow or rotational moulding; constant section → extrusion.)</li>
  <li>What accuracy and finish are needed?</li>
@@ -149,7 +151,7 @@ BOOKLETS.push({ id: 't11', topic: 11, title: 'Information, modelling and forward
  <table><tr><th>Type</th><th>Protects</th><th>How you get it</th><th>How long (UK)</th><th>Symbol / example</th></tr>
  <tr><td><b>Patent</b></td><td>A new <b>invention</b>: how something works, what it does, how it is made. Must be new, involve an inventive step, and be capable of industrial application</td><td>Apply and pay; examined; you must <b>not reveal it publicly before applying</b></td><td>Up to <b>20 years</b> (annual renewal fees)</td><td>e.g. Dyson cyclone technology</td></tr>
  <tr><td><b>Registered design</b></td><td>The <b>appearance</b>: shape, contours, colours, texture, materials, ornamentation</td><td>Apply and pay</td><td>Up to <b>25 years</b>, renewed every 5</td><td>e.g. the shape of a chair or bottle</td></tr>
- <tr><td><b>Design right</b> (unregistered)</td><td>The <b>shape and configuration</b> of a 3D object</td><td><b>Automatic</b></td><td>Up to 15 years from creation or 10 years from first sale, whichever is earlier</td><td>Harder to prove in court</td></tr>
+ <tr><td><b>Design right</b> (unregistered)</td><td>The <b>shape and configuration</b> of a 3D object</td><td><b>Automatic</b></td><td>15 years from creation, or 10 years from first sale if sold within the first 5 years; others can ask for a licence in the last 5 years</td><td>Harder to prove in court</td></tr>
  <tr><td><b>Copyright</b></td><td>Original written, artistic, musical and recorded work: drawings, photos, text, software, music</td><td><b>Automatic</b> once recorded</td><td>Life of the creator + <b>70 years</b> (for most works)</td><td>©</td></tr>
  <tr><td><b>Trademark</b></td><td><b>Brand identity</b>: names, logos, slogans, sounds, distinctive shapes and colours</td><td>™ can be used without registering; ® only once registered</td><td>10 years, renewable indefinitely</td><td>™ ® e.g. Nike swoosh</td></tr></table>
  <h4>Why IP matters</h4>
@@ -175,7 +177,7 @@ BOOKLETS.push({ id: 't11', topic: 11, title: 'Information, modelling and forward
  <tr><td><b>BSI</b> (British Standards Institution)</td><td>The UK’s national standards body. Writes <b>British Standards</b> (BS), e.g. BS 8888 technical drawing, BS 1363 plugs and sockets, BS EN 71 toy safety, BS 4800 colours</td></tr>
  <tr><td><b>Kitemark</b></td><td>A BSI certification mark: the product has been <b>independently tested</b> to the relevant standard, and the manufacturer is regularly audited. Builds consumer trust. Voluntary</td></tr>
  <tr><td><b>CEN</b> (European Committee for Standardization)</td><td>Writes <b>European Norms (EN)</b> used across Europe; when adopted in the UK they become <b>BS EN</b> standards</td></tr>
- <tr><td><b>CE marking</b></td><td>The manufacturer’s declaration that a product meets the <b>EU’s</b> health, safety and environmental requirements. <b>Required by law</b> to sell certain products (toys, electrical goods, machinery, PPE) in the EU/EEA. Often self-certified. (Great Britain also has the UKCA mark)</td></tr>
+ <tr><td><b>CE marking</b></td><td>The manufacturer’s declaration that a product meets the <b>EU’s</b> health, safety and environmental requirements. <b>Required by law</b> to sell certain products (toys, electrical goods, machinery, PPE) in the EU/EEA. Often self-certified. (Great Britain has its own UKCA mark; CE-marked goods are still accepted in Great Britain for most product types, including toys)</td></tr>
  <tr><td><b>ISO</b> (International Organization for Standardization)</td><td>Worldwide standards. <b>ISO 9001</b>: quality management systems. <b>ISO 14001</b>: environmental management. Others cover sizes (A4 paper, ISO 216), screw threads and more</td></tr></table>
  <h4>Why standards matter</h4>
  <ul><li><b>Safety:</b> products are tested so they do not harm users.</li>
@@ -190,7 +192,7 @@ BOOKLETS.push({ id: 't11', topic: 11, title: 'Information, modelling and forward
  ] },
  { exam: [
   ['**Explain** one benefit to a consumer of buying a product with the BSI Kitemark.', 2, ['Independently tested to a British Standard (1)', 'so the consumer can trust it is safe/good quality (1)']],
-  ['**Explain** why a UK toy manufacturer must make sure its products carry the CE (or UKCA) mark.', 3, ['It is a legal requirement to sell toys in the EU/UK (1)', 'Shows the toy meets safety requirements, e.g. EN 71: small parts, toxicity, flammability (1)', 'Without it products can be withdrawn and the company fined/sued; affects reputation (1)']],
+  ['**Explain** why a UK toy manufacturer must make sure its products carry the CE (or UKCA) mark.', 3, ['It is a legal requirement: toys need CE marking to be sold in the EU, and CE or UKCA marking in Great Britain (1)', 'Shows the toy meets safety requirements, e.g. EN 71: small parts, toxicity, flammability (1)', 'Without it products can be withdrawn and the company fined/sued; affects reputation (1)']],
   ['**Discuss** the benefits to a manufacturer of gaining ISO 9001 certification.', 6, ['Consistent quality, fewer defects and returns, lower cost (1–2)', 'Customers and big retailers often require it: more contracts, international trade (1–2)', 'Marketing and reputation (1)', 'Costs: time, paperwork, audits, fees; does not guarantee product quality on its own (1–2)']],
  ] },
 ]},

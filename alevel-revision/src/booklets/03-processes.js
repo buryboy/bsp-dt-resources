@@ -55,7 +55,7 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  { notes: `<table><tr><th>Process</th><th>How it works</th><th>Advantages</th><th>Disadvantages</th><th>Products</th></tr>
  <tr><td><b>Offset lithography</b></td><td>Based on oil and water not mixing. Image areas on an aluminium plate attract oily ink; non-image areas are wetted with water. Ink transfers (offsets) from plate → rubber blanket cylinder → paper. One plate per colour (CMYK)</td><td>High quality, fast, consistent; plates cheap; low unit cost on medium–long runs</td><td>Set-up time and waste at the start; not economic for very short runs</td><td>Magazines, books, brochures, posters, leaflets, packaging</td></tr>
  <tr><td><b>Flexography</b></td><td>Flexible rubber/photopolymer <b>relief</b> plates (raised image) on rotating cylinders; fast-drying, often water-based inks</td><td>Prints on almost anything: plastic film, foil, corrugated board; very fast, continuous rolls</td><td>Lower detail and quality than litho or gravure</td><td>Plastic carrier bags, food packaging, labels, corrugated boxes, wallpaper</td></tr>
- <tr><td><b>Gravure</b></td><td>Image <b>etched</b> as tiny cells into a copper-plated cylinder. Ink fills the cells; a doctor blade wipes the surface clean; paper pressed on picks up the ink</td><td>Very high quality, consistent over huge runs, fast</td><td>Cylinders very expensive, so only for very long runs</td><td>High-circulation magazines, stamps, banknotes, high-quality packaging, wallpaper</td></tr>
+ <tr><td><b>Gravure</b></td><td>Image <b>etched</b> as tiny cells into a copper-plated cylinder. Ink fills the cells; a doctor blade wipes the surface clean; paper pressed on picks up the ink</td><td>Very high quality, consistent over huge runs, fast</td><td>Cylinders very expensive, so only for very long runs</td><td>High-circulation magazines and catalogues, postage stamps, high-quality flexible packaging, wallpaper</td></tr>
  <tr><td><b>Screen printing</b></td><td>Ink forced through a fine mesh with a squeegee; a stencil blocks non-image areas. One screen per colour</td><td>Prints on almost any surface, including curved and fabrics; thick, vivid, opaque ink; cheap set-up</td><td>Slow; one colour at a time; registration hard; limited fine detail</td><td>T-shirts, posters, signs, printed circuit boards, short runs</td></tr></table>
  <h4>Quality control in printing</h4>
  <ul><li><b>Registration marks</b> check each colour plate lines up.</li>
@@ -82,6 +82,7 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <li>The boxes are separated, the pattern and pins removed, and a <b>runner</b> cut to the cavity. Boxes are reassembled.</li>
  <li>Molten metal (often aluminium) is poured into the sprue until it rises up the riser (which shows the mould is full and feeds metal as it shrinks).</li>
  <li>When cool, the sand is broken away, sprue and riser are cut off, and the casting is <b>fettled</b> (cleaned up) and machined.</li></ol>
+ <p><b>Safety:</b> the mould and tools must be completely dry; wear a face shield, leather apron, gauntlets and stout footwear; pour over a sand tray.</p>
  <p>✔ Cheap moulds, large parts, one-off and batch. ✘ Rough surface, poor accuracy, mould destroyed each time, needs machining.</p>
  <h4>Investment casting (lost wax)</h4>
  <ol><li>A <b>wax pattern</b> is made (often injection moulded), several joined on a wax “tree”.</li>
@@ -97,7 +98,7 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <p><b>Products:</b> toy cars, engine and gearbox casings, laptop and phone frames, taps, door handles.</p>
  <h4>Resin casting and plaster of Paris</h4>
  <p><b>Resin casting:</b> a master model is used to make a flexible <b>silicone mould</b>; two-part polyurethane or polyester resin is mixed and poured in, then removed when cured. Ideal for prototypes and short runs with fine detail.</p>
- <p><b>Plaster of Paris:</b> mixed with water and poured; sets quickly. Used to make moulds for <b>slip casting</b> ceramics (porous plaster draws water from the slip), to cast models, and for low-melting-point metal casting.</p>` },
+ <p><b>Plaster of Paris:</b> mixed with water and poured; sets quickly. Used to make moulds for <b>slip casting</b> ceramics (porous plaster draws water from the slip), to cast models, and (only when completely dried out, because damp plaster makes steam that can spit molten metal) for casting low-melting-point metals such as pewter.</p>` },
  { order: { q: 'Put the stages of sand casting in order.', steps: ['Place the pattern in the drag and ram sand around it', 'Add the cope with sprue and riser pins and ram sand', 'Separate the boxes, remove the pattern and pins, cut a runner', 'Reassemble and pour molten metal into the sprue until it shows in the riser', 'Allow to cool, break away the sand', 'Cut off sprue and riser and fettle the casting'] } },
  { order: { h: 'Investment casting', q: 'Put the stages of investment (lost wax) casting in order.', steps: ['Make wax patterns and attach them to a wax tree', 'Dip the tree in ceramic slurry and sand to build a shell', 'Heat to melt out the wax and fire the shell', 'Pour molten metal into the hot shell', 'Break off the ceramic and cut parts from the tree'] } },
  { match: { q: 'Which casting process?', lh: 'Product', rh: 'Process', pairs: [['10,000 die-cast model cars', 'Die casting'], ['A one-off aluminium bracket for a sculpture', 'Sand casting'], ['A silver ring with fine detail', 'Investment casting'], ['20 prototype phone cases to test grip', 'Resin casting in a silicone mould'], ['A batch of ceramic mugs', 'Slip casting in plaster of Paris moulds']] } },
@@ -126,7 +127,7 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <tr><td><b>Press forming</b></td><td>Sheet metal is pressed between a male and female die (deep drawing pulls it into a cup shape)</td><td>Car body panels, sinks, drinks cans, saucepans</td></tr>
  <tr><td><b>Bending / folding</b></td><td>Sheet folded in a press brake or folding bars</td><td>Brackets, enclosures, sheet metal boxes</td></tr></table>
  <p>Presses run at high speed with expensive dies, so stamping and pressing suit <b>high-volume</b> production with low unit cost.</p>` },
- { sort: { h: 'Turning or milling?', q: 'Which machine would make each feature?', cats: ['Turning (lathe)', 'Milling'], items: [['A threaded bolt shank', 0], ['A slot along a flat bar', 1], ['A knurled grip on a handle', 0], ['A square pocket in a block', 1], ['A tapered shaft', 0], ['Flat faces on a vice jaw', 1]] } },
+ { sort: { h: 'Turning or milling?', q: 'Which machine would make each feature?', cats: ['Turning (lathe)', 'Milling'], items: [['A screw thread cut on a one-off steel bar', 0], ['A slot along a flat bar', 1], ['A knurled grip on a handle', 0], ['A square pocket in a block', 1], ['A tapered shaft', 0], ['Flat faces on a vice jaw', 1]] } },
  { mcq: [
   ['The key difference between turning and milling is…', ['milling is for wood only', 'in turning the work rotates; in milling the cutter rotates', 'turning is only CNC', 'milling makes cylinders'], 1, 'Turning: work spins against a fixed tool. Milling: cutter spins, work moves.'],
   ['Which process makes a car door panel?', ['Turning', 'Press forming', 'Sand casting', 'Routing'], 1, 'Sheet steel or aluminium is pressed between dies.'],
@@ -159,14 +160,14 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <p>✔ Continuous, very high output, complex profiles. ✘ Only constant cross-sections. <b>Products:</b> pipes, window frames, curtain rails, rods, cable insulation, aluminium frame sections.</p>
  <h4>Rotational moulding</h4>
  <p>Measured polymer <b>powder</b> is put in a hollow metal mould which is heated while <b>rotating on two axes</b>. The powder melts and coats the inside evenly; it is cooled while still rotating, then opened.</p>
- <p>✔ Large, hollow, seamless parts with even walls, cheap moulds, little waste. ✘ Slow cycle times. <b>Products:</b> kayaks, traffic cones, water tanks, playground slides, wheelie bins.</p>
+ <p>✔ Large, hollow, seamless parts with even walls, cheap moulds, little waste. ✘ Slow cycle times. <b>Products:</b> kayaks, traffic cones, water tanks, playground slides, large storage bins and road barriers.</p>
  <h4>Lamination</h4>
- <ul><li><b>Wood laminating:</b> thin veneers are glued and clamped over a <b>former</b> (or in a vacuum bag) until the glue sets, holding a curve. Products: bentwood chairs, skateboard decks, curved furniture.</li>
+ <ul><li><b>Wood laminating:</b> thin veneers are glued and clamped over a <b>former</b> (or in a vacuum bag) until the glue sets, holding a curve. Products: laminated (bent-ply) chair frames, skateboard decks, curved furniture.</li>
  <li><b>Composite lay-up:</b> layers of glass or carbon fibre mat are laid in a mould and wetted with resin, then rolled to remove air. Products: GRP boat hulls, car panels.</li>
  <li><b>Paper and board laminating:</b> a thin plastic film is bonded to the surface to protect it and add gloss or matt.</li></ul>` },
  { order: { q: 'Put the stages of injection moulding in order.', steps: ['Granules are fed from the hopper', 'The rotating screw carries them through the heated barrel and melts them', 'The screw rams the melt under pressure into the closed mould', 'Pressure is held while the part cools in the mould', 'The mould opens and ejector pins push the part out'] } },
  { order: { h: 'Vacuum forming', q: 'Put the stages of vacuum forming in order.', steps: ['Place the mould on the platen and clamp the sheet in the frame', 'Heat the sheet until it sags and is soft', 'Raise the mould into the softened sheet', 'Switch on the vacuum to suck the sheet onto the mould', 'Allow to cool, remove, and trim off the waste'] } },
- { match: { q: 'Which moulding process?', lh: 'Product', rh: 'Process', pairs: [['A 1.5 m water butt, seamless', 'Rotational moulding'], ['A PET drinks bottle', 'Blow moulding'], ['A uPVC window frame section', 'Extrusion'], ['A chocolate box insert tray', 'Vacuum forming'], ['A TV remote control casing', 'Injection moulding'], ['A bentwood chair seat', 'Lamination over a former']] } },
+ { match: { q: 'Which moulding process?', lh: 'Product', rh: 'Process', pairs: [['A 1.5 m water butt, seamless', 'Rotational moulding'], ['A PET drinks bottle', 'Blow moulding'], ['A uPVC window frame section', 'Extrusion'], ['A chocolate box insert tray', 'Vacuum forming'], ['A TV remote control casing', 'Injection moulding'], ['A curved plywood chair back', 'Lamination over a former']] } },
  { mcq: [
   ['Why must a vacuum-forming mould have draft angles?', ['To make it stronger', 'So the formed sheet can be removed from the mould', 'To speed up heating', 'To save plastic'], 1, 'Without a taper the cooled sheet grips the mould.'],
   ['Which of these is evidence that a product was injection moulded?', ['A seam down the middle and a pinch-off at the base', 'Small circular ejector pin marks inside', 'Layer lines', 'Uniform cross-section along its length'], 1, 'Ejector pin marks are a clear sign of injection moulding. A pinch-off suggests blow moulding.'],
@@ -191,6 +192,8 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <h4>Measuring</h4>
  <table><tr><th>Tool</th><th>Accuracy and use</th></tr>
  <tr><td>Steel rule</td><td>About 0.5 mm: general lengths</td></tr>
+ <tr><td>Internal and external (spring) callipers</td><td>Transfer an inside or outside size to a rule when it cannot be measured directly, e.g. a turned diameter or a bore</td></tr>
+ <tr><td>Squares</td><td>Try square (90° on wood), engineer’s square (90° on metal, more accurate), mitre square (45°), set squares (30°/60° and 45°, for drawing)</td></tr>
  <tr><td><b>Vernier callipers</b></td><td>To 0.02–0.05 mm: inside, outside and depth measurements</td></tr>
  <tr><td><b>Micrometer</b></td><td>To 0.01 mm (or better): very precise outside diameters and thicknesses</td></tr>
  <tr><td>Digital callipers</td><td>Easy to read to 0.01 mm; can switch mm/inch and zero</td></tr>
@@ -251,11 +254,13 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <tr><td>Contact adhesive</td><td>Apply to both surfaces, leave touch-dry, press together: laminates, fabrics, leather</td></tr>
  <tr><td>Solvent cement (e.g. Tensol)</td><td>Acrylic: dissolves the surfaces so they fuse</td></tr>
  <tr><td>Cyanoacrylate (superglue)</td><td>Instant bonds on small parts, many materials</td></tr>
+ <tr><td>Polystyrene cement</td><td>Solvent that fuses polystyrene (HIPS) parts: models, vacuum-formed parts</td></tr>
  <tr><td>Hot melt glue</td><td>Quick, low strength: models, card, prototypes</td></tr></table>
  <h4>Mechanical fixings</h4>
  <ul><li><b>Screws:</b> wood screws (countersunk, round head), self-tapping screws for sheet metal and plastics, machine screws.</li>
  <li><b>Nuts and bolts:</b> strong, temporary; washers spread the load; locknuts resist vibration.</li>
  <li><b>Rivets:</b> permanent; solid rivets need access to both sides; <b>pop (blind) rivets</b> are fitted from one side.</li>
+ <li><b>Press (interference) fit:</b> a part is forced into a slightly smaller hole and held by friction, e.g. bearings into housings, dowel pins.</li>
  <li><b>Knock-down (KD) fittings:</b> cam locks, cross dowels, corner blocks, threaded inserts: for flat-pack furniture assembled with simple tools.</li></ul>
  <h4>Heat processes for metals</h4>
  <table><tr><th>Process</th><th>How</th><th>Notes</th></tr>
@@ -283,7 +288,7 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  ] },
  { exam: [
   ['**Explain** one advantage of using knock-down fittings in flat-pack furniture.', 2, ['Sold flat-packed (1) so cheaper and easier to store and transport (1)', 'Or: assembled with simple tools by the user / can be taken apart to move (1)(1)']],
-  ['**Describe** the process of MIG welding two mild steel plates.', 4, ['Clean plates and clamp in position; PPE: welding mask, gloves (1)', 'Earth clamp attached; trigger feeds wire electrode and shielding gas (1)', 'Arc formed between wire and work melts wire and edges of plates (1)', 'Weld run along the joint; molten metal fuses and solidifies; clean slag/spatter (1)']],
+  ['**Describe** the process of MIG welding two mild steel plates.', 4, ['Clean plates and clamp in position; PPE: welding mask, gloves (1)', 'Earth clamp attached; trigger feeds wire electrode and shielding gas (1)', 'Arc formed between wire and work melts wire and edges of plates (1)', 'Weld run along the joint; molten metal fuses and solidifies; clean off spatter with a wire brush (1)']],
   ['**Evaluate** the use of adhesives rather than mechanical fixings in mass-produced products.', 6, ['For: spread load over the whole area, join dissimilar materials, invisible, no holes, light, can be automated (1–2)', 'Against: permanent so harder to repair/recycle (design for disassembly), curing time, surface prep, fumes/VOCs, can fail with heat (1–2)', 'Mechanical fixings: easy to disassemble, inspect and repair, but add parts and weight, need holes (1–2)', 'Judgement in context (1)']],
  ] },
 ]},
@@ -294,6 +299,7 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <table><tr><th>Finish</th><th>Notes</th></tr>
  <tr><td>Paint</td><td>Primer → undercoat → topcoat; opaque, colourful, protects</td></tr>
  <tr><td>Varnish (e.g. polyurethane)</td><td>Clear, hard, waterproof coating; shows the grain</td></tr>
+ <tr><td>Sealants (sanding sealer, shellac)</td><td>Seal the grain so later coats do not soak in; silicone sealants also keep water out of joints</td></tr>
  <tr><td>Wood stain</td><td>Changes colour, shows grain; little protection on its own</td></tr>
  <tr><td>Oil (Danish, teak) and wax</td><td>Soaks in, enhances grain, natural look; needs reapplying</td></tr>
  <tr><td>Preservatives</td><td>Protect outdoor timber from rot and insects: pressure treatment (tanalising) forces preservative deep into the wood; also brush-on treatments</td></tr></table>
@@ -303,7 +309,7 @@ BOOKLETS.push({ id: 't3', topic: 3, title: 'Manufacturing processes', pages: [
  <tr><td><b>Powder coating</b></td><td>Polymer powder is sprayed onto the metal, which is electrically earthed so the charged powder sticks <b>electrostatically</b>; baked in an oven (about 200°C) so it melts and flows into a tough, even coat</td><td>Bike frames, garden furniture, appliances, radiators</td></tr>
  <tr><td><b>Galvanising</b></td><td>Steel <b>dipped in molten zinc</b>; zinc forms a barrier and corrodes <b>sacrificially</b> to protect the steel even if scratched</td><td>Crash barriers, fencing, nails, buckets, steel structures outdoors</td></tr>
  <tr><td><b>Electroplating</b></td><td>The product is the <b>cathode</b> in an electrolyte; current deposits a thin layer of another metal (chrome, nickel, zinc, gold, silver)</td><td>Taps, cutlery, jewellery, bike parts</td></tr>
- <tr><td><b>Anodising</b></td><td><b>Aluminium only.</b> The part is the <b>anode</b> in an acid bath; current thickens the natural oxide layer, which can be <b>dyed</b> before sealing</td><td>Phone and laptop cases, torches, carabiners, drinks bottles</td></tr>
+ <tr><td><b>Anodising</b></td><td><b>Mainly aluminium</b> (also titanium). The part is the <b>anode</b> in an acid bath; current thickens the natural oxide layer, which can be <b>dyed</b> before sealing</td><td>Phone and laptop cases, torches, carabiners, drinks bottles</td></tr>
  <tr><td><b>Oiling</b></td><td>Thin film of oil keeps out moisture; temporary</td><td>Tools, machine parts, mild steel in storage</td></tr>
  <tr><td><b>Cathodic protection</b></td><td>A more reactive metal (zinc, magnesium) is connected as a <b>sacrificial anode</b>; it corrodes instead of the steel</td><td>Ship hulls, pipelines, oil rigs, boat outboards</td></tr></table>
  <h4>Polymers</h4><p>Usually <b>self-finishing</b>: colour is added as masterbatch and the mould gives the surface texture. Edges of acrylic can be scraped, wet-and-dried, buffed or flame polished. Vinyl decals and printing can be added.</p>

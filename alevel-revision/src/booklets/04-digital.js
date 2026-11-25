@@ -151,7 +151,7 @@ BOOKLETS.push({ id: 't4', topic: 4, title: 'Digital technologies', pages: [
  <tr><td>Less waste: nesting, fewer mistakes</td><td>Subtractive, so still produces waste swarf/dust</td></tr>
  <tr><td>Safer: operator kept away from cutting by guards</td><td>A programming error can damage the machine or tool</td></tr>
  <tr><td>Quick to change product by loading a new program</td><td>Size limited by the machine bed or travel</td></tr></table>` },
- { match: { q: 'Which CNC machine?', lh: 'Part', rh: 'Machine', pairs: [['A batch of 500 brass threaded spacers', 'CNC lathe'], ['A steel injection mould cavity', 'CNC milling machine (machining centre)'], ['Flat-pack plywood desk parts', 'CNC router'], ['An aluminium gearbox bracket with pockets and holes', 'CNC milling machine (machining centre)'], ['A wooden sign with engraved lettering, 1.2 m long', 'CNC router']] } },
+ { match: { q: 'Which CNC machine?', lh: 'Part', rh: 'Machine', pairs: [['A batch of 500 brass threaded spacers', 'CNC lathe'], ['Flat-pack plywood desk parts', 'CNC router'], ['An aluminium gearbox bracket with pockets and holes', 'CNC milling machine (machining centre)'], ['A wooden sign with engraved lettering, 1.2 m long', 'CNC router']] } },
  { mcq: [
   ['Why are tabs left when profile-cutting parts on a CNC router?', ['To save cutting time', 'To stop the cut parts moving or being thrown out at the end of the cut', 'For decoration', 'To make the parts stronger'], 1, 'Small bridges hold the part in the sheet; they are trimmed off afterwards.'],
   ['What does an automatic tool changer allow?', ['Hand operation', 'Several tools to be used in one program without stopping, so the machine can run unattended', 'Faster spindle speed', 'Larger parts'], 1, 'Drilling, roughing and finishing happen in one cycle.'],
@@ -172,8 +172,8 @@ BOOKLETS.push({ id: 't4', topic: 4, title: 'Digital technologies', pages: [
  <p><b>Settings:</b> power, speed, frequency, number of passes; line colours in the file usually tell the machine which operation to do. <b>Focus</b> must be set to the material surface.</p>
  <p><b>Kerf:</b> the width of material removed by the beam (about 0.1–0.3 mm). Allow for it in tight-fitting joints.</p>
  <table><tr><th>Suitable</th><th>Never cut</th></tr>
- <tr><td>Acrylic (polished edge), MDF, plywood, card, paper, leather, fabric, some foams; engraving on anodised aluminium, glass, stone</td><td><b>PVC</b> and vinyl (give off toxic, corrosive <b>chlorine/hydrochloric acid</b> gas), polycarbonate (catches fire, discolours), ABS (melts, fumes), metals on a CO<sub>2</sub> school laser</td></tr></table>
- <p><b>Safety:</b> never leave it running unattended (fire risk); lid interlock closed; extraction and air assist on; keep a fire blanket/extinguisher close; only approved materials; do not stare at the beam through the window if it is not rated for it.</p>
+ <tr><td>Acrylic (polished edge), MDF, plywood, card, paper, leather, fabric, some foams; engraving on anodised aluminium, glass, stone</td><td><b>PVC</b> and vinyl (give off toxic, corrosive <b>hydrogen chloride (hydrochloric acid)</b> fumes), polycarbonate (catches fire, discolours), ABS (melts, fumes), metals on a CO<sub>2</sub> school laser</td></tr></table>
+ <p><b>Safety:</b> never leave it running unattended (fire risk); lid interlock closed; extraction and air assist on; keep a fire blanket/extinguisher close; only approved materials; never defeat the lid interlock or run the machine with the lid open: it is safe only with its laser-rated window and interlocks in place.</p>
  <h4>Vinyl cutters</h4>
  <p>A small <b>drag knife</b> moves across self-adhesive vinyl on a backing sheet, cutting through the vinyl but not the backing (“kiss cut”). Unwanted vinyl is <b>weeded</b> away, and <b>application (transfer) tape</b> moves the design to the product.</p>
  <ul><li><b>Uses:</b> signs, vehicle graphics, decals and logos on products, stencils (e.g. for screen printing or etching), masks for spray painting, heat-transfer vinyl for T-shirts.</li>
@@ -182,13 +182,13 @@ BOOKLETS.push({ id: 't4', topic: 4, title: 'Digital technologies', pages: [
  { sort: { h: 'Safe to laser cut?', q: 'Can each material be cut on a school CO₂ laser cutter?', cats: ['Yes', 'No'], items: [['3 mm acrylic', 0], ['PVC sheet', 1], ['MDF', 0], ['Polycarbonate', 1], ['Birch plywood', 0], ['Card', 0], ['Vinyl', 1], ['Mild steel sheet', 1]] } },
  { order: { h: 'Vinyl cutting', q: 'Put the stages of applying a vinyl logo in order.', steps: ['Draw the logo as vector paths in 2D CAD', 'Load the vinyl, set the origin and do a test cut', 'Cut the design (kiss cut through the vinyl only)', 'Weed away the unwanted vinyl', 'Apply transfer tape, then lift and stick the design onto the product'] } },
  { mcq: [
-  ['Why must PVC never be laser cut?', ['It is too thick', 'It releases chlorine-based gases that are toxic and corrode the machine', 'It reflects the beam', 'It is too expensive'], 1, 'Hydrochloric acid fumes harm people and destroy the laser’s optics and mechanics.'],
+  ['Why must PVC never be laser cut?', ['It is too thick', 'It releases hydrogen chloride fumes that are toxic and corrode the machine', 'It reflects the beam', 'It is too expensive'], 1, 'Hydrochloric acid fumes harm people and destroy the laser’s optics and mechanics.'],
   ['What is kerf?', ['A type of laser', 'The width of material removed by the cut', 'The lens focus', 'The speed setting'], 1, 'Allow for kerf in parts that must fit tightly.'],
   ['What is the difference between raster and vector engraving?', ['Raster cuts through, vector does not', 'Raster scans back and forth to fill areas; vector follows lines', 'They are the same', 'Raster is for metals only'], 1, 'Raster for images and filled text; vector for outlines and scoring.'],
   ['Why must a laser cutter never be left unattended?', ['It might run out of material', 'Material can catch fire', 'It needs to be refocused every minute', 'It is noisy'], 1, 'Flare-ups are common, especially with wood and card.'],
  ] },
  { exam: [
-  ['**Explain** two safety precautions when using a laser cutter.', 4, ['Never leave unattended / fire extinguisher or blanket nearby (1) because the material can ignite (1)', 'Extraction on (1) to remove harmful fumes and smoke (1)', 'Only approved materials, no PVC (1) because it releases toxic chlorine gas (1); lid interlock closed (1)']],
+  ['**Explain** two safety precautions when using a laser cutter.', 4, ['Never leave unattended / fire extinguisher or blanket nearby (1) because the material can ignite (1)', 'Extraction on (1) to remove harmful fumes and smoke (1)', 'Only approved materials, no PVC (1) because it releases toxic, corrosive hydrogen chloride (hydrochloric acid) fumes (1); lid interlock closed (1)']],
   ['**Explain** why a designer might use a vinyl cutter to apply a logo to a batch of prototype products.', 3, ['Cheap and quick to produce accurate graphics from a CAD file (1)', 'Same design repeated exactly on every product (1)', 'Easily changed between versions; no expensive printing set-up for a small batch (1)']],
  ] },
 ]},

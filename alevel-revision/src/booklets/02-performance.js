@@ -15,6 +15,7 @@ BOOKLETS.push({ id: 't2', topic: 2, title: 'Performance characteristics', pages:
  <tr><td><b>Toughness</b></td><td>Ability to absorb energy (impact) without breaking or cracking. Opposite: brittle</td><td>Polycarbonate, ABS, mild steel, nylon</td></tr>
  <tr><td><b>Durability</b></td><td>Ability to withstand wear, weathering and deterioration over time</td><td>Stainless steel, uPVC windows, oak</td></tr>
  <tr><td><b>Biodegradability</b></td><td>Ability to be broken down naturally by micro-organisms (bacteria, fungi) into natural substances</td><td>Paper, wood, cotton, PLA (industrial composting)</td></tr></table>
+ <p>These terms apply to <b>every material group</b>, not just metals and polymers: corrugated board is stiff for its weight; nylon fibre has high tensile strength; cotton and paper are biodegradable; oak is durable; CFRP is strong and stiff but fails in a brittle way.</p>
  <h4>Commonly confused</h4>
  <ul><li><b>Hard ≠ tough.</b> Glass is hard (scratch resistant) but brittle. Rubber is tough but soft.</li>
  <li><b>Strong ≠ stiff.</b> Stiffness is resistance to bending/flexing; a nylon rope is strong in tension but not stiff.</li>
@@ -93,7 +94,7 @@ BOOKLETS.push({ id: 't2', topic: 2, title: 'Performance characteristics', pages:
  <tr><td><b>Electrical / thermal tests</b></td><td>Conductivity</td><td>Measure resistance with a meter; measure heat flow through a sample</td></tr></table>
  <h4>Simple workshop tests (comparative)</h4>
  <ul><li><b>Hardness:</b> try to scratch with a file or scriber, or drop a ball bearing and compare the dent.</li>
- <li><b>Toughness:</b> clamp in a vice and strike with a hammer; does it bend or snap?</li>
+ <li><b>Toughness:</b> clamp in a vice and strike with a hammer, or drop a weight from a set height; does it bend or snap? Wear eye protection and use a safety screen, because brittle samples can shatter.</li>
  <li><b>Elasticity/stiffness:</b> clamp as a cantilever, hang a weight, measure deflection, remove the weight and see if it returns.</li>
  <li><b>Ductility/malleability:</b> bend repeatedly or hammer flat and look for cracking.</li>
  <li><b>Conductivity:</b> put it in a simple circuit with a bulb or multimeter.</li></ul>
@@ -104,7 +105,7 @@ BOOKLETS.push({ id: 't2', topic: 2, title: 'Performance characteristics', pages:
   ['To make a workshop test fair you should…', ['use different sized samples', 'keep sample size, force and method the same and repeat', 'test only once', 'use your strongest hammer blow'], 1, 'Control the variables and repeat to get reliable results.'],
  ] },
  { exam: [
-  ['**Describe** a simple workshop test to compare the toughness of three polymers.', 4, ['Cut samples the same size and shape (1)', 'Clamp each in a vice / use a drop weight from the same height (1)', 'Strike with the same force / drop the same mass (1)', 'Compare whether each cracks, bends or snaps; repeat for reliability (1)']],
+  ['**Describe** a simple workshop test to compare the toughness of three polymers.', 4, ['Cut samples the same size and shape (1)', 'Clamp each in a vice / use a drop weight from the same height (1)', 'Strike with the same force / drop the same mass (1)', 'Compare whether each cracks, bends or snaps; repeat for reliability (1)', 'Accept as an alternative point: eye protection / safety screen, as samples may shatter (1)']],
   ['**Explain** why industrial tests such as the Vickers test are used rather than workshop tests when specifying materials.', 2, ['They are standardised and give numerical values (1) so materials can be compared accurately / to a specification or British Standard (1)']],
  ] },
 ]},

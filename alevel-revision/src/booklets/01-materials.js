@@ -5,7 +5,7 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
  { notes: `<p class="lead">Topic 1 asks you to know the <b>properties</b> and <b>uses</b> of named materials, and to <b>explain why</b> a material suits a product. Every page has notes, quick checks with instant feedback, and exam questions.</p>
  <h4>What the examiner wants</h4>
  <ul><li><b>Name the specific material</b>, not the group. “Beech”, not “a hardwood”. “HDPE”, not “plastic”.</li>
- <li><b>Link the property to the product</b>: property → so → benefit to the user or maker. “ABS is tough, <i>so</i> the kettle body won’t crack if knocked off the worktop.”</li>
+ <li><b>Link the property to the product</b>: property → so → benefit to the user or maker. “ABS is tough, <i>so</i> the games controller casing won’t crack if it is dropped.”</li>
  <li>Use the right property word: hard is not the same as tough; strong is not the same as stiff (page on performance characteristics in Topic 2).</li></ul>
  <table><tr><th>Page</th><th>Spec</th><th>Covers</th></tr>
  <tr><td>2</td><td>1.1</td><td>Woods: hardwoods and softwoods</td></tr>
@@ -19,8 +19,8 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
  { tip: '<b>Revision tip:</b> do the quizzes before you read the notes. Getting things wrong first, then reading, makes it stick far better than reading first.' },
  { keys: [
   ['Property', 'A characteristic of a material, e.g. hardness, density, conductivity.'],
-  ['Hardwood', 'Wood from a deciduous, broad-leaved tree. Usually slow growing and denser.'],
-  ['Softwood', 'Wood from a coniferous (evergreen, needle-leaved) tree. Usually fast growing and cheaper.'],
+  ['Hardwood', 'Wood from a broad-leaved tree (most in temperate climates are deciduous). Usually slow growing and denser.'],
+  ['Softwood', 'Wood from a coniferous (cone-bearing, needle-leaved) tree. Usually fast growing and cheaper.'],
   ['Ferrous metal', 'A metal that contains iron. Usually magnetic and will rust.'],
   ['Non-ferrous metal', 'A metal that contains no iron. Does not rust.'],
   ['Alloy', 'A mixture of a metal with at least one other element, to improve its properties.'],
@@ -35,7 +35,7 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
  { notes: `<h4>Hardwoods and softwoods</h4>
  <p>The names describe the <b>type of tree</b>, not how hard the wood is: balsa is a hardwood and is very soft.</p>
  <table><tr><th></th><th>Hardwoods</th><th>Softwoods</th></tr>
- <tr><td><b>Tree</b></td><td>Deciduous, broad leaves; most lose leaves in winter</td><td>Coniferous, needles, evergreen, cones</td></tr>
+ <tr><td><b>Tree</b></td><td>Broad-leaved; most temperate ones are deciduous (lose their leaves in winter)</td><td>Coniferous: needles and cones; almost all evergreen (larch is the exception: it drops its needles)</td></tr>
  <tr><td><b>Growth</b></td><td>Slow (often 80–100+ years)</td><td>Fast (about 30 years)</td></tr>
  <tr><td><b>Cost</b></td><td>More expensive</td><td>Cheaper and more readily available</td></tr>
  <tr><td><b>Sustainability</b></td><td>Slower to replace; look for FSC certification</td><td>Easier to replant from managed forests</td></tr>
@@ -52,14 +52,14 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
  <tr><td><b>Pine</b> (Scots pine, “red deal”)</td><td>Pale yellow, straight grain, knotty, light, easy to work, cheap</td><td>Construction timber, DIY and flat-pack furniture, mouldings</td></tr>
  <tr><td><b>Cedar</b> (western red cedar)</td><td>Reddish, light, natural oils make it resist rot and insects without treatment; soft</td><td>Outdoor cladding, sheds, fencing, roof shingles, beehives</td></tr>
  <tr><td><b>Larch</b></td><td>Tough and durable for a softwood, resinous, resists rot</td><td>Boat planking, cladding, fencing, decking, garden furniture</td></tr>
- <tr><td><b>Redwood</b> (sequoia)</td><td>Light, straight grain, resists decay and insects, stable</td><td>Outdoor furniture, decking, construction, cladding</td></tr></table>
+ <tr><td><b>Redwood</b> (in the UK timber trade, European redwood is Scots pine; Californian redwood is sequoia)</td><td>Light, straight grain, resists decay and insects, stable</td><td>Outdoor furniture, decking, construction, cladding</td></tr></table>
  <h4>Stock forms</h4>
  <p>Wood is sold <b>rough sawn</b> (straight from the sawmill) or <b>planed</b>: PSE (planed square edge) or PAR (planed all round), which is slightly smaller than the nominal size. Also sold as boards, strips, squares, dowel and mouldings.</p>` },
- { sort: { h: 'Hardwood or softwood?', q: 'Sort each wood by the type of tree it comes from.', cats: ['Hardwood', 'Softwood'], items: [['Oak', 0], ['Pine', 1], ['Balsa', 0], ['Larch', 1], ['Beech', 0], ['Cedar', 1], ['Jelutong', 0], ['Redwood (sequoia)', 1], ['Mahogany', 0]] } },
+ { sort: { h: 'Hardwood or softwood?', q: 'Sort each wood by the type of tree it comes from.', cats: ['Hardwood', 'Softwood'], items: [['Oak', 0], ['Pine', 1], ['Balsa', 0], ['Larch', 1], ['Beech', 0], ['Cedar', 1], ['Jelutong', 0], ['Redwood', 1], ['Mahogany', 0]] } },
  { match: { q: 'Match each wood to the product it is best suited to.', lh: 'Wood', rh: 'Product', pairs: [['Beech', 'A child’s wooden toy train'], ['Jelutong', 'A pattern for sand casting'], ['Balsa', 'A model aircraft wing'], ['Western red cedar', 'Untreated outdoor cladding on a garden studio'], ['Oak', 'A high-quality dining table with a natural finish'], ['Pine', 'Low-cost flat-pack bookcase frame']] } },
  { mcq: [
   ['Why should brass rather than steel screws be used in oak?', ['Oak is too hard for steel screws', 'Tannic acid in oak corrodes steel and stains the wood', 'Brass screws are stronger', 'Steel screws split oak'], 1, 'Oak contains tannic acid. It reacts with iron, corroding the screw and leaving black stains in the wood.'],
-  ['Balsa is classed as a hardwood because…', ['it is dense', 'it comes from a deciduous, broad-leaved tree', 'it is used for models', 'it is expensive'], 1, 'Hardwood and softwood describe the tree, not the hardness.'],
+  ['Balsa is classed as a hardwood because…', ['it is dense', 'it comes from a broad-leaved tree, not a conifer', 'it is used for models', 'it is expensive'], 1, 'Hardwood and softwood describe the tree, not the hardness.'],
   ['Which property makes jelutong ideal for casting patterns?', ['It is very hard', 'It is resinous', 'Fine, even grain with few knots, so it is easy to shape accurately and stable', 'It is cheap and knotty'], 2, 'Patterns must be shaped accurately and stay the same size. Jelutong is easy to carve and stable.'],
   ['Why is softwood usually cheaper than hardwood?', ['It is lighter', 'Coniferous trees grow faster, so supply is greater', 'It has fewer knots', 'It is always imported'], 1, 'Softwoods are ready to fell in about 30 years, compared with 80–100+ for many hardwoods.'],
   ['Which wood would you choose for a garden bench that will not be treated?', ['Beech', 'Jelutong', 'Larch or cedar', 'Balsa'], 2, 'Larch and cedar contain natural resins or oils that resist rot. Beech rots outdoors.'],
@@ -91,8 +91,8 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
  <tr><td><b>Duralumin</b></td><td>Aluminium + about 4% copper (+ manganese, magnesium)</td><td>Light but nearly as strong as mild steel; age hardens</td><td>Aircraft structures, high-performance bike parts</td></tr>
  <tr><td><b>Brass</b></td><td>Copper + zinc (about 65:35)</td><td>Casts and machines well, corrosion resistant, attractive gold colour, low friction</td><td>Door furniture, plumbing fittings, musical instruments, screws for oak</td></tr></table>
  <h4>Stock forms</h4><p>Sheet, plate, bar (round, square, flat), tube, angle, channel, I-beam, wire, and ingots or powder for casting.</p>` },
- { sort: { h: 'Ferrous, non-ferrous or alloy?', q: 'Choose the best category for each metal.', cats: ['Ferrous', 'Non-ferrous', 'Alloy'], items: [['Mild steel', 0], ['Copper', 1], ['Brass', 2], ['Cast iron', 0], ['Aluminium', 1], ['Duralumin', 2], ['Tin', 1], ['High carbon steel', 0], ['Zinc', 1], ['Stainless steel', 2]] } },
- { gap: { text: 'Brass is an alloy of {{copper}} and {{zinc}}. Stainless steel contains {{chromium}}, which forms a protective layer so it does not rust. Duralumin is aluminium alloyed with about 4% {{copper}}. Cast iron contains 2–4% {{carbon}}, which makes it {{brittle}} but good for casting.', extra: ['tin', 'nickel', 'ductile', 'lead'] } },
+ { sort: { h: 'Ferrous, non-ferrous or alloy?', q: 'The specification lists metals in three groups: ferrous metals, non-ferrous (pure) metals, and named alloys. Sort each into the group Edexcel puts it in.', cats: ['Ferrous (spec list)', 'Non-ferrous pure metal', 'Named alloy (spec list)'], items: [['Mild steel', 0], ['Copper', 1], ['Brass', 2], ['Cast iron', 0], ['Aluminium', 1], ['Duralumin', 2], ['Tin', 1], ['High carbon steel', 0], ['Zinc', 1], ['Stainless steel', 2]] } },
+ { gap: { text: 'Brass is an alloy of copper and {{zinc}}. Stainless steel contains {{chromium}}, which forms a protective layer so it does not rust. Duralumin is aluminium alloyed with about 4% {{copper}}. Cast iron contains 2–4% {{carbon}}, which makes it {{brittle}} but good for casting.', extra: ['tin', 'nickel', 'ductile', 'lead'] } },
  { mcq: [
   ['Why is aluminium used for drinks cans?', ['It is magnetic for sorting', 'It is light, malleable and corrosion resistant, and can be recycled endlessly', 'It is the hardest metal', 'It is cheaper than steel per kg'], 1, 'Light to transport, malleable for deep drawing, does not rust, and highly recyclable.'],
   ['Which metal is used to galvanise steel?', ['Tin', 'Copper', 'Zinc', 'Aluminium'], 2, 'Hot-dip galvanising coats steel in zinc, which protects it sacrificially.'],
@@ -120,7 +120,7 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
  <tr><td><b>PET</b> (polyethylene terephthalate)</td><td>Clear, tough, light, good barrier to gases and moisture, recyclable</td><td>Drinks bottles, food packaging, polyester fibre</td></tr>
  <tr><td><b>PVC</b></td><td>Rigid (uPVC) or flexible when plasticised; weather and chemical resistant, good insulator</td><td>Window frames, pipes and gutters (uPVC); cable insulation, flooring (flexible)</td></tr>
  <tr><td><b>Polypropylene (PP)</b></td><td>Tough, light, flexible, excellent fatigue resistance (makes <b>living hinges</b>), food safe, chemical resistant</td><td>Lunch boxes, bottle-top hinges, chairs, kettles, rope</td></tr>
- <tr><td><b>ABS</b></td><td>Tough, high impact strength, hard, good surface finish, easily injection moulded</td><td>LEGO, kettle and appliance casings, phone cases, 3D printing</td></tr></table>
+ <tr><td><b>ABS</b></td><td>Tough, high impact strength, hard, good surface finish, easily injection moulded</td><td>LEGO, appliance and power-tool casings, phone cases, 3D printing</td></tr></table>
  <h4>Thermosets</h4>
  <table><tr><th>Polymer</th><th>Properties</th><th>Uses</th></tr>
  <tr><td><b>Epoxy resin</b></td><td>Strong, excellent adhesion to most materials, chemical resistant, good electrical insulator</td><td>Two-part adhesive (Araldite), matrix for carbon fibre, encapsulating electronics, PCB boards</td></tr>
@@ -131,7 +131,7 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
  <h4>Where polymers come from</h4>
  <p>Most are synthetic, made from crude oil by fractional distillation then cracking and polymerisation. Bioplastics such as PLA are made from plant starch; they are compostable in industrial conditions.</p>` },
  { sort: { h: 'Thermoplastic, thermoset or elastomer?', q: 'Sort each polymer.', cats: ['Thermoplastic', 'Thermoset', 'Elastomer'], items: [['Acrylic', 0], ['Urea formaldehyde', 1], ['Polypropylene', 0], ['Epoxy resin', 1], ['Natural rubber', 2], ['ABS', 0], ['Polyester resin', 1], ['PET', 0], ['Silicone rubber', 2], ['HDPE', 0], ['PVC', 0]] } },
- { match: { q: 'Match the polymer to its best use.', lh: 'Polymer', rh: 'Use', pairs: [['Polypropylene', 'The hinge on a shampoo bottle cap'], ['Acrylic', 'A clear, glossy shop display stand'], ['Urea formaldehyde', 'An electrical socket cover'], ['ABS', 'A tough kettle body'], ['PET', 'A fizzy drinks bottle'], ['Epoxy resin', 'The matrix in a carbon fibre bike frame'], ['LDPE', 'A squeezy sauce bottle']] } },
+ { match: { q: 'Match the polymer to its best use.', lh: 'Polymer', rh: 'Use', pairs: [['Polypropylene', 'The hinge on a shampoo bottle cap'], ['Acrylic', 'A clear, glossy shop display stand'], ['Urea formaldehyde', 'An electrical socket cover'], ['ABS', 'A tough vacuum cleaner casing'], ['PET', 'A fizzy drinks bottle'], ['Epoxy resin', 'The matrix in a carbon fibre bike frame'], ['LDPE', 'A squeezy sauce bottle']] } },
  { tf: [
   ['Thermosets can be recycled by melting them down and remoulding.', false, 'Cross-links stop them softening, so they cannot be remelted. They are hard to recycle.'],
   ['Polypropylene is used for living hinges because of its fatigue resistance.', true, 'PP can flex thousands of times without cracking.'],
@@ -173,7 +173,7 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
  ] },
  { exam: [
   ['**Explain** two advantages of using plywood rather than solid timber for a large table top.', 4, ['Grain of veneers at 90° (1) so it is stable and resists warping and splitting (1)', 'Available in large standard sheets (1) so narrow boards do not need joining (1)', 'Cheaper / makes better use of timber (1) with reason (1)']],
-  ['**Discuss** the use of GRP for the hull of a small sailing dinghy.', 6, ['Strong and light (1); waterproof and does not rot or corrode (1–2)', 'Moulded in one piece in a reusable mould: smooth, seamless, cost effective for batch production (1–2)', 'Against: brittle under sharp impact; styrene fumes during lay-up; hard to recycle at end of life (1–2)']],
+  ['**Discuss** the use of GRP for the hull of a small sailing dinghy.', 6, ['Strong and light (1); waterproof and does not rot or corrode (1–2)', 'Moulded in one piece in a reusable mould: smooth, seamless, cost effective for batch production (1–2)', 'Against: brittle under sharp impact; styrene fumes during lay-up; hard to recycle at end of life (1–2)', 'Reasoned conclusion, e.g. well suited to batch-produced dinghies despite end-of-life issues (1)']],
   ['**State** two disadvantages of chipboard.', 2, ['Swells/breaks down when wet (1)', 'Weak edges / poor screw holding (1)', 'Rough surface needs veneer or laminate (1)']],
  ] },
 ]},
@@ -240,7 +240,7 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
 ]},
 
 { t: 'Smart and modern materials', spec: '1.7', blocks: [
- { notes: `<h4>Smart materials</h4><p>Smart materials respond to a change in their environment (temperature, light, pressure, voltage) by changing a property, and change back when the stimulus is removed. They need no control system.</p>
+ { notes: `<h4>Smart materials</h4><p>Smart materials respond to a change in their environment (temperature, light, pressure, voltage) by changing a property, and change back when the stimulus is removed. Most need no control system: the material itself reacts (LCDs and electrochromic glass respond to an applied voltage).</p>
  <table><tr><th>Material</th><th>Stimulus → response</th><th>Uses</th></tr>
  <tr><td><b>Shape memory alloy</b> (SMA, e.g. nitinol: nickel-titanium)</td><td>Deformed when cool; heated above its transformation temperature it returns to its “remembered” shape. Some are <b>superelastic</b> at room temperature</td><td>Glasses frames that spring back, dental braces, medical stents, actuators, thermostatic valves</td></tr>
  <tr><td><b>Thermochromic</b> pigments</td><td>Temperature → colour change</td><td>Kettles and mugs that show heat, baby spoons and bath ducks, forehead thermometers, battery testers</td></tr>
@@ -252,7 +252,7 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
  <h4>Modern materials</h4><p>Developed through new processes rather than responding to stimuli, e.g. graphene, nanomaterials, Kevlar, e-textiles, bioplastics (PLA). Know a couple of examples to use in “new developments” answers.</p>` },
  { match: { q: 'Match each smart material to the product.', lh: 'Material', rh: 'Product', pairs: [['Shape memory alloy', 'Glasses frames that spring back after being sat on'], ['Thermochromic pigment', 'A baby spoon that changes colour if food is too hot'], ['Photochromic pigment', 'Sunglasses that darken outdoors'], ['QTC', 'A pressure-sensitive switch in a glove'], ['Electrochromic glass', 'An office window that tints at the press of a switch'], ['Thermo-ceramic', 'A cooker hob top']] } },
  { tf: [
-  ['A smart material needs a microcontroller to change its properties.', false, 'The change comes from the material itself responding to the stimulus.'],
+  ['A thermochromic pigment needs a sensor and microcontroller to change colour.', false, 'The change comes from the material itself responding to the stimulus.'],
   ['Thermochromic pigments respond to UV light.', false, 'Thermochromic = temperature. Photochromic = light.'],
   ['QTC conducts electricity better when compressed.', true, 'Squeezing brings conductive particles close enough for electrons to tunnel between them.'],
   ['Nitinol is an alloy of nickel and titanium.', true, 'Ni-Ti: NiTiNOL (Naval Ordnance Laboratory, where it was discovered).'],
@@ -279,7 +279,7 @@ BOOKLETS.push({ id: 't1', topic: 1, title: 'Materials', pages: [
   ['Best material for a sailing dinghy hull made in batches?', ['GRP', 'Pine', 'Mild steel', 'Foam board'], 0, 'Waterproof, light, strong, moulded in one piece from a reusable mould.'],
  ] },
  { exam: [
-  ['**Justify** a suitable material for the body of an electric kettle.', 4, ['Named material, e.g. polypropylene or ABS / stainless steel (1)', 'Reasons linked to product: heat resistant enough / electrical insulator (polymer) (1); tough, won’t crack if knocked (1); easily injection moulded with handle and features in one (1); stainless: hygienic, durable, premium look (1)']],
+  ['**Justify** a suitable material for the body of an electric kettle.', 4, ['Named material, e.g. polypropylene / stainless steel (1)', 'Reasons linked to product: heat resistant enough / electrical insulator (polymer) (1); tough, won’t crack if knocked (1); easily injection moulded with handle and features in one (1); stainless: hygienic, durable, premium look (1)']],
   ['**Evaluate** the use of solid oak compared with oak-veneered MDF for a range of bedroom furniture.', 9, ['Solid oak: strength, durability, can be refinished, premium value, attractive figure (1–2); but expensive, heavy, slow-growing, can warp/move with humidity (1–2)', 'Veneered MDF: stable, large flat panels, cheaper, uses waste fibre, same visible appearance (1–2); but edges need lipping, damaged veneer hard to repair, swells when wet, formaldehyde/dust (1–2)', 'Context: mass-produced range favours MDF; bespoke/premium favours solid oak (1–2)', 'Supported judgement (1)']],
   ['**Explain** two factors, other than material properties, that a designer considers when selecting a material.', 4, ['Cost (1) e.g. material and processing cost must suit the selling price (1)', 'Availability / stock forms (1) e.g. standard sheet sizes reduce waste (1)', 'Sustainability / recyclability (1) reduce environmental impact (1)', 'Manufacturing process / scale (1); aesthetics (1)']],
  ] },

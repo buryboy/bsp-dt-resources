@@ -29,6 +29,26 @@ const rating = (id) => (S['r.' + id] == null ? -1 : +S['r.' + id]);
 
 /* ---------- units: every answerable item, for progress and score ---------- */
 // returns [{id, auto, done, ok, marks, got}]
+/* ---------- diagrams (see diagrams/00-kit.js) ---------- */
+const DG = typeof DIAGRAMS !== 'undefined' ? DIAGRAMS : {};
+// mode 'key': numbered markers with the names listed underneath; 'blank': markers only (for labelling); 'plain': no markers
+function figSVG(id, mode, inner, w, h) {
+  const d = DG[id] || {}; inner = inner == null ? d.svg : inner; w = w || d.w || 700; h = h || d.h || 400; let m = '';
+  if (mode !== 'plain') (d.parts || []).forEach(([x, y, , tx, ty], i) => { if (tx != null) m += `<line x1="${x}" y1="${y}" x2="${tx}" y2="${ty}" stroke="#b21c26" stroke-width="1.6"/><circle cx="${tx}" cy="${ty}" r="3.4" fill="#b21c26"/>`;
+    m += `<circle cx="${x}" cy="${y}" r="13" fill="#fff" stroke="#b21c26" stroke-width="2.2"/><text x="${x}" y="${y + 5}" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="middle" fill="#b21c26">${i + 1}</text>`; });
+  return `<svg class="dg" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${E(d.t || 'Diagram')}"><rect x="0" y="0" width="${w}" height="${h}" fill="#fff"/>${inner || ''}${m}</svg>`;
+}
+function figHTML(id, cap, ref) {
+  const d = DG[id]; if (!d) return `<p class="muted">[diagram “${E(id)}” is missing]</p>`;
+  if (d.stages) return `<figure class="fig${ref ? ' ref' : ''}"><div class="stg">${d.stages.map(([sv, c], i) => `<div>${figSVG(id, 'plain', sv)}<p><b>${i + 1}</b> ${c}</p></div>`).join('')}</div><figcaption>${cap || d.t}</figcaption></figure>`;
+  return `<figure class="fig${ref ? ' ref' : ''}">${figSVG(id, 'key')}${(d.parts || []).length ? `<ol class="fkey">${d.parts.map((p) => `<li>${p[2]}</li>`).join('')}</ol>` : ''}<figcaption>${cap || d.t}</figcaption></figure>`;
+}
+// { label: id } and { stages: id } are shorthand: they become a matching and an ordering activity built from the diagram
+BOOKLETS.forEach((bk) => (bk.pages || []).forEach((pg) => pg.blocks.forEach((b) => {
+  if (b.label && DG[b.label] && DG[b.label].parts) { const d = DG[b.label]; b.match = { h: 'Label the diagram', q: b.q || `Choose the correct name for each numbered part of the diagram: ${d.t.toLowerCase()}.`, lh: 'Number', rh: 'Part', pairs: d.parts.map((p, i) => [String(i + 1), p[2]]), fig: b.label }; }
+  if (b.stages && DG[b.stages] && DG[b.stages].stages) { const d = DG[b.stages]; b.order = { h: 'Put the stages in order', q: b.q || `These pictures show ${d.t.toLowerCase()}. Number them in the correct order.`, steps: d.stages.map(([sv, c]) => `<span class="ostg">${figSVG(b.stages, 'plain', sv)}<span>${c}</span></span>`) }; }
+})));
+
 function blockUnits(bk, b) {
   const U = [], u = (id) => S.u[id] || {};
   const add = (id, auto, done, ok, extra) => U.push(Object.assign({ id, auto, done, ok, started: Object.keys(S.u[id] || {}).length > 0 }, extra || {}));
@@ -194,6 +214,7 @@ function blockHTML(bk, b, bi) {
   if (b.h) h += `<h3>${b.h}</h3>`;
   if (b.notes) h += `<div class="notes ref">${b.notes}</div>`;
   if (b.tip) h += `<div class="tip ref">${b.tip}</div>`;
+  if (b.fig) h += figHTML(b.fig, b.cap, true);
   if (b.keys) {
     h += head('Key words', 'Tap a card to read what it means; tapping another card closes the last one. When you start the matching below, the cards blur until you have finished it.');
     h += `<div class="flips ref">${b.keys.map(([t, d]) => `<div class="flip"><b>${t}</b><div class="d">${d}</div></div>`).join('')}</div>`;
@@ -216,6 +237,7 @@ function blockHTML(bk, b, bi) {
   }
   if (b.match) {
     h += head(b.match.h || 'Match them up', b.match.q);
+    if (b.match.fig) h += `<figure class="fig">${figSVG(b.match.fig, 'blank')}</figure>`;
     // options are de-duplicated by text, and an answer is right if its text matches (two rows may share an answer)
     const first = (i) => b.match.pairs.findIndex((p) => p[1] === b.match.pairs[i][1]);
     const rs = shuffle([...new Set(b.match.pairs.map((p, i) => first(i)))], b.match.q);
@@ -240,10 +262,10 @@ function blockHTML(bk, b, bi) {
   }
   if (b.exam) {
     h += head(b.eh || 'Exam practice', CFG.examIntro || 'Start with the command word (highlighted). Answer first: the mark scheme opens once you have written at least 15 characters. <b>Explain</b> = a point plus a linked reason for 2 marks, or two linked reasons for 3 marks. <b>Discuss</b> and <b>Evaluate</b> are marked by level. Then mark yourself honestly.');
-    h += b.exam.map(([q, m, ms, kind], i) => { const id = bk.id + ':e' + hsh(q); const sk = kind === 'sketch'; return `<div class="q" data-eu="${id}"${sk ? ' data-sk="1"' : ''}><span class="qn">Q${i + 1}</span>${cw(q)} <span class="tag">${m} mark${m > 1 ? 's' : ''}</span>
+    h += b.exam.map(([q, m, ms, kind, fig], i) => { const id = bk.id + ':e' + hsh(q); const sk = kind === 'sketch'; return `<div class="q" data-eu="${id}"${sk ? ' data-sk="1"' : ''}><span class="qn">Q${i + 1}</span>${cw(q)} <span class="tag">${m} mark${m > 1 ? 's' : ''}</span>
       ${sk ? `<div class="tip" style="margin-top:8px"><b>On paper:</b> sketch and label your answer by hand, as you would in the exam. Labelled sketches earn the marks; neat drawing does not.</div><label class="chk"><input type="checkbox" data-skdone> I have sketched and labelled my answer on paper</label>` : `<textarea style="margin-top:8px;min-height:${m >= 9 ? 220 : m >= 6 ? 170 : m >= 4 ? 120 : 80}px" placeholder="Answer as you would in the exam."></textarea>`}
       <button class="btn ghost small" data-ms style="margin-top:8px">Show the mark scheme</button>
-      <div class="ms">${msHTML(q, m, ms)}
+      <div class="ms">${fig && DG[fig] ? `<p style="margin:0 0 6px"><b>A model sketch.</b> Yours does not need to be this neat, but it should show these parts, labelled.</p>${figHTML(fig)}` : ''}${msHTML(q, m, ms)}
       <label class="key">My mark: <select class="f" style="width:auto;display:inline-block"><option value=""></option>${Array.from({ length: m + 1 }, (_, k) => `<option>${k}</option>`).join('')}</select> / ${m}</label></div></div>`; }).join('');
   }
   if (h.length > a1) h = h.slice(0, a1) + `<div class="actv" data-bi="${bi}">` + h.slice(a1) + '</div>';

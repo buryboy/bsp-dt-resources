@@ -21,7 +21,9 @@ for n in ('jspdf.umd.min.js', 'html2canvas.min.js'):
     libs += p.read_text() + '\n'
 t = t.replace('/*LIBS*/', libs)
 t = t.replace('/*SPEC*/', (HERE / 'spec.js').read_text())
-t = t.replace('/*BOOKLETS*/', '\n'.join(p.read_text() for p in sorted((HERE / 'booklets').glob('*.js'))))
+# the diagrams (shared by both apps) go in first: 00-kit.js, then one file per group of drawings
+diagrams = '\n'.join(p.read_text() for p in sorted((HERE / 'diagrams').glob('*.js')))
+t = t.replace('/*BOOKLETS*/', diagrams + '\n' + '\n'.join(p.read_text() for p in sorted((HERE / 'booklets').glob('*.js'))))
 t = t.replace('/*ENGINE*/', (HERE / 'engine.js').read_text())
 # iPad extras
 t = t.replace('</title>', '</title>\n<link rel="manifest" href="app.webmanifest">\n<link rel="apple-touch-icon" href="../../book-kit/icons/alevel-revision-180.png">\n<meta name="theme-color" content="#1f2328">', 1)

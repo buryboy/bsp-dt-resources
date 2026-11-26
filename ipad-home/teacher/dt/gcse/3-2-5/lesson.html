@@ -142,5 +142,22 @@ show(0);
 
 }
 </script>
+<script>
+/* Fit to the board: scale each section up so it fills the screen and can be read from the back of the room.
+   It measures the section with every card opened, so tapping a card never makes the page jump or scroll. */
+(() => { const main = document.getElementById('main'); if (!main || !('zoom' in main.style)) return; let busy = false, t = 0;
+  const fit = () => { if (busy) return; busy = true;
+    const side = innerWidth > 1000 ? main.getBoundingClientRect().left : 0, W = innerWidth - side, H = innerHeight;
+    if (innerWidth <= 1000) { main.style.zoom = ''; main.style.width = ''; main.style.height = ''; busy = false; return; }
+    const closed = [...main.querySelectorAll('.card:not(.open)')], hidden = [...main.querySelectorAll('.result:not(.show)')];
+    closed.forEach((c) => c.classList.add('open')); hidden.forEach((r) => r.classList.add('show'));
+    const set = (z) => { main.style.zoom = z; main.style.width = (W / z) + 'px'; main.style.height = (H / z) + 'px'; };
+    let lo = 1, hi = 2.6; for (let k = 0; k < 9; k++) { const z = (lo + hi) / 2; set(z); if (main.scrollHeight <= main.clientHeight + 1 && main.scrollWidth <= main.clientWidth + 1) lo = z; else hi = z; }
+    set(lo); closed.forEach((c) => c.classList.remove('open')); hidden.forEach((r) => r.classList.remove('show')); main.scrollTop = 0;
+    requestAnimationFrame(() => { busy = false; }); };
+  const later = () => { clearTimeout(t); t = setTimeout(fit, 60); };
+  new MutationObserver(later).observe(main, { childList: true }); addEventListener('resize', later); addEventListener('load', later); if (document.fonts && document.fonts.ready) document.fonts.ready.then(later); later();
+})();
+</script>
 </body>
 </html>

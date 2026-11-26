@@ -24,6 +24,7 @@ main{max-width:1100px;margin:0 auto;padding:18px 14px 60px}
 .pane canvas,.pane .svgbox{width:100%;height:auto;display:block;border-radius:6px}
 .svgbox{background:#fff;background-image:linear-gradient(45deg,#f1f2f4 25%,transparent 25%,transparent 75%,#f1f2f4 75%),linear-gradient(45deg,#f1f2f4 25%,transparent 25%,transparent 75%,#f1f2f4 75%);background-size:16px 16px;background-position:0 0,8px 8px}
 .svgbox svg{width:100%;height:auto;display:block}
+.svgbox svg .cutline{stroke-width:1.2px;vector-effect:non-scaling-stroke}
 .ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 22px}
 .ctl label{display:block;font-weight:600;font-size:15px}
 .ctl input[type=range]{width:100%}
@@ -37,7 +38,7 @@ main{max-width:1100px;margin:0 auto;padding:18px 14px 60px}
 <div class="bar"><h1>Drawing to SVG</h1><span data-upd-before data-upd-class="plain"></span></div>
 <main>
  <div class="card">
-  <p style="margin:0 0 10px"><b>Draw in black and red pen on white paper, photograph it, and get a clean vector file (SVG)</b> for the laser cutter, vinyl cutter or CAD.</p>
+  <p style="margin:0 0 10px"><b>Draw in black and red pen on white paper, photograph it, and get a clean vector file (SVG) for the laser cutter.</b> Black lines become hairline <b>cut</b> lines. Red becomes filled shapes to <b>engrave</b>.</p>
   <div class="acts"><button class="btn" id="pick">Take or choose a photo</button><input type="file" id="file" accept="image/*" style="display:none"><span class="muted" id="status">Tip: flat paper, good light, fill the frame, and keep shadows off the page.</span></div>
  </div>
  <div class="two" id="panes" style="display:none">
@@ -52,7 +53,7 @@ main{max-width:1100px;margin:0 auto;padding:18px 14px 60px}
    <div><label for="spk">Ignore specks smaller than: <span id="spkv"></span></label><input type="range" id="spk" min="0" max="60" value="12"><small>Removes dust and paper texture.</small></div>
    <div><label class="chk"><input type="checkbox" id="useB" checked> Include black <input type="color" id="colB" value="#000000" aria-label="Black output colour"></label>
         <label class="chk" style="margin-top:8px"><input type="checkbox" id="useR" checked> Include red <input type="color" id="colR" value="#ff0000" aria-label="Red output colour"></label></div>
-   <div><label class="chk"><input type="checkbox" id="outline"> Outlines only (hairline, no fill)</label><small>For laser cutters that follow a line: black and red can be set to cut and engrave.</small></div>
+   <div><label class="chk"><input type="checkbox" id="cut" checked> Black lines are cut lines</label><small>Each black pen line becomes one hairline down its centre, with no fill, for the laser to cut. Red stays a filled shape to engrave. Untick to keep black as filled shapes.</small></div>
   </div>
   <div class="acts" style="margin-top:14px"><button class="btn" id="saveSvg" disabled>Save SVG</button><button class="btn ghost" id="savePng" disabled>Save PNG (transparent)</button><span class="muted" id="info"></span></div>
  </div>
@@ -1334,36 +1335,90 @@ function despeckle(cls, min) { // remove connected blobs of ink smaller than min
       if (y > 0 && !seen[p - W] && cls[p - W] === c) { seen[p - W] = 1; stack[top++] = p - W; } if (y < H - 1 && !seen[p + W] && cls[p + W] === c) { seen[p + W] = 1; stack[top++] = p + W; } }
     if (n < min) blob.forEach((p) => cls[p] = 0); }
 }
+// ---- Black as cut lines: thin every black pen stroke down to a one-pixel centre line, then follow it ----
+function thin(m) { // Zhang-Suen thinning, in place. m is 1 where there is black ink.
+  const idx = (x, y) => y * W + x; let changed = true; const kill = [];
+  while (changed) { changed = false;
+    for (let pass = 0; pass < 2; pass++) { kill.length = 0;
+      for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) { const i = idx(x, y); if (!m[i]) continue;
+        const p2 = m[i - W], p3 = m[i - W + 1], p4 = m[i + 1], p5 = m[i + W + 1], p6 = m[i + W], p7 = m[i + W - 1], p8 = m[i - 1], p9 = m[i - W - 1];
+        const b = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9; if (b < 2 || b > 6) continue;
+        const a = (!p2 && p3) + (!p3 && p4) + (!p4 && p5) + (!p5 && p6) + (!p6 && p7) + (!p7 && p8) + (!p8 && p9) + (!p9 && p2); if (a !== 1) continue;
+        if (pass === 0 ? (p2 * p4 * p6 === 0 && p4 * p6 * p8 === 0) : (p2 * p4 * p8 === 0 && p2 * p6 * p8 === 0)) kill.push(i); }
+      if (kill.length) { changed = true; for (const i of kill) m[i] = 0; } } }
+}
+function centreLines(cls, minLen, eps) { // returns an array of polylines [[x,y],...]
+  const m = new Uint8Array(W * H); for (let i = 0; i < m.length; i++) m[i] = cls[i] === 1 ? 1 : 0;
+  for (let x = 0; x < W; x++) { m[x] = 0; m[(H - 1) * W + x] = 0; } for (let y = 0; y < H; y++) { m[y * W] = 0; m[y * W + W - 1] = 0; }
+  thin(m);
+  // neighbours: the four straight ones, plus a diagonal only when it is not already reached by a straight step (keeps the graph clean)
+  const nb = (i) => { const o = []; const u = m[i - W], d = m[i + W], l = m[i - 1], r = m[i + 1];
+    if (u) o.push(i - W); if (d) o.push(i + W); if (l) o.push(i - 1); if (r) o.push(i + 1);
+    if (m[i - W - 1] && !u && !l) o.push(i - W - 1); if (m[i - W + 1] && !u && !r) o.push(i - W + 1); if (m[i + W - 1] && !d && !l) o.push(i + W - 1); if (m[i + W + 1] && !d && !r) o.push(i + W + 1); return o; };
+  const node = new Uint8Array(W * H), vis = new Uint8Array(W * H), nodes = [];
+  for (let i = 0; i < m.length; i++) if (m[i]) { const k = nb(i).length; if (k !== 2) { node[i] = 1; if (k) nodes.push(i); } }
+  const lines = [], done = new Set(), pt = (i) => [i % W + 0.5, Math.floor(i / W) + 0.5];
+  const walk = (a, b) => { const pts = [a]; let prev = a, cur = b;
+    for (;;) { pts.push(cur); if (node[cur] || vis[cur]) break; vis[cur] = 1; const n = nb(cur).filter((x) => x !== prev); if (!n.length) break; prev = cur; cur = n.find((x) => !vis[x] || node[x]); if (cur === undefined) cur = n[0]; }
+    return pts; };
+  for (const a of nodes) for (const b of nb(a)) {
+    if (node[b]) { const k = a < b ? a + ':' + b : b + ':' + a; if (done.has(k)) continue; done.add(k); lines.push([a, b]); }
+    else if (!vis[b]) lines.push(walk(a, b)); }
+  for (let i = 0; i < m.length; i++) if (m[i] && !node[i] && !vis[i]) { vis[i] = 1; const n = nb(i); const l = walk(i, n[0]); l.push(i); lines.push(l); } // closed loops
+  // join pieces that meet end to end at a simple junction is left to the laser software; here: drop tiny spurs, simplify, convert
+  const rdp = (p, e) => { if (p.length < 3) return p; const a = p[0], b = p[p.length - 1]; let mx = 0, k = 0; const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+    for (let i = 1; i < p.length - 1; i++) { const d = L === 1 && !dx && !dy ? Math.hypot(p[i][0] - a[0], p[i][1] - a[1]) : Math.abs(dy * p[i][0] - dx * p[i][1] + b[0] * a[1] - b[1] * a[0]) / L; if (d > mx) { mx = d; k = i; } }
+    if (mx <= e) return [a, b]; return rdp(p.slice(0, k + 1), e).slice(0, -1).concat(rdp(p.slice(k), e)); };
+  const out = [];
+  for (const l of lines) { if (l.length < Math.max(3, minLen)) { const ends = node[l[0]] && nb(l[0]).length === 1 || node[l[l.length - 1]] && nb(l[l.length - 1]).length === 1; if (ends || l.length < 3) continue; }
+    const closed = l.length > 3 && l[0] === l[l.length - 1]; let p = l.map(pt);
+    if (closed) { const h = Math.floor(p.length / 2); p = rdp(p.slice(0, h + 1), eps).slice(0, -1).concat(rdp(p.slice(h), eps)); } else p = rdp(p, eps);
+    out.push({ p, closed }); }
+  return out;
+}
+function cutPath(l, smooth) { const f = (n) => Math.round(n * 10) / 10, p = l.p, P = (q) => f(q[0]) + ' ' + f(q[1]); if (p.length < 2) return '';
+  if (!smooth || p.length < 3) return 'M' + p.map(P).join('L') + (l.closed ? 'Z' : '');
+  // gentle bends are rounded with a curve; sharp corners (a turn of more than about 40 degrees) are kept sharp
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const sharp = (a, b, c) => { const u = [b[0] - a[0], b[1] - a[1]], v = [c[0] - b[0], c[1] - b[1]], d = (u[0] * v[0] + u[1] * v[1]) / ((Math.hypot(u[0], u[1]) * Math.hypot(v[0], v[1])) || 1); return d < 0.77; };
+  let d = 'M' + P(p[0]);
+  for (let i = 1; i < p.length - 1; i++) { if (sharp(p[i - 1], p[i], p[i + 1])) d += 'L' + P(p[i]); else d += 'Q' + P(p[i]) + ' ' + P(i === p.length - 2 ? p[i + 1] : mid(p[i], p[i + 1])); }
+  if (!/Q[^QL]*$/.test(d) || d.slice(d.lastIndexOf(' ', d.lastIndexOf(' ') - 1) + 1) !== P(p[p.length - 1])) d += 'L' + P(p[p.length - 1]);
+  return d + (l.closed ? 'Z' : '');
+}
 const hex = (h) => ({ r: parseInt(h.slice(1, 3), 16), g: parseInt(h.slice(3, 5), 16), b: parseInt(h.slice(5, 7), 16), a: 255 });
 function trace() {
   const cls = classify(); despeckle(cls, +$('#spk').value);
-  const useB = $('#useB').checked, useR = $('#useR').checked, det = +$('#det').value;
+  const useB = $('#useB').checked, useR = $('#useR').checked, det = +$('#det').value, cut = $('#cut').checked;
   const arr = []; for (let y = -1; y <= H; y++) { const row = new Array(W + 2); for (let x = -1; x <= W; x++) row[x + 1] = (x < 0 || y < 0 || x >= W || y >= H) ? -1 : cls[y * W + x]; arr.push(row); }
   const ii = { array: arr, palette: [] }, opt = ImageTracer.checkoptions({ ltres: [0.3, 0.6, 1, 1.6, 2.4][det], qtres: [0.3, 0.6, 1, 1.6, 2.4][det], pathomit: 4, rightangleenhance: false, strokewidth: 0, roundcoords: 1, viewbox: true, linefilter: det >= 3, scale: 1 });
   const td = { layers: [], palette: [], width: W, height: H }; let nb = 0, nr = 0;
-  [[1, useB, $('#colB').value], [2, useR, $('#colR').value]].forEach(([num, on, col]) => { if (!on) return;
+  [[2, useR, $('#colR').value], [1, useB && !cut, $('#colB').value]].forEach(([num, on, col]) => { if (!on) return;
     td.layers.push(ImageTracer.batchtracepaths(ImageTracer.internodes(ImageTracer.pathscan(ImageTracer.layeringstep(ii, num), opt.pathomit), opt), opt.ltres, opt.qtres)); td.palette.push(hex(col)); });
   for (let i = 0; i < cls.length; i++) { if (cls[i] === 1) nb++; else if (cls[i] === 2) nr++; }
   let svg = ImageTracer.getsvgstring(td, opt);
-  if ($('#outline').checked) svg = svg.replace(/fill="(rgb\([^"]+\))" stroke="rgb\([^"]+\)" stroke-width="0"/g, 'fill="none" stroke="$1" stroke-width="0.5"');
+  let cuts = 0;
+  if (cut && useB) { const lines = centreLines(cls, Math.max(6, +$('#spk').value), [0.6, 0.9, 1.3, 1.9, 2.6][det]); const d = lines.map((l) => cutPath(l, det >= 1)).filter(Boolean); cuts = d.length;
+    // hairline: laser software treats a very thin stroke with no fill as a line to cut
+    svg = svg.replace('</svg>', '<g id="cut-lines" fill="none" stroke="' + $('#colB').value + '" stroke-width="0.01mm" stroke-linecap="round" stroke-linejoin="round">' + d.map((x) => '<path class="cutline" d="' + x + '"/>').join('') + '</g></svg>'); }
   svg = svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ').replace(/xmlns="http:\/\/www.w3.org\/2000\/svg" (.*?)xmlns="http:\/\/www.w3.org\/2000\/svg"/, 'xmlns="http://www.w3.org/2000/svg" $1');
   svgText = svg; $('#out').innerHTML = svg;
   const paths = (svg.match(/<path/g) || []).length;
-  $('#info').textContent = `${paths} shapes · ${Math.round(svg.length / 1024)} KB`;
+  $('#info').textContent = (cut && useB ? `${cuts} cut lines · ${paths - cuts} engrave shapes` : `${paths} shapes`) + ` · ${Math.round(svg.length / 1024)} KB`;
   $('#status').textContent = (nb + nr) ? 'Adjust the sliders until the result matches your drawing, then save.' : 'No pen lines found. Try moving the Black pen slider up.';
   $('#saveSvg').disabled = $('#savePng').disabled = !paths;
 }
 let timer = 0;
 function schedule(ms) { clearTimeout(timer); $('#info').textContent = 'Working…'; timer = setTimeout(() => { try { trace(); } catch (e) { $('#info').textContent = 'Something went wrong: ' + e.message; } }, ms == null ? 350 : ms); }
 function labels() { $('#tbv').textContent = $('#tb').value; $('#trv').textContent = $('#tr').value; $('#detv').textContent = ['none', 'light', 'medium', 'strong', 'maximum'][+$('#det').value]; $('#spkv').textContent = $('#spk').value + ' px'; }
-['tb', 'tr', 'det', 'spk', 'useB', 'useR', 'colB', 'colR', 'outline'].forEach((id) => $('#' + id).addEventListener('input', () => { labels(); if (px) schedule(); }));
+['tb', 'tr', 'det', 'spk', 'useB', 'useR', 'colB', 'colR', 'cut'].forEach((id) => $('#' + id).addEventListener('input', () => { labels(); if (px) schedule(); }));
 labels();
 async function saveFile(file) {
   if (navigator.maxTouchPoints > 1 && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
   const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
 }
 $('#saveSvg').onclick = () => saveFile(new File([svgText], baseName + '.svg', { type: 'image/svg+xml' }));
-$('#savePng').onclick = () => { const im = new Image(), u = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml' })); im.onload = () => { const k = 2, c = document.createElement('canvas'); c.width = W * k; c.height = H * k; c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob((b) => saveFile(new File([b], baseName + '.png', { type: 'image/png' })), 'image/png'); }; im.src = u; };
+$('#savePng').onclick = () => { const im = new Image(), u = URL.createObjectURL(new Blob([svgText.replace('stroke-width="0.01mm"', 'stroke-width="1.5"')], { type: 'image/svg+xml' })); im.onload = () => { const k = 2, c = document.createElement('canvas'); c.width = W * k; c.height = H * k; c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob((b) => saveFile(new File([b], baseName + '.png', { type: 'image/png' })), 'image/png'); }; im.src = u; };
 $('#pick').onclick = () => $('#file').click();
 $('#file').onchange = (e) => { if (e.target.files[0]) load(e.target.files[0]); e.target.value = ''; };
 document.addEventListener('dragover', (e) => e.preventDefault());

@@ -1,5 +1,5 @@
 // Offline cache for the Drawing to SVG app. Bump CACHE when index.html changes.
-const CACHE = 'ipad-drawing-to-svg-11f2a59fadf5';
+const CACHE = 'ipad-drawing-to-svg-8fb2571c1564';
 const FILES = [
  "./",
  "app.webmanifest",

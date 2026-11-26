@@ -17,3 +17,13 @@ Copy an existing booklet file and change `id` (short, never reused), `topic` and
 
 Answers are saved by a hash of the question text, so editing a question's wording resets that one question for students; adding pages or questions does not affect saved work.
 Saved data: localStorage `pd-revision-9dt0-v1` (on first run it copies ratings from the old self-check, `pd-selfcheck-9dt0-v1`). The critical path workbook keeps its own save (`cpa-y13-v1`); Home estimates its progress from that.
+
+## Animations and 3D models
+
+A notes figure can also be shown moving. `diagrams/01-motion-kit.js` holds the format and the players:
+
+- `ANIMS[id]` gives a diagram an **Animation** tab: either one cycle in named stages (play, slider, stage buttons, caption) or a process that runs all the time with a list of things to watch.
+- `MODELS[id]` gives it a **3D model** tab: drag to turn, pinch to zoom, tap a part for its name and job. Models are built in code from simple shapes with the helpers in the kit. three.js lives in `book-kit/three/` and is only fetched the first time a 3D tab is opened; the service worker caches it for offline use.
+- The engine adds the tabs to any notes figure whose id is in `ANIMS` or `MODELS`. The saved PDF always shows the still.
+
+So far: injection moulding (still, animation, 3D), extrusion, blow moulding, vacuum forming, die casting and offset lithography (animation), centre lathe and wood joints (3D), and for GCSE the types of movement, linkages, cams and gear trains (animation, `60-mechanisms.js`).

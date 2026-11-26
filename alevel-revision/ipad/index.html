@@ -655,6 +655,180 @@ const D = (() => {
   return { K, r, c, e, p, l, a, rot, t, hatch, dots };
 })();
 
+/* Motion kit: lets a diagram also be shown as an animation and as a 3D model.
+   ANIMS[id]  = { stages: [[from, to, 'Name', 'What happens'], ...], draw: (t, uid) => svg markup, dur }      one cycle, t runs 0 to 1
+             or { loop: true, watch: ['What to look for', ...], draw, dur }                                      a process that runs continuously
+   MODELS[id] = { build: (M, variant) => ({ root, frame(t), parts: { key: ['Name', 'What it does'] }, front: [groups hidden when cut open], home: { t: [x, y, z], d } }),
+                  stages (or the ones in ANIMS[id]), slider: 'Label' for a plain slider instead of a cycle, variants: ['...'] }
+   The engine wraps any notes figure whose id is in ANIMS or MODELS in tabs: Diagram, Animation, 3D model.
+   three.js is only fetched (from book-kit/three, cached for offline use) the first time a 3D tab is opened. */
+const ANIMS = {}, MODELS = {};
+// 2D drawing helpers that work in the machine's own units: S pixels per unit, (ox, oy) is where the origin sits, y is up
+const U2 = (S, ox, oy) => {
+  const ink = D.K.ink, f1 = (v) => +v.toFixed(1), X = (x) => f1(ox + x * S), Y = (y) => f1(oy - y * S);
+  const sk = (w) => `stroke="${ink}" stroke-width="${w == null ? 2 : w}" stroke-linejoin="round" stroke-linecap="round"`;
+  const col = (f) => D.K[f] || f || 'none';
+  const R = (x0, x1, y0, y1, f, rx, w) => `<rect x="${X(x0)}" y="${Y(y1)}" width="${f1((x1 - x0) * S)}" height="${f1((y1 - y0) * S)}" rx="${rx || 0}" fill="${col(f)}" ${sk(w)}/>`;
+  const PG = (pts, f, w, dx, dy) => `<polygon points="${pts.map((p) => X(p[0] + (dx || 0)) + ',' + Y(p[1] + (dy || 0))).join(' ')}" fill="${col(f)}" ${w === 0 ? 'stroke="none"' : sk(w)}/>`;
+  const PL = (pts, w, c, dash) => `<polyline points="${pts.map((p) => X(p[0]) + ',' + Y(p[1])).join(' ')}" fill="none" stroke="${col(c) === 'none' ? ink : col(c)}" stroke-width="${w || 2}" stroke-linejoin="round" stroke-linecap="round"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`;
+  const C = (x, y, r, f, w) => `<circle cx="${X(x)}" cy="${Y(y)}" r="${f1(r * S)}" fill="${col(f)}" ${sk(w)}/>`;
+  const SH = (x0, x1, y0, y1) => `<rect x="${X(x0)}" y="${Y(y1)}" width="${f1((x1 - x0) * S)}" height="${f1((y1 - y0) * S)}" fill="#fff" opacity=".45"/>`;
+  const AR = (x1, y1, x2, y2, c) => D.a(X(x1), Y(y1), X(x2), Y(y2), c || 'ink2', 3.5);
+  const ROT = (x, y, r, a0, a1, c) => D.rot(X(x), Y(y), r * S, a0, a1, c);
+  const T = (x, y, s, size, anchor, c) => D.t(X(x), Y(y), s, size || 13, anchor, c);
+  const both = (pf) => pf.concat(pf.slice().reverse().map((p) => [p[0], -p[1]]));
+  const hatchDef = (id) => `<pattern id="${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="${ink}" stroke-width="1" opacity=".38"/></pattern>`;
+  return { X, Y, S, R, PG, PL, C, SH, AR, ROT, T, both, sk, hatchDef, col };
+};
+
+const FIGX = (() => {
+  const sm = (a, b, t) => { const x = Math.min(1, Math.max(0, (t - a) / (b - a))); return x * x * (3 - 2 * x); };
+  const mix = (a, b, t) => { const h = (c) => [1, 3, 5].map((i) => parseInt(c.substr(i, 2), 16)), A = h(a), B = h(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+  const has = (id) => !!(ANIMS[id] || MODELS[id]);
+  const css = `.ftabs{display:flex;gap:6px;margin:0 0 8px;flex-wrap:wrap}
+.ftabs button,.fchips button{font:600 14px/1.2 inherit;font-family:inherit;border:1.5px solid var(--line,#bbb);background:#f4f5f7;border-radius:7px;padding:8px 12px;cursor:pointer;color:var(--ink,#1f2328)}
+.ftabs button.on{background:var(--ink,#1f2328);color:#fff;border-color:var(--ink,#1f2328)}
+.fchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.fchips button{font-size:13.5px;padding:7px 10px}.fchips button.on{background:var(--acc2,#24539c);color:#fff;border-color:var(--acc2,#24539c)}
+.fctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}.fctl label{font-size:14px;font-weight:600}
+.fctl input[type=range]{flex:1;min-width:150px;accent-color:var(--acc2,#24539c);height:30px;padding:0;border:0;background:none}
+.fcap,.finfo{border-left:4px solid var(--acc2,#24539c);background:#f4f7fc;padding:8px 12px;border-radius:0 8px 8px 0;margin:8px 0 2px;font-size:15.5px;line-height:1.45;text-align:left}
+.fcap{min-height:4.7em}.finfo{border-left-color:var(--acc,#b0402a);background:#fff;outline:1.5px solid var(--line,#bbb);outline-offset:-1.5px;min-height:3.2em}
+.fwatch{margin:8px 0 2px;padding-left:24px;font-size:15.5px;text-align:left}.fwatch li{margin:3px 0}.fwatch li::marker{color:#3b5bdb;font-weight:700}
+.f3d{position:relative;aspect-ratio:16/10;background:linear-gradient(#fff,#f1f2ee);border-radius:6px;overflow:hidden;touch-action:none}
+.f3d canvas{display:block;width:100%;height:100%;cursor:grab}.f3d .fhint{position:absolute;left:10px;bottom:7px;font-size:12px;color:#5f6670;pointer-events:none}
+.f3d .fmsg{padding:24px;margin:0}
+@media(max-width:640px){.f3d{aspect-ratio:4/3}}
+.pdfmode .figx .ftabs{display:none}.pdfmode .figx .fpane{display:none!important}.pdfmode .figx .fpane[data-fp=still]{display:block!important}`;
+  if (typeof document !== 'undefined') { const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st); }
+
+  // the engine calls this with the still figure's markup
+  function wrap(id, still) {
+    const tabs = [['still', 'Diagram'], ANIMS[id] && ['anim', 'Animation'], MODELS[id] && ['model', '3D model']].filter(Boolean);
+    return `<div class="figx" data-fig="${id}"><div class="ftabs">${tabs.map((t, i) => `<button type="button" data-ft="${t[0]}"${i ? '' : ' class="on"'}>${t[1]}</button>`).join('')}</div>
+      <div class="fpane" data-fp="still">${still}</div>${tabs.slice(1).map((t) => `<div class="fpane" data-fp="${t[0]}" hidden></div>`).join('')}</div>`;
+  }
+
+  // play button, slider, stage buttons and caption; calls onFrame(t) with t from 0 to 1
+  function player(pane, cfg, onFrame) {
+    const el = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.firstElementChild; };
+    const ctl = el('<div class="fctl"><button type="button" class="btn small fplay">Play</button></div>'), btn = ctl.firstChild; pane.appendChild(ctl);
+    const st = cfg.stages, DUR = cfg.dur || 16000; let t = cfg.start == null ? .4 : cfg.start, playing = false, last = 0, shown = -1, rng, chips, cap;
+    if (st) { rng = el('<input type="range" min="0" max="1000" aria-label="Position in the cycle">'); ctl.appendChild(rng); chips = el('<div class="fchips"></div>'); cap = el('<p class="fcap"></p>'); pane.appendChild(chips); pane.appendChild(cap);
+      st.forEach((g, i) => { const b = el(`<button type="button">${i + 1} ${g[2]}</button>`); b.onclick = () => { stop(); set(g[4] != null ? g[4] : (g[0] + g[1]) / 2); }; chips.appendChild(b); });
+      rng.oninput = () => { stop(); set(rng.value / 1000); }; }
+    else if (cfg.watch) pane.appendChild(el(`<ol class="fwatch">${cfg.watch.map((w) => `<li>${w}</li>`).join('')}</ol>`));
+    function set(v) { t = v; if (st) { rng.value = Math.round(t * 1000); let k = st.findIndex((g) => t >= g[0] && t < g[1]); if (k < 0) k = st.length - 1;
+      if (k !== shown) { shown = k; [...chips.children].forEach((c, i) => c.classList.toggle('on', i === k)); cap.innerHTML = `<b>${k + 1}. ${st[k][2]}.</b> ${st[k][3]}`; } } onFrame(t); }
+    function tick(now) { if (!playing) return; if (!pane.isConnected || pane.hidden) return stop(); const d = Math.min(80, now - last); last = now; set((t + d / DUR) % 1); requestAnimationFrame(tick); }
+    function stop() { playing = false; btn.textContent = 'Play'; }
+    btn.onclick = () => { if (playing) return stop(); playing = true; btn.textContent = 'Pause'; last = performance.now(); requestAnimationFrame(tick); };
+    set(t); return { set, ctl };
+  }
+
+  function openAnim(pane, id) {
+    const a = ANIMS[id], d = DIAGRAMS[id] || {}, box = document.createElement('div'); pane.appendChild(box);
+    const frame = (t) => { box.innerHTML = `<svg class="dg" viewBox="0 0 ${a.w || d.w} ${a.h || d.h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${(d.t || 'Diagram') + ', animated'}">${a.draw(t, 'a')}</svg>`; };
+    const p = player(pane, a, frame); if (a.loop && !matchMedia('(prefers-reduced-motion: reduce)').matches) p.ctl.firstChild.click();
+  }
+
+  /* ---------- 3D ---------- */
+  let threeP = null;
+  const script = (src) => new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+  const three = () => threeP || (threeP = (window.THREE ? Promise.resolve() : script('../../book-kit/three/three.min.js')).then(() => (THREE.OrbitControls ? 0 : script('../../book-kit/three/OrbitControls.js'))).catch((e) => { threeP = null; throw e; }));
+
+  function openModel(pane, id) {
+    const mdl = MODELS[id], host = document.createElement('div'); host.className = 'f3d'; host.innerHTML = '<p class="fmsg">Loading the 3D model…</p>'; pane.appendChild(host);
+    three().then(() => mount(pane, host, id, mdl)).catch(() => { host.innerHTML = '<p class="fmsg">The 3D model could not load. Open the app once with the internet on, then it will work offline.</p>'; });
+  }
+
+  function mount(pane, host, id, mdl) {
+    const K = D.K; let renderer; try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { host.innerHTML = '<p class="fmsg">This device cannot show the 3D model.</p>'; return; }
+    host.innerHTML = '<span class="fhint">drag to turn · pinch to zoom · tap a part</span>'; host.insertBefore(renderer.domElement, host.firstChild);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.localClippingEnabled = true;
+    const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(26, 1.6, .5, 600); scene.add(cam);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xb8bcc4, .42)); const sun = new THREE.DirectionalLight(0xffffff, .6); sun.position.set(-6, 9, 8); cam.add(sun);
+    const ctl = new THREE.OrbitControls(cam, renderer.domElement); ctl.enableDamping = true; ctl.dampingFactor = .12; ctl.maxPolarAngle = Math.PI * .6;
+    // toon shading in three steps so surfaces read as flat tones, like the drawings
+    const ramp = new THREE.DataTexture(new Uint8Array([150, 150, 150, 215, 215, 215, 255, 255, 255]), 3, 1, THREE.RGBFormat); ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+    const hc = document.createElement('canvas'); hc.width = hc.height = 32; const hx = hc.getContext('2d'); hx.fillStyle = '#fff'; hx.fillRect(0, 0, 32, 32); hx.strokeStyle = 'rgba(31,35,40,.45)'; hx.lineWidth = 2; [-32, 0, 32].forEach((k) => { hx.beginPath(); hx.moveTo(k, 32); hx.lineTo(k + 32, 0); hx.stroke(); });
+    const hatchTex = new THREE.CanvasTexture(hc); hatchTex.wrapS = hatchTex.wrapT = THREE.RepeatWrapping; hatchTex.repeat.set(2.2, 2.2);
+    const c3 = (c) => K[c] || c;
+    const toon = (c) => new THREE.MeshToonMaterial({ color: c3(c), gradientMap: ramp, side: THREE.DoubleSide });
+    const flat = (c, hatch) => new THREE.MeshBasicMaterial({ color: c3(c), map: hatch ? hatchTex : null, side: THREE.DoubleSide });
+    const ink = () => new THREE.LineBasicMaterial({ color: K.ink });
+    let tagged = {};
+    const tag = (key, ...objs) => { objs.forEach((o) => { o.userData.part = key; (tagged[key] = tagged[key] || []).push(o); }); return objs[0]; };
+    const strip = (pos, n, m) => { const idx = []; for (let k = 0; k < n; k++) idx.push(2 * k, 2 * k + 1, 2 * k + 2, 2 * k + 1, 2 * k + 3, 2 * k + 2); const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return new THREE.Mesh(g, m); };
+    const line = (pts, m, loop) => new (loop ? THREE.LineLoop : THREE.Line)(new THREE.BufferGeometry().setFromPoints(pts.map((p) => new THREE.Vector3(p[0], p[1], p[2]))), m || ink());
+    // a shape turned about the x axis (or a vertical axis at cx). pf is a closed outline of [distance along the axis, radius].
+    // Returns a back half with its cut face and a front half, so the part can be shown cut open; { whole: true } gives one uncut piece.
+    function rev(pf, color, o) {
+      o = o || {}; const vert = o.axis === 'y', cx = o.cx || 0, oy = o.oy || 0, oz = o.oz || 0, N = o.n || 40;
+      const pt = (a, r, phi) => (vert ? [cx + r * Math.cos(phi), a, oz + r * Math.sin(phi)] : [a, oy + r * Math.cos(phi), oz + r * Math.sin(phi)]);
+      const half = (p0, p1, withCap) => { const g = new THREE.Group(), m = toon(color), lm = ink(), n = Math.round(N * (p1 - p0) / (2 * Math.PI));
+        for (let i = 0; i < pf.length; i++) { const A = pf[i], B = pf[(i + 1) % pf.length]; if (A[1] < 1e-6 && B[1] < 1e-6) continue;
+          const pos = []; for (let k = 0; k <= n; k++) { const phi = p0 + (p1 - p0) * k / n; pos.push(...pt(A[0], A[1], phi), ...pt(B[0], B[1], phi)); } g.add(strip(pos, n, m));
+          if (A[1] > 1e-6) { const lp = []; for (let k = 0; k <= n; k++) lp.push(pt(A[0], A[1], p0 + (p1 - p0) * k / n)); g.add(line(lp, lm)); } }
+        if (withCap) { const cm = flat(o.cap || color, o.hatch); [1, -1].forEach((sg) => { const q = pf.map((p) => (vert ? [cx + sg * p[1], p[0]] : [p[0], oy + sg * p[1]]));
+          const mesh = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(q.map((p) => new THREE.Vector2(p[0], p[1])))), cm); mesh.position.z = oz; g.add(mesh); g.add(line(q.map((p) => [p[0], p[1], oz + .012]), lm, true)); }); }
+        return g; };
+      if (o.whole) return { back: half(0, Math.PI * 2, false) };
+      return { back: half(Math.PI, Math.PI * 2, true), front: half(0, Math.PI, false) };
+    }
+    const cyl = (x0, x1, r) => [[x0, 0], [x0, r], [x1, r], [x1, 0]];
+    function box(x0, x1, y0, y1, z0, z1, color) { const g = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), m = new THREE.Mesh(g, toon(color)); m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), ink())); return m; }
+    // a flat outline [[x, y], ...] pushed through a depth along z (from z0 to z1), with ink edges
+    function slab(pts, z0, z1, color, holes) { const sh = new THREE.Shape(pts.map((p) => new THREE.Vector2(p[0], p[1]))); (holes || []).forEach((h) => sh.holes.push(new THREE.Path(h.map((p) => new THREE.Vector2(p[0], p[1])))));
+      const g = new THREE.ExtrudeGeometry(sh, { depth: z1 - z0, bevelEnabled: false, curveSegments: 24 }), m = new THREE.Mesh(g, toon(color)); m.position.z = z0; m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 28), ink())); return m; }
+    let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const M = { THREE, K, toon, flat, ink, tag, rev, cyl, box, slab, strip, line, rnd, sm, mix, hatchTex };
+
+    let res, need = true, cut = true, lit = [];
+    const info = document.createElement('p'); info.className = 'finfo'; info.innerHTML = '<b>Tap a part</b> of the model to see what it is and what it does.';
+    function home() { const h = res.home || {}, tg = h.t || [0, 0, 0], d = (h.d || 50) * (host.clientWidth / host.clientHeight < 1.45 ? 1.3 : 1), v = h.v || [-.22, .3, .93]; ctl.target.set(tg[0], tg[1], tg[2]); cam.position.set(tg[0] + d * v[0], tg[1] + d * v[1], tg[2] + d * v[2]); ctl.minDistance = d * .22; ctl.maxDistance = d * 2.2; ctl.update(); need = true; }
+    function setCut(v) { cut = v; (res.front || []).forEach((g) => { g.visible = !v; }); if (cutBtn) cutBtn.textContent = v ? 'Show it whole' : 'Cut it open'; need = true; }
+    function pick(key) { lit.splice(0).forEach((m) => { if (m.emissive) m.emissive.setHex(0); else m.color.set(K.ink); });
+      if (!key || !res.parts[key]) return; (tagged[key] || []).forEach((o) => o.traverse((c) => { const m = c.material; if (!m) return; if (m.emissive) { m.emissive.setHex(0x5a1408); lit.push(m); } else if (m.isLineBasicMaterial) { m.color.set('#b0402a'); lit.push(m); } }));
+      info.innerHTML = `<b>${res.parts[key][0]}.</b> ${res.parts[key][1]}`; need = true; }
+    function load(variant) { if (res) scene.remove(res.root); tagged = {}; lit = []; res = mdl.build(M, variant); scene.add(res.root); setCut(cut); need = true; }
+
+    // controls under the model
+    const el = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.firstElementChild; };
+    let cutBtn = null, value = mdl.slider ? (mdl.start || 0) : .4;
+    if (mdl.variants) { const row = el('<div class="fchips"></div>'); mdl.variants.forEach((v, i) => { const b = el(`<button type="button"${i ? '' : ' class="on"'}>${v}</button>`); b.onclick = () => { [...row.children].forEach((c) => c.classList.toggle('on', c === b)); load(i); res.frame(value); home(); info.innerHTML = res.note || '<b>Tap a part</b> to see what it is.'; }; row.appendChild(b); }); pane.appendChild(row); }
+    load(0);
+    let ctlRow;
+    if (mdl.slider) { ctlRow = el(`<div class="fctl"><label>${mdl.slider}</label><input type="range" min="0" max="1000" value="${Math.round(value * 1000)}" aria-label="${mdl.slider}"></div>`); pane.appendChild(ctlRow); ctlRow.lastChild.oninput = (e) => { value = e.target.value / 1000; res.frame(value); need = true; }; res.frame(value); }
+    else { const p = player(pane, { stages: mdl.stages || (ANIMS[id] || {}).stages, dur: mdl.dur }, (t) => { value = t; res.frame(t); need = true; }); ctlRow = p.ctl; }
+    if (res.front) { cutBtn = el('<button type="button" class="btn small ghost"></button>'); cutBtn.onclick = () => setCut(!cut); ctlRow.appendChild(cutBtn); setCut(true); }
+    const rb = el('<button type="button" class="btn small ghost">Reset view</button>'); rb.onclick = home; ctlRow.appendChild(rb);
+    pane.appendChild(info); if (res.note) info.innerHTML = res.note;
+
+    // tap a part to name it
+    const ray = new THREE.Raycaster(), cv = renderer.domElement; let down = null;
+    const shown = (o) => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+    cv.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+    cv.addEventListener('pointerup', (e) => { if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return; const b = cv.getBoundingClientRect();
+      ray.setFromCamera({ x: (e.clientX - b.left) / b.width * 2 - 1, y: -(e.clientY - b.top) / b.height * 2 + 1 }, cam);
+      const hit = ray.intersectObjects(res.root.children, true).find((h) => h.object.isMesh && shown(h.object) && !(h.object.material.clippingPlanes || []).some((pl) => pl.distanceToPoint(h.point) < 0));
+      let o = hit && hit.object; while (o && !o.userData.part) o = o.parent; pick(o ? o.userData.part : null); });
+    function size() { const w = host.clientWidth, h = host.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); need = true; }
+    new ResizeObserver(size).observe(host); size(); home();
+    ctl.addEventListener('change', () => { need = true; });
+    (function loop() { if (!cv.isConnected) { renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) { /* already gone */ } return; } requestAnimationFrame(loop); if (pane.hidden) return; ctl.update(); if (need) { need = false; renderer.render(scene, cam); } })();
+    host.__m3 = { pick, setCut, frame: (t) => { res.frame(t); need = true; }, load };
+  }
+
+  if (typeof document !== 'undefined') document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('.ftabs button'); if (!b) return; const fx = b.closest('.figx'), id = fx.dataset.fig, want = b.dataset.ft;
+    fx.querySelectorAll('.ftabs button').forEach((x) => x.classList.toggle('on', x === b));
+    fx.querySelectorAll('.fpane').forEach((p) => { p.hidden = p.dataset.fp !== want; });
+    const pane = fx.querySelector(`.fpane[data-fp="${want}"]`); if (pane.dataset.ready || want === 'still') return; pane.dataset.ready = 1;
+    if (want === 'anim') openAnim(pane, id); else openModel(pane, id);
+  });
+  return { has, wrap, sm, mix };
+})();
+
 /* Polymer moulding and forming */
 (() => { const { r, c, p, l, a, rot, t, hatch, dots } = D;
 
@@ -746,6 +920,250 @@ DIAGRAMS['rotational-moulding'] = { t: 'Rotational moulding', w: 320, h: 266, st
   [rm(2), 'The mould is heated in an oven while it turns slowly about two axes. The powder melts and coats the inside evenly.'],
   [rm(3), 'Still turning, the mould is cooled so the polymer sets as a hollow shell of even thickness.'],
   [rm(4), 'The mould is opened and the hollow product is removed.']] };
+})();
+
+/* Injection moulding three ways: a still, an animation of one cycle and a 3D model, all drawn from the same measurements.
+   Units are roughly centimetres on a small machine; x runs along the machine axis, the axis is y = 0. */
+(() => {
+ const K = Object.assign({ melt: '#ec7a3c', trans: '#f8cf8f' }, D.K), { sm, mix } = FIGX;
+ const STAGES = [
+  [0, .12, 'Clamp', 'The moving platen closes the mould. The hydraulic clamp holds the two halves shut against the injection pressure.'],
+  [.12, .30, 'Inject', 'The screw stops turning and is pushed forward like a ram. It forces a measured shot of molten polymer through the nozzle and sprue into the cavity.'],
+  [.30, .50, 'Hold and cool', 'Pressure is held to pack the cavity as the polymer shrinks. Water in the cooling channels takes the heat away and the moulding turns solid.'],
+  [.50, .68, 'Recharge', 'While the moulding is still cooling, the screw turns again. It draws granules from the hopper, melts them with the heater bands and friction, and moves back as the next shot builds up in front of it.'],
+  [.68, .82, 'Open', 'The clamp pulls the moving half back. The moulding has shrunk on to the core, so it travels with the moving half.'],
+  [.82, 1, 'Eject', 'Ejector pins push the moulding off the core and it drops clear. The sprue is trimmed off and the cycle starts again.', .94]];
+ const OPEN = 3.4, STROKE = 1.5, PUSH = 1.5, DROP = 2.6;
+ const cyc = (t) => { const s = { open: t < .5 ? 1 - sm(0, .12, t) : sm(.68, .82, t), fwd: sm(.12, .30, t) - sm(.50, .68, t), rot: sm(.50, .68, t) * Math.PI * 6, fill: sm(.12, .29, t), cool: sm(.30, .50, t),
+   push: sm(.82, .90, t) * PUSH, drop: Math.pow(sm(.89, .99, t), 2), part: t >= .12, stage: STAGES.findIndex((g) => t >= g[0] && t < g[1]) }; s.off = -STROKE * (1 - s.fwd); if (s.stage < 0) s.stage = 5; return s; };
+ // outlines as [x along the machine, radius]; the drawing and the model both use them
+ const PF = { fixed: [[3.6, .2], [3.6, 3.2], [6, 3.2], [6, 1.9], [4.4, 1.6], [4.4, .3]], moving: [[4.7, 0], [4.7, 1.3], [6, 1.6], [6, 3.2], [8.4, 3.2], [8.4, 0]],
+  part: [[4.4, 0], [4.4, 1.6], [6, 1.9], [6, 1.6], [4.7, 1.3], [4.7, 0]], sprue: [[3.6, 0], [3.6, .2], [4.4, .3], [4.4, 0]], nozzle: [[2, 1], [2, 1.6], [3.6, .5], [3.6, .2]],
+  barrel: [[-10.5, 1], [-10.5, 1.6], [2, 1.6], [2, 1]], melt: [[-5, 0], [-5, 1], [2, 1], [3.6, .2], [3.6, 0]] };
+ const BANDS = [-6.5, -4.5, -2.5, -.5], CHAN_F = [[5.2, 2.6], [4, 1.3]], CHAN_M = [[7.3, 2.3]];
+
+ /* ---- the drawing ---- */
+ const { X, Y, R, PG, C, SH, AR, T, both, sk, hatchDef } = U2(20, 352, 172), W = 776, H = 320;
+ let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+ const GR = [], GB = []; for (let i = 0; i < 46; i++) { const y = 1.9 + rnd() * 3.5, hw = .5 + (y - 1.6) * .27 - .16; GR.push([-8.5 + (rnd() * 2 - 1) * hw, y]); } for (let i = 0; i < 26; i++) GB.push([-10.3 + rnd() * 3.2, (rnd() * 2 - 1) * .82]);
+ const sides = (pf, f, hid, dx) => [pf, pf.map((p) => [p[0], -p[1]])].map((q) => PG(q, f, 2, dx) + PG(q, `url(#${hid})`, 0, dx)).join('');
+ const gran = (g, r) => `<circle cx="${X(g[0])}" cy="${Y(g[1])}" r="${r}" fill="${K.mat}" stroke="${K.ink}" stroke-width=".9"/>`;
+ function draw(t, id, still) {
+  const s = cyc(t), dx = s.open * OPEN, o = [], h = 'imh' + id;
+  o.push(`<defs>${hatchDef(h)}<clipPath id="imb${id}"><rect x="${X(-10.5)}" y="${Y(1)}" width="250" height="40"/></clipPath><clipPath id="imf${id}"><rect x="${X(3.6)}" y="${Y(2.2)}" width="${(s.fill * 49).toFixed(1)}" height="88"/></clipPath></defs>`);
+  o.push(R(-17, 20.8, -6.5, -4.5, 'dark', 4), R(-16.5, 2.4, -4.5, -1.9, 'pale'));                                             // bed and pedestal
+  [3.6, -3.6].forEach((y) => o.push(R(3.6, 16.4, y - .35, y + .35, 'steel'), SH(3.6, 15.4, y + .08, y + .22)));                // tie bars
+  o.push(R(-16, -12, -1.9, 1.9, 'dark', 8), SH(-15.8, -12.2, 1, 1.4), [-15, -14, -13].map((x) => `<line x1="${X(x)}" y1="${Y(1.9)}" x2="${X(x)}" y2="${Y(-1.9)}" stroke="${K.ink}" stroke-width="1" opacity=".5"/>`).join(''));
+  o.push(R(-10.5, 2, -1.6, 1.6, 'steel'), `<rect x="${X(-10.5)}" y="${Y(1.6)}" width="250" height="64" fill="url(#${h})"/>`, R(-10.5, 2, -1, 1, 'pale', 0, 1.5));   // barrel
+  o.push(`<rect x="${X(-7.4)}" y="${Y(1)}" width="68" height="40" fill="${K.trans}"/><rect x="${X(-4.6)}" y="${Y(1)}" width="132" height="40" fill="${K.melt}"/><rect x="${X(-9.1) + 1}" y="${Y(1.62)}" width="22" height="14" fill="${K.pale}"/>`);
+  o.push(`<g clip-path="url(#imb${id})">` + GB.map((g) => gran(g, 2.6)).join(''));
+  const ph = ((s.rot / (2 * Math.PI)) * 1.2) % 1.2, x0 = -10.6 + s.off, x1 = .2 + s.off;                                       // screw: the flights shift along as it turns
+  o.push(R(-11.6 + s.off, x1, -.5, .5, 'dark', 0, 1.6));
+  for (let x = x0 - 1.2 + ph; x < x1 - .8; x += 1.2) if (x > x0 - .3) o.push(PG([[x, -.95], [x + .26, -.95], [x + .86, .95], [x + .6, .95]], 'steel', 1.6));
+  o.push(PG([[x1, .5], [x1 + .9, 0], [x1, -.5]], 'dark', 1.6), '</g>', R(-12, -10.5, -1.5, 1.5, 'steel', 3));
+  BANDS.forEach((x) => o.push(R(x - .5, x + .5, 1.6, 1.92, 'hot', 3), R(x - .5, x + .5, -1.92, -1.6, 'hot', 3)));
+  o.push(PG([[-10.4, 6], [-6.6, 6], [-7.9, 1.6], [-9.1, 1.6]], 'pale'), GR.map((g) => gran(g, 2.9)).join(''));
+  o.push(sides(PF.nozzle, 'steel', h), PG([[2, 1], [3.6, .2], [3.6, -.2], [2, -1]], K.melt, 1.5));
+  o.push(R(2.6, 3.6, 1.8, 4.5, 'dark'), R(2.6, 3.6, -4.5, -1.8, 'dark'), sides(PF.fixed, 'steel', h));
+  CHAN_F.forEach((c) => [1, -1].forEach((m) => o.push(C(c[0], c[1] * m, .23, 'cool', 1.4))));
+  o.push(R(11.8 + dx, 16.6 + dx, -.8, .8, 'steel'), SH(11.9 + dx, 16.4 + dx, .3, .5), R(16.4, 20.2, -1.7, 1.7, 'steel', 6), SH(16.6, 20, .9, 1.2), R(15.4, 16.4, -4.5, 4.5, 'dark'));
+  const mv = both(PF.moving.slice(1, 5)), cc = mix(K.hot, K.mat, s.cool);
+  o.push(PG(mv, 'steel', 2, dx), PG(mv, `url(#${h})`, 0, dx)); CHAN_M.forEach((c) => [1, -1].forEach((m) => o.push(C(c[0] + dx, c[1] * m, .23, 'cool', 1.4)))); o.push(C(5.7 + dx, 0, .23, 'cool', 1.4));
+  o.push(R(8.4 + dx, 9.2 + dx, -4.5, 4.5, 'dark'), R(9.2 + dx, 11.4 + dx, 1.5, 2.1, 'dark'), R(9.2 + dx, 11.4 + dx, -2.1, -1.5, 'dark'), R(11.4 + dx, 11.8 + dx, -2.1, 2.1, 'dark'));
+  [.8, -.8].forEach((y) => o.push(R(4.7 + dx - s.push, 11 + dx - s.push, y - .1, y + .1, 'pale', 0, 1.2))); o.push(R(10.9 + dx - s.push, 11.2 + dx - s.push, -1.3, 1.3, 'steel'));
+  if (s.part) { const px = dx - s.push, py = -s.drop * DROP; o.push(`<g${s.fill < 1 ? ` clip-path="url(#imf${id})"` : ''}>` + PG(both(PF.part.slice(1, 5)), cc, 2, px, py) + PG(both(PF.sprue.slice(1, 3)), cc, 1.5, px, py) + '</g>'); }
+  if (!still) { const st = s.stage;
+   if (st === 0) o.push(AR(15, -2.6, 12.6, -2.6)); if (st === 1) o.push(AR(-7, -2.9, -3.6, -2.9)); if (st === 2) o.push(AR(13.4, -2.6, 12.2, -2.6), T(5.2, -4.1, 'cooling water', 13, 'middle', 'ink2'));
+   if (st === 3) o.push(AR(-3.6, -2.9, -7, -2.9), `<path d="M${X(-11.25)} ${Y(2.3)}A11 46 0 0 1 ${X(-11.25)} ${Y(-2.3)}" fill="none" stroke="${K.ink2}" stroke-width="3.5" stroke-linecap="round"/>` + AR(-11, -2.05, -11.3, -2.4));
+   if (st === 4) o.push(AR(12.6, -2.6, 15, -2.6)); if (st === 5) o.push(AR(10.6 + dx, 0, 9.6 + dx, 0)); }
+  return o.join('');
+ }
+ const MARK = [[-12.3, 6.9, 'Hopper', -9.7, 4.6], [-5.6, 6.9, 'Polymer granules', -8.2, 4.4], [-15.6, 4.2, 'Motor and gearbox (turn the screw)', -14.6, 1.7], [-5.5, -5.5, 'Reciprocating screw', -5.5, -.3], [-9.6, -5.5, 'Heated barrel', -9.6, -1.3],
+  [-2.5, 4.4, 'Heater bands', -2.5, 1.85], [.6, -5.5, 'Nozzle', 2.9, -.9], [.9, 6.9, 'Fixed platen', 3.1, 4.1], [4.3, 6.9, 'Fixed half of the mould (cavity)', 4.4, 2.75], [2.9, -5.5, 'Sprue', 4, -.12],
+  [5.4, -5.5, 'Moulding in the cavity', 5.3, -1.6], [7.7, 6.9, 'Moving half of the mould (core)', 7.5, 2.9], [7.9, -5.5, 'Cooling channels', 7.3, -2.3], [10.4, -5.5, 'Ejector pins', 9.9, -.8],
+  [10.9, 6.9, 'Moving platen', 8.8, 4.1], [13.9, 6.9, 'Tie bars', 13.3, 3.7], [19.2, 4.6, 'Hydraulic clamp', 18.6, 1.7]];
+ DIAGRAMS['injection-moulding'] = { t: 'Injection moulding', w: W, h: H, svg: draw(.42, 's', true), parts: MARK.map((m) => [X(m[0]), Y(m[1]), m[2], X(m[3]), Y(m[4])]) };
+ ANIMS['injection-moulding'] = { stages: STAGES, draw: (t, id) => draw(t, id) };
+
+ /* ---- the model ---- */
+ const PARTS = {
+  hopper: ['Hopper', 'Holds the polymer granules and feeds them into the barrel by gravity.'], granules: ['Polymer granules', 'The thermoplastic raw material. Pigment can be mixed in to colour the moulding.'],
+  motor: ['Motor and gearbox', 'Turn the screw during recharging.'], screw: ['Reciprocating screw', 'Turns to carry and melt the polymer, then is pushed forward as a ram to inject the shot.'],
+  barrel: ['Heated barrel', 'The tube the screw turns in. The polymer melts as it moves along it.'], heaters: ['Heater bands', 'Electric heaters around the barrel. Friction from the screw adds more heat.'],
+  melt: ['Molten polymer', 'The shot of melted polymer waiting in front of the screw.'], nozzle: ['Nozzle', 'Seals against the mould and passes the melt into the sprue.'],
+  fplaten: ['Fixed platen', 'Carries the fixed half of the mould. It does not move.'], fmould: ['Fixed half of the mould (cavity)', 'Forms the outside of the moulding. The sprue runs through it.'],
+  mmould: ['Moving half of the mould (core)', 'Forms the inside of the moulding. It carries the ejector pins.'], cooling: ['Cooling channels', 'Water flows through the mould to take heat out of the moulding quickly.'],
+  part: ['Moulding and sprue', 'The finished product. The sprue is the waste left in the feed channel and is trimmed off.'], pins: ['Ejector pins', 'Push the cooled moulding off the core when the mould opens. They leave small round marks.'],
+  mplaten: ['Moving platen', 'Carries the moving half of the mould and slides along the tie bars.'], tiebars: ['Tie bars', 'Guide the moving platen and take the clamping force.'],
+  clamp: ['Hydraulic clamp', 'Opens and closes the mould and holds it shut during injection.'], bed: ['Machine bed', 'The frame that carries the injection unit and the clamp unit.'] };
+ MODELS['injection-moulding'] = { stages: STAGES, build(M) {
+  const { THREE, toon, flat, ink, tag, rev, cyl, box, strip, line, rnd } = M;
+  const root = new THREE.Group(), front = new THREE.Group(), mov = new THREE.Group(), movFront = new THREE.Group(), ej = new THREE.Group(), part = new THREE.Group(), partFront = new THREE.Group(), screw = new THREE.Group();
+  root.add(front, mov, part, screw); mov.add(movFront, ej); part.add(partFront);
+  const add = (key, pf, color, o, backTo, frontTo) => { const r = rev(pf, color, o); (backTo || root).add(tag(key, r.back)); if (r.front) (frontTo || front).add(tag(key, r.front)); };
+  root.add(tag('bed', box(-17, 20.8, -6.5, -4.5, -4.6, 4.6, 'dark')), tag('bed', box(-16.5, 2.4, -4.5, -1.95, -2, 2, 'pale')));
+  add('motor', cyl(-16, -12, 1.9), 'dark', { whole: true }); root.add(tag('motor', box(-12, -10.5, -1.5, 1.5, -1.5, 1.5, 'steel')));
+  add('barrel', PF.barrel, 'steel', { hatch: true }); BANDS.forEach((x) => add('heaters', [[x - .5, 1.6], [x - .5, 1.92], [x + .5, 1.92], [x + .5, 1.6]], 'hot'));
+  add('nozzle', PF.nozzle, 'steel', { hatch: true }); add('melt', PF.melt, K.melt, { cap: K.melt }, root, new THREE.Group());
+  add('hopper', [[6, 1.9], [6, 1.78], [1.6, .55], [1.6, .67]], 'pale', { axis: 'y', cx: -8.5 });
+  const gm = toon('mat'), sg = new THREE.SphereGeometry(.15, 10, 8), mk = (list) => { const im = new THREE.InstancedMesh(sg, gm, list.length), mt = new THREE.Matrix4(); list.forEach((p, i) => { mt.makeTranslation(p[0], p[1], p[2]); im.setMatrixAt(i, mt); }); return tag('granules', im); };
+  const gb = [], gf = []; for (let i = 0; i < 520; i++) { const y = 1.75 + rnd() * 3.7, rr = (.5 + (y - 1.6) * .28 - .17) * Math.sqrt(rnd()), an = rnd() * Math.PI * 2, p = [-8.5 + rr * Math.cos(an), y, rr * Math.sin(an)]; (p[2] < 0 ? gb : gf).push(p); }
+  for (let i = 0; i < 70; i++) { const an = Math.PI + rnd() * Math.PI, rr = .62 + rnd() * .26; gb.push([-10.2 + rnd() * 3, rr * Math.cos(an), rr * Math.sin(an)]); }
+  root.add(mk(gb)); front.add(mk(gf));
+  // screw: shaft, tip and a flight swept round it in a helix
+  { screw.add(rev([[-11.6, 0], [-11.6, .5], [.2, .5], [1.1, 0]], 'dark', { whole: true }).back);
+   const m = toon('steel'), P = 1.2, xa = -10.3, xb = -.1, n = Math.round((xb - xa) / P * 36), Cn = [[-.1, .48], [.1, .48], [.1, .95], [-.1, .95]];
+   const at = (k, c) => { const x = xa + (xb - xa) * k / n, a = 2 * Math.PI * x / P; return [x + Cn[c][0], Cn[c][1] * Math.cos(a), Cn[c][1] * Math.sin(a)]; };
+   [[1, 2], [2, 3], [3, 0]].forEach((f) => { const pos = []; for (let k = 0; k <= n; k++) pos.push(...at(k, f[0]), ...at(k, f[1])); screw.add(strip(pos, n, m)); });
+   [2, 3].forEach((c) => { const lp = []; for (let k = 0; k <= n; k++) lp.push(at(k, c)); screw.add(line(lp)); }); tag('screw', screw); }
+  // fixed platen: a plate with a hole for the nozzle, made in two halves
+  const plate = (sign) => { const sh = new THREE.Shape(); sh.moveTo(0, 4.5); sh.lineTo(4.5 * sign, 4.5); sh.lineTo(4.5 * sign, -4.5); sh.lineTo(0, -4.5); sh.lineTo(0, -1.8); sh.absarc(0, 0, 1.8, -Math.PI / 2, Math.PI / 2, sign < 0); sh.lineTo(0, 4.5);
+   const g = new THREE.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: false, curveSegments: 20 }); g.rotateY(Math.PI / 2); const m = new THREE.Mesh(g, toon('dark')); m.position.x = 2.6; m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), ink())); return m; };
+  root.add(tag('fplaten', plate(1))); front.add(tag('fplaten', plate(-1))); add('fmould', PF.fixed, 'steel', { hatch: true });
+  const disc = (x, y, to) => { const d = new THREE.Mesh(new THREE.CircleGeometry(.24, 20), flat('cool')); d.position.set(x, y, .02); const ring = []; for (let k = 0; k <= 20; k++) ring.push([.24 * Math.cos(k * Math.PI / 10), .24 * Math.sin(k * Math.PI / 10), .005]); d.add(line(ring)); to.add(tag('cooling', d)); };
+  CHAN_F.forEach((c) => { disc(c[0], c[1], root); disc(c[0], -c[1], root); });
+  [[3.6, -3.6], [-3.6, -3.6]].forEach((p) => add('tiebars', cyl(3.6, 16.4, .35), 'steel', { whole: true, oy: p[0], oz: p[1] }));
+  [[3.6, 3.6], [-3.6, 3.6]].forEach((p) => front.add(tag('tiebars', rev(cyl(3.6, 16.4, .35), 'steel', { whole: true, oy: p[0], oz: p[1] }).back)));
+  root.add(tag('clamp', box(15.4, 16.4, -4.5, 4.5, -4.5, 4.5, 'dark'))); add('clamp', cyl(16.4, 20.2, 1.7), 'steel', { whole: true });
+  add('mmould', PF.moving, 'steel', { hatch: true }, mov, movFront); CHAN_M.forEach((c) => { disc(c[0], c[1], mov); disc(c[0], -c[1], mov); }); disc(5.7, 0, mov);
+  mov.add(tag('mplaten', box(8.4, 9.2, -4.5, 4.5, -4.5, 0, 'dark'))); movFront.add(tag('mplaten', box(8.4, 9.2, -4.5, 4.5, 0, 4.5, 'dark')));
+  mov.add(tag('clamp', box(9.2, 11.4, 1.5, 2.1, -2.1, 2.1, 'dark')), tag('clamp', box(9.2, 11.4, -2.1, -1.5, -2.1, 2.1, 'dark')), tag('clamp', box(11.4, 11.8, -2.1, 2.1, -2.1, 2.1, 'dark')));
+  add('clamp', cyl(11.8, 16.6, .8), 'steel', { whole: true }, mov);
+  [.8, -.8].forEach((y) => ej.add(tag('pins', rev(cyl(4.7, 11, .11), 'pale', { whole: true, oy: y }).back))); ej.add(tag('pins', box(10.9, 11.2, -1.3, 1.3, -1.3, 1.3, 'steel')));
+  // moulding and sprue, uncovered by a clipping plane as the cavity fills
+  const fillPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 99), mats = [];
+  [PF.part, PF.sprue].forEach((pf) => { const r = rev(pf, 'hot', { cap: K.hot }); part.add(tag('part', r.back)); partFront.add(tag('part', r.front)); });
+  part.traverse((o) => { if (o.material) { o.material.clippingPlanes = [fillPlane]; if (o.isMesh) mats.push(o.material); } });
+  const frame = (t) => { const s = cyc(t), dx = s.open * OPEN; mov.position.x = dx; ej.position.x = -s.push; screw.position.x = s.off; screw.rotation.x = -s.rot;
+   part.visible = s.part; part.position.set(dx - s.push, -s.drop * DROP, 0); fillPlane.constant = s.fill < 1 ? 3.6 + s.fill * 2.45 : 99; const c = new THREE.Color(mix(K.hot, K.mat, s.cool)); mats.forEach((m) => m.color.copy(c)); };
+  return { root, frame, parts: PARTS, front: [front, movFront, partFront], home: { t: [1.7, -1.2, 0], d: 56 } };
+ } };
+})();
+
+/* Animations for extrusion, blow moulding, vacuum forming and pressure die casting. See 01-motion-kit.js for the format. */
+(() => {
+ const K = Object.assign({ melt: '#ec7a3c', trans: '#f8cf8f', cast: '#b9c2cc' }, D.K), { sm, mix } = FIGX;
+ const num = (u, x, y, n) => `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+ const lerpP = (A, B, e) => A.map((p, i) => [p[0] + (B[i][0] - p[0]) * e, p[1] + (B[i][1] - p[1]) * e]);
+
+ /* ---- extrusion: runs all the time ---- */
+ { const u = U2(20, 352, 150), { X, Y, R, PG, C, SH, AR, ROT, T } = u, W = 776, H = 290;
+  let seed = 5; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }; const GR = [], GB = [];
+  for (let i = 0; i < 44; i++) { const y = 1.9 + rnd() * 3.5, hw = .5 + (y - 1.6) * .27 - .16; GR.push([-12.5 + (rnd() * 2 - 1) * hw, y]); } for (let i = 0; i < 24; i++) GB.push([-14.3 + rnd() * 3.2, (rnd() * 2 - 1) * .82]);
+  const gran = (g, r) => `<circle cx="${X(g[0])}" cy="${Y(g[1])}" r="${r}" fill="${K.mat}" stroke="${K.ink}" stroke-width=".9"/>`;
+  const draw = (t, id, still) => { const o = [], h = 'exh' + id, v = t * 3;
+   o.push(`<defs>${u.hatchDef(h)}<clipPath id="exb${id}"><rect x="${X(-14.5)}" y="${Y(1)}" width="230" height="40"/></clipPath><clipPath id="exv${id}"><rect x="0" y="0" width="${X(20.9)}" height="${H}"/></clipPath></defs>`);
+   o.push(R(-17.3, 20.9, -6.2, -4.5, 'dark', 4), R(-17, -2.4, -4.5, -1.9, 'pale'));
+   o.push(R(-17, -15.6, -1.6, 1.6, 'dark', 6), R(-15.6, -14.5, -1.3, 1.3, 'steel', 3));
+   o.push(R(-14.5, -3, -1.6, 1.6, 'steel'), `<rect x="${X(-14.5)}" y="${Y(1.6)}" width="230" height="64" fill="url(#${h})"/>`, R(-14.5, -3, -1, 1, 'pale', 0, 1.5));
+   o.push(`<rect x="${X(-11.4)}" y="${Y(1)}" width="60" height="40" fill="${K.trans}"/><rect x="${X(-8.6)}" y="${Y(1)}" width="112" height="40" fill="${K.melt}"/><rect x="${X(-13.1) + 1}" y="${Y(1.62)}" width="22" height="14" fill="${K.pale}"/>`);
+   o.push(`<g clip-path="url(#exb${id})">` + GB.map((g) => gran(g, 2.6)).join('') + R(-15.4, -3.6, -.5, .5, 'dark', 0, 1.6));
+   for (let x = -15.8 + ((v * 1.2) % 1.2); x < -4.4; x += 1.2) o.push(PG([[x, -.95], [x + .26, -.95], [x + .86, .95], [x + .6, .95]], 'steel', 1.6));
+   o.push('</g>'); [-10.5, -8.5, -6.5, -4.5].forEach((x) => o.push(R(x - .5, x + .5, 1.6, 1.92, 'hot', 3), R(x - .5, x + .5, -1.92, -1.6, 'hot', 3)));
+   o.push(PG([[-14.4, 6], [-10.6, 6], [-11.9, 1.6], [-13.1, 1.6]], 'pale'), GR.map((g) => gran(g, 2.9)).join(''));
+   // die: the melt is squeezed down to the shape of the opening
+   [1, -1].forEach((m) => o.push(PG([[-3, 1 * m], [-3, 2.2 * m], [-1.4, 2.2 * m], [-1.4, .4 * m], [-2.2, .4 * m]], 'steel') + PG([[-3, 1 * m], [-3, 2.2 * m], [-1.4, 2.2 * m], [-1.4, .4 * m], [-2.2, .4 * m]], `url(#${h})`, 0)));
+   o.push(PG([[-3, 1], [-2.2, .4], [-1.4, .4], [-1.4, -.4], [-2.2, -.4], [-3, -1]], K.melt, 1.5));
+   // cooling trough, haul-off, cutter, the cut lengths
+   o.push(`<g clip-path="url(#exv${id})">`, R(.4, 7.6, -1.5, .9, 'none'), `<rect x="${X(.4) + 1}" y="${Y(.55)}" width="142" height="40" fill="${K.cool}" opacity=".75"/>`);
+   const end = 14 + (v % 3), hotEnd = 1.2;
+   o.push(R(-1.4, hotEnd, -.4, .4, K.melt, 0, 1.6), R(hotEnd, end, -.4, .4, 'mat', 0, 1.6));
+   for (let x = -1 + (v % 1); x < end - .2; x += 1) o.push(`<line x1="${X(x)}" y1="${Y(.4)}" x2="${X(x)}" y2="${Y(-.4)}" stroke="${K.ink}" stroke-width="1" opacity=".35"/>`);
+   [0, 3].forEach((k) => { const a = end + .25 + k; o.push(R(a, a + 3, -.4, .4, 'mat', 0, 1.6)); });
+   o.push(`<path d="M${X(.5)} ${Y(.55)} q9 -6 18 0 t18 0 t18 0 t18 0 t18 0 t18 0 t18 0 t14 0" fill="none" stroke="${K.ink}" stroke-width="1.3"/>`, '</g>');
+   [1.15, -1.15].forEach((y, i) => { o.push(C(10.4, y, .75, 'dark')); const a = (v / .75) * (i ? 1 : -1); [0, 1, 2].forEach((k) => o.push(`<line x1="${X(10.4)}" y1="${Y(y)}" x2="${X(10.4 + .7 * Math.cos(a + k * 2.094))}" y2="${Y(y + .7 * Math.sin(a + k * 2.094))}" stroke="${K.ink}" stroke-width="1.6"/>`)); });
+   o.push(R(8.4, 12.4, -4.5, -2.2, 'pale'), R(14.2, 20.6, -.75, -.4, 'pale', 0, 1.5), R(14.6, 15, -4.5, -.75, 'pale', 0, 1.5), R(19.6, 20, -4.5, -.75, 'pale', 0, 1.5));
+   const f = v % 3, cutY = (f > 2.82 ? (f - 2.82) / .18 : f < .18 ? 1 - f / .18 : 0) * 1.5;
+   o.push(R(13.6, 14.4, 3 - cutY, 3.6 - cutY, 'dark', 2), PG([[13.86, 3 - cutY], [14.14, 3 - cutY], [14, 1.3 - cutY]], 'steel', 1.6), R(13.4, 14.6, 3.6, 4.2, 'steel', 2));
+   if (!still) o.push(num(u, -12.5, 6.9, 1), num(u, -7.5, 3.1, 2), num(u, -2.2, 3.3, 3), num(u, 4, 2, 4), num(u, 10.4, 3, 5), AR(15, 1.6, 18, 1.6));
+   return o.join(''); };
+  const mk = (x, y, s, tx, ty) => [X(x), Y(y), s, X(tx), Y(ty)];
+  DIAGRAMS['extrusion'] = { t: 'Extrusion of a polymer', w: W, h: H, svg: draw(.4, 's', true), parts: [mk(-15.5, 6.2, 'Hopper of granules', -13.4, 4.6), mk(-16.3, 3.4, 'Motor', -16.3, 1.4), mk(-9.5, -3.2, 'Rotating screw', -9.5, -.3), mk(-6.5, 3.6, 'Heater bands', -6.5, 1.8), mk(-2.2, 4.2, 'Die (gives the cross-section)', -2.2, 1.6),
+   mk(4, 2.6, 'Cooling water trough', 4, .7), mk(10.4, 3.6, 'Haul-off rollers', 10.4, 1.6), mk(15.6, 5, 'Cutter', 14.3, 3.3), mk(7.6, -3, 'Extrusion (constant cross-section)', 8.6, -.2)] };
+  ANIMS['extrusion'] = { loop: true, dur: 5200, draw, watch: ['Granules fall from the hopper into the heated barrel.', 'The screw turns all the time. It carries the polymer forward while the heater bands and friction melt it.', 'The melt is forced through the die, which gives the extrusion its cross-section.', 'The extrusion passes through a water trough, so it cools and keeps its shape.', 'Haul-off rollers pull it along at a steady speed and a cutter cuts it to length.'] }; }
+
+ /* ---- extrusion blow moulding ---- */
+ { const u = U2(22, 250, 168), { X, Y, R, PG, C, AR, T } = u, W = 500, H = 340;
+  const ST = [[0, .2, 'Extrude the parison', 'A tube of hot, soft polymer called a parison is extruded downwards between the two open halves of the mould.'],
+   [.2, .34, 'Close the mould', 'The mould halves close on the parison. The bottom is pinched shut and sealed, and the top is gripped round the blow pin.'],
+   [.34, .52, 'Blow', 'Compressed air is blown in through the blow pin. The parison inflates like a balloon until it presses against the cold walls of the mould.'],
+   [.52, .72, 'Cool', 'The polymer cools against the water-cooled mould and sets in the shape of the cavity.'],
+   [.72, 1, 'Open and eject', 'The mould opens and the bottle is removed. The waste pinched off at the top and bottom, called flash, is trimmed away.', .9]];
+  const half = [[.6, 3.5], [4.6, 3.5], [4.6, -5.5], [0, -5.5], [0, -4.8], [1.9, -4.8], [1.9, 1], [.6, 2.2]];
+  const bottle = [[.6, 3.5], [.6, 2.2], [1.9, 1], [1.9, -4.8], [0, -4.8]], tube = [[.5, 3.5], [.5, 2.2], [.5, 1], [.5, -4.8], [.5, -4.8]];
+  const draw = (t, id) => { const o = [], h = 'bmh' + id, open = t < .5 ? 1 - sm(.2, .34, t) : sm(.72, .84, t), g = open * 3, len = t < .72 ? sm(0, .2, t) : 1, e = sm(.34, .5, t), cool = sm(.52, .72, t), drop = Math.pow(sm(.86, .99, t), 2) * 2.6, col = mix(K.hot, K.mat, cool), pinch = sm(.24, .34, t);
+   o.push(`<defs>${u.hatchDef(h)}</defs>`, R(-11, 11, -7.4, -6.6, 'dark', 3));
+   o.push(R(-10.6, -1.6, 4.9, 6.1, 'steel'), T(-6.4, 5.3, 'from the extruder', 12), AR(-4.2, 6.7, -2, 6.7), R(-1.6, 1.6, 4.5, 6.6, 'steel'), `<rect x="${X(-1.6)}" y="${Y(6.6)}" width="${3.2 * 22}" height="${2.1 * 22}" fill="url(#${h})"/>`);
+   o.push(R(-.55, -.3, 4.5, 6.2, K.melt, 0, 1.2), R(.3, .55, 4.5, 6.2, K.melt, 0, 1.2));
+   [1, -1].forEach((m) => { o.push(R(m > 0 ? 4.6 + g : -9.4, m > 0 ? 9.4 : -4.6 - g, -1.4, -.6, 'steel'), R(m > 0 ? 9.2 : -10.8, m > 0 ? 10.8 : -9.2, -2.4, .4, 'dark', 4)); });
+   // parison or bottle (drawn behind the mould faces so the pinch looks right)
+   const yb = 4.5 - len * 10.6, py = -drop;
+   if (t >= .2 || len > 0) { if (t < .2) o.push(R(-.5, .5, yb, 4.5, K.hot), R(-.3, .3, yb - .02, 4.52, '#fff', 0, 0).replace(/stroke="[^"]*"/, 'stroke="none"'));
+    else { const pf = lerpP(tube, bottle, e).map((p, i) => (i === 4 ? [p[0] * (1 - pinch), p[1]] : p)), inner = pf.map((p, i) => [Math.max(0, p[0] - .2), i === 3 || i === 4 ? p[1] + .2 : p[1]]);
+     if (t < .84) o.push(R(-.5, .5, 3.5, 4.5, col)); if (drop < .05) o.push(R(-.5 * (1 - pinch) - .06, .5 * (1 - pinch) + .06, -6.1, -4.8, col, 0, 1.5));
+     o.push(PG(u.both(pf.map((p) => [p[1], p[0]])).map((p) => [p[1], p[0]]), col, 2, 0, py), PG(u.both(inner.map((p) => [p[1], p[0]])).map((p) => [p[1], p[0]]), '#fff', 1.2, 0, py)); } }
+   [1, -1].forEach((m) => { const pts = half.map((p) => [p[0] * m + m * g, p[1]]); o.push(PG(pts, 'steel'), PG(pts, `url(#${h})`, 0)); [[3.2, 2], [3.4, -1.5], [3.2, -4.4]].forEach((c) => o.push(C(c[0] * m + m * g, c[1], .2, 'cool', 1.3))); });
+   o.push(R(-.13, .13, 2.9, 7.2, 'dark', 0, 1.4));
+   if (t >= .34 && t < .52) o.push(AR(0, 8.4, 0, 7.3), AR(.4, -1, 1.5, -1), AR(-.4, -1, -1.5, -1), AR(.4, -3.4, 1.5, -3.4), AR(-.4, -3.4, -1.5, -3.4), T(1.2, 7.7, 'compressed air', 12, 'start', 'ink2'));
+   if (t >= .2 && t < .34) o.push(AR(8.6, .9, 6.6, .9), AR(-8.6, .9, -6.6, .9)); if (t >= .72 && t < .86) o.push(AR(6.6, .9, 8.6, .9), AR(-6.6, .9, -8.6, .9)); if (t < .2) o.push(AR(1.4, 3, 1.4, .8));
+   return o.join(''); };
+  ANIMS['blow-moulding'] = { stages: ST, draw, w: W, h: H, start: .45 }; }
+
+ /* ---- vacuum forming ---- */
+ { const u = U2(24, 190, 112), { X, Y, R, PG, PL, AR, T } = u, W = 440, H = 300;
+  const ST = [[0, .1, 'Clamp the sheet', 'A mould is placed on the platen. A sheet of thermoforming polymer, such as HIPS, is clamped in the frame above it so the edges are airtight.'],
+   [.1, .32, 'Heat', 'The heater is moved over the sheet. The sheet softens and starts to sag when it is flexible enough to form.'],
+   [.32, .48, 'Raise the platen', 'The heater is moved away and the platen is raised, pushing the mould up into the soft sheet.'],
+   [.48, .64, 'Vacuum on', 'The pump removes the air from under the sheet. Air pressure above pushes the sheet tightly over the mould.'],
+   [.64, .8, 'Cool', 'The sheet cools and becomes rigid in the shape of the mould.'],
+   [.8, 1, 'Release and trim', 'The platen is lowered and the sheet is unclamped. Draft angles on the mould let it come away cleanly. The waste round the edge is trimmed off.', .92]];
+  const draw = (t, id) => { const o = [], heatIn = sm(.1, .15, t) - sm(.3, .36, t), soft = sm(.12, .3, t) - sm(.64, .8, t), sag = (sm(.16, .32, t)) * .9, up = sm(.34, .47, t) - sm(.8, .9, t), tight = sm(.49, .62, t), lift = sm(.9, .99, t), top = -3.5 + up * 3.2 + 2.2, pyS = -3.5 + up * 3.2;
+   o.push(R(-6.2, 6.2, -5.2, 0, 'pale', 4), R(-6.2, 6.2, -7, -5.2, 'dark', 4), T(0, -6.35, t >= .48 && t < .8 ? 'vacuum pump ON' : 'vacuum pump', 12, 'middle', '#fff'));
+   o.push(R(-.3, .3, -5.2, pyS - .4, 'steel'), R(-4.4, 4.4, pyS - .4, pyS, 'steel'), PG([[-2.4, pyS], [-1.6, pyS + 2.2], [1.6, pyS + 2.2], [2.4, pyS]], 'wood'));
+   [-3.4, -2.8, 2.8, 3.4].forEach((x) => o.push(`<line x1="${X(x)}" y1="${Y(pyS)}" x2="${X(x)}" y2="${Y(pyS - .4)}" stroke="${K.ink}" stroke-width="2.5"/>`));
+   // the sheet: flat, sagging, lifted by the mould, then pulled tight
+   const fin = t >= .8, T0 = fin ? 1.9 : top, P0 = fin ? -.3 : pyS, shape = [[4.9, 0], [3.8, 0], [2.7, 0], [1.6, 0], [0, 0]].map((p, i) => { const sg = -sag * [0, .5, .85, 1, 1][i] * (1 - tight), tent = T0 * [0, 1 / 3, 2 / 3, 1, 1][i], tg = [[4.9, 0], [4.3, P0], [2.45, P0], [1.6, T0], [0, T0]][i];
+    const y0 = Math.max(sg, Math.min(tent, T0 > 0 ? tent : -9)); return [p[0] + (tg[0] - p[0]) * tight, (y0 + (tg[1] - y0) * tight) + lift * .9]; });
+   const pts = shape.concat(shape.slice(0, 4).reverse().map((p) => [-p[0], p[1]])), sc = mix('#5b8fd9', K.hot, Math.max(0, soft));
+   o.push(PL([[6.1, lift * .9]].concat(pts, [[-6.1, lift * .9]]), 7, K.ink), PL([[6.1, lift * .9]].concat(pts, [[-6.1, lift * .9]]), 4.2, sc));
+   [1, -1].forEach((m) => o.push(R(m > 0 ? 4.9 : -6.4, m > 0 ? 6.4 : -4.9, -.5, -.1, 'dark', 2), R(m > 0 ? 4.9 : -6.4, m > 0 ? 6.4 : -4.9, .1 + lift * 1.5, .5 + lift * 1.5, 'dark', 2)));
+   const hx = (1 - heatIn) * 13; if (heatIn > .01) { o.push(R(-5.6 + hx, 5.6 + hx, 2.7, 3.5, 'hot', 5)); if (heatIn > .9) [-4, -2, 0, 2, 4].forEach((x) => o.push(AR(x, 2.5, x, 1.3, 'hot'))); }
+   if (t >= .34 && t < .48) o.push(AR(5.4, -3.6, 5.4, -1.4)); if (t >= .48 && t < .64) o.push(AR(-3.1, -1.2, -3.1, -4.4), AR(3.1, -1.2, 3.1, -4.4), AR(-3, 3.6, -2.2, 2.4, 'ink'), AR(3, 3.6, 2.2, 2.4, 'ink'), T(0, 3.9, 'air pressure', 12));
+   if (t >= .64 && t < .8) o.push(T(0, 3.4, 'cooling', 12, 'middle', 'ink2')); if (t >= .8 && t < .9) o.push(AR(5.4, -1.4, 5.4, -3.6));
+   return o.join(''); };
+  ANIMS['vacuum-forming'] = { stages: ST, draw, w: W, h: H, start: .56 }; }
+
+ /* ---- pressure die casting (cold chamber) ---- */
+ { const u = U2(20, 300, 150), { X, Y, R, PG, C, SH, AR, T, both } = u, W = 640, H = 290;
+  const ST = [[0, .1, 'Close the die', 'The two halves of the steel die are closed and locked together.'],
+   [.1, .3, 'Ladle the metal', 'A measured amount of molten metal, usually an aluminium alloy, is ladled from a separate furnace into the shot sleeve. That is why it is called cold chamber.'],
+   [.3, .44, 'Inject', 'A hydraulic plunger forces the metal into the die cavity at very high pressure, so it fills thin sections and fine detail.'],
+   [.44, .62, 'Solidify', 'The pressure is held while the metal cools quickly against the water-cooled steel die and turns solid.'],
+   [.62, .78, 'Open the die', 'The moving half of the die is pulled back. The casting stays on the moving half.'],
+   [.78, 1, 'Eject', 'Ejector pins push the casting out. The plunger goes back, and the sprue and any flash are trimmed off and remelted.', .93]];
+  const fixed = [[0, .9], [0, 3], [2.2, 3], [2.2, 2.2], [1.2, 2.2], [1.2, .9]], moving = [[2.2, 0], [2.2, 3], [4.8, 3], [4.8, 0]];
+  const cast = [[0, .9], [1.2, .9], [1.2, 2.2], [2.2, 2.2], [2.2, 0], [0, 0]];
+  const draw = (t, id) => { const o = [], h = 'dch' + id, open = t < .5 ? 1 - sm(0, .1, t) : sm(.62, .76, t), dx = open * 3, pour = sm(.12, .16, t) - sm(.26, .3, t), lvl = sm(.14, .28, t), inj = sm(.3, .43, t) - sm(.86, .98, t), cool = sm(.44, .62, t), push = sm(.78, .86, t) * 1.3, drop = Math.pow(sm(.86, .98, t), 2) * 3.2, col = mix(K.hot, K.cast, cool), has = t >= .3;
+   o.push(`<defs>${u.hatchDef(h)}<clipPath id="dcf${id}"><rect x="${X(0)}" y="${Y(2.4)}" width="${(sm(.3, .42, t) * 46).toFixed(1)}" height="96"/></clipPath></defs>`);
+   o.push(R(-14.6, 14.6, -6.4, -4.6, 'dark', 4), R(-14, -10.4, -1.5, 1.5, 'steel', 6), SH(-13.8, -10.6, .7, 1));
+   [3.4, -3.4].forEach((y) => o.push(R(0, 11.6, y - .3, y + .3, 'steel')));
+   // shot sleeve with its pouring hole, plunger and the metal in it
+   o.push(R(-8, 0, -.9, .9, 'pale', 0, 1.5)); const px = -7.6 + inj * 6.9;
+   if (!has && lvl > 0) o.push(`<rect x="${X(-6.9)}" y="${Y(-.9 + lvl * 1.1)}" width="${6.9 * 20}" height="${(lvl * 1.1 * 20).toFixed(1)}" fill="${K.hot}"/>`); if (has && inj < 1 && t < .5) o.push(`<rect x="${X(px + .7)}" y="${Y(.9)}" width="${Math.max(0, (-px - .7) * 20).toFixed(1)}" height="36" fill="${K.hot}"/>`);
+   o.push(R(-10.4, px, -.3, .3, 'steel', 0, 1.6), R(px, px + .7, -.86, .86, 'dark', 2));
+   o.push(R(-8, -5.6, .9, 1.4, 'steel'), R(-4.4, 0, .9, 1.4, 'steel'), R(-8, 0, -1.4, -.9, 'steel'), R(-1, 0, 1.4, 4.4, 'dark'), R(-1, 0, -4.4, -1.4, 'dark'));
+   if (pour > .01) { const lx = -5, ly = 3.4; o.push(`<g transform="rotate(${(-48 * pour).toFixed(1)} ${X(lx)} ${Y(ly)})">` + PG([[lx - .2, ly + .9], [lx + 1.9, ly + .9], [lx + 1.6, ly - .7], [lx + .1, ly - .7]], 'dark') + PG([[lx, ly + .6], [lx + 1.8, ly + .6], [lx + 1.55, ly - .5], [lx + .2, ly - .5]], K.hot, 1.2) + R(lx + 1.9, lx + 4.6, ly + .2, ly + .5, 'steel') + '</g>'); if (pour > .9) o.push(R(-5.15, -4.85, -.6, 2.6, K.hot, 0, 0).replace(/stroke="[^"]*"/, 'stroke="none"')); }
+   // die halves, cooling channels, clamp
+   [fixed, fixed.map((p) => [p[0], -p[1]])].forEach((q) => o.push(PG(q, 'steel'), PG(q, `url(#${h})`, 0))); [[1.3, 2.7], [1.3, -2.7]].forEach((c) => o.push(C(c[0], c[1], .2, 'cool', 1.3)));
+   o.push(R(8.6 + dx, 11.6 + dx, -.7, .7, 'steel'), R(11.6, 14.2, -1.6, 1.6, 'steel', 6), R(10.8, 11.6, -4.4, 4.4, 'dark'));
+   const mv = both(moving.slice(1, 3)); o.push(PG(mv, 'steel', 2, dx), PG(mv, `url(#${h})`, 0, dx), C(3.9 + dx, 2.4, .2, 'cool', 1.3), C(3.9 + dx, -2.4, .2, 'cool', 1.3));
+   o.push(R(4.8 + dx, 5.6 + dx, -4.4, 4.4, 'dark'), R(5.6 + dx, 8.2 + dx, 1.4, 1.9, 'dark'), R(5.6 + dx, 8.2 + dx, -1.9, -1.4, 'dark'), R(8.2 + dx, 8.6 + dx, -1.9, 1.9, 'dark'));
+   [1.5, -1.5].forEach((y) => o.push(R(2.2 + dx - push, 7.8 + dx - push, y - .09, y + .09, 'pale', 0, 1.2))); o.push(R(7.6 + dx - push, 7.9 + dx - push, -1.2, 1.2, 'steel'));
+   if (has) o.push(`<g${t < .43 ? ` clip-path="url(#dcf${id})"` : ''}>` + PG(both(cast.slice(0, 5)), col, 2, dx - push, -drop) + '</g>');
+   if (t < .1) o.push(AR(9.6, -2.6, 7.4, -2.6)); if (t >= .3 && t < .44) o.push(AR(-9.6, -2.4, -6.4, -2.4)); if (t >= .62 && t < .78) o.push(AR(7.4, -2.6, 9.6, -2.6)); if (t >= .78 && t < .86) o.push(AR(8 + dx, 0, 7 + dx, 0));
+   if (t >= .44 && t < .62) o.push(T(1.2, -4.1, 'cooling water', 12, 'middle', 'ink2'));
+   return o.join(''); };
+  ANIMS['die-casting'] = { stages: ST, draw, w: W, h: H, start: .37 }; }
 })();
 
 /* Casting, forming, machining and joining metals */
@@ -889,6 +1307,31 @@ DIAGRAMS['screen-printing'] = { t: 'Screen printing', w: 680, h: 340,
   l(254, 212, 254, 234, 3).replace('stroke="#1f2328"', 'stroke="#3b5bdb"') + l(300, 212, 300, 234, 3).replace('stroke="#1f2328"', 'stroke="#3b5bdb"') + r(250, 232, 78, 5, 'ink2', 0, 0),
  parts: [[70, 180, 'Frame', 124, 180], [200, 110, 'Squeegee', 310, 130], [500, 110, 'Ink', 400, 196], [610, 180, 'Fine mesh screen', 500, 206], [200, 300, 'Stencil blocks the mesh where no ink is wanted', 200, 210],
   [400, 300, 'Ink forced through the open mesh', 278, 224], [600, 300, 'Substrate: paper, card, fabric, polymer', 520, 242], [450, 60, 'Direction of pull', 420, 130]] };
+})();
+
+/* Offset lithography running. See 01-motion-kit.js for the format. */
+(() => {
+ const u = U2(22, 230, 196), { X, Y, R, PG, C, AR, T } = u, K = D.K, W = 460, H = 350, INK = '#2b4fa8', P = Math.PI;
+ const arc = (cx, cy, r, a0, a1, col, w) => { const q = (a) => [X(cx + r * Math.cos(a)), Y(cy + r * Math.sin(a))], s = q(a0), e = q(a1); return `<path d="M${s[0]} ${s[1]}A${r * 22} ${r * 22} 0 ${Math.abs(a1 - a0) > P ? 1 : 0} ${a1 > a0 ? 0 : 1} ${e[0]} ${e[1]}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="butt"/>`; };
+ const spoke = (cx, cy, r, a) => `<line x1="${X(cx)}" y1="${Y(cy)}" x2="${X(cx + r * Math.cos(a))}" y2="${Y(cy + r * Math.sin(a))}" stroke="${K.ink}" stroke-width="1.6" opacity=".6"/>`;
+ const num = (x, y, n) => `<circle cx="${X(x)}" cy="${Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${X(x)}" y="${Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+ const draw = (t, id) => { const o = [], th = 2 * P * t, half = .87;
+  o.push(`<defs><clipPath id="olp${id}"><rect x="${X(0)}" y="0" width="${W}" height="${H}"/></clipPath></defs>`);
+  // ink duct and water trough, with their roller trains
+  o.push(PG([[2.9, 7.9], [5.3, 7.9], [4.9, 6.2], [3.2, 6.2]], INK), PG([[-2.9, 7.9], [-5.3, 7.9], [-4.9, 6.2], [-3.2, 6.2]], 'cool'));
+  [[1.67, 5.99, 1], [2.59, 6.76, -1], [3.79, 6.76, 1]].forEach((c) => { o.push(C(c[0], c[1], .6, '#7f95cf'), spoke(c[0], c[1], .6, c[2] * th * 3.33), C(-c[0], c[1], .6, 'cool'), spoke(-c[0], c[1], .6, -c[2] * th * 3.33 + 1)); });
+  // the three cylinders
+  o.push(C(0, 4, 2, 'steel'), spoke(0, 4, 2, 1.5 * P - th + P), arc(0, 4, 2, 1.5 * P - th - half, 1.5 * P - th + half, INK, 7), C(0, 4, .3, 'dark'));
+  o.push(C(0, 0, 2, '#b9d3c0'), spoke(0, 0, 2, .5 * P + th + P), arc(0, 0, 2, .5 * P + th - half, .5 * P + th + half, INK, 7), C(0, 0, .3, 'dark'));
+  o.push(C(0, -4.1, 2, 'steel'), spoke(0, -4.1, 2, -th), C(0, -4.1, .3, 'dark'));
+  // paper passing through the nip, printed after it
+  o.push(R(-10.2, 10.2, -2.1, -2, '#fff', 0, 1.5), `<g clip-path="url(#olp${id})">`);
+  [-1, 0, 1].forEach((k) => { const c = (t - .5 + k) * 4 * P; o.push(`<rect x="${X(c - 2 * half)}" y="${Y(-1.9) - 5}" width="${(4 * half * 22).toFixed(1)}" height="6" fill="${INK}"/>`); }); o.push('</g>');
+  o.push(T(0, 4.9, 'plate', 12), T(0, .9, 'blanket', 12), T(0, -5.1, 'impression', 12), T(-7.6, -1.5, 'paper in', 12), AR(-9.4, -3, -6.4, -3), T(7.4, -1.2, 'printed', 12));
+  o.push(num(-5.9, 6.2, 1), num(5.9, 6.2, 2), num(-3, 2.2, 3), num(3.2, -3.4, 4));
+  return o.join(''); };
+ ANIMS['offset-litho'] = { loop: true, dur: 6500, w: W, h: H, draw, watch: ['Dampening rollers wet the plate. The water stays on the non-image area and is repelled by the greasy image area.', 'Ink rollers coat the plate. The oil-based ink sticks only to the image area, because oil and water do not mix.',
+  'The plate cylinder transfers (offsets) the inked image on to the rubber blanket cylinder. The image on the blanket is reversed.', 'The blanket cylinder prints the image on to the paper, which is pressed against it by the impression cylinder. The plate never touches the paper, so it lasts for long runs.'] };
 })();
 
 /* Materials, forces and testing */
@@ -1060,6 +1503,144 @@ DIAGRAMS['go-no-go'] = { t: 'Go / no-go gauge', w: 640, h: 300,
   t(173, 250, 'GO', 20) + t(449, 250, 'NO GO', 20) + t(173, 222, '20.1 mm', 12) + t(449, 222, '19.9 mm', 12) +
   c(173, 166, 31, 'mat') + c(449, 92, 31, 'mat') + a(173, 40, 173, 126) + a(449, 20, 449, 56) + t(300, 60, 'part: 20 mm ± 0.1', 13),
  parts: [[60, 60, 'GO gap, made to the largest size allowed: a good part drops in', 150, 150], [590, 60, 'NO GO gap, made to the smallest size allowed: a good part will not enter', 470, 130], [300, 180, 'Fits GO but not NO GO: the part is within tolerance', 204, 166]] };
+})();
+
+/* 3D models: wood joints that pull apart, and a centre lathe turning a bar. See 01-motion-kit.js for the format. */
+(() => {
+ const { sm } = FIGX, WA = '#dfc08f', WB = '#c99b62', PEG = '#f0dfb0';
+ /* ---- wood joints ---- */
+ const JOINTS = [
+  ['Butt', 'The end of one piece is simply glued against the other, often with nails or screws. Quick to make but weak: end grain glues poorly and the glue area is small.'],
+  ['Dowel', 'A butt joint strengthened with wooden pegs glued into holes drilled in both pieces. The holes must line up exactly, so a jig is used. Common in flat-pack furniture.'],
+  ['Mitre', 'Both ends are cut at 45°. It hides the end grain, so it looks neat on picture frames, but it is weak unless it is reinforced.'],
+  ['Halving (lap)', 'Half the thickness is cut away from each piece so they overlap and finish flush. It has more glue area than a butt joint and is used in frames.'],
+  ['Housing', 'A groove cut across one piece holds the end of the other. Used for shelves and dividers in cabinets and bookcases.'],
+  ['Mortise and tenon', 'A tongue (the tenon) fits into a slot (the mortise). Very strong, with a large glue area. Used for tables, chairs and door frames.'],
+  ['Finger (comb)', 'Square fingers interlock, giving a large glue area. Strong and decorative, used for boxes. It is easy to cut by machine or laser.'],
+  ['Dovetail', 'Wedge-shaped tails lock between the pins. It can only come apart in one direction, so it resists pulling. Used for drawer fronts.']];
+ MODELS['wood-joints'] = { variants: JOINTS.map((j) => j[0]), slider: 'Pull apart', start: .6, build(M, v) {
+  const { THREE, tag, box, slab, rev, cyl, flat } = M, root = new THREE.Group(), A = new THREE.Group(), B = new THREE.Group(); root.add(A, B);
+  const plan = (pts, h, c) => { const g = new THREE.Group(); g.add(slab(pts, 0, h, c)); g.rotation.x = -Math.PI / 2; return g; };                 // outline seen from above, pushed up to height h (z runs away from you)
+  const side = (pts, x0, x1, c, holes) => { const g = new THREE.Group(); g.add(slab(pts, -x1, -x0, c, holes)); g.rotation.y = -Math.PI / 2; return g; }; // outline as [z, y], pushed along x
+  let dir = [-1, 0, 0], dist = 5; const parts = { a: ['First piece', 'One of the two pieces being joined.'], b: ['Second piece', 'The other piece.'] };
+  if (v === 0 || v === 1) { A.add(box(0, 10, 0, 6, 0, 2, WA)); B.add(box(10, 12, 0, 6, 0, 10, WB));
+   if (v === 1) { [1.5, 3, 4.5].forEach((y) => { B.add(tag('peg', rev(cyl(8.6, 10, .36), PEG, { whole: true, oy: y, oz: 1 }).back)); const h = new THREE.Mesh(new THREE.CircleGeometry(.38, 20), flat('#6b5233')); h.rotation.y = Math.PI / 2; h.position.set(10.01, y, 1); A.add(tag('hole', h)); });
+    parts.peg = ['Dowel', 'A round wooden peg, usually beech, with grooves to let glue and air escape.']; parts.hole = ['Dowel hole', 'Drilled to the same diameter as the dowel, in both pieces.']; } }
+  if (v === 2) { A.add(plan([[0, 0], [12, 0], [10, 2], [0, 2]], 6, WA)); B.add(plan([[12, 0], [12, 10], [10, 10], [10, 2]], 6, WB)); A.scale.z = B.scale.z = -1; }
+  if (v === 3) { A.add(slab([[0, 0], [10, 0], [10, 1], [6, 1], [6, 2], [0, 2]], 0, 4, WA)); B.add(side([[0, 1], [4, 1], [4, 0], [12, 0], [12, 2], [0, 2]], 6, 10, WB)); dir = [0, 1, 0]; dist = 4; }
+  if (v === 4) { A.add(tag('groove', slab([[0, 0], [12, 0], [12, 2], [7, 2], [7, 1.2], [5, 1.2], [5, 2], [0, 2]], 0, 6, WA))); B.add(box(5, 7, 1.2, 9, 0, 6, WB)); dir = [0, 1, 0]; dist = 4; parts.groove = ['Housing', 'The groove is cut across the grain to the thickness of the shelf.']; delete parts.a; }
+  if (v === 5) { A.add(tag('mortise', side([[0, 0], [3, 0], [3, 12], [0, 12]], 0, 4, WA, [[[1, 5], [2, 5], [2, 8], [1, 8]]]))); B.add(box(4, 13, 4.5, 8.5, 0, 3, WB), tag('tenon', box(.4, 4, 5, 8, 1, 2, WB))); dir = [1, 0, 0]; dist = 6;
+   parts.mortise = ['Mortise', 'The slot, cut with a mortise chisel or a mortising machine.']; parts.tenon = ['Tenon', 'The tongue, about one third of the thickness of the wood. The flat faces round it are the shoulders.']; delete parts.a; }
+  if (v === 6) { A.add(slab([[0, 0], [12, 0], [12, 1.2], [10, 1.2], [10, 2.4], [12, 2.4], [12, 3.6], [10, 3.6], [10, 4.8], [12, 4.8], [12, 6], [0, 6]], 0, 2, WA)); B.add(side([[10, 0], [10, 6], [2, 6], [2, 4.8], [0, 4.8], [0, 3.6], [2, 3.6], [2, 2.4], [0, 2.4], [0, 1.2], [2, 1.2], [2, 0]], 10, 12, WB)); dir = [0, 0, 1]; }
+  if (v === 7) { A.add(tag('tails', slab([[0, 0], [10, 0], [10, .9], [12, .5], [12, 2.5], [10, 2.1], [10, 3.9], [12, 3.5], [12, 5.5], [10, 5.1], [10, 6], [0, 6]], 0, 2, WA))); B.add(box(10, 12, 0, 6, 2, 10, WB));
+   [[[10, 0], [12, 0], [12, .5], [10, .9]], [[10, 2.1], [12, 2.5], [12, 3.5], [10, 3.9]], [[10, 5.1], [12, 5.5], [12, 6], [10, 6]]].forEach((p) => B.add(tag('pins', slab(p, 0, 2, WB)))); dir = [0, 0, 1];
+   parts.tails = ['Tails', 'Wider at the end than at the base, like a dove’s tail, so they cannot pull straight out.']; parts.pins = ['Pins', 'Fit between the tails. The slope is about 1 in 6 for softwood and 1 in 8 for hardwood.']; delete parts.a; }
+  A.children.forEach((c) => { if (!c.userData.part) tag('a', c); }); B.children.forEach((c) => { if (!c.userData.part) tag('b', c); });
+  const mover = dir[0] < 0 ? A : B, frame = (e) => { mover.position.set(dir[0] * e * dist, dir[1] * e * dist, dir[2] * e * dist * (v === 2 ? -1 : 1)); };
+  return { root, frame, parts, note: `<b>${JOINTS[v][0]} joint.</b> ${JOINTS[v][1]}`, home: { t: [7, 3.5, v === 2 ? -4 : 4], d: 46, v: [.42, .42, .8] } };
+ } };
+
+ /* ---- centre lathe ---- */
+ const LST = [[0, .18, 'Set the tool', 'The work is held in the chuck and supported by the tailstock centre. The chuck turns the work. The cross-slide winds the tool in to set the depth of cut.'],
+  [.18, .84, 'Turn', 'The carriage feeds the tool along the bed, parallel to the axis of the work. The tool stays still while the work turns, and a thin layer is cut away to leave a smaller diameter.'],
+  [.84, 1, 'Wind back', 'The tool is wound out and the carriage is taken back to the start, ready for another cut.', .92]];
+ MODELS['centre-lathe'] = { stages: LST, dur: 14000, build(M) {
+  const { THREE, tag, box, rev, cyl, K } = M, root = new THREE.Group(), G = '#9cc4a8', spin = new THREE.Group(), car = new THREE.Group(), cross = new THREE.Group(); root.add(spin, car); car.add(cross);
+  const R = (key, pf, c, o, to) => { const r = rev(pf, c, Object.assign({ whole: true }, o)); (to || root).add(tag(key, r.back)); return r.back; };
+  root.add(tag('bed', box(-6, 16, -4, -3, -2, 2, 'steel')), tag('bed', box(-6, -1, -10, -4, -2.4, 2.4, G)), tag('bed', box(12, 16, -10, -4, -2.4, 2.4, G)), tag('bed', box(-1, 12, -5.2, -4.6, -2.6, 2.6, 'dark')));
+  root.add(tag('head', box(-6, -1, -3, 2.4, -2.5, 2.5, G))); R('head', cyl(-1, -.4, 1.3), 'dark');
+  R('chuck', cyl(-.4, 1.2, 2.3), 'dark', {}, spin); [0, 1, 2].forEach((k) => { const j = box(1.2, 1.9, 1.05, 2.1, -.35, .35, 'steel'), g = new THREE.Group(); g.add(j); g.rotation.x = k * 2.094; spin.add(tag('chuck', g)); });
+  const thick = R('work', cyl(0, 1, 1.2), '#e3e7ec', { n: 32 }, spin), thin = R('work', cyl(0, 1, .92), '#f4f6f8', { n: 32 }, spin);
+  [0, 1, 2, 3].forEach((k) => { const m = box(0, 1, 1.17, 1.215, -.05, .05, 'dark'), g = new THREE.Group(); g.add(m); g.rotation.x = k * 1.5708; g.userData.mark = 1; spin.add(g); });   // marks so the spin shows
+  root.add(tag('tail', box(12.6, 15.4, -3, 1.4, -1.7, 1.7, G))); R('tail', cyl(11.7, 12.6, .6), 'steel'); R('centre', [[11, 0], [11.7, .5], [11.7, 0]], 'dark'); R('tail', cyl(15.4, 15.7, 1.3), 'dark');
+  R('lead', cyl(-1, 12.6, .16), 'steel', { oy: -3.5, oz: 2.25 });
+  car.add(tag('carriage', box(-1.7, 1.7, -3, -2.4, -2.7, 2.7, G)), tag('carriage', box(-1.7, 1.7, -5.4, -3, 2.3, 2.8, G))); R('carriage', cyl(0, .3, .8), 'dark', { oy: -4.2, oz: 3.1 }, car).rotation.y = -Math.PI / 2;
+  cross.add(tag('cross', box(-1, 1, -2.4, -1.9, -.4, 3.4, 'steel')), tag('post', box(-.7, .7, -1.9, -.2, 1.1, 2.5, 'dark')), tag('tool', box(-.16, .16, -.3, .02, 0, 2.4, K.yellow))); R('cross', cyl(0, .3, .6), 'dark', { oy: -2.15, oz: 0 }, cross).position.set(0, 0, 3.7); cross.children[cross.children.length - 1].rotation.y = -Math.PI / 2;
+  const parts = { bed: ['Bed', 'The rigid base. The carriage and tailstock slide along its accurately machined ways.'], head: ['Headstock', 'Holds the motor, gears and spindle that turn the chuck. Spindle speed is set here.'], chuck: ['Three-jaw chuck', 'Grips round bar. The three jaws move together, so the work is centred automatically.'],
+   work: ['Workpiece', 'The bar being turned. It rotates while the tool stays still.'], tail: ['Tailstock', 'Slides along the bed and locks. It supports the end of long work, or holds a drill chuck.'], centre: ['Centre', 'A hardened point that sits in a centre-drilled hole to support the end of the work.'],
+   carriage: ['Carriage (saddle)', 'Moves the tool along the bed, by handwheel or by automatic feed.'], cross: ['Cross-slide', 'Moves the tool in and out, at right angles to the work. It sets the depth of cut and is used for facing off.'], post: ['Tool post', 'Clamps the cutting tool at centre height.'],
+   tool: ['Cutting tool', 'A single-point tool of high-speed steel or with a carbide tip.'], lead: ['Lead screw', 'Drives the carriage at a steady rate for automatic feed and for cutting screw threads.'] };
+  const frame = (t) => { const inn = sm(.04, .16, t) - sm(.84, .9, t), cut = sm(.18, .84, t), back = sm(.9, .99, t), cx = 10.6 - cut * 8 + back * 8, done = 10.6 - cut * 8;
+   spin.rotation.x = t * 75; car.position.x = cx; cross.position.z = 2.2 - inn * 1.28;
+   thick.scale.x = Math.max(.01, done - .9); thick.position.x = .9; thin.scale.x = Math.max(.001, 11 - done); thin.position.x = done; thin.visible = cut > .001;
+   spin.children.forEach((c) => { if (c.userData.mark) { c.scale.x = Math.max(.01, done - 1.9); c.position.x = 1.9; } }); };
+  return { root, frame, parts, home: { t: [5, -2.4, 0], d: 50, v: [.3, .3, .9] } };
+ } };
+})();
+
+/* Mechanisms for GCSE (AQA 3.1.5): types of movement, linkages, cams and gear trains, each as a still and a running animation. */
+(() => {
+ const K = D.K, P = Math.PI, IN = K.ink2, OUT = K.hot;
+ const bar = (u, a, b, c) => `<line x1="${u.X(a[0])}" y1="${u.Y(a[1])}" x2="${u.X(b[0])}" y2="${u.Y(b[1])}" stroke="${K.ink}" stroke-width="12" stroke-linecap="round"/><line x1="${u.X(a[0])}" y1="${u.Y(a[1])}" x2="${u.X(b[0])}" y2="${u.Y(b[1])}" stroke="${c || K.steel}" stroke-width="8" stroke-linecap="round"/>`;
+ const fixedP = (u, x, y) => u.PG([[x, y], [x - .55, y - .95], [x + .55, y - .95]], 'dark') + `<line x1="${u.X(x - .8)}" y1="${u.Y(y - .95)}" x2="${u.X(x + .8)}" y2="${u.Y(y - .95)}" stroke="${K.ink}" stroke-width="2.5"/>` + u.C(x, y, .2, K.ink);
+ const movP = (u, x, y) => u.C(x, y, .2, '#fff', 2);
+ const head = (u, x, y, s, size, col) => u.T(x, y, s, size || 15, 'middle', col);
+ const dirAr = (u, x, y, dx, dy, sgn, col) => u.AR(x - dx * sgn, y - dy * sgn, x + dx * sgn, y + dy * sgn, col);
+
+ /* ---- the four types of movement ---- */
+ { const u = U2(20, 0, 96), { X, Y, R, C, AR, ROT } = u, W = 720, H = 200;
+  const draw = (t) => { const o = [], s = Math.sin(2 * P * t);
+   [9, 18, 27].forEach((x) => o.push(`<line x1="${X(x)}" y1="14" x2="${X(x)}" y2="${H - 14}" stroke="${K.ink}" stroke-width="1" opacity=".25"/>`));
+   // linear: a parcel on a conveyor
+   o.push(R(1, 8, -.9, -.5, 'dark', 4), C(1.3, -.7, .42, 'steel'), C(7.7, -.7, .42, 'steel')); const lx = 1.2 + ((t * 2) % 1) * 5.4; o.push(R(lx, lx + 1.3, -.5, .7, 'wood'), AR(2.4, 2, 6.6, 2));
+   // reciprocating: a saw blade moving backwards and forwards
+   const rx = 13.5 + s * 2; o.push(R(rx - 2.2, rx + 2.2, -.2, .25, 'steel'), u.PG(Array.from({ length: 9 }, (_, i) => [[rx - 2.2 + i * .55, -.2], [rx - 1.93 + i * .55, -.6]]).flat().concat([[rx + 2.2, -.2]]), 'steel', 1.5), R(rx + 2.2, rx + 3.4, -.5, .55, 'wood', 4), AR(13.5, 2, 11, 2), AR(13.5, 2, 16, 2));
+   // rotary: a wheel
+   const a = -2 * P * t; o.push(C(22.5, 0, 1.9, 'steel'), C(22.5, 0, 1.45, 'pale'), [0, 1, 2, 3].map((k) => `<line x1="${X(22.5)}" y1="${Y(0)}" x2="${X(22.5 + 1.45 * Math.cos(a + k * P / 2))}" y2="${Y(1.45 * Math.sin(a + k * P / 2))}" stroke="${K.ink}" stroke-width="2.5"/>`).join(''), C(22.5, 0, .3, 'dark'), ROT(22.5, 0, 2.5, 215, 325));
+   // oscillating: a pendulum
+   const an = s * .6, bx = 31.5 + 3.2 * Math.sin(an), by = 2.6 - 3.2 * Math.cos(an); o.push(R(30.3, 32.7, 2.6, 2.9, 'dark'), `<line x1="${X(31.5)}" y1="${Y(2.6)}" x2="${X(bx)}" y2="${Y(by)}" stroke="${K.ink}" stroke-width="3"/>`, C(bx, by, .6, 'mat'), `<path d="M${X(29.4)} ${Y(-1.3)}Q${X(31.5)} ${Y(-2.2)} ${X(33.6)} ${Y(-1.3)}" fill="none" stroke="${IN}" stroke-width="3.5" stroke-linecap="round"/>`, AR(29.7, -1.42, 29.3, -1.2), AR(33.3, -1.42, 33.7, -1.2));
+   [['Linear', 'one way, in a straight line'], ['Reciprocating', 'back and forth in a line'], ['Rotary', 'round in a circle'], ['Oscillating', 'swinging in an arc']].forEach((n, i) => o.push(head(u, 4.5 + 9 * i, 3.7, n[0]), u.T(4.5 + 9 * i, -3.6, n[1], 11.5, 'middle', '#5f6670')));
+   return o.join(''); };
+  DIAGRAMS['motion-types'] = { t: 'The four types of movement', w: W, h: H, svg: draw(.07) };
+  ANIMS['motion-types'] = { loop: true, dur: 4000, draw, watch: ['Linear: the parcel keeps moving one way in a straight line.', 'Reciprocating: the saw blade moves backwards and forwards in a straight line.', 'Rotary: the wheel turns round and round.', 'Oscillating: the pendulum swings backwards and forwards in an arc.'] }; }
+
+ /* ---- linkages ---- */
+ { const u = U2(20, 0, 120), { X, Y, T } = u, W = 720, H = 250;
+  const draw = (t) => { const o = [], al = Math.sin(2 * P * t) * .34, sg = Math.cos(2 * P * t) >= 0 ? 1 : -1, sn = Math.sin(al), cs = Math.cos(al), L = 1.7;
+   [12, 24].forEach((x) => o.push(`<line x1="${X(x)}" y1="14" x2="${X(x)}" y2="${H - 14}" stroke="${K.ink}" stroke-width="1" opacity=".25"/>`));
+   // reverse motion: one bar on a fixed pivot at its centre
+   { const p = [6, 0], a = [p[0] + L * sn, L * cs], b = [p[0] - L * sn, -L * cs]; o.push(bar(u, [a[0] - 4.2, a[1]], a, '#9db4ea'), bar(u, b, [b[0] + 4.2, b[1]], '#f0a39b'), bar(u, a, b), fixedP(u, 6, 0), movP(u, a[0], a[1]), movP(u, b[0], b[1]), dirAr(u, 2.6, 3, 1, 0, sg, IN), dirAr(u, 9.4, -3, 1, 0, -sg, OUT)); }
+   // parallel motion (push-pull): two bars joined by a link
+   { const p1 = 16.4, p2 = 19.6, a1 = [p1 + L * sn, L * cs], b1 = [p1 - L * sn, -L * cs], a2 = [p2 + L * sn, L * cs], b2 = [p2 - L * sn, -L * cs];
+    o.push(bar(u, [a1[0] - 3.4, a1[1]], a1, '#9db4ea'), bar(u, a2, [a2[0] + 3.4, a2[1]], '#f0a39b'), bar(u, b1, b2), bar(u, a1, b1), bar(u, a2, b2), fixedP(u, p1, 0), fixedP(u, p2, 0), [a1, b1, a2, b2].map((q) => movP(u, q[0], q[1])).join(''), dirAr(u, 14, 3, 1, 0, sg, IN), dirAr(u, 22, 3, 1, 0, sg, OUT)); }
+   // bell crank: an L-shaped bar on a fixed pivot at its corner
+   { const p = [29, -.4], a = [p[0] + L * sn, p[1] + L * cs], b = [p[0] + L * cs, p[1] - L * sn]; o.push(bar(u, [a[0] - 3.6, a[1]], a, '#9db4ea'), bar(u, b, [b[0], b[1] - 3.2], '#f0a39b'), bar(u, a, p), bar(u, p, b), fixedP(u, p[0], p[1]), movP(u, a[0], a[1]), movP(u, b[0], b[1]), dirAr(u, 26.4, 2.7, 1, 0, sg, IN), dirAr(u, 32.4, -2.6, 0, 1, -sg, OUT)); }
+   [['Reverse motion', 'the output moves the opposite way'], ['Parallel motion (push/pull)', 'the output moves the same way'], ['Bell crank', 'the direction is turned through 90°']].forEach((n, i) => o.push(head(u, 6 + 12 * i, 5, n[0]), T(6 + 12 * i, -5.4, n[1], 11.5, 'middle', '#5f6670')));
+   o.push(T(1.2, 2.2, 'IN', 12, 'middle', IN), T(10.8, -3.6, 'OUT', 12, 'middle', OUT), T(13.1, 2.2, 'IN', 12, 'middle', IN), T(22.9, 2.2, 'OUT', 12, 'middle', OUT), T(25.6, 1.8, 'IN', 12, 'middle', IN), T(33.6, -3.2, 'OUT', 12, 'middle', OUT));
+   return o.join(''); };
+  DIAGRAMS['linkages'] = { t: 'Linkages change the direction of a movement', w: W, h: H, svg: draw(.12) };
+  ANIMS['linkages'] = { loop: true, dur: 3600, draw, watch: ['Blue is the input and red is the output. The dark triangles are fixed pivots; the white circles are moving pivots.', 'Reverse motion: push the input one way and the output moves the other way.', 'Parallel motion (push/pull): two bars and a link, so the output moves the same way as the input.', 'Bell crank: the movement is turned through 90°. Moving a pivot nearer one end changes the size of the output force and movement.'] }; }
+
+ /* ---- cams and followers ---- */
+ { const u = U2(20, 0, 170), { X, Y, R, C, T, ROT } = u, W = 720, H = 290;
+  const prof = [(f) => 1.1 + 1.3 * Math.pow(Math.max(0, Math.cos(f)), 1.4), (f) => .7 * Math.cos(f) + Math.sqrt(2.25 - .49 * Math.sin(f) * Math.sin(f)), (f) => .9 + 1.5 * ((((f + P) % (2 * P)) + 2 * P) % (2 * P)) / (2 * P)];
+  const draw = (t) => { const o = [], th = -2 * P * t;
+   [12, 24].forEach((x) => o.push(`<line x1="${X(x)}" y1="14" x2="${X(x)}" y2="${H - 14}" stroke="${K.ink}" stroke-width="1" opacity=".25"/>`));
+   prof.forEach((r, i) => { const cx = 6 + 12 * i, cy = 0, pts = []; for (let k = 0; k < 90; k++) { const f = k * P / 45; pts.push([cx + r(f) * Math.cos(f + th), cy + r(f) * Math.sin(f + th)]); }
+    const h = r(P / 2 - th); o.push(u.PG(pts, 'mat'), C(cx, cy, .32, 'dark'), `<line x1="${X(cx)}" y1="${Y(cy)}" x2="${X(cx + .32 * Math.cos(th))}" y2="${Y(cy + .32 * Math.sin(th))}" stroke="#fff" stroke-width="2"/>`);
+    o.push(R(cx - .22, cx + .22, cy + h + .3, cy + h + 4.6, 'steel'), u.PG([[cx - .22, cy + h + .3], [cx + .22, cy + h + .3], [cx, cy + h]], 'steel'), R(cx - .9, cx + .9, cy + h + 4.6, cy + h + 4.95, 'cool'));
+    [1, -1].forEach((m) => o.push(R(cx + m * .22 + (m > 0 ? 0 : -.9), cx + m * .22 + (m > 0 ? .9 : 0), 4.3, 5.5, 'dark')));
+    o.push(ROT(cx - .2, cy, 2.9, 150, 210)); });
+   [['Pear cam', 'dwells, then rises and falls'], ['Eccentric (circular) cam', 'smooth rise and fall'], ['Snail (drop) cam', 'slow rise, sudden drop']].forEach((n, i) => o.push(T(6 + 12 * i, -3.6, n[0], 15), T(6 + 12 * i, -4.5, n[1], 11.5, 'middle', '#5f6670')));
+   return o.join(''); };
+  const mk = (x, y, s, tx, ty) => [X(x), Y(y), s, X(tx), Y(ty)];
+  DIAGRAMS['cam-follower'] = { t: 'Cams and followers: rotary motion in, reciprocating motion out', w: W, h: H, svg: draw(.1), parts: [mk(2.2, -.8, 'Cam', 5, -.5), mk(2.6, 2.6, 'Follower', 5.75, 3.2), mk(9.4, 6.2, 'Guide (slide)', 7, 4.9), mk(9.6, -1.4, 'Shaft (rotary motion in)', 6.2, -.1)] };
+  ANIMS['cam-follower'] = { loop: true, dur: 4200, draw, watch: ['The cam turns (rotary motion) and the follower moves up and down (reciprocating motion). The guide keeps the follower in a straight line.', 'Pear cam: the follower dwells for about half a turn, then rises and falls.', 'Eccentric cam: a circle turning off-centre gives a smooth, steady rise and fall.', 'Snail cam: a slow rise, then the follower drops suddenly. It can only turn in one direction.'] }; }
+
+ /* ---- gear trains ---- */
+ { const u = U2(21, 0, 128), { X, Y, C, T, ROT } = u, W = 680, H = 270, m = .28;
+  const gear = (cx, cy, N, phi, col) => { const rp = N * m / 2, ro = rp + m, rr = rp - 1.2 * m, tau = 2 * P / N, pts = []; for (let k = 0; k < N; k++) { const a = phi + k * tau; [[rr, -.27], [ro, -.13], [ro, .13], [rr, .27]].forEach((q) => pts.push([cx + q[0] * Math.cos(a + q[1] * tau), cy + q[0] * Math.sin(a + q[1] * tau)])); }
+   return u.PG(pts, col, 1.8) + C(cx, cy, .3, 'dark') + C(cx + (rr - .45) * Math.cos(phi), cy + (rr - .45) * Math.sin(phi), .17, K.ink, 0); };
+  const next = (phi, N1, N2) => P - (N1 / N2) * phi - P / N2;                                                    // the angle that keeps the next gear in mesh
+  const draw = (t) => { const o = [], a = -4 * P * t, b = next(a, 12, 24), c2 = next(a, 12, 24), c3 = next(c2, 24, 12);
+   o.push(`<line x1="${X(14.4)}" y1="14" x2="${X(14.4)}" y2="${H - 14}" stroke="${K.ink}" stroke-width="1" opacity=".25"/>`);
+   o.push(gear(3.4, 0, 12, a, K.mat), gear(8.44, 0, 24, b, K.cool), ROT(3.4, 0, 2.5, 240, 300), ROT(8.44, 0, 4.2, 285, 255, 'hot'));
+   o.push(gear(17.6, 0, 12, a, K.mat), gear(22.64, 0, 24, c2, K.steel), gear(27.68, 0, 12, c3, K.cool), ROT(17.6, 0, 2.5, 240, 300), ROT(27.68, 0, 2.5, 240, 300, 'hot'));
+   o.push(T(6.6, 5.1, 'Simple gear train', 15), T(3.4, -3.3, 'driver', 12.5), T(3.4, -4, '12 teeth', 11.5, 'middle', '#5f6670'), T(8.44, -4.6, 'driven', 12.5), T(8.44, -5.3, '24 teeth', 11.5, 'middle', '#5f6670'));
+   o.push(T(22.6, 5.1, 'With an idler gear', 15), T(17.6, -3.3, 'driver', 12.5), T(17.6, -4, '12 teeth', 11.5, 'middle', '#5f6670'), T(22.64, -4.6, 'idler', 12.5), T(27.68, -3.3, 'driven', 12.5), T(27.68, -4, '12 teeth', 11.5, 'middle', '#5f6670'));
+   return o.join(''); };
+  DIAGRAMS['gear-train'] = { t: 'Gear trains', w: W, h: H, svg: draw(.03) };
+  ANIMS['gear-train'] = { loop: true, dur: 9000, draw, watch: ['Gears that mesh turn in opposite directions. Watch the dot on each gear.', 'Gear ratio = teeth on the driven gear ÷ teeth on the driver gear = 24 ÷ 12 = 2, written 2:1. The driven gear turns at half the speed of the driver, but with more turning force.', 'An idler gear sits between the driver and the driven gear so they both turn the same way. It does not change the gear ratio: here 12 ÷ 12 = 1:1.'] }; }
 })();
 
 /* Topic 1: Materials (Edexcel 9DT0 1.1–1.7) */
@@ -4478,8 +5059,11 @@ function figSVG(id, mode, inner, w, h) {
 }
 function figHTML(id, cap, ref) {
   const d = DG[id]; if (!d) return `<p class="muted">[diagram “${E(id)}” is missing]</p>`;
-  if (d.stages) return `<figure class="fig${ref ? ' ref' : ''}"><div class="stg">${d.stages.map(([sv, c], i) => `<div>${figSVG(id, 'plain', sv)}<p><b>${i + 1}</b> ${c}</p></div>`).join('')}</div><figcaption>${cap || d.t}</figcaption></figure>`;
-  return `<figure class="fig${ref ? ' ref' : ''}">${figSVG(id, 'key')}${(d.parts || []).length ? `<ol class="fkey">${d.parts.map((p) => `<li>${p[2]}</li>`).join('')}</ol>` : ''}<figcaption>${cap || d.t}</figcaption></figure>`;
+  const body = d.stages ? `<div class="stg">${d.stages.map(([sv, c], i) => `<div>${figSVG(id, 'plain', sv)}<p><b>${i + 1}</b> ${c}</p></div>`).join('')}</div>`
+    : figSVG(id, 'key') + ((d.parts || []).length ? `<ol class="fkey">${d.parts.map((p) => `<li>${p[2]}</li>`).join('')}</ol>` : '');
+  // in the notes, a diagram that also has an animation or a 3D model gets tabs to switch between them (diagrams/01-motion-kit.js)
+  const tabs = ref && typeof FIGX !== 'undefined' && FIGX.has(id);
+  return `<figure class="fig${ref ? ' ref' : ''}">${tabs ? FIGX.wrap(id, body) : body}<figcaption>${cap || d.t}</figcaption></figure>`;
 }
 // { label: id } and { stages: id } are shorthand: they become a matching and an ordering activity built from the diagram
 BOOKLETS.forEach((bk) => (bk.pages || []).forEach((pg) => pg.blocks.forEach((b) => {

@@ -11,6 +11,7 @@
    'Commercial processes': { fig: ['offset-litho', 'die-casting'], label: ['offset-litho'] },
    'Quality control and exam practice': { fig: ['go-no-go'] },
   },
+  g5: { 'Types of movement': { fig: ['motion-types'] }, 'Linkages': { fig: ['linkages'] }, 'Cams and followers': { fig: ['cam-follower'], label: ['cam-follower'] }, 'Gear trains, pulleys and belts': { fig: ['gear-train'] } },
   g8: { 'The five forces': { fig: ['forces'] } },
   g10: { 'Timber and paper': { fig: ['timber-conversion'] } },
   g6: { 'Timbers: natural and manufactured': { fig: ['manufactured-boards'] }, 'Textiles: fibres and fabrics': { fig: ['weaves'] } },

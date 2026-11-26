@@ -40,8 +40,11 @@ function figSVG(id, mode, inner, w, h) {
 }
 function figHTML(id, cap, ref) {
   const d = DG[id]; if (!d) return `<p class="muted">[diagram “${E(id)}” is missing]</p>`;
-  if (d.stages) return `<figure class="fig${ref ? ' ref' : ''}"><div class="stg">${d.stages.map(([sv, c], i) => `<div>${figSVG(id, 'plain', sv)}<p><b>${i + 1}</b> ${c}</p></div>`).join('')}</div><figcaption>${cap || d.t}</figcaption></figure>`;
-  return `<figure class="fig${ref ? ' ref' : ''}">${figSVG(id, 'key')}${(d.parts || []).length ? `<ol class="fkey">${d.parts.map((p) => `<li>${p[2]}</li>`).join('')}</ol>` : ''}<figcaption>${cap || d.t}</figcaption></figure>`;
+  const body = d.stages ? `<div class="stg">${d.stages.map(([sv, c], i) => `<div>${figSVG(id, 'plain', sv)}<p><b>${i + 1}</b> ${c}</p></div>`).join('')}</div>`
+    : figSVG(id, 'key') + ((d.parts || []).length ? `<ol class="fkey">${d.parts.map((p) => `<li>${p[2]}</li>`).join('')}</ol>` : '');
+  // in the notes, a diagram that also has an animation or a 3D model gets tabs to switch between them (diagrams/01-motion-kit.js)
+  const tabs = ref && typeof FIGX !== 'undefined' && FIGX.has(id);
+  return `<figure class="fig${ref ? ' ref' : ''}">${tabs ? FIGX.wrap(id, body) : body}<figcaption>${cap || d.t}</figcaption></figure>`;
 }
 // { label: id } and { stages: id } are shorthand: they become a matching and an ordering activity built from the diagram
 BOOKLETS.forEach((bk) => (bk.pages || []).forEach((pg) => pg.blocks.forEach((b) => {

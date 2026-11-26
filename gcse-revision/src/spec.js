@@ -16,9 +16,10 @@ const APP = {
   LV: {
     6: [['Basic', '1–2', 'One or two simple points; little or no explanation; no examples'], ['Good', '3–4', 'Several relevant points, some explained; examples may be general rather than specific'], ['Thorough', '5–6', 'Detailed, well-explained points that answer the question asked; clear, specific examples']],
     8: [['Limited', '1–2', 'One or two simple points on one side only; no examples'], ['Basic', '3–4', 'Some relevant points; little explanation; no real judgement; few or no examples'], ['Good', '5–6', 'Both sides considered and explained; some relevant examples'], ['Detailed', '7–8', 'Both sides explained in detail and weighed up; relevant, specific examples throughout']],
+    10: [['Limited', '1–2', 'One or two simple points; no explanation or examples'], ['Basic', '3–5', 'Some relevant points on one side; little explanation; few examples; no real judgement'], ['Good', '6–8', 'Points on both sides, mostly explained; relevant examples; some judgement'], ['Detailed', '9–10', 'Detailed, well-explained points on both sides; specific examples throughout; a clear, supported conclusion']],
     9: [['Basic', '1–3', 'A few simple points; little explanation; no examples'], ['Good', '4–6', 'Relevant points, mostly explained; some examples; a simple judgement'], ['Thorough', '7–9', 'Detailed, well-explained points on all parts of the question; specific examples; a supported judgement']],
   },
-  levelled: (q, m) => m >= 6 && !/\*\*(Calculate|Complete|Draw|Sketch)\*\*/i.test(q),
+  levelled: (q, m) => m >= 6 && !/\*\*(Calculate|Complete|Draw|Sketch|Give)\*\*/i.test(q),
 };
 const TOPICS = { 1: 'New and emerging technologies', 2: 'Energy generation and storage', 3: 'Developments in new materials', 4: 'Systems approach to designing', 5: 'Mechanical devices', 6: 'Materials and their working properties',
   7: 'Selection of materials or components', 8: 'Forces and stresses', 9: 'Ecological and social footprint', 10: 'Sources and origins', 11: 'Using and working with materials', 12: 'Stock forms, types and sizes', 13: 'Scales of production', 14: 'Specialist techniques and processes', 15: 'Surface treatments and finishes',

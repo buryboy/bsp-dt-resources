@@ -125,6 +125,8 @@ BOOKLETS.push({ id: 'g22', topic: 22, title: 'Making: materials, tolerances, too
  <tr><td>Cuts from blades and sharp edges</td><td>Cut away from the body; safety rule and cutting mat; keep tools sharp; remove burrs</td></tr>
  <tr><td>Burns from hot metal, polymer and tools</td><td>Heat-proof gloves and tongs; a stand for the soldering iron; label hot work</td></tr>
  <tr><td>Trips and collisions</td><td>Clear floor and bench; bags stored away; one person at a machine; no running</td></tr></table>
+ <h4>Checking equipment so it gives a quality result</h4>
+ <p>Exam questions ask what checks you would make <b>before and during</b> use. Think: is the tool or blade <b>sharp, clean and secure</b>? Is the work <b>held firmly</b> and in the right position? Are the <b>settings</b> right for this material and thickness (speed, power, temperature, stitch length)? Have I made a <b>test piece</b> and <b>measured</b> it?</p>
  <p>Know where the <b>emergency stop</b> buttons are. Only use a machine you have been trained on and have permission to use. Report damage and accidents.</p>
  <p>A <b>risk assessment</b> names the <b>hazard</b>, the <b>risk</b> (who could be hurt, how likely it is and how badly) and the <b>control measure</b>.</p>` },
  { tip: '<b>Safety answers must be specific.</b> “Wear goggles” scores less than “wear goggles <b>because</b> chips of acrylic can fly up from the drill”. “Be careful” scores nothing. Read whether the question wants precautions for <b>cutting</b>, for <b>heat</b>, or in general.' },

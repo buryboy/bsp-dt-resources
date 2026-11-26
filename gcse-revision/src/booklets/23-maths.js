@@ -8,7 +8,8 @@ BOOKLETS.push({ id: 'gmaths', topic: 'Maths', tag: 'Maths', title: 'Maths for De
  <tr><td>3</td><td>Area, surface area and volume</td><td>How much material is needed</td></tr>
  <tr><td>4</td><td>Handling data: tables, charts, averages</td><td>Pie chart angles; reading a survey</td></tr>
  <tr><td>5</td><td>Angles, scale and tessellation</td><td>Scale drawings; how many parts from a sheet</td></tr>
- <tr><td>6</td><td>Costs, then mixed exam questions</td><td>Cost of the materials for a batch</td></tr></table>
+ <tr><td>6</td><td>Maths from real papers</td><td>Hole spacing, hoops, hexagons, levers</td></tr>
+ <tr><td>7</td><td>Costs, then mixed exam questions</td><td>Cost of the materials for a batch</td></tr></table>
  <h4>How the marks work</h4>
  <ul><li>There are marks for each <b>step</b>, so <b>show your working</b>. A wrong final answer can still score 2 out of 3.</li>
  <li>If you use your own wrong answer correctly in the next step, you still get that mark.</li>
@@ -138,6 +139,45 @@ BOOKLETS.push({ id: 'gmaths', topic: 'Maths', tag: 'Maths', title: 'Maths for De
   ['Rectangles 220 mm × 90 mm are cut from a sheet 600 mm × 450 mm, all the same way round with the 220 mm side along the 600 mm edge. How many can be cut?', 10, 0, '', '600 ÷ 220 = 2.7, so 2. 450 ÷ 90 = 5. 2 × 5 = 10.'],
   ['Now the same 220 mm × 90 mm rectangles are turned so the 90 mm side runs along the 600 mm edge. How many can be cut?', 12, 0, '', '600 ÷ 90 = 6.7, so 6. 450 ÷ 220 = 2.05, so 2. 6 × 2 = 12: two more than before.'],
   ['Shelves 450 mm long are cut from a 2400 mm plank. Each saw cut removes 3 mm. How many whole shelves can be cut?', 5, 0, '', 'Five shelves need 5 × 450 = 2250 mm plus 4 cuts × 3 mm = 12 mm: 2262 mm, which fits. Six would need 2700 mm.'],
+ ] },
+]},
+
+{ t: 'Maths from real papers', blocks: [
+ { notes: `<p class="lead">These are the kinds of maths that have appeared in recent papers and in AQA's guide to maths in D&T. Each is ordinary maths wrapped in a design problem.</p>
+ <h4>Levers and movement</h4>
+ <p>The two ends of a lever move in proportion to their distances from the pivot. If end A is 10 mm from the pivot and end B is 40 mm from it, B moves <b>four times</b> as far as A, in the opposite direction.</p>
+ <h4>Equally spaced holes</h4>
+ <p>If a strip has 7 holes equally spaced from each other <b>and from each end</b>, there are 7 + 1 = <b>8 equal gaps</b>. Spacing = length ÷ 8. The gap between the edges of two holes = spacing − one diameter. The centre line of a strip is half its width from either edge.</p>
+ <h4>Circles, arcs and hoops</h4>
+ <p>Circumference = π × diameter (or 2πr). A semicircular hoop is <b>half</b> a circumference; a quarter bend is a quarter. Add any straight sections. Watch the rounding instruction: “to the nearest whole millimetre”.</p>
+ <h4>Angles in shapes</h4>
+ <ul><li>Interior angles of a polygon add up to (number of sides − 2) × 180°.</li>
+ <li>A <b>regular hexagon</b>: 720° ÷ 6 = <b>120°</b> at each corner. It is made of six equilateral triangles, so the distance across opposite corners is <b>twice the side length</b>.</li>
+ <li>Square: 90°. Equilateral triangle: 60°. Regular octagon: 135°.</li></ul>
+ <h4>Sharing in a ratio</h4>
+ <p>Solar to other renewables in the ratio 1:10 means 11 parts altogether. Solar = total ÷ 11.</p>
+ <h4>Pythagoras and trigonometry</h4>
+ <p>For a right-angled triangle: <b>a² + b² = c²</b>, where c is the longest side (the hypotenuse). Use it to find the length of a diagonal brace or a sloping edge. <b>sin = opposite ÷ hypotenuse; cos = adjacent ÷ hypotenuse; tan = opposite ÷ adjacent</b> (SOH CAH TOA) links a side to an angle.</p>
+ <h4>Efficiency</h4>
+ <p>Efficiency = useful output ÷ total input × 100%.</p>
+ <h4>Charts</h4>
+ <p>A <b>bar chart</b> is for separate categories (favourite colour). A <b>histogram</b> is for continuous measurements grouped into ranges (hand widths of 70–75 mm, 75–80 mm…), with no gaps between the bars.</p>
+ <h4>Units</h4>
+ <p>10 mm = 1 cm; 100 cm = 1 m; 1000 mm = 1 m. Some materials are still sold in <b>imperial</b> sizes: 1 inch = 25.4 mm, and a “2 by 4” timber is roughly 50 × 100 mm.</p>` },
+ { calc: [
+  ['A lever in a toy pivots at one point. End A is 15 mm from the pivot and end B is 60 mm from the pivot. End A moves 8 mm. How far does end B move, in mm?', 32, 0, 'mm', '60 ÷ 15 = 4, so B moves 4 times as far: 8 × 4 = 32 mm.'],
+  ['A strip 180 mm long has 5 holes, equally spaced from each other and from each end. What is the distance between the centres of neighbouring holes, in mm?', 30, 0, 'mm', '5 holes give 6 equal gaps. 180 ÷ 6 = 30 mm.'],
+  ['The holes in that strip are 8 mm in diameter. What is the shortest distance between the edges of two neighbouring holes, in mm?', 22, 0, 'mm', 'Centre to centre is 30 mm. Take off half a diameter at each end: 30 − 8 = 22 mm.'],
+  ['A hoop is a semicircle with a diameter of 300 mm. What length of rod is needed to make it, to the nearest whole millimetre? Use the π button.', 471, 0.6, 'mm', 'Full circumference = π × 300 = 942.48 mm. Half = 471.24, so 471 mm.'],
+  ['A plant support is made from three straight legs, each 400 mm long, and one full circular hoop of diameter 200 mm. What total length of rod is needed, to the nearest whole centimetre?', 183, 0.6, 'cm', 'Legs: 3 × 400 = 1200 mm. Hoop: π × 200 = 628.3 mm. Total 1828.3 mm = 182.8 cm, so 183 cm.'],
+  ['What is the size of each interior angle of a regular hexagon, in degrees?', 120, 0, '°', '(6 − 2) × 180 = 720°. 720 ÷ 6 = 120°.'],
+  ['A regular hexagonal template measures 90 mm between two opposite corners. What is the length of one side, in mm?', 45, 0, 'mm', 'A regular hexagon is six equilateral triangles, so corner to corner is twice the side: 90 ÷ 2 = 45 mm.'],
+  ['A country generated 88 TWh of renewable energy. The ratio of solar to all other renewable sources was 1:10. How much was solar, in TWh?', 8, 0.01, 'TWh', '1 + 10 = 11 parts. 88 ÷ 11 = 8 TWh.'],
+  ['A survey asked 240 children about colour schemes. 102 chose primary colours. What percentage is this?', 42.5, 0.01, '%', '102 ÷ 240 × 100 = 42.5%.'],
+  ['A rectangular frame is 300 mm wide and 400 mm high. What length of diagonal brace is needed, corner to corner, in mm?', 500, 0, 'mm', '300² + 400² = 90 000 + 160 000 = 250 000. √250 000 = 500 mm.'],
+  ['A motor takes in 50 J of electrical energy and gives out 40 J of useful movement energy. What is its efficiency, as a percentage?', 80, 0.01, '%', '40 ÷ 50 × 100 = 80%.'],
+  ['A piece of material is 60 mm × 40 mm. Six right-angled triangles, each with a base of 18 mm and a height of 18 mm, are cut from it. What area is wasted, in mm²?', 1428, 0, 'mm²', 'Sheet = 60 × 40 = 2400 mm². One triangle = ½ × 18 × 18 = 162 mm². Six = 972 mm². Waste = 2400 − 972 = 1428 mm².'],
+  ['A coat needs four buttons and one spare. Buttons cost 14p each. What is the cost of buttons for 1200 coats, in pounds?', 840, 0.001, '£', '5 buttons × 14p = 70p per coat. 0.70 × 1200 = £840.00.'],
  ] },
 ]},
 

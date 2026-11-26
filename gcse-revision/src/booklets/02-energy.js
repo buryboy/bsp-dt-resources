@@ -88,7 +88,7 @@ BOOKLETS.push({ id: 'g2', topic: 2, title: 'Energy generation and storage', page
  <h4>Batteries</h4>
  <table><tr><th></th><th>Alkaline</th><th>Rechargeable</th></tr>
  <tr><td><b>Use</b></td><td>Single use: thrown away when flat</td><td>Charged and reused hundreds of times</td></tr>
- <tr><td><b>Types</b></td><td>AA, AAA, 9 V (PP3)</td><td>Lithium-ion (phones, laptops, power tools, cars); nickel-metal hydride (rechargeable AA)</td></tr>
+ <tr><td><b>Types</b></td><td>AA, AAA, 9 V (PP3). Older, cheaper <b>zinc-carbon</b> cells look the same but hold less energy and are more likely to leak and corrode</td><td>Lithium-ion (phones, laptops, power tools, cars); nickel-metal hydride (rechargeable AA)</td></tr>
  <tr><td><b>For</b></td><td>Cheap to buy; ready to use; hold their charge for years on the shelf</td><td>Cheaper over time; far less waste; can deliver the high current a motor needs</td></tr>
  <tr><td><b>Against</b></td><td>Expensive over time; a lot of waste; contain chemicals that must not go to landfill</td><td>Cost more at first; need a charger; slowly lose capacity; lithium is mined and finite</td></tr>
  <tr><td><b>Suits</b></td><td>Low-power products used now and then: TV remote, smoke alarm, clock</td><td>Products used every day or needing lots of power: phone, drill, e-bike</td></tr></table>

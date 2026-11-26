@@ -132,7 +132,7 @@ BOOKLETS.push({ id: 'g1', topic: 1, title: 'New and emerging technologies', page
  { notes: `<p>You need to be able to look at a new technology from <b>different points of view</b> and decide whether it is a good thing.</p>
  <table><tr><th>Issue</th><th>What to think about</th></tr>
  <tr><td><b>Planned obsolescence</b></td><td>The product is designed to be replaced: a sealed battery, software that stops updating, a style that dates. Good for the company's sales and brings new features sooner. Bad for the customer's wallet and creates waste</td></tr>
- <tr><td><b>Design for maintenance</b></td><td>The product can be opened, repaired and upgraded: screws instead of glue, spare parts on sale, standard components. It lasts longer and makes less waste, but can cost more and be bulkier</td></tr>
+ <tr><td><b>Design for maintenance</b></td><td>The product can be opened, repaired and upgraded: screws instead of glue, spare parts on sale, standard components. Design for <b>disassembly</b> goes with it: the product comes apart easily at the end of its life so the materials can be separated and recycled. It lasts longer and makes less waste, but can cost more and be bulkier</td></tr>
  <tr><td><b>Ethics</b></td><td>Is it right? Are workers paid fairly and kept safe? Is the customer being misled? Who loses their job?</td></tr>
  <tr><td><b>The environment</b></td><td>Materials and energy used to make it; pollution; what happens when it is thrown away</td></tr></table>` },
  { tip: '<b>How to answer “evaluate” or “discuss” questions:</b> give points <b>for</b> and <b>against</b>, explain each one, use a real example, and finish with your own judgement. Six marks or more are marked by band, not by counting points.' },

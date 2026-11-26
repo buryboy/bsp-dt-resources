@@ -85,7 +85,7 @@ BOOKLETS.push({ id: 'g20', topic: 20, title: 'Communication of design ideas', pa
  <h4>Exploded diagrams</h4>
  <p>The parts are drawn <b>pulled apart</b> along the lines on which they fit together, usually in isometric, with thin lines linking them. They show <b>constructional detail</b> and the <b>order of assembly</b>: think of flat-pack furniture instructions.</p>
  <h4>System and schematic diagrams</h4>
- <p>A <b>systems (block) diagram</b> shows input → process → output as boxes and arrows. A <b>schematic (circuit) diagram</b> uses standard symbols to show how components are connected. A <b>flowchart</b> shows the steps of a program or a process.</p>` },
+ <p>A <b>systems (block) diagram</b> shows input → process → output as boxes and arrows. A <b>schematic diagram</b> uses simple standard symbols to show how a system is connected, leaving out what it really looks like: a circuit diagram is one, and so is the London Underground map. A <b>flowchart</b> shows the steps of a program or a process.</p>` },
  { match: { q: 'Match each line type to its use on a working drawing.', lh: 'Line', rh: 'Use', pairs: [['Thick continuous line', 'An edge you can see'], ['Thin short dashes', 'A hidden edge'], ['Thin long-dash, short-dash line', 'The centre of a hole or symmetrical part'], ['Thin line with arrowheads', 'A dimension']] } },
  { calc: [
   ['A drawing is made at a scale of 1:2. A line on the drawing is 45 mm long. How long is the real part, in mm?', 90, 0, 'mm', '1:2 means the real part is twice the drawing: 45 × 2 = 90 mm.'],

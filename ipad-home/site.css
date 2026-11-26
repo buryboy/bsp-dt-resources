@@ -47,6 +47,7 @@ section{background:var(--card);border-radius:18px;padding:22px;margin:16px 0;box
 .toolbar{background:linear-gradient(135deg,#1f4d36,#2e7d55);color:#fff}
 .toolbar .sub{color:#d5e6dc}
 .toolbar .wb{background:#ffffff;color:var(--ink);border-color:transparent}
+.band{margin:30px 0 4px;font-size:1.5rem}
 .howto{background:#fff;border-radius:14px;padding:14px 18px;color:#3d4b42;box-shadow:0 4px 14px #1f4d3612;margin-top:18px}
 .howto summary{font-weight:600;cursor:pointer}
 .howto li{margin:4px 0}

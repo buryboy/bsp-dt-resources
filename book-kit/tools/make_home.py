@@ -3,7 +3,7 @@
 
     python3 book-kit/tools/make_home.py
 
-Writes ipad-home/index.html (the one home page: tools, then workbooks by key stage), teacher/, teacher/dt/ (not linked from home) and one page per GCSE
+Writes ipad-home/index.html (the one home page: tools, revision guides, then lesson resources by key stage), teacher/, teacher/dt/ (not linked from home) and one page per GCSE
 topic in teacher/dt/gcse/<slug>/. The lesson files themselves (board page, notes sheet, PowerPoint, print pack without
 its answer key) already sit in each topic folder. build_ipad_site.py copies the whole ipad-home folder to the site root.
 No logins, no forms, nothing sent anywhere: plain pages and files.
@@ -77,13 +77,19 @@ def main():
     # landing: one page for everyone. Tools on top, then workbooks by key stage. The teacher pages stay at
     # teacher/ but nothing here links to them.
     ks = [x for x in STAGES if x[0] != 'tools']
+    REV = [('gcse-revision', 'GCSE revision', 'AQA 8552 · a booklet for every spec section, self-check and exam practice'),
+           ('alevel-revision', 'A level revision', 'Edexcel 9DT0 · a booklet for every topic, self-check and exam practice')]
+    rev_ids = {r[0] for r in REV}
     tools = ''.join(wb_card(w[0], '', w[3]) for w in WORKBOOKS if w[2] == 'tools')
+    revs = ''.join(wb_card(f, '', note).replace('<b>' + E(next(w[1] for w in WORKBOOKS if w[0] == f)) + '</b>', '<b>' + E(t) + '</b>') for f, t, note in REV)
     body = ['<h1>Design &amp; Technology</h1>'
-            '<p class="sub">Workbooks, revision and handy apps for your iPad. Tap one to open it.</p>',
+            '<p class="sub">Tools, revision guides and lesson resources for your iPad. Tap one to open it.</p>',
             f'<section id="tools" class="toolbar"><h2>Tools</h2><p class="sub">Small apps that run on your iPad. Nothing is uploaded.</p><div class="wbs">{tools}</div></section>',
+            f'<section id="revision"><h2>Revision guides</h2><p class="sub">Everything for the written paper in one app, with your progress in red, amber and green.</p><div class="wbs">{revs}</div></section>',
+            '<h2 class="band">Lesson resources</h2>',
             '<div class="tabs">' + ''.join(f'<a href="#{k}">{E(n)}</a>' for k, n, _ in ks) + '</div>']
     for k, n, sub in ks:
-        cards = ''.join(wb_card(w[0], '', ('AQA ' + w[3]) if w[2] == 'ks4' and w[3][0].isdigit() else '') for w in WORKBOOKS if w[2] == k)
+        cards = ''.join(wb_card(w[0], '', ('AQA ' + w[3]) if w[2] == 'ks4' and w[3][0].isdigit() else '') for w in WORKBOOKS if w[2] == k and w[0] not in rev_ids)
         body.append(f'<section id="{k}"><h2>{E(n)}</h2><p class="sub">{E(sub)}</p><div class="wbs">{cards}</div></section>')
     body.append('<details class="howto"><summary>How to keep a workbook on your iPad</summary><ol>'
                 '<li>Tap your workbook.</li><li>Follow the steps it shows to add it to your Home Screen. It works without Wi-Fi.</li>'

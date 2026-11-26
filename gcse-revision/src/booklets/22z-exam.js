@@ -31,26 +31,45 @@ BOOKLETS.push({ id: 'gexam', topic: 'Exam', tag: 'Exam', title: 'The exam paper:
 ]},
 
 { t: 'Command words', blocks: [
- { notes: `<p class="lead">The <b>command word</b> tells you what kind of answer the examiner wants. These are the ones used in recent papers, with what to do for each. The meanings are in our own words.</p>
+ { notes: `<p class="lead">The <b>command word</b> tells you what kind of answer the examiner wants. AQA publishes a list of the command words it uses for Design and Technology. They are all here, grouped by the kind of answer they need, with what to do for each. The explanations are in our own words.</p>
+ <h4>Short answers: recall and select</h4>
  <table><tr><th>Command word</th><th>What to do</th><th>Typical marks</th></tr>
- <tr><td><b>Which one… / Identify</b></td><td>Pick the correct answer from those given</td><td>1</td></tr>
- <tr><td><b>Name</b></td><td>Give the correct term. Be specific: “beech”, not “wood”</td><td>1</td></tr>
- <tr><td><b>State</b></td><td>A short, clear fact. No explanation needed</td><td>1 each</td></tr>
- <tr><td><b>Give</b></td><td>A short answer. “Give two advantages” for 2 marks means two brief points. “Give two reasons” for 4 marks means two points, each with some detail</td><td>1 or 2 each</td></tr>
- <tr><td><b>Define</b></td><td>Say exactly what the term means</td><td>1 or 2</td></tr>
- <tr><td><b>Describe</b></td><td>Say what something is like, or what happens, step by step. No reasons needed</td><td>2 to 6</td></tr>
- <tr><td><b>Explain</b></td><td>Make a point <b>and give the reason</b>: use “because”, “so that”, “which means”</td><td>2 to 6</td></tr>
- <tr><td><b>Calculate / Work out</b></td><td>Do the maths. Show every step and give the unit</td><td>1 to 4</td></tr>
- <tr><td><b>Complete</b></td><td>Finish a drawing, table or chart that has been started for you</td><td>1 to 5</td></tr>
- <tr><td><b>Use notes and/or sketches to describe…</b></td><td>Draw the process in stages and label every stage. A good labelled sketch can earn as much as a paragraph</td><td>5</td></tr>
- <tr><td><b>Discuss</b></td><td>Look at the issue from more than one side: advantages <b>and</b> disadvantages, with examples</td><td>8</td></tr>
- <tr><td><b>Analyse</b></td><td>Break it down: pick out the features and say what each one does</td><td rowspan="2">4 to 10, usually together as “Analyse and evaluate”</td></tr>
- <tr><td><b>Evaluate</b></td><td>Judge it: how well does it work, for whom, and what is good and bad about it? Reach a conclusion</td></tr></table>
+ <tr><td><b>Which / What (is)</b></td><td>Choose or give the correct information: this is how multiple-choice questions start</td><td>1</td></tr>
+ <tr><td><b>Identify</b></td><td>Name it, or say what kind of thing it is</td><td>1</td></tr>
+ <tr><td><b>Name</b></td><td>Give the correct title or term. Be specific: “beech”, not “wood”</td><td>1</td></tr>
+ <tr><td><b>State</b></td><td>Say it clearly and briefly. No explanation needed</td><td>1 each</td></tr>
+ <tr><td><b>Give</b></td><td>Produce an answer from what you remember. “Give two advantages” for 2 marks means two brief points; “give two reasons” for 4 marks means two points, each with some detail</td><td>1 or 2 each</td></tr>
+ <tr><td><b>Define</b></td><td>Say exactly what the term means</td><td>1 or 2</td></tr></table>
+ <h4>Answers that show understanding</h4>
+ <table><tr><th>Command word</th><th>What to do</th><th>Typical marks</th></tr>
+ <tr><td><b>Describe</b></td><td>Set out what something is like, or what happens, step by step. No reasons needed</td><td>2 to 6</td></tr>
+ <tr><td><b>Outline</b></td><td>Give the main features only, without the detail</td><td>2 to 4</td></tr>
+ <tr><td><b>Explain</b></td><td>Give the <b>purpose or the reasons</b>: make a point and say why, using “because”, “so that”, “which means”</td><td>2 to 6</td></tr>
+ <tr><td><b>Apply</b></td><td>Use what you know in the situation given in the question</td><td>2 to 4</td></tr>
+ <tr><td><b>Use notes and/or sketches to describe…</b></td><td>Draw the process in stages and label every stage. A good labelled sketch can earn as much as a paragraph</td><td>5</td></tr></table>
+ <h4>Maths and drawing</h4>
+ <table><tr><th>Command word</th><th>What to do</th><th>Typical marks</th></tr>
+ <tr><td><b>Calculate</b> (also “work out”)</td><td>Find a numerical answer. Show every step and give the unit</td><td>1 to 4</td></tr>
+ <tr><td><b>How (far, many, much)</b></td><td>Work out the correct answer</td><td>1 to 3</td></tr>
+ <tr><td><b>Complete</b></td><td>Finish a drawing, table or chart by adding to what is given</td><td>1 to 5</td></tr>
+ <tr><td><b>Repeat (the pattern)</b></td><td>Maths only: copy a given shape again and again, for example to nest triangles on a sheet</td><td>1</td></tr></table>
+ <h4>Longer answers: weighing things up</h4>
+ <table><tr><th>Command word</th><th>What to do</th><th>Typical marks</th></tr>
+ <tr><td><b>Analyse</b></td><td>Break it into parts and pick out the features of each</td><td rowspan="2">4 to 10, usually together as “Analyse and evaluate”</td></tr>
+ <tr><td><b>Evaluate</b></td><td>Make a judgement from the evidence available: how well does it work, for whom, what is good and bad? Reach a conclusion</td></tr>
+ <tr><td><b>Discuss</b></td><td>Present the key points about an idea, or its strengths <b>and</b> weaknesses, with examples</td><td>6 to 8</td></tr>
+ <tr><td><b>Compare</b></td><td>Say what is <b>similar and what is different</b> about two things</td><td>4 to 6</td></tr>
+ <tr><td><b>Contrast</b></td><td>Say what is <b>different</b> only</td><td>2 to 6</td></tr>
+ <tr><td><b>Justify</b></td><td>Back up a choice or a case with evidence: “I would choose… because…”</td><td>2 to 6</td></tr>
+ <tr><td><b>Argue</b></td><td>Build a reasoned case for a point of view</td><td>4 to 8</td></tr>
+ <tr><td><b>Consider</b></td><td>Look carefully at the information you are given and respond to it</td><td>4 to 8</td></tr>
+ <tr><td><b>Examine</b></td><td>Investigate it closely, in detail</td><td>4 to 8</td></tr></table>
+ <p>In the June 2022 and June 2023 papers and the specimen paper, the words used were: which, what, identify, name, state, give, define, describe, explain, calculate, work out, complete, repeat, discuss, analyse and evaluate. The others are on AQA's list, so they could appear.</p>
  <h4>How short answers are marked</h4>
  <p>For most 2-mark questions: <b>1 mark for a simple, correct point; 2 marks for a point that is explained in detail</b>. Where a question says “2 × 2 marks” or “2 × 3 marks”, each of the two parts is marked separately in the same way.</p>
  <h4>How long answers are marked</h4>
  <p>Answers worth 6 marks or more are marked by <b>band</b>. The examiner reads the whole answer and decides which description fits best: basic, good, or detailed and thorough. More points do not automatically mean more marks: <b>detail, examples and (for evaluate) judgement</b> move you up a band.</p>` },
- { match: { q: 'Match each command word to what it asks for.', lh: 'Command word', rh: 'What to do', pairs: [['Name', 'Give the correct term'], ['Describe', 'Say what happens, step by step'], ['Explain', 'Make a point and give the reason for it'], ['Evaluate', 'Judge how well it works and reach a conclusion'], ['Calculate', 'Do the maths and show the working'], ['Discuss', 'Give advantages and disadvantages, with examples'], ['Complete', 'Finish a drawing, table or chart']] } },
+ { match: { q: 'Match each command word to what it asks for.', lh: 'Command word', rh: 'What to do', pairs: [['Name', 'Give the correct term'], ['Describe', 'Say what happens, step by step'], ['Explain', 'Make a point and give the reason for it'], ['Evaluate', 'Judge how well it works and reach a conclusion'], ['Calculate', 'Do the maths and show the working'], ['Discuss', 'Give strengths and weaknesses, with examples'], ['Complete', 'Finish a drawing, table or chart'], ['Compare', 'Say what is similar and what is different'], ['Contrast', 'Say what is different only'], ['Justify', 'Back up a choice with evidence'], ['Outline', 'Give the main features only']] } },
  { sort: { q: 'A question says “Explain one advantage of using manufactured boards. [2 marks]”. Would each answer get 1 mark or 2?', cats: ['1 mark', '2 marks'], items: [['“They come in big sheets.”', 0], ['“They come in large sheets, so wide panels can be made without joining boards together.”', 1], ['“They are stable.”', 0], ['“They are stable because the layers or fibres run in all directions, so they do not warp like solid timber.”', 1], ['“They use waste wood.”', 0], ['“They are made from wood chips and fibres that would otherwise be wasted, which makes them cheaper than solid timber.”', 1]] } },
  { tf: [
   ['For “Describe”, you must always give reasons.', false, 'Describe wants what it is like or what happens. Reasons are for Explain.'],

@@ -39,6 +39,19 @@ WORKBOOKS = [
     ('drawing-to-svg', 'Drawing to SVG', 'tools', 'Pen drawing photo to vector file'),
 ]
 WB = {w[0]: w for w in WORKBOOKS}
+
+# one-off lessons: single student pages kept on the teacher side for reuse. They are not listed on the home page;
+# the teacher gives the class the link. folder, title, who it is for, how long, what it is, teacher notes
+ONE_OFFS = [
+    ('smart-materials-challenge', 'Smart materials design challenge', 'GCSE · AQA 3.1.3', 'About 30 minutes, plus a homework question',
+     'Students design something off the wall, such as a superhero costume, that uses at least two smart materials.',
+     ['2 minutes: the brief, with stimulus and response explained.',
+      '5 minutes: a six-question quick check. The material cards blur until it is finished.',
+      '20 minutes: sketch the design on the page, then say where each smart material goes, what sets it off and what it does.',
+      'Homework: a 4-mark question on why a smart material beats a normal one.',
+      'Students save the page as a PDF and hand it in on Showbie. Nothing is sent from the page.']),
+]
+WB.update({o[0]: (o[0], o[1], 'one-off', o[2]) for o in ONE_OFFS})
 NEA_GCSE = [('a', 'Identifying & investigating design possibilities'), ('b', 'Producing a design brief & specification'), ('c', 'Generating design ideas'), ('d', 'Developing design ideas'), ('e', 'Realising design ideas'), ('f', 'Analysing & evaluating')]
 NEA_ALEVEL = [(1, 'Identification & investigation of a design possibility'), (2, 'Investigation of needs & research'), (3, 'Specification'), (4, 'Design ideas'), (5, 'Development of design ideas'), (6, 'Final design solution'), (7, 'Review of development & final design'), (8, 'Communication of design ideas'), (9, 'Tools & equipment'), (10, 'Quality & accuracy'), (11, 'Testing & evaluation')]
 STAGES = [('ks3', 'Key Stage 3', 'Years 7 to 9'), ('ks4', 'Key Stage 4', 'GCSE · AQA Design & Technology 8552'), ('ks5', 'Key Stage 5', 'A level · Edexcel Design & Technology (Product Design)'), ('tools', 'Tools', 'Small apps that run on your iPad. Nothing is uploaded.')]
@@ -131,7 +144,19 @@ def main():
              + '</div><div class="wbs" style="margin-top:12px">' + wb_card('nea-alevel', '../../', 'NEA practice workbook') + wb_card('grooved-pine', '../../', 'Y12 project booklet · grids 1–4, with hints') + wb_card('critical-path', '../../', 'Y13 revision · topic 12.2, uses your own NEA') + wb_card('alevel-revision', '../../', 'Paper 1 revision app · topic booklets, self-check, revision list to email') + '</div>'
              '<div class="spec" style="margin-top:12px"><a class="row" href="self-check-tally.html"><span class="code">Tally</span><span class="t"><b>Self-check tally</b><small>Paste the students\' emailed lists to see which topics the class finds hardest</small></span><span class="go">›</span></a></div>' + '<p class="soon">More A level resources to come.</p></section>')
     b.append('<section id="tools"><h2>Tools</h2><p class="sub">Small apps that run on the iPad or a computer. Nothing is uploaded and no AI is used.</p><div class="wbs">' + wb_card('heic-to-jpeg', '../../', 'Turn HEIC photos into ordinary JPEGs') + wb_card('drawing-to-svg', '../../', 'Black and red pen drawing to SVG for the laser or vinyl cutter') + '</div></section>')
+    b.append('<section id="one-off"><h2>One-off lessons</h2><p class="sub">Single lessons and design tasks that are not part of a unit, kept here to use again.</p><div class="spec"><a class="row" href="one-off/"><span class="code">%d</span><span class="t"><b>One-off lessons</b><small>%s</small></span></a></div></section>' % (len(ONE_OFFS), E(', '.join(o[1] for o in ONE_OFFS))))
     page('teacher/dt/index.html', 'Design & Technology', [('Home', ''), ('Teachers', 'teacher/')], ''.join(b), 2)
+    # teacher: one-off lessons (student pages that are not on the home page; the teacher shares the link)
+    oo = ['<h1>One-off lessons</h1><p class="sub">Single lessons and design tasks, kept here to use again. These pages are not on the students\' home page: give the class the link, for example in Showbie.</p>']
+    for f, t, who, mins, what, notes in ONE_OFFS:
+        url = 'https://dt.bsphosted.fr/%s/ipad/' % f
+        oo.append('<section><h2>%s</h2><p class="sub">%s · %s</p><p>%s</p><div class="wbs">%s</div>' % (E(t), E(who), E(mins), E(what), wb_card(f, '../../../', 'Open the student page'))
+                  + '<p style="margin:14px 0 4px"><b>Link for students</b></p><p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0"><code style="background:#fff;border:1px solid rgba(0,0,0,.15);border-radius:8px;padding:8px 10px;font-size:15px;word-break:break-all">%s</code>'
+                    '<button type="button" data-copy="%s" style="font:600 14px inherit;border:0;border-radius:8px;padding:9px 14px;background:#1e5c3a;color:#fff;cursor:pointer">Copy link</button></p>' % (E(url), E(url))
+                  + '<p style="margin:14px 0 4px"><b>How it runs</b></p><ul style="margin:0;padding-left:22px">' + ''.join('<li>%s</li>' % E(n) for n in notes) + '</ul></section>')
+    oo.append("<script>document.addEventListener('click',function(e){var b=e.target.closest('[data-copy]');if(!b)return;var u=b.getAttribute('data-copy');function ok(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy link'},1800)}"
+              "if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(ok,function(){b.textContent='Select the link and copy it'})}else{b.textContent='Select the link and copy it'}});</script>")
+    page('teacher/dt/one-off/index.html', 'One-off lessons', [('Home', ''), ('Teachers', 'teacher/'), ('Design & Technology', 'teacher/dt/')], ''.join(oo), 3)
 
     # teacher: self-check tally (adds up students' emailed revision lists; nothing stored)
     import re

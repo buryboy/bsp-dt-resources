@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Smart materials design challenge</title>
+<style>
+/*FONTS*/
+:root{--paper:#fdfcf7;--ink:#22262b;--soft:#5f6670;--acc:#c0392b;--acc2:#1f6f9c;--ok:#2f7d4a;--line:rgba(31,35,40,.26);--rule:rgba(31,111,156,.16);--hand:'Patrick Hand','Comic Sans MS',cursive;--sans:'Lexend',-apple-system,'Segoe UI',Arial,sans-serif}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:#6b4f3a;background-image:linear-gradient(90deg,rgba(0,0,0,.08) 1px,transparent 1px);background-size:46px 46px;color:var(--ink);font:400 17px/1.55 var(--sans);-webkit-text-size-adjust:100%}
+.bar{position:sticky;top:0;z-index:20;display:flex;gap:12px;align-items:center;padding:10px 16px;background:#22262b;color:#eef0f2;flex-wrap:wrap}
+.bar h1{font:400 24px var(--hand);margin:0;flex:1;min-width:220px}
+.btn{font:600 15px var(--sans);border:0;border-radius:8px;padding:10px 15px;background:var(--acc);color:#fff;cursor:pointer}
+.btn.ghost{background:#e7e9ec;color:var(--ink)}.btn.small{padding:7px 11px;font-size:14px}.btn.plain{background:#3a4047}
+main{max-width:1000px;margin:18px auto 80px;padding:0 12px}
+.page{background:var(--paper);border-radius:4px;box-shadow:0 14px 40px rgba(0,0,0,.4);padding:30px 34px 36px 76px;position:relative;
+ background-image:linear-gradient(var(--rule) 1px,transparent 1px);background-size:100% 32px;background-position:0 12px}
+.page::before{content:'';position:absolute;left:56px;top:0;bottom:0;width:2px;background:rgba(192,57,43,.45)}
+.kick{font:600 13px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--acc)}
+h2{font:400 44px/1.05 var(--hand);margin:2px 0 8px;color:var(--acc2)}
+h3{font:400 30px/1.1 var(--hand);margin:30px 0 6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+h3 .n{font:600 13px var(--sans);background:var(--ink);color:#fff;padding:3px 9px;border-radius:4px}
+h3 .tm{font:500 13px var(--sans);color:var(--soft);border:1.5px solid var(--line);border-radius:20px;padding:2px 10px;background:#fff}
+p{margin:6px 0 10px;max-width:70ch}.muted{color:var(--soft);font-size:15px}
+.card{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label.l{display:block;font:600 13px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--soft);margin:10px 0 4px}
+input[type=text],textarea,select{font:400 16px var(--sans);width:100%;border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff;color:var(--ink)}
+textarea{min-height:84px;resize:vertical;line-height:1.45}
+ul.tick{list-style:none;padding:0;margin:6px 0}ul.tick li{padding-left:28px;position:relative;margin:5px 0}ul.tick li::before{content:'';position:absolute;left:2px;top:4px;width:15px;height:15px;border:2px solid var(--acc2);border-radius:3px;background:#fff}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:10px 0;transition:filter .4s,opacity .4s}
+.cards.lock{filter:blur(7px);opacity:.55;pointer-events:none;user-select:none;-webkit-user-select:none}
+.flip{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;min-height:112px;position:relative;text-align:left;font:inherit;color:inherit;display:block;width:100%}
+.flip b{display:block;font:400 23px/1.1 var(--hand);color:var(--acc2)}.flip .tag{font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--ok);border-radius:3px;padding:1px 6px;display:inline-block;margin-top:5px}
+.flip .tag.x{background:#8a6d1c}.flip .d{display:none;margin-top:8px;font-size:14.5px;line-height:1.4}.flip.open{border-color:var(--acc2);box-shadow:0 0 0 3px rgba(31,111,156,.15)}.flip.open .d{display:block}
+.flip:not(.open)::after{content:'tap to turn over';position:absolute;right:12px;bottom:8px;font-size:12px;color:var(--soft)}
+.flip .d i{font-style:normal;font-weight:600;color:var(--acc)}
+.q{display:grid;grid-template-columns:1fr 250px;gap:10px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;margin:7px 0}
+.q.right{border-color:var(--ok);background:#eef8f1}.q.wrong{border-color:var(--acc);background:#fbefec}
+.fb{font-weight:600;min-height:1.5em;margin:8px 0}.fb.good{color:var(--ok)}.fb.bad{color:var(--acc)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.chip{font:500 15px var(--sans);border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:8px 14px;cursor:pointer;color:var(--ink)}.chip.on{background:var(--acc2);color:#fff;border-color:var(--acc2)}
+.pad{border:2px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden;margin-top:6px}.pad canvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 0}.sw{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--line);cursor:pointer;padding:0}.sw.on{box-shadow:0 0 0 3px var(--ink)}
+table.m{width:100%;border-collapse:collapse;margin-top:6px}table.m th,table.m td{border:1.5px solid var(--line);padding:6px;vertical-align:top;background:#fff}table.m th{font:600 12.5px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--acc2);background:#eef4f8;text-align:left}
+table.m textarea{min-height:64px}
+.note{border-left:5px solid var(--acc2);background:#fff;padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:99;color:#fff;font:600 20px var(--sans)}
+@media(max-width:720px){.page{padding:22px 16px 28px 38px}.page::before{left:24px}.two{grid-template-columns:1fr}.q{grid-template-columns:1fr}h2{font-size:36px}table.m,table.m tbody,table.m tr,table.m td{display:block;width:100%}table.m thead{display:none}}
+.pdfmode .cards.lock{filter:none;opacity:1}.pdfmode .flip .d{display:block}.pdfmode .flip::after{display:none}.pdfmode .tools,.pdfmode .nopdf{display:none}
+</style>
+</head><body>
+<div class="bar"><h1>Smart materials design challenge</h1><button class="btn" id="pdfBtn" data-upd-before data-upd-class="plain">Save as PDF</button></div>
+<main><div class="page" id="page">
+<div class="kick">GCSE Design &amp; Technology · AQA 3.1.3 · one lesson</div>
+<h2>Design something only smart materials could make</h2>
+<div class="two"><div><label class="l" for="f-name">Name</label><input type="text" id="f-name" data-k="name" autocomplete="off"></div><div><label class="l" for="f-class">Class</label><input type="text" id="f-class" data-k="class" autocomplete="off"></div></div>
+
+<h3><span class="n">1</span>The brief <span class="tm">2 minutes</span></h3>
+<p>A <b>smart material</b> changes one of its properties when something around it changes, and changes back again afterwards. The thing that sets it off is the <b>stimulus</b>. What the material does is the <b>response</b>.</p>
+<div class="note"><b>Your job:</b> design something a bit off the wall that uses <b>at least two</b> smart materials. A superhero costume, a pet gadget, kit for an extreme sport, anything you like. Every smart material must do a real job in your design.</div>
+<p><b>A good design shows:</b></p>
+<ul class="tick"><li>a clear, labelled sketch</li><li>two or more smart materials, named correctly</li><li>the stimulus and the response for each one</li><li>why a normal material could not do that job</li><li>one problem with your design and how you would solve it</li></ul>
+
+<h3><span class="n">2</span>Smart material cards</h3>
+<p class="muted">Tap a card to turn it over. Green cards are named on the AQA specification, so learn those three. The others are extra ideas for your design.</p>
+<div class="cards" id="cards"></div>
+<p class="muted nopdf" id="lockNote" style="display:none">The cards are hidden until you finish the quick check.</p>
+
+<h3><span class="n">3</span>Quick check <span class="tm">5 minutes</span></h3>
+<p>Choose the smart material that fits each description. Once you start, the cards are hidden until you finish.</p>
+<div id="quiz"></div>
+<div class="chips nopdf"><button class="btn" id="chk" type="button">Check my answers</button></div>
+<p class="fb" id="qfb"></p>
+
+<h3><span class="n">4</span>Your design <span class="tm">20 minutes</span></h3>
+<p>Pick a starting point, or use your own idea.</p>
+<div class="chips" id="themes"></div>
+<div class="two"><div><label class="l" for="f-title">Name of your design</label><input type="text" id="f-title" data-k="title"></div><div><label class="l" for="f-user">Who is it for, and what problem does it solve?</label><input type="text" id="f-user" data-k="user"></div></div>
+<label class="l">Sketch it and label where each smart material goes</label>
+<div class="pad"><canvas id="pad" width="1400" height="820"></canvas></div>
+<div class="tools"><span id="sws"></span><button class="btn small ghost" id="thin" type="button">Fine pen</button><button class="btn small ghost" id="rub" type="button">Rubber</button><button class="btn small ghost" id="undo" type="button">Undo</button><button class="btn small ghost" id="clear" type="button">Clear</button><span class="muted">Or draw on paper and add a photo in Showbie.</span></div>
+<label class="l">The smart materials in your design</label>
+<table class="m"><thead><tr><th style="width:22%">Smart material</th><th style="width:22%">Where is it?</th><th style="width:24%">Stimulus: what sets it off?</th><th>Response: what does it do, and why is that useful?</th></tr></thead><tbody id="rows"></tbody></table>
+<label class="l" for="f-prob">One problem with your design, and how you would solve it</label><textarea id="f-prob" data-k="prob"></textarea>
+
+<h3><span class="n">5</span>Finish for homework <span class="tm">exam practice</span></h3>
+<p><b>Explain</b> why one of the smart materials in your design is a better choice than a normal material for that job. <span class="muted">[4 marks]</span></p>
+<textarea id="f-hw" data-k="hw" style="min-height:130px"></textarea>
+<p class="muted">Tip: name the material, say what the stimulus is, say how it responds, then say what a normal material would do instead.</p>
+
+<h3><span class="n">6</span>Hand it in</h3>
+<p>Tap <b>Save as PDF</b> at the top and add the file to Showbie. Your work stays on this iPad. Nothing is sent anywhere.</p>
+</div></main>
+<div class="ov" id="ov">Making your PDF…</div>
+<script>/*LIBS*/</script>
+<script>
+'use strict';
+const KEY = 'smart-materials-challenge-v1'; let S = {}; try { S = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { S = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage full or blocked: carry on */ } };
+const $ = (s) => document.querySelector(s);
+// name, [on the AQA spec?], stimulus, response, real use, a spark for the design
+const MATS = [
+ ['Shape memory alloy (nitinol)', 1, 'heat (or an electric current that heats it)', 'goes back to the shape it was given when it was made', 'spectacle frames that straighten in warm water, dental braces', 'A cape frame that snaps into wing shape when it warms up.'],
+ ['Thermochromic pigment', 1, 'a change in temperature', 'changes colour', 'baby spoons and kettles that warn when food or water is hot, forehead thermometers', 'A suit that turns red when the wearer is overheating.'],
+ ['Photochromic pigment', 1, 'ultraviolet (UV) light, such as sunlight', 'changes colour or goes darker', 'glasses lenses that darken outdoors, UV warning wristbands', 'A visor that darkens by itself in bright sun.'],
+ ['Hydrochromic ink', 0, 'water', 'changes colour or turns see-through', 'umbrellas with patterns that appear in the rain, nappies that show when they are wet', 'Hidden markings that only appear in the rain.'],
+ ['Phosphorescent pigment', 0, 'light, which it soaks up', 'glows in the dark for a while afterwards', 'emergency exit signs, watch hands', 'Glowing trim so the hero can be seen at night.'],
+ ['Quantum tunnelling composite (QTC)', 0, 'pressure (being squeezed)', 'changes from an electrical insulator to a conductor', 'touch-sensitive pads and switches in clothing', 'Squeeze the glove to switch on the lights.'],
+ ['Piezoelectric material', 0, 'being squeezed or struck', 'makes a small electric voltage', 'gas lighters, sensors, buzzers', 'Boots that make power with every step.'],
+ ['Polymorph', 0, 'heat (about 62 °C, such as hot water)', 'goes soft and can be shaped by hand, then sets hard as it cools', 'custom grips and handles, quick prototypes', 'A handle moulded to fit one person’s hand exactly.'],
+ ['Self-healing material', 0, 'being cut or cracked', 'the damage seals itself up', 'scratch-proof phone coatings, some tyres', 'Armour that repairs its own scratches.'],
+ ['Hydrogel', 0, 'water', 'soaks up many times its own weight and swells', 'nappies, plant watering crystals, cooling scarves', 'A cooling collar that holds water for hours.']];
+$('#cards').innerHTML = MATS.map((m, i) => `<button type="button" class="flip" data-i="${i}"><b>${m[0]}</b><span class="tag${m[1] ? '' : ' x'}">${m[1] ? 'On the spec' : 'Extra idea'}</span><span class="d"><i>Stimulus:</i> ${m[2]}.<br><i>Response:</i> ${m[3]}.<br><i>Used for:</i> ${m[4]}.<br><i>Idea:</i> ${m[5]}</span></button>`).join('');
+$('#cards').addEventListener('click', (e) => { const f = e.target.closest('.flip'); if (f) f.classList.toggle('open'); });
+
+/* quick check */
+const QS = [['It goes back to its original shape when it is heated.', 0], ['It changes colour when the temperature changes.', 1], ['It darkens in sunlight.', 2], ['It becomes an electrical conductor when it is squeezed.', 5], ['It glows in the dark after being in the light.', 4], ['It goes soft in hot water so it can be shaped by hand.', 7]];
+const ORDER = [2, 7, 0, 5, 1, 4, 3, 6, 8, 9]; S.q = S.q || {}; S.tries = S.tries || 0;
+$('#quiz').innerHTML = QS.map((q, i) => `<div class="q" id="q${i}"><span>${i + 1}. ${q[0]}</span><select id="qs${i}" aria-label="Answer ${i + 1}"><option value="">Choose…</option>${ORDER.map((k) => `<option value="${k}">${MATS[k][0]}</option>`).join('')}</select></div>`).join('');
+function quizState(mark) { let right = 0, started = false; QS.forEach((q, i) => { const v = S.q[i]; if (v != null && v !== '') started = true; const ok = String(v) === String(q[1]); if (ok) right++; if (mark) { const el = $('#q' + i); el.classList.toggle('right', ok); el.classList.toggle('wrong', !ok); } });
+ const done = S.done || right === QS.length && S.tries > 0; const lock = started && !done; $('#cards').classList.toggle('lock', lock); $('#lockNote').style.display = lock ? '' : 'none'; if (lock) document.querySelectorAll('.flip.open').forEach((f) => f.classList.remove('open')); return right; }
+QS.forEach((q, i) => { const s = $('#qs' + i); s.value = S.q[i] == null ? '' : S.q[i]; s.onchange = () => { S.q[i] = s.value; save(); quizState(false); }; });
+$('#chk').onclick = () => { S.tries++; const r = quizState(true), fb = $('#qfb'); if (r === QS.length) { S.done = 1; fb.className = 'fb good'; fb.textContent = 'All six right. The cards are back: use them for your design.'; }
+ else if (S.tries >= 3) { S.done = 1; QS.forEach((q, i) => { $('#qs' + i).value = q[1]; S.q[i] = String(q[1]); }); fb.className = 'fb bad'; fb.textContent = `You got ${r} out of 6. The right answers are now shown. Read them, then carry on.`; quizState(true); }
+ else { fb.className = 'fb bad'; fb.textContent = `${r} out of 6. Change the red ones and check again (${3 - S.tries} ${3 - S.tries === 1 ? 'try' : 'tries'} left).`; } save(); quizState(S.done ? true : true); };
+quizState(S.tries > 0);
+
+/* design: themes, text boxes, table */
+const THEMES = ['Superhero costume', 'Extreme sports kit', 'Pet gadget', 'Festival survival kit', 'School uniform of 2050', 'Space tourist outfit', 'My own idea'];
+$('#themes').innerHTML = THEMES.map((t) => `<button type="button" class="chip${S.theme === t ? ' on' : ''}">${t}</button>`).join('');
+$('#themes').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; S.theme = c.textContent; save(); document.querySelectorAll('#themes .chip').forEach((x) => x.classList.toggle('on', x === c)); });
+$('#rows').innerHTML = [0, 1, 2].map((r) => `<tr><td><select data-k="m${r}" aria-label="Smart material ${r + 1}"><option value="">${r === 2 ? 'A third one (optional)' : 'Choose…'}</option>${MATS.map((m) => `<option>${m[0]}</option>`).join('')}</select></td><td><textarea data-k="w${r}" aria-label="Where it is"></textarea></td><td><textarea data-k="s${r}" aria-label="Stimulus"></textarea></td><td><textarea data-k="r${r}" aria-label="Response and why it is useful"></textarea></td></tr>`).join('');
+document.querySelectorAll('[data-k]').forEach((el) => { const k = el.dataset.k; if (S[k] != null) el.value = S[k]; el.addEventListener('input', () => { S[k] = el.value; save(); }); el.addEventListener('change', () => { S[k] = el.value; save(); }); });
+
+/* sketch pad */
+const cv = $('#pad'), cx = cv.getContext('2d'), COLS = ['#22262b', '#c0392b', '#1f6f9c', '#2f7d4a', '#e39a1c']; let strokes = [], cur = null, col = COLS[0], wide = 5, rub = false;
+try { strokes = JSON.parse(localStorage.getItem(KEY + '-ink') || '[]'); } catch (e) { strokes = []; }
+const keep = () => { try { localStorage.setItem(KEY + '-ink', JSON.stringify(strokes)); } catch (e) { /* too big to keep: the drawing stays on screen */ } };
+function paint() { cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.lineCap = cx.lineJoin = 'round'; strokes.concat(cur ? [cur] : []).forEach((s) => { cx.strokeStyle = s.c; cx.lineWidth = s.w; cx.beginPath(); s.p.forEach((q, i) => (i ? cx.lineTo(q[0], q[1]) : cx.moveTo(q[0], q[1]))); if (s.p.length === 1) cx.lineTo(s.p[0][0] + .1, s.p[0][1]); cx.stroke(); }); }
+const at = (e) => { const b = cv.getBoundingClientRect(); return [Math.round((e.clientX - b.left) / b.width * cv.width), Math.round((e.clientY - b.top) / b.height * cv.height)]; };
+cv.addEventListener('pointerdown', (e) => { e.preventDefault(); cv.setPointerCapture(e.pointerId); cur = { c: rub ? '#ffffff' : col, w: rub ? 34 : wide, p: [at(e)] }; paint(); });
+cv.addEventListener('pointermove', (e) => { if (!cur) return; cur.p.push(at(e)); paint(); });
+const end = () => { if (!cur) return; strokes.push(cur); cur = null; keep(); paint(); }; cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+$('#sws').innerHTML = COLS.map((c, i) => `<button type="button" class="sw${i ? '' : ' on'}" style="background:${c}" data-c="${c}" aria-label="Pen colour ${i + 1}"></button>`).join(' ');
+$('#sws').addEventListener('click', (e) => { const b = e.target.closest('.sw'); if (!b) return; col = b.dataset.c; rub = false; $('#rub').classList.remove('btn-on'); $('#rub').textContent = 'Rubber'; document.querySelectorAll('.sw').forEach((x) => x.classList.toggle('on', x === b)); });
+$('#thin').onclick = () => { wide = wide === 5 ? 2.5 : 5; $('#thin').textContent = wide === 5 ? 'Fine pen' : 'Thick pen'; };
+$('#rub').onclick = () => { rub = !rub; $('#rub').textContent = rub ? 'Back to pen' : 'Rubber'; };
+$('#undo').onclick = () => { strokes.pop(); keep(); paint(); };
+let armed = 0; $('#clear').onclick = () => { if (Date.now() - armed < 3000) { strokes = []; keep(); paint(); $('#clear').textContent = 'Clear'; armed = 0; } else { armed = Date.now(); $('#clear').textContent = 'Tap again to clear'; setTimeout(() => { $('#clear').textContent = 'Clear'; }, 3000); } };
+paint();
+
+/* PDF: a picture of the page, cut into A4 sheets */
+$('#pdfBtn').onclick = async () => { const ov = $('#ov'); ov.style.display = 'flex'; document.body.classList.add('pdfmode'); await new Promise((r) => setTimeout(r, 60));
+ try { const c = await html2canvas($('#page'), { scale: 1.5, backgroundColor: '#fdfcf7', windowWidth: 1000 }), { jsPDF } = window.jspdf, pdf = new jsPDF({ unit: 'mm', format: 'a4' }), W = 210, H = 297, ph = Math.floor(c.width * H / W);
+  for (let y = 0, n = 0; y < c.height; y += ph, n++) { const s = document.createElement('canvas'); s.width = c.width; s.height = Math.min(ph, c.height - y); s.getContext('2d').drawImage(c, 0, -y); if (n) pdf.addPage(); pdf.addImage(s.toDataURL('image/jpeg', .9), 'JPEG', 0, 0, W, s.height * W / c.width); }
+  const nm = (S.name || 'my design').replace(/[^\w ]+/g, '').trim() || 'my design'; pdf.save(`Smart materials - ${nm}.pdf`); }
+ catch (e) { $('#qfb').className = 'fb bad'; $('#qfb').textContent = 'The PDF could not be made. Take screenshots of your work instead.'; }
+ document.body.classList.remove('pdfmode'); ov.style.display = 'none'; };
+</script>
+</body></html>

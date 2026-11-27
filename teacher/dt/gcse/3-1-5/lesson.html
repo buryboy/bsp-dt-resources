@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mechanical devices lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a finishing workshop's test bench: try a finish, watch what happens
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Mechanical devices<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.1.5</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+
+const S=[
+{t:'Types of movement',c:'#C2410C',lead:'Every mechanism takes in one type of movement and gives out another. Learn the four types first. Tap the buttons under the stage.',
+ cards:[['Linear','Moving in a straight line in one direction. A sliding door, a conveyor belt.'],['Rotary','Turning round in a circle. A wheel, a motor shaft, a fan.'],['Reciprocating','Back and forth in a straight line. A piston, a saw, a sewing machine needle.'],['Oscillating','Swinging back and forth in an arc. A pendulum, a swing, a windscreen wiper.']],
+ demo:{type:'move',title:'Movement test',q:'A grandfather clock pendulum moves with which type of movement?',opts:['Rotary','Reciprocating','Oscillating'],right:2,buttons:['Linear','Rotary','Reciprocating','Oscillating'],runMode:'Oscillating',ms:3000,
+  res:'Oscillating: it swings back and forth in an arc around a pivot. Reciprocating is back and forth in a STRAIGHT line.'}},
+{t:'Levers',c:'#2478B3',lead:'A lever is a rigid bar turning about a pivot (fulcrum). Where the fulcrum, load and effort sit decides the class. Tap the classes under the stage.',
+ cards:[['1st class','Fulcrum in the middle. Seesaw, crowbar, scissors.'],['2nd class','Load in the middle. Wheelbarrow, nutcracker, bottle opener. Always MA > 1.'],['3rd class','Effort in the middle. Tweezers, tongs, your forearm. MA < 1: gives control and movement, not force.'],['Mechanical advantage','MA = load ÷ effort. MA of 4 means the effort is a quarter of the load.']],
+ demo:{type:'lever',title:'Lever test',q:'A nutcracker squeezes a nut between the hinge and your hand. Which class of lever?',opts:['1st class','2nd class','3rd class'],right:1,buttons:['1st class','2nd class','3rd class'],runMode:'2nd class',ms:2500,
+  res:'2nd class: the hinge is the fulcrum, the nut (load) is in the middle and your hand (effort) is at the end, so a small effort cracks a strong nut.'}},
+{t:'Linkages',c:'#7449B0',lead:'Linkages are bars joined by pivots. They change the direction of motion, move things in parallel, or carry motion to a new place.',
+ cards:[['Reverse motion','Output moves the opposite way to the input.'],['Parallel motion','Output moves the same way, staying parallel.'],['Bell crank','Turns motion through 90°. Bike brakes, doorbells.'],['Crank and slider','Changes rotary to reciprocating (or back). Engines.']],
+ demo:{type:'bell',title:'Linkage test',q:'You pull a brake cable DOWN. A bell crank sits at the corner. Which way does the other arm move?',opts:['Down too','Sideways (through 90°)','It does not move'],right:1,ms:2600,
+  res:'A bell crank pivots at its corner, so a pull on one arm swings the other arm through 90°. That lets a cable go round a corner, as on a bike.'}},
+{t:'Cams and followers',c:'#2E8B57',lead:'A cam is a shaped wheel. As it turns, a follower resting on it rises and falls: rotary in, reciprocating out. The cam shape decides the motion. Try each cam.',
+ cards:[['Circular (eccentric)','Off-centre circle: smooth, steady rise and fall.'],['Pear','Rests, then rises and falls quickly, then rests again.'],['Snail (drop)','Slow rise, then a sudden drop. Can only turn one way.'],['Followers','Knife edge (precise), flat (hard-wearing), roller (low friction).']],
+ demo:{type:'cam',title:'Cam test',q:'Which cam makes the follower drop suddenly once every turn?',opts:['Circular','Pear','Snail'],right:2,buttons:['Circular','Pear','Snail'],runMode:'Snail',ms:4000,bms:4000,
+  res:'The snail (drop) cam rises steadily, then the follower falls off the step: a sudden drop once per turn. Used in toys and hammers.'}},
+{t:'Gears',c:'#8B5A2B',lead:'Gears pass rotary motion between shafts. A small gear driving a big gear turns it slower but with more force. Meshing gears turn in opposite directions.',
+ cards:[['Gear ratio','Driven teeth ÷ driver teeth. 30 ÷ 10 = 3, written 3:1.'],['Output speed','Input speed ÷ gear ratio. 3000 rpm ÷ 3 = 1000 rpm.'],['Idler gear','A gear in between keeps the output turning the same way as the input.'],['Compound train','Two gears on one shaft multiply ratios: 4:1 × 4:1 = 16:1.'],['Rack and pinion','Rotary to linear. Gate openers, steering.'],['Worm and wormwheel','Huge reduction, through 90°, cannot be driven backwards.']],
+ demo:{type:'gears',title:'Gear test',q:'A 10-tooth driver turns a 30-tooth driven gear. How does the driven gear turn?',opts:['3 times faster, same way','3 times slower, opposite way','Same speed'],right:1,ms:6000,
+  res:'Ratio 30 ÷ 10 = 3:1, so the big gear turns 3 times slower, with more turning force. Meshing gears always turn opposite ways. Count the turns on the stage.'}},
+{t:'Pulleys and belts',c:'#C99A06',lead:'Pulleys and a belt pass rotary motion over a distance. Unlike gears, both pulleys turn the same way, and the belt can slip safely if something jams.',
+ cards:[['Pulley ratio','Driven diameter ÷ driver diameter. 200 ÷ 50 = 4:1.'],['Direction','Both turn the same way. A crossed belt reverses the direction.'],['Slip','The belt slips if overloaded: a safety feature in machines.'],['Chain and sprocket','Same idea but no slip. Bicycles.']],
+ demo:{type:'pulley',title:'Pulley test',q:'A 50 mm pulley drives a 200 mm pulley with a belt. Which is true?',opts:['Big pulley turns 4 times slower, same way','Big pulley turns 4 times faster','Big pulley turns the opposite way'],right:0,ms:6000,
+  res:'200 ÷ 50 = 4:1, so the big pulley turns 4 times slower. With an open belt both pulleys turn the same way.'}},
+{t:'Quick fire',c:'#14213d',lead:'Answer before you tap. Then the exam question.',
+ cards:[['A swing','<em>Oscillating</em> movement'],['Tweezers','<em>3rd class</em> lever'],['Load 600 N, effort 200 N','MA = <em>3</em>'],['Driver 12 teeth, driven 36','Ratio <em>3:1</em>'],['Motor 900 rpm, ratio 3:1','Output <em>300 rpm</em>'],['Car steering wheel to wheels','<em>Rack and pinion</em>']],
+ exam:{q:'A motor turns at 2400 rpm. It drives a 15-tooth gear meshing with a 60-tooth gear. Calculate the gear ratio and the output speed. (2 marks)',a:'Gear ratio = 60 ÷ 15 = 4:1 (1). Output speed = 2400 ÷ 4 = 600 rpm (1).'}}
+];
+const gear=(cx,cy,r,n,a,c)=>{let g=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c}"/>`;for(let i=0;i<n;i++){const t=a+i*2*Math.PI/n;g+=`<rect x="${-5}" y="${-r-7}" width="10" height="10" fill="${c}" transform="translate(${cx} ${cy}) rotate(${t*180/Math.PI})"/>`}return g+`<circle cx="${cx}" cy="${cy}" r="6" fill="#fff"/><line x1="${cx}" y1="${cy}" x2="${cx+(r-8)*Math.cos(a)}" y2="${cy+(r-8)*Math.sin(a)}" stroke="#fff" stroke-width="4"/>`};
+const DEMOS={
+move:(t,s)=>{const m=s.mode,p=t*Math.PI*4;let o=T(20,285,m,'font-size="22" font-weight="700"');
+ if(m==='Linear')o+=`<line x1="60" y1="150" x2="540" y2="150" stroke="#ccc" stroke-width="4"/><circle cx="${80+t*440}" cy="150" r="22" fill="#c2410c"/>`+AR(250,110,350,110);
+ if(m==='Rotary')o+=`<circle cx="300" cy="140" r="90" fill="none" stroke="#ccc" stroke-width="4"/><circle cx="${300+90*Math.cos(p)}" cy="${140+90*Math.sin(p)}" r="20" fill="#c2410c"/>`;
+ if(m==='Reciprocating')o+=`<line x1="120" y1="150" x2="480" y2="150" stroke="#ccc" stroke-width="4"/><circle cx="${300+160*Math.sin(p)}" cy="150" r="22" fill="#c2410c"/>`;
+ if(m==='Oscillating'){const a=Math.sin(p)*.6;o+=`<circle cx="300" cy="40" r="7" fill="#1b2a33"/><line x1="300" y1="40" x2="${300+180*Math.sin(a)}" y2="${40+180*Math.cos(a)}" stroke="#1b2a33" stroke-width="4"/><circle cx="${300+180*Math.sin(a)}" cy="${40+180*Math.cos(a)}" r="22" fill="#c2410c"/>`}
+ return o},
+lever:(t,s)=>{const k=s.mode||'1st class',pos={'1st class':[300,120,480],'2nd class':[120,300,480],'3rd class':[120,480,300]}[k];const[f,l,e]=pos;const tilt=Math.sin(t*Math.PI)*8;
+ let o=`<g transform="rotate(${-tilt} ${f} 170)"><rect x="100" y="160" width="400" height="18" rx="4" fill="#d8b57a"/><rect x="${l-30}" y="112" width="60" height="48" rx="6" fill="#2478b3"/>`+T(l,142,'LOAD','text-anchor="middle" fill="#fff" font-size="14"')+AR(e,80,e,155)+T(e+10,100,'EFFORT','fill="#c2410c" font-size="14"')+`</g><polygon points="${f},180 ${f-22},220 ${f+22},220" fill="#1b2a33"/>`+T(f,245,'FULCRUM','text-anchor="middle" font-size="14"')+T(20,285,k,'font-size="22" font-weight="700"');return o},
+bell:(t,s)=>{const a=clamp(t*1.2)*28*Math.PI/180,cx=300,cy=140;const v=[cx+130*Math.sin(-a),cy+130*Math.cos(a)],h=[cx+130*Math.cos(a),cy-130*Math.sin(a)];
+ return `<polyline points="${v[0]},${v[1]} ${cx},${cy} ${h[0]},${h[1]}" fill="none" stroke="#7449b0" stroke-width="16" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="10" fill="#1b2a33"/>`+AR(v[0]-40,v[1]-10,v[0]-40,v[1]+40,'#c2410c')+T(v[0]-120,v[1]+60,'input: pulled down','font-size="15"')+(t>.3?AR(h[0]+10,h[1]-40,h[0]+60,h[1]-40,'#2e8b57')+T(h[0]-30,h[1]-60,'output: moves sideways','font-size="15" fill="#2e8b57"'):'')},
+cam:(t,s)=>{const m=s.mode||'Circular',a=t*Math.PI*4,cx=300,cy=200;let pts=[],lift;const R=th=>{th=((th%(2*Math.PI))+2*Math.PI)%(2*Math.PI);if(m==='Circular')return 55+30*Math.cos(th);if(m==='Pear')return th<Math.PI*.6||th>Math.PI*1.4?55:55+40*Math.sin((th-Math.PI*.6)/(Math.PI*.8)*Math.PI);return 50+38*(th/(2*Math.PI))};
+ for(let i=0;i<=72;i++){const th=i/72*2*Math.PI,r=R(th);pts.push(`${cx+r*Math.cos(th+a)},${cy+r*Math.sin(th+a)}`)}
+ lift=R(-Math.PI/2-a);const fy=cy-lift;
+ return `<polygon points="${pts.join(' ')}" fill="#2e8b57"/><circle cx="${cx}" cy="${cy}" r="6" fill="#fff"/><rect x="${cx-8}" y="${fy-120}" width="16" height="120" fill="#9aa3ab"/><rect x="${cx-40}" y="${fy-140}" width="80" height="20" rx="4" fill="#1b2a33"/><rect x="${cx-30}" y="40" width="10" height="30" fill="#ccc"/><rect x="${cx+20}" y="40" width="10" height="30" fill="#ccc"/>`+T(400,60,'follower height','font-size="14"')+`<rect x="400" y="${70}" width="20" height="${Math.max(2,lift*1.3-50)}" fill="#c2410c"/>`+T(20,285,m+' cam','font-size="22" font-weight="700"')},
+gears:(t)=>{const a=t*Math.PI*6;const turnsD=(t*3).toFixed(1),turnsB=(t*1).toFixed(1);return gear(170,150,40,10,a,'#8b5a2b')+gear(170+40+120+4,150,120*.98,30,-a/3+Math.PI/30,'#c9a26b')+T(130,260,'Driver: 10 teeth','font-size="15"')+T(300,285,'Driven: 30 teeth','font-size="15"')+T(20,30,`Driver turns: ${turnsD}`,'font-size="16"')+T(20,52,`Driven turns: ${turnsB}`,'font-size="16"')},
+pulley:(t)=>{const a=t*Math.PI*8,c1=[130,150],c2=[410,150],r1=30,r2=110;return `<line x1="${c1[0]}" y1="${c1[1]-r1}" x2="${c2[0]}" y2="${c2[1]-r2}" stroke="#1b2a33" stroke-width="6"/><line x1="${c1[0]}" y1="${c1[1]+r1}" x2="${c2[0]}" y2="${c2[1]+r2}" stroke="#1b2a33" stroke-width="6"/><circle cx="${c1[0]}" cy="${c1[1]}" r="${r1}" fill="#c99a06"/><circle cx="${c2[0]}" cy="${c2[1]}" r="${r2}" fill="#e8cf7a"/>`+
+ `<line x1="${c1[0]}" y1="${c1[1]}" x2="${c1[0]+r1*Math.cos(a)}" y2="${c1[1]+r1*Math.sin(a)}" stroke="#1b2a33" stroke-width="4"/><line x1="${c2[0]}" y1="${c2[1]}" x2="${c2[0]+r2*Math.cos(a/4)}" y2="${c2[1]+r2*Math.sin(a/4)}" stroke="#1b2a33" stroke-width="5"/>`+T(80,215,'50 mm driver','font-size="15"')+T(350,285,'200 mm driven','font-size="15"')+T(20,30,`Driver turns: ${(t*4).toFixed(1)}   Driven turns: ${(t).toFixed(1)}`,'font-size="16"')}
+};
+
+
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const AR=(x1,y1,x2,y2,c='#c2410c',w=5)=>{const a=Math.atan2(y2-y1,x2-x1),s=12;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/><polygon points="${x2},${y2} ${x2-s*Math.cos(a-.5)},${y2-s*Math.sin(a-.5)} ${x2-s*Math.cos(a+.5)},${y2-s*Math.sin(a+.5)}" fill="${c}"/>`};
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">${d.run||'Run the test'}</button><button class="go sec" id="reset">Reset</button>${(d.buttons||[]).map(b=>`<button class="opt" data-b="${b}">${b}</button>`).join('')}${d.slider?`<input type="range" id="slider" min="0" max="1000" value="0" aria-label="${d.slider}"><span class="clock" id="clock"></span>`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"${right?'':' style="grid-template-columns:1fr"'}><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt[data-k]').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run'),sl=document.getElementById('slider'),ck=document.getElementById('clock');
+ const D=DEMOS[d.type];let state={mode:d.mode0||(d.buttons||[])[0]};
+ const draw=t=>{st.innerHTML=`<svg viewBox="0 0 600 300">${D(t,state,d)}</svg>`;if(sl){sl.value=Math.round(t*1000);if(d.clock)ck.textContent=d.clock(t)}};
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,done=finish)=>{cancelAnimationFrame(anim);const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);draw(t);if(t<1)anim=requestAnimationFrame(step);else done()};anim=requestAnimationFrame(step)};
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));state.mode=d.mode0||(d.buttons||[])[0];draw(0)};
+ run.onclick=()=>{reset();if(d.runMode)state.mode=d.runMode;play(d.ms||3000)};
+ document.getElementById('reset').onclick=reset;
+ main.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.b;play(d.bms||1600,()=>{})});
+ if(sl)sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/1000);if(sl.value>=1000)finish()};
+ draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+
+}
+</script>
+<script>
+/* Fit to the board: scale each section up so it fills the screen and can be read from the back of the room.
+   It measures the section with every card opened, so tapping a card never makes the page jump or scroll. */
+(() => { const main = document.getElementById('main'); if (!main || !('zoom' in main.style)) return; let busy = false, t = 0;
+  const fit = () => { if (busy) return; busy = true;
+    const side = innerWidth > 1000 ? main.getBoundingClientRect().left : 0, W = innerWidth - side, H = innerHeight;
+    if (innerWidth <= 1000) { main.style.zoom = ''; main.style.width = ''; main.style.height = ''; busy = false; return; }
+    const closed = [...main.querySelectorAll('.card:not(.open)')], hidden = [...main.querySelectorAll('.result:not(.show)')];
+    closed.forEach((c) => c.classList.add('open')); hidden.forEach((r) => r.classList.add('show'));
+    const set = (z) => { main.style.zoom = z; main.style.width = (W / z) + 'px'; main.style.height = (H / z) + 'px'; };
+    let lo = 1, hi = 2.6; for (let k = 0; k < 9; k++) { const z = (lo + hi) / 2; set(z); if (main.scrollHeight <= main.clientHeight + 1 && main.scrollWidth <= main.clientWidth + 1) lo = z; else hi = z; }
+    set(lo); closed.forEach((c) => c.classList.remove('open')); hidden.forEach((r) => r.classList.remove('show')); main.scrollTop = 0;
+    requestAnimationFrame(() => { busy = false; }); };
+  const later = () => { clearTimeout(t); t = setTimeout(fit, 60); };
+  new MutationObserver(later).observe(main, { childList: true }); addEventListener('resize', later); addEventListener('load', later); if (document.fonts && document.fonts.ready) document.fonts.ready.then(later); later();
+})();
+</script>
+</body>
+</html>

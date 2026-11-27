@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Materials and stock lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a finishing workshop's test bench: try a finish, watch what happens
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Selecting materials, stock and waste<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.2.1 · 3.2.6 · 3.3.9</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+
+const S=[
+{t:'Choosing materials',c:'#0f766e',lead:'Designers weigh up several factors before choosing a material. AQA lists six. Tap each one.',
+ cards:[['Functionality','Will it do the job? Strength, weather resistance, weight, safety.'],['Aesthetics','How it looks and feels: colour, texture, finish.'],['Environmental factors','Sustainable source? Recyclable? Energy and pollution in making it.'],['Availability','Can you get it easily, in the stock form and size you need?'],['Cost','Price per unit, plus the cost of shaping and finishing it.'],['Social, cultural and ethical','Fair working conditions, local suppliers, cultural meaning, safety for users.']],
+ demo:{type:'score',title:'Lab test: choose a park bench material',q:'Three materials are scored out of 5 on each factor. Which scores best OVERALL for a park bench?',opts:['Pine','Oak','Recycled plastic'],right:2,ms:3500,
+  res:'Recycled plastic wins overall: it never rots, needs no finish and uses waste material. Oak looks best but costs most; pine is cheapest but rots outdoors. Change the client\'s priorities and the winner can change: that is why designers justify choices.'}},
+{t:'Stock forms',c:'#2478B3',lead:'Materials are bought in standard stock forms. Knowing them lets you plan a product and order the right thing.',
+ cards:[['Papers and boards','Sheets (A sizes), rolls; sold by size, weight (gsm) and thickness.'],['Timber','Planks, boards, square and round sections, mouldings, manufactured board sheets 2440 × 1220.'],['Metal','Sheet, plate, flat bar, round bar (rod), square bar, tube, angle.'],['Polymers','Sheet, rod, tube, film, powder, granules (for moulding), foam.'],['Textiles','Fabric on rolls sold by the metre at a set width; threads, tapes, webbing.'],['Components','Standard parts: screws, nuts and bolts, hinges, zips, LEDs, resistors.']],
+ demo:{type:'stock',title:'Lab test: name the stock form',q:'Which stock form would you buy to make a table leg?',opts:['Sheet','Square section','Granules'],right:1,ms:4200,
+  res:'A table leg is long and square, so you buy square-section timber (or square tube for metal) and cut it to length. Granules are melted for moulding; sheet is for flat parts.'}},
+{t:'Standard sizes',c:'#7449B0',lead:'Stock comes in standard sizes, so parts and machines fit together everywhere. Paper uses A sizes: each one is half the size of the one before.',
+ cards:[['A sizes','A0 is 1 m². Halve it to get A1, halve again for A2, and so on. A4 = 297 × 210 mm.'],['Paper weight','Measured in gsm (grams per square metre). Printer paper ~80 gsm; card ~250–300 gsm.'],['Timber','Sold by length × width × thickness. "Planed" timber is smaller than its nominal size.'],['Sheet materials','MDF and plywood: 2440 × 1220 mm full sheets, cut to half or quarter.'],['Polymers and metals','Sheet thickness (gauge), length, width and diameter.'],['Fabric','Sold by the metre from rolls of a fixed width, e.g. 150 cm.']],
+ demo:{type:'asize',title:'Lab test: halving paper',q:'How many A4 sheets can be cut from one A1 sheet?',opts:['4','8','16'],right:1,ms:4000,
+  res:'A1 halves to two A2, then four A3, then eight A4. Each step doubles the number of sheets.'}},
+{t:'Nesting and tessellation',c:'#C2410C',lead:'Material management means planning a cutting layout that wastes as little as possible. Nesting fits parts closely together; tessellation repeats shapes with no gaps.',
+ cards:[['Nesting','Arrange parts close together, turning them to fit, like a jigsaw.'],['Tessellation','Shapes that repeat with no gaps: squares, triangles, hexagons.'],['Why it matters','Less waste means lower cost and less environmental impact.'],['Marking out','Use templates and mark from a straight edge, allowing for saw cuts (kerf).']],
+ demo:{type:'nest',title:'Lab test: two cutting layouts',q:'Triangle parts are cut from the same sheet. How many more fit when they are nested (alternating up and down)?',opts:['About the same','Nearly twice as many','Three times as many'],right:1,ms:4000,
+  res:'Laid out one per square, 18 triangles fit and half the sheet is wasted. Turning every other triangle upside down fits 33: nearly twice as many from the same sheet.'}},
+{t:'Calculating quantities',c:'#8B5A2B',lead:'Estimators work out how many parts fit in each stock unit, how many units to buy, and the waste. Round parts DOWN and units UP.',
+ cards:[['Parts per length','Stock length ÷ part length, rounded down.'],['Parts per sheet','(Length ÷ part length) × (width ÷ part width), rounded down. Try rotating.'],['Units to buy','Parts needed ÷ parts per unit, rounded up.'],['Waste %','(Amount bought − amount used) ÷ amount bought × 100.']],
+ demo:{type:'plank',title:'Lab test: cutting 450 mm shelves',q:'Shelves are 450 mm long. Which plank length gives the least waste?',opts:['1.8 m','2.4 m','Both the same'],right:0,ms:4200,
+  res:'1.8 m gives exactly 4 shelves with no offcut (4 × 450 = 1800). 2.4 m gives 5 shelves and a 150 mm offcut, about 6% waste. Always check which stock length divides best.'}},
+{t:'Quick fire',c:'#C99A06',lead:'Work it out before you tap. Then the exam question.',
+ cards:[['50 × 50 squares from 600 × 400 sheet','600÷50 = 12, 400÷50 = 8 → <em>96</em>'],['700 mm legs from 2.4 m lengths','2400÷700 → <em>3</em> per length'],['10 parts needed, 4 per sheet','10÷4 = 2.5 → buy <em>3</em> sheets'],['Bought 2 m, used 1.5 m','0.5 ÷ 2 × 100 = <em>25% waste</em>'],['A3 sheets in one A1','<em>4</em>'],['Stock form for a bike frame','<em>Tube</em>']],
+ exam:{q:'A school needs 30 box nets, each 280 × 190 mm, cut from A1 board (841 × 594 mm) costing £1.20 per sheet. Calculate the number of sheets needed and the total cost. Show your working. (3 marks)',a:'841 ÷ 280 = 3 and 594 ÷ 190 = 3, so 9 nets per sheet (1). 30 ÷ 9 = 3.3, so 4 sheets (1). 4 × £1.20 = £4.80 (1).'}}
+];
+const DEMOS={
+score:(t,s,d)=>{const F=['Function','Looks','Environment','Availability','Cheapness','Ethics'],M=[['Pine','#d8b57a',[2,3,4,5,5,4]],['Oak','#8b5a2b',[4,5,3,3,1,3]],['Recycled plastic','#2e8b57',[5,2,5,4,3,5]]];let o='';
+ M.forEach(([n,c,v],k)=>{const y=40+k*82;o+=T(14,y+8,n,'font-weight="700"');let x=160;v.forEach((s,i)=>{const w=s*13*clamp(t*1.4-i*.08);o+=`<rect x="${x}" y="${y-12}" width="${w}" height="26" fill="${c}" opacity="${.55+i*.07}"/>`;x+=w+2});const tot=v.reduce((a,b)=>a+b);if(t>.8)o+=T(x+10,y+8,tot+' / 30','font-weight="700"')});
+ o+=T(14,288,'Each bar adds up: '+F.join(' + '),'font-size="14" fill="#5b6670"');return o},
+stock:(t,s,d)=>{const it=[['Sheet',`<rect x="0" y="20" width="90" height="10" fill="#c9a26b"/>`],['Plank',`<rect x="0" y="12" width="90" height="22" fill="#d8b57a"/>`],['Square section',`<rect x="25" y="0" width="40" height="40" fill="#d8b57a" stroke="#8b5a2b" stroke-width="3"/>`],['Round bar',`<circle cx="45" cy="20" r="20" fill="#9aa3ab"/>`],['Tube',`<circle cx="45" cy="20" r="20" fill="#9aa3ab"/><circle cx="45" cy="20" r="12" fill="#efeae0"/>`],['Flat bar',`<rect x="10" y="14" width="70" height="12" fill="#9aa3ab"/>`],['Roll',`<circle cx="45" cy="20" r="20" fill="#e8b4c8"/><circle cx="45" cy="20" r="6" fill="#efeae0"/>`],['Granules',[...Array(14)].map((_,i)=>`<circle cx="${12+(i*23)%70}" cy="${8+Math.floor(i/4)*9}" r="4" fill="#7449b0"/>`).join('')]];let o='';
+ it.forEach(([n,g],i)=>{const x=20+(i%4)*145,y=40+Math.floor(i/4)*125,a=clamp(t*9-i);o+=`<g opacity="${a}" transform="translate(${x} ${y})">${g}</g>`+`<g opacity="${a}">${T(x+45,y+75,n,'text-anchor="middle" font-size="16"')}</g>`;if(n==='Square section'&&t>.95)o+=`<rect x="${x-10}" y="${y-14}" width="110" height="105" rx="10" fill="none" stroke="#2e8b57" stroke-width="4"/>`});return o},
+asize:(t,s,d)=>{const x0=60,y0=30,W=340,H=240;let o=`<rect x="${x0}" y="${y0}" width="${W}" height="${H}" fill="#fff" stroke="#1b2a33" stroke-width="2"/>`;const step=Math.floor(clamp(t)*3.99);
+ const lines=[[x0+W/2,y0,x0+W/2,y0+H],[x0,y0+H/2,x0+W/2,y0+H/2],[x0+W/2,y0+H/2,x0+W,y0+H/2],[x0+W/4,y0,x0+W/4,y0+H],[x0+3*W/4,y0,x0+3*W/4,y0+H]];
+ if(step>=1)o+=`<line x1="${lines[0][0]}" y1="${lines[0][1]}" x2="${lines[0][2]}" y2="${lines[0][3]}" stroke="#7449b0" stroke-width="4"/>`;
+ if(step>=2)o+=[1,2].map(i=>`<line x1="${lines[i][0]}" y1="${lines[i][1]}" x2="${lines[i][2]}" y2="${lines[i][3]}" stroke="#7449b0" stroke-width="4"/>`).join('');
+ if(step>=3)o+=[3,4].map(i=>`<line x1="${lines[i][0]}" y1="${lines[i][1]}" x2="${lines[i][2]}" y2="${lines[i][3]}" stroke="#7449b0" stroke-width="4"/>`).join('');
+ const lab=['A1','2 × A2','4 × A3','8 × A4'][step];o+=T(440,150,lab,'font-size="30" font-weight="700" fill="#7449b0"');if(step===3)o+=[...Array(8)].map((_,i)=>T(x0+W/8+(i%4)*W/4-8,y0+H/4+Math.floor(i/4)*H/2+6,'A4','font-size="14"')).join('');return o},
+nest:(t,s,d)=>{let o='';const sx=[20,320],sw=260,sh=200,u=sw/6*0.98;[0,1].forEach(k=>{const x=sx[k],y=30;o+=`<rect x="${x}" y="${y}" width="${sw}" height="${sh}" fill="#e9dcc0" stroke="#8b5a2b" stroke-width="2"/>`;
+ let n=0;const max=k?33:18;const show=Math.floor(clamp(t*1.15)*max);
+ if(!k){for(let r=0;r<3;r++)for(let c=0;c<6;c++){if(n++>=show)continue;const px=x+c*sw/6,py=y+r*sh/3;o+=`<polygon points="${px+2},${py+sh/3-2} ${px+sw/12},${py+3} ${px+sw/6-2},${py+sh/3-2}" fill="#c2410c"/>`}}
+ else{for(let r=0;r<3;r++)for(let c=0;c<11;c++){if(n++>=show)continue;const px=x+c*sw/12,py=y+r*sh/3,up=c%2==0;o+=up?`<polygon points="${px+1},${py+sh/3-2} ${px+sw/12},${py+3} ${px+sw/6-1},${py+sh/3-2}" fill="#2e8b57"/>`:`<polygon points="${px+1},${py+3} ${px+sw/6-1},${py+3} ${px+sw/12},${py+sh/3-2}" fill="#2e8b57"/>`}}
+ o+=T(x+sw/2,262,(k?'Nested: ':'One per square: ')+show+' parts','text-anchor="middle"')});return o},
+plank:(t,s,d)=>{let o='';[[1800,'1.8 m'],[2400,'2.4 m']].forEach(([L,l],k)=>{const y=70+k*110,sc=430/2400,n=Math.floor(L/450),cut=Math.floor(clamp(t*1.2)*(n+.99));o+=T(20,y-14,l+' length','font-weight="700"');
+ o+=`<rect x="40" y="${y}" width="${L*sc}" height="34" fill="#d8b57a" stroke="#8b5a2b"/>`;for(let i=1;i<=Math.min(cut,n);i++){const x=40+i*450*sc;o+=`<line x1="${x}" y1="${y-6}" x2="${x}" y2="${y+40}" stroke="#c2410c" stroke-width="3"/>`}
+ if(cut>n||t>.9){const off=L-n*450;o+=off>0?`<rect x="${40+n*450*sc}" y="${y}" width="${off*sc}" height="34" fill="#c2410c" opacity=".5"/>`+T(40+L*sc+8,y+24,off+' mm waste','fill="#c2410c" font-weight="700"'):T(40+L*sc+8,y+24,'no waste','fill="#2e8b57" font-weight="700"');o+=T(40,y+60,n+' shelves','font-size="15"')}});return o}
+};
+
+
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const AR=(x1,y1,x2,y2,c='#c2410c',w=5)=>{const a=Math.atan2(y2-y1,x2-x1),s=12;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/><polygon points="${x2},${y2} ${x2-s*Math.cos(a-.5)},${y2-s*Math.sin(a-.5)} ${x2-s*Math.cos(a+.5)},${y2-s*Math.sin(a+.5)}" fill="${c}"/>`};
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">${d.run||'Run the test'}</button><button class="go sec" id="reset">Reset</button>${(d.buttons||[]).map(b=>`<button class="opt" data-b="${b}">${b}</button>`).join('')}${d.slider?`<input type="range" id="slider" min="0" max="1000" value="0" aria-label="${d.slider}"><span class="clock" id="clock"></span>`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"${right?'':' style="grid-template-columns:1fr"'}><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt[data-k]').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run'),sl=document.getElementById('slider'),ck=document.getElementById('clock');
+ const D=DEMOS[d.type];let state={mode:d.mode0||(d.buttons||[])[0]};
+ const draw=t=>{st.innerHTML=`<svg viewBox="0 0 600 300">${D(t,state,d)}</svg>`;if(sl){sl.value=Math.round(t*1000);if(d.clock)ck.textContent=d.clock(t)}};
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,done=finish)=>{cancelAnimationFrame(anim);const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);draw(t);if(t<1)anim=requestAnimationFrame(step);else done()};anim=requestAnimationFrame(step)};
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));state.mode=d.mode0||(d.buttons||[])[0];draw(0)};
+ run.onclick=()=>{reset();if(d.runMode)state.mode=d.runMode;play(d.ms||3000)};
+ document.getElementById('reset').onclick=reset;
+ main.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.b;play(d.bms||1600,()=>{})});
+ if(sl)sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/1000);if(sl.value>=1000)finish()};
+ draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+
+}
+</script>
+<script>
+/* Fit to the board: scale each section up so it fills the screen and can be read from the back of the room.
+   It measures the section with every card opened, so tapping a card never makes the page jump or scroll. */
+(() => { const main = document.getElementById('main'); if (!main || !('zoom' in main.style)) return; let busy = false, t = 0;
+  const fit = () => { if (busy) return; busy = true;
+    const side = innerWidth > 1000 ? main.getBoundingClientRect().left : 0, W = innerWidth - side, H = innerHeight;
+    if (innerWidth <= 1000) { main.style.zoom = ''; main.style.width = ''; main.style.height = ''; busy = false; return; }
+    const closed = [...main.querySelectorAll('.card:not(.open)')], hidden = [...main.querySelectorAll('.result:not(.show)')];
+    closed.forEach((c) => c.classList.add('open')); hidden.forEach((r) => r.classList.add('show'));
+    const set = (z) => { main.style.zoom = z; main.style.width = (W / z) + 'px'; main.style.height = (H / z) + 'px'; };
+    let lo = 1, hi = 2.6; for (let k = 0; k < 9; k++) { const z = (lo + hi) / 2; set(z); if (main.scrollHeight <= main.clientHeight + 1 && main.scrollWidth <= main.clientWidth + 1) lo = z; else hi = z; }
+    set(lo); closed.forEach((c) => c.classList.remove('open')); hidden.forEach((r) => r.classList.remove('show')); main.scrollTop = 0;
+    requestAnimationFrame(() => { busy = false; }); };
+  const later = () => { clearTimeout(t); t = setTimeout(fit, 60); };
+  new MutationObserver(later).observe(main, { childList: true }); addEventListener('resize', later); addEventListener('load', later); if (document.fonts && document.fonts.ready) document.fonts.ready.then(later); later();
+})();
+</script>
+</body>
+</html>

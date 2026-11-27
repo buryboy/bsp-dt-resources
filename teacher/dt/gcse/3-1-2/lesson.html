@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Energy lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a finishing workshop's test bench: try a finish, watch what happens
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Energy generation and storage<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.1.2</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+
+const S=[
+{t:'Fossil fuels',c:'#5B6670',lead:'Coal, gas and oil formed from ancient plants and animals over millions of years. They are finite: once burned, they are gone.',
+ cards:[['How it works','Fuel is burned to boil water; steam spins a turbine; the turbine turns a generator.'],['For','Reliable, available on demand, existing power stations and supply chains.'],['Against','Finite; releases CO₂ (global warming) and other pollution; mining and drilling damage landscapes.'],['Gas vs coal','Gas releases about half the CO₂ of coal and starts up faster.']],
+ demo:{type:'power',title:'Lab test: inside a power station',q:'In a coal power station, what actually spins the turbine?',opts:['The burning coal','High-pressure steam','Electricity'],right:1,ms:5000,
+  res:'Burning coal heats water into high-pressure steam. The steam spins the turbine, and the turbine turns the generator, which makes electricity.'}},
+{t:'Nuclear power',c:'#7449B0',lead:'Nuclear power stations split uranium atoms (fission). The heat makes steam, just like a fossil station, but almost no CO₂ is released.',
+ cards:[['For','Huge, steady output whatever the weather; very low CO₂.'],['Against','Radioactive waste stays dangerous for thousands of years; very expensive and slow to build; small risk of accidents.'],['Fuel','Uranium is mined and is finite, but a little goes a long way.']],
+ demo:{type:'co2',title:'Lab test: carbon per unit of electricity',q:'Which source releases the MOST CO₂ for each unit of electricity?',opts:['Gas','Coal','Nuclear'],right:1,ms:4000,
+  res:'Coal is by far the worst, about 820 g of CO₂ per kWh over its life. Gas is about 490. Nuclear, wind and solar are all very low (around 10 to 50 g). Figures are approximate IPCC lifecycle medians.'}},
+{t:'Wind and solar',c:'#2E8B57',lead:'Wind and solar are renewable and free to run, but their output depends on the weather and time of day.',
+ cards:[['Wind','Blades spin a generator. Best on coasts, hills and at sea. Output varies; turbines change the landscape and can be noisy.'],['Solar PV','Photovoltaic cells turn sunlight directly into electricity. No output at night; less in winter; no moving parts.'],['The problem','Electricity is needed when it is dark and calm too, so these need storage or backup.']],
+ demo:{type:'day',title:'Lab test: one day of renewable power',q:'When does a solar panel produce the most electricity?',opts:['At night','Around midday','At sunrise'],right:1,ms:5000,
+  res:'Solar output follows the sun: zero at night, peaking around midday. Wind goes up and down with the weather, at any time. Neither matches when people use most power (evenings), so storage matters.'}},
+{t:'Tidal, hydro and biomass',c:'#2478B3',lead:'Three more renewables, each suited to particular places.',
+ cards:[['Tidal','Tides flow through turbines. Completely predictable, years ahead. Few suitable sites; affects sea life.'],['Hydro-electric','Water flowing downhill spins turbines. Reliable; dams flood valleys and displace people.'],['Biomass','Plant or animal waste is burned or digested. Renewable if replanted; needs land; releases some CO₂.']],
+ demo:{type:'tide',title:'Lab test: predict the future',q:'Which source\'s output can be predicted accurately years ahead?',opts:['Wind','Tidal','Solar'],right:1,ms:5000,
+  res:'Tides follow the moon, so they can be predicted years in advance. Wind and sunshine depend on the weather, which cannot.'}},
+{t:'Pumped storage',c:'#C99A06',lead:'Pumped storage hydro is a giant battery made of two lakes. It stores spare electricity and releases it in seconds when demand surges.',
+ cards:[['Night','Demand is low and electricity cheap: water is pumped UP to the top lake.'],['Peak','When everyone switches on, water flows DOWN through turbines in seconds.'],['Why it matters','Fast response balances the grid and stores renewable energy.'],['Drawback','Needs mountains and lakes; loses some energy in pumping.']],
+ demo:{type:'pumped',title:'Lab test: 24 hours of pumped storage',q:'When is water pumped UP to the top lake?',opts:['At peak times','At night when demand is low','Never'],right:1,ms:6000,
+  res:'At night, spare cheap electricity pumps water up. At the evening peak the water rushes down through turbines and generates power within seconds.'}},
+{t:'Batteries',c:'#C2410C',lead:'Batteries store energy chemically for portable products. The right choice depends on how much and how often the product is used.',
+ cards:[['Alkaline (single-use)','Cheap, long shelf life. Best for low-drain products: remotes, clocks, smoke alarms.'],['Rechargeable','NiMH or lithium-ion. Recharged hundreds of times. Best for high-drain, daily-use products.'],['Lithium-ion','Very light for the energy stored: phones, laptops, e-bikes. Must be recycled safely.'],['Disposal','All batteries contain chemicals: never put them in household waste.']],
+ demo:{type:'battery',title:'Lab test: two years of gaming',q:'A game controller is used every day. Over two years, which is cheaper?',opts:['Single-use alkaline','Rechargeable + charger','The same'],right:1,ms:5000,
+  res:'Swapping alkaline batteries every couple of weeks costs around £75 over two years and fills bins with used cells. A rechargeable set and charger costs about £15 once. (Example prices.)'}},
+{t:'Quick fire',c:'#14213d',lead:'Name the energy source or storage before you tap. Then the exam question.',
+ cards:[['Can be predicted years ahead','<em>Tidal</em>'],['Most CO₂ per unit','<em>Coal</em>'],['Radioactive waste','<em>Nuclear</em>'],['Stores energy using two lakes','<em>Pumped storage</em>'],['Best for a TV remote','<em>Alkaline</em> single-use'],['Uses farm waste','<em>Biomass</em>']],
+ exam:{q:'Give two advantages and two disadvantages of using wind turbines to generate electricity. (4 marks)',a:'Advantages: renewable, will not run out (1); no CO₂ when running (1). Disadvantages: output depends on the wind, so it is unreliable (1); can spoil landscapes or be noisy (1).'}}
+];
+const DEMOS={
+power:(t)=>{const st=['Fuel burned','Boiler: water → steam','Turbine spins','Generator','To the grid'],c=['#5b6670','#c2410c','#2478b3','#7449b0','#2e8b57'];const k=Math.min(4,Math.floor(t*5.2));let o='';
+ st.forEach((s,i)=>{const x=14+i*118,on=i<=k;o+=`<rect x="${x}" y="90" width="104" height="80" rx="10" fill="${on?c[i]:'#fff'}" stroke="${c[i]}" stroke-width="3"/>`+`<foreignObject x="${x+4}" y="95" width="96" height="70"><div xmlns="http://www.w3.org/1999/xhtml" style="font:600 14px Lexend,sans-serif;color:${on?'#fff':'#1b2a33'};text-align:center;display:flex;align-items:center;justify-content:center;height:70px">${s}</div></foreignObject>`;if(i<4)o+=AR(x+104,130,x+116,130,'#1b2a33',3)});
+ if(k>=2)o+=`<g transform="translate(302 230) rotate(${t*1500})"><line x1="-30" y1="0" x2="30" y2="0" stroke="#2478b3" stroke-width="8"/><line x1="0" y1="-30" x2="0" y2="30" stroke="#2478b3" stroke-width="8"/></g>`;return o},
+co2:(t)=>{const d=[['Coal',820,'#1b2a33'],['Gas',490,'#5b6670'],['Solar',48,'#c99a06'],['Nuclear',12,'#7449b0'],['Wind',11,'#2e8b57']];let o=T(20,28,'g CO₂ per kWh (approx., whole lifecycle)','font-size="15" fill="#5b6670"');
+ d.forEach(([n,v,c],i)=>{const y=50+i*46,w=v/820*420*clamp(t*1.3);o+=T(20,y+24,n)+`<rect x="110" y="${y}" width="${Math.max(2,w)}" height="32" fill="${c}"/>`+(t>.7?T(118+w,y+23,v,'font-size="15" font-weight="700"'):'')});return o},
+day:(t)=>{const h=t*24;let sp='',wp='';for(let i=0;i<=Math.floor(t*96);i++){const x=40+i*5.4,hh=i/4;const s=Math.max(0,Math.sin((hh-6)/12*Math.PI))*150;const w=60+40*Math.sin(hh*.9)+25*Math.sin(hh*2.3);sp+=`${x},${250-s} `;wp+=`${x},${250-w} `}
+ return `<line x1="40" y1="250" x2="560" y2="250" stroke="#999"/>`+['0:00','6:00','12:00','18:00','24:00'].map((l,i)=>T(28+i*130,275,l,'font-size="13"')).join('')+`<polyline points="${sp}" fill="none" stroke="#c99a06" stroke-width="4"/><polyline points="${wp}" fill="none" stroke="#2e8b57" stroke-width="4"/>`+T(400,40,'— solar','fill="#c99a06" font-weight="700"')+T(400,64,'— wind','fill="#2e8b57" font-weight="700"')+T(40,40,`Time ${Math.floor(h)}:00`,'font-size="20" font-weight="700"')},
+tide:(t)=>{let tp='',wp='';for(let i=0;i<=Math.floor(t*100);i++){const x=40+i*5.2;tp+=`${x},${110-45*Math.sin(i/100*Math.PI*4)} `;wp+=`${x},${230-35*Math.sin(i*.37)*Math.cos(i*.11)-15*Math.sin(i*1.3)} `}
+ return T(40,40,'Tidal output','font-weight="700" fill="#2478b3"')+`<polyline points="${tp}" fill="none" stroke="#2478b3" stroke-width="4"/>`+T(40,175,'Wind output','font-weight="700" fill="#2e8b57"')+`<polyline points="${wp}" fill="none" stroke="#2e8b57" stroke-width="4"/>`+(t>.9?T(330,40,'regular: predictable','fill="#2478b3"')+T(330,175,'irregular: weather','fill="#2e8b57"'):'')},
+pumped:(t)=>{const h=t*24,night=h<6||h>22,peak=h>17&&h<21;const up=night?1:peak?-1:0;const lvl=clamp(.3+.7*Math.min(1,Math.max(0,(h<6?h/6:h>22?1:h<17?1:1-(h-17)/4))));
+ return `<polygon points="20,250 250,60 600,60 600,300 20,300" fill="#cdbfa4"/><rect x="40" y="200" width="200" height="60" fill="#2478b3" opacity=".7"/><rect x="380" y="${60+70*(1-lvl)}" width="200" height="${70*lvl}" fill="#2478b3"/>`+T(400,50,'Top lake','font-weight="700"')+T(60,195,'Bottom lake','font-weight="700"')+`<line x1="240" y1="230" x2="380" y2="120" stroke="#1b2a33" stroke-width="10"/>`+(up===1?AR(260,214,350,143,'#2e8b57',5)+T(150,110,'PUMPING UP (cheap night power)','fill="#2e8b57" font-weight="700"'):up===-1?AR(350,143,260,214,'#c2410c',5)+T(150,110,'GENERATING (evening peak)','fill="#c2410c" font-weight="700"'):'')+T(20,30,`Time ${Math.floor(h)}:00`,'font-size="20" font-weight="700"')},
+battery:(t)=>{const wk=t*104,alk=Math.floor(wk/2)*1.45,rech=15;return T(20,34,`Week ${Math.floor(wk)}`,'font-size="20" font-weight="700"')+`<rect x="60" y="${260-alk*2.6}" width="140" height="${alk*2.6}" fill="#c2410c"/>`+T(130,285,'Alkaline','text-anchor="middle"')+T(130,250-alk*2.6,'£'+alk.toFixed(0),'text-anchor="middle" font-weight="700"')+`<rect x="360" y="${260-rech*2.6}" width="140" height="${rech*2.6}" fill="#2e8b57"/>`+T(430,285,'Rechargeable','text-anchor="middle"')+T(430,250-rech*2.6,'£15','text-anchor="middle" font-weight="700"')+T(230,80,`used batteries: ${Math.floor(wk/2)*2}`,'font-size="15" fill="#c2410c"')}
+};
+
+
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const AR=(x1,y1,x2,y2,c='#c2410c',w=5)=>{const a=Math.atan2(y2-y1,x2-x1),s=12;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/><polygon points="${x2},${y2} ${x2-s*Math.cos(a-.5)},${y2-s*Math.sin(a-.5)} ${x2-s*Math.cos(a+.5)},${y2-s*Math.sin(a+.5)}" fill="${c}"/>`};
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">${d.run||'Run the test'}</button><button class="go sec" id="reset">Reset</button>${(d.buttons||[]).map(b=>`<button class="opt" data-b="${b}">${b}</button>`).join('')}${d.slider?`<input type="range" id="slider" min="0" max="1000" value="0" aria-label="${d.slider}"><span class="clock" id="clock"></span>`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"${right?'':' style="grid-template-columns:1fr"'}><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt[data-k]').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run'),sl=document.getElementById('slider'),ck=document.getElementById('clock');
+ const D=DEMOS[d.type];let state={mode:d.mode0||(d.buttons||[])[0]};
+ const draw=t=>{st.innerHTML=`<svg viewBox="0 0 600 300">${D(t,state,d)}</svg>`;if(sl){sl.value=Math.round(t*1000);if(d.clock)ck.textContent=d.clock(t)}};
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,done=finish)=>{cancelAnimationFrame(anim);const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);draw(t);if(t<1)anim=requestAnimationFrame(step);else done()};anim=requestAnimationFrame(step)};
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));state.mode=d.mode0||(d.buttons||[])[0];draw(0)};
+ run.onclick=()=>{reset();if(d.runMode)state.mode=d.runMode;play(d.ms||3000)};
+ document.getElementById('reset').onclick=reset;
+ main.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.b;play(d.bms||1600,()=>{})});
+ if(sl)sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/1000);if(sl.value>=1000)finish()};
+ draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+
+}
+</script>
+<script>
+/* Fit to the board: scale each section up so it fills the screen and can be read from the back of the room.
+   It measures the section with every card opened, so tapping a card never makes the page jump or scroll. */
+(() => { const main = document.getElementById('main'); if (!main || !('zoom' in main.style)) return; let busy = false, t = 0;
+  const fit = () => { if (busy) return; busy = true;
+    const side = innerWidth > 1000 ? main.getBoundingClientRect().left : 0, W = innerWidth - side, H = innerHeight;
+    if (innerWidth <= 1000) { main.style.zoom = ''; main.style.width = ''; main.style.height = ''; busy = false; return; }
+    const closed = [...main.querySelectorAll('.card:not(.open)')], hidden = [...main.querySelectorAll('.result:not(.show)')];
+    closed.forEach((c) => c.classList.add('open')); hidden.forEach((r) => r.classList.add('show'));
+    const set = (z) => { main.style.zoom = z; main.style.width = (W / z) + 'px'; main.style.height = (H / z) + 'px'; };
+    let lo = 1, hi = 2.6; for (let k = 0; k < 9; k++) { const z = (lo + hi) / 2; set(z); if (main.scrollHeight <= main.clientHeight + 1 && main.scrollWidth <= main.clientWidth + 1) lo = z; else hi = z; }
+    set(lo); closed.forEach((c) => c.classList.remove('open')); hidden.forEach((r) => r.classList.remove('show')); main.scrollTop = 0;
+    requestAnimationFrame(() => { busy = false; }); };
+  const later = () => { clearTimeout(t); t = setTimeout(fit, 60); };
+  new MutationObserver(later).observe(main, { childList: true }); addEventListener('resize', later); addEventListener('load', later); if (document.fonts && document.fonts.ready) document.fonts.ready.then(later); later();
+})();
+</script>
+</body>
+</html>

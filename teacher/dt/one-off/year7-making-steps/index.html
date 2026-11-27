@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Year 7: today's making steps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#1d1530;--ink:#fbf4ea;--soft:#c9bfd9;--card:#2a2042}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 clamp(15px,1.35vw,26px)/1.35 'Atkinson Hyperlegible',Arial,sans-serif;overflow:hidden;
+ background-image:radial-gradient(circle at 8% 110%,rgba(242,107,33,.22),transparent 40%),radial-gradient(circle at 95% -10%,rgba(255,46,136,.22),transparent 40%)}
+.wrap{height:100vh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:1.6vh;padding:2.6vh 2.6vw}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:2vw}
+h1{font:400 clamp(26px,3.4vw,62px)/1.02 'Righteous',sans-serif;margin:0;letter-spacing:.01em}
+h1 span{background:linear-gradient(90deg,#f26b21,#f2b134 30%,#19c3e6 70%,#ff2e88);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--soft);margin-top:.5vh;font-size:1.05em}
+.ctl{display:flex;gap:.6vw}
+.ctl button{font:700 .8em 'Atkinson Hyperlegible',sans-serif;background:#3a2e58;color:var(--ink);border:0;border-radius:999px;padding:.6em 1.1em;cursor:pointer;min-height:44px}
+.ctl button:focus-visible{outline:3px solid #19c3e6}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:2.2vh 1.8vw;perspective:1200px}
+.card{position:relative;background:var(--card);border-radius:22px;padding:2.2vh 1.5vw 2vh;display:flex;flex-direction:column;gap:1vh;cursor:pointer;
+ border:3px solid transparent;transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .9s,box-shadow .9s,border-color .9s,filter .9s;transform-origin:center}
+.card .top{display:flex;align-items:center;gap:.9vw}
+.num{flex:none;width:2.4em;height:2.4em;border-radius:50%;display:grid;place-items:center;font:400 1.25em 'Righteous',sans-serif;background:var(--c);color:#1d1530}
+.card h2{font:400 clamp(20px,2.1vw,40px)/1.05 'Righteous',sans-serif;margin:0}
+.where{font-weight:700;color:var(--c);font-size:.95em}
+.card ul{margin:0;padding-left:1.15em}
+.card li{margin:.45vh 0}
+.card li b{color:#fff}
+.card.safe{background:#3a1420;border-color:#ff5a5a}
+.grid.run .card{opacity:.5;transform:scale(.96);filter:saturate(.6)}
+.grid.run.rest .card{opacity:1;transform:none;filter:none}
+.grid.run .card.on{opacity:1;filter:none;transform:scale(1.1);z-index:5;border-color:var(--c);
+ box-shadow:0 0 0 6px rgba(0,0,0,.25),0 30px 70px rgba(0,0,0,.6),0 0 60px color-mix(in srgb,var(--c) 55%,transparent)}
+.grid .card:nth-child(1){transform-origin:left top}.grid .card:nth-child(2){transform-origin:center top}.grid .card:nth-child(3){transform-origin:right top}
+.grid .card:nth-child(4){transform-origin:left bottom}.grid .card:nth-child(5){transform-origin:center bottom}.grid .card:nth-child(6){transform-origin:right bottom}
+footer{display:flex;align-items:center;justify-content:space-between;gap:2vw;background:#3a1420;border:2px solid #ff5a5a;border-radius:18px;padding:1.4vh 1.6vw}
+footer .hand{font-size:1.1em}footer .hand b{color:#ffd0d0}
+.dots{display:flex;gap:.5vw}.dots i{width:.9em;height:.9em;border-radius:50%;background:#4b3f69;transition:background .5s,transform .5s}.dots i.on{background:var(--c);transform:scale(1.35)}
+@media(prefers-reduced-motion:reduce){.card{transition:opacity .3s,border-color .3s}.grid.run .card.on{transform:none}}
+@media(max-width:800px){body{overflow:auto}.wrap{height:auto}.grid{grid-template-columns:1fr;grid-template-rows:none}.grid.run .card.on{transform:scale(1.03)}header{flex-direction:column;align-items:flex-start}}
+</style></head><body>
+<div class="wrap">
+ <header>
+  <div><h1>Year 7: <span>today's making steps</span></h1>
+   <div class="sub">Work through the steps in order. Neat and careful beats fast.</div></div>
+  <div class="ctl"><button id="pause">Pause</button><button id="full">Full screen</button></div>
+ </header>
+ <div class="grid run" id="grid"></div>
+ <footer>
+  <div class="hand">⚠️ <b>Goggles and aprons ON</b> whenever you use a machine or a tool. Hair tied back. One person at a machine.</div>
+  <div class="dots" id="dots"></div>
+ </footer>
+</div>
+<script>
+{
+const TASKS = [
+ { c: '#19c3e6', t: 'Cut your wooden base', w: 'Fret saw or coping saw', p: ['Use the <b>fret saw</b>, or a <b>coping saw</b> with the wood held in a <b>vice</b>', 'Cut just on the <b>waste side</b> of your line', 'Slow, steady strokes: let the saw do the work', 'Fingers well away from the blade'] },
+ { c: '#f26b21', t: 'Smooth the edges', w: 'Files, then sandpaper', p: ['Hold the base in the <b>vice</b>', '<b>File</b> the edges back to your line', 'Finish with <b>sandpaper</b>', 'Aim for <b>nice and neat</b>: no splinters, no saw marks'] },
+ { c: '#ff2e88', t: 'Colour the backboard', w: 'Acrylic pens', p: ['Use the <b>acrylic pens</b>', 'Follow <b>your design</b>', 'Work <b>neatly</b>: clean edges, even colour', 'Let each colour <b>dry</b> before the next'] },
+ { c: '#f2b134', t: 'Cut your extra pieces', w: 'Plywood or CDs', p: ['Cut out any extra <b>plywood</b> or <b>CD</b> pieces you need', 'Smooth their edges too', 'Put your <b>name</b> on them', 'Keep them <b>safe</b>, all together'] },
+ { c: '#1b9e8f', t: 'Plan your acrylic pieces', w: 'Before you stick anything', p: ['Decide <b>where</b> each acrylic piece will go', 'Lay them out on the board first', 'Mark the positions lightly in <b>pencil</b>', 'Check it with a partner or your teacher'] },
+ { c: '#ff5a5a', t: 'Stay safe', w: 'Every machine, every tool', safe: 1, p: ['<b>Goggles on</b>', '<b>Apron on</b>', 'Long hair <b>tied back</b>', 'Work held firmly in the <b>vice</b>', 'Stop and <b>ask</b> if you are not sure'] },
+];
+const grid = document.getElementById('grid'), dots = document.getElementById('dots');
+grid.innerHTML = TASKS.map((k, i) => `<div class="card${k.safe ? ' safe' : ''}" style="--c:${k.c}" data-i="${i}"><div class="top"><span class="num">${k.safe ? '!' : i + 1}</span><div><h2>${k.t}</h2><div class="where">${k.w}</div></div></div><ul>${k.p.map((x) => `<li>${x}</li>`).join('')}</ul></div>`).join('');
+dots.innerHTML = TASKS.map((k) => `<i style="--c:${k.c}"></i>`).join('');
+const cards = [...grid.children], ds = [...dots.children];
+const HOLD = 4200, REST = 2200;
+let i = -1, timer = null, paused = false;
+function light(n) {
+  i = (n + TASKS.length) % TASKS.length;
+  grid.classList.remove('rest');
+  cards.forEach((c, k) => c.classList.toggle('on', k === i)); ds.forEach((d, k) => d.classList.toggle('on', k === i));
+}
+function step() {
+  clearTimeout(timer); if (paused) return;
+  light(i + 1);
+  timer = setTimeout(() => { grid.classList.add('rest'); cards.forEach((c) => c.classList.remove('on')); timer = setTimeout(step, REST); }, HOLD);
+}
+function setPaused(p) { paused = p; document.getElementById('pause').textContent = p ? 'Play' : 'Pause'; if (!p) step(); else clearTimeout(timer); }
+document.getElementById('pause').onclick = () => setPaused(!paused);
+document.getElementById('full').onclick = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {} };
+cards.forEach((c) => c.onclick = () => { clearTimeout(timer); light(+c.dataset.i - 0); if (!paused) timer = setTimeout(() => { grid.classList.add('rest'); cards.forEach((x) => x.classList.remove('on')); timer = setTimeout(step, REST); }, HOLD * 2); });
+addEventListener('keydown', (e) => {
+  if (e.key === ' ') { e.preventDefault(); setPaused(!paused); }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { clearTimeout(timer); light(i + (e.key === 'ArrowRight' ? 1 : -1)); if (!paused) timer = setTimeout(step, HOLD * 2); }
+  if (e.key === 'f' || e.key === 'F') document.getElementById('full').click();
+});
+setTimeout(step, 800);
+}
+</script>
+</body></html>

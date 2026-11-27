@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../book-kit/solo-pages.js?h=e80f7906"></script>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/ks3-electronics-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KS3 Electronics – Interactive Workbook">
+<meta name="theme-color" content="#1f4d36">
+<meta name="robots" content="noindex">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 9 · AND or OR?</title>
+<link rel="stylesheet" href="../common.css?h=1095ee77">
+<script type="application/json" id="level-info">
+{"t":"AND or OR?","d":"Use switches to make decisions. Fill in truth tables, then build a bank vault lock and a two-door doorbell.","s":"Switch logic","c":"#3a86ff",
+ "cols":3,"rows":3,"parts":{"v-0-0":"battery","v-1-0":"wire","h-0-0":"wire","h-0-1":"wire","v-0-1":"switch+","v-0-2":"switch","v-1-1":"wire","v-1-2":"wire","h-2-0":"bulb","h-2-1":"wire"},"power":1}
+</script>
+<style>
+table.tt{border-collapse:collapse;margin-top:10px;font:700 18px Nunito}
+table.tt th,table.tt td{border:2px solid #dde7f3;padding:8px 16px;text-align:center}
+table.tt th{background:#f2f7fd}
+table.tt td.out{cursor:pointer;min-width:90px;background:#fff8e6}
+table.tt td.out.right{background:#dcfaf0}table.tt td.out.wrong{background:#ffe8ee}
+table.tt tr.now td{box-shadow:inset 0 0 0 3px var(--orange)}
+</style>
+</head>
+<body>
+<script src="../common.js?h=daf867c1"></script>
+<script src="../circuit.js?h=8b387158"></script>
+<script>
+const AND={'v-0-0':'battery!','h-0-0':'switch!@A','h-0-1':'switch!@B','v-0-2':'wire!','h-1-1':'bulb!','h-1-0':'wire!'};
+const OR={'v-0-0':'battery!','v-1-0':'wire!','h-0-0':'wire!','h-0-1':'wire!','v-0-1':'switch!@A','v-0-2':'switch!@B','v-1-1':'wire!','v-1-2':'wire!','h-2-0':'bulb!','h-2-1':'wire!'};
+const ROWS=[[0,0],[0,1],[1,0],[1,1]];
+const onOff=v=>v?'ON':'OFF';
+function sw(b){const s=[...b.parts].filter(([k,p])=>p.type==='switch');const A=s.find(([k,p])=>p.label==='A')[1],B=s.find(([k,p])=>p.label==='B')[1];return[A,B];}
+
+function truth(st,api,cfg){
+ const w=h('div',{class:'split'});st.append(w);const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+ L.append(h('div',{class:'kicker'},cfg.kicker),h('h2',{},cfg.title),h('div',{class:'lead',html:cfg.text}));
+ const t=h('table',{class:'tt',html:'<tr><th>Switch A</th><th>Switch B</th><th>Bulb</th></tr>'+ROWS.map(r=>`<tr><td>${onOff(r[0])}</td><td>${onOff(r[1])}</td><td class="out">?</td></tr>`).join('')});
+ L.append(t);const ans=[null,null,null,null];
+ [...t.querySelectorAll('td.out')].forEach((td,i)=>td.onclick=()=>{if(checked)return;ans[i]=!ans[i];td.textContent=ans[i]?'💡 ON':'⚫ OFF';Sfx.click();});
+ const msg=h('div',{class:'msg hide'}),after=h('div');let checked=false;
+ const btn=h('button',{class:'btn warm',style:'margin-top:12px',onclick:()=>{
+  if(ans.includes(null)){msg.className='msg warn';msg.textContent='Tap every "?" to choose ON or OFF first.';return;}
+  checked=true;btn.remove();let right=0;
+  [...t.querySelectorAll('td.out')].forEach((td,i)=>{const ok=ans[i]===cfg.rule(...ROWS[i]);td.classList.add(ok?'right':'wrong');if(ok)right++;else td.textContent=(cfg.rule(...ROWS[i])?'💡 ON':'⚫ OFF')+' ✗';});
+  api.add(right,4);right===4?(Sfx.win(),confetti(60)):Sfx.bad();
+  msg.className='msg '+(right===4?'good':'warn');msg.innerHTML=`${right}/4 correct. ${cfg.why}<br><br>Now <b>test it</b>: tap the switches on the circuit and watch the table.`;
+  b.power=true;b.changed();note.remove();after.append(h('div',{class:'row',style:'margin-top:12px'},api.nextBtn()));}},'✔ Check my table');
+ L.append(btn,msg,after);
+ const b=new Circuit.Board(R,{parts:cfg.parts,editable:false,power:false,noStatus:true,cols:cfg.cols,rows:cfg.rows,S:cfg.rows===3?100:110,onChange:()=>{
+  const [A,B]=sw(b);[...t.rows].forEach((tr,i)=>tr.classList.toggle('now',checked&&i>0&&ROWS[i-1][0]==!!A.on&&ROWS[i-1][1]==!!B.on));}});
+ const note=h('p',{style:'font-weight:700;color:#5a6f8c'},'The power stays off until you check your table.');R.append(note);
+}
+
+const lit=(c,t)=>c.sum[t].some(x=>x.s.on);
+Level({n:9,title:'AND or OR?',summary:'switches in SERIES make AND logic – every switch must be on. Switches in PARALLEL make OR logic – any one switch will do. A truth table lists every possible switch combination and what the output does.',steps:[
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  c.append(h('div',{class:'kicker'},'Step 1 · Circuits that decide'),h('h2',{},'Two switches, two kinds of logic'),
+   h('p',{class:'lead'},'Where you put two switches changes how they work together. Try both circuits – tap the switches.'));
+  const g=h('div',{class:'mini two'});c.append(g);
+  const a=h('div',{html:'<h3>🔗 Switches in series = <span style="color:var(--blue)">AND</span></h3><p>The bulb is on only if A <b>AND</b> B are on.</p>'}),o=h('div',{html:'<h3>🔀 Switches in parallel = <span style="color:var(--purple)">OR</span></h3><p>The bulb is on if A <b>OR</b> B (or both) are on.</p>'});
+  g.append(a,o);
+  new Circuit.Board(a,{parts:AND,editable:false,noStatus:true});new Circuit.Board(o,{parts:OR,cols:3,rows:3,S:100,editable:false,noStatus:true});
+  c.append(h('div',{class:'row',style:'margin-top:12px'},api.nextBtn()));
+ },
+ (st,api)=>truth(st,api,{kicker:'Step 2 · Truth table',title:'Predict: the AND circuit',parts:AND,rule:(a,b)=>!!(a&&b),
+  text:'<p>A <b>truth table</b> shows what happens for every combination of switches. Tap each <b>?</b> to predict whether the bulb is ON or OFF.</p>',
+  why:'With switches in series, ANY open switch makes a gap – so both must be ON.'}),
+ (st,api)=>truth(st,api,{kicker:'Step 3 · Truth table',title:'Predict: the OR circuit',parts:OR,cols:3,rows:3,rule:(a,b)=>!!(a||b),
+  text:'<p>Now the switches are in <b>parallel</b>. Tap each <b>?</b> to predict the bulb.</p>',
+  why:'With switches in parallel, the current only needs ONE closed path – so either switch works.'}),
+ (st,api)=>Circuit.challenge(st,api,{kicker:'Step 4 · Build it',title:'The bank vault',
+  text:'<p>The vault door is opened by a <b>motor</b>. For safety, the manager <b>and</b> the cashier must both turn their key switches before the motor will run.</p><p>Build it, then test every switch position.</p>',
+  goals:['Use a motor and two switches','The motor only runs when BOTH switches are on'],
+  board:{parts:{'v-0-0':'battery!'}},tools:['switch','motor','wire','bin'],
+  check:b=>{const s=b.summary(),n=s.motors.length>=1&&s.switches.length===2;if(!n)return{g:[0,0]};
+   const cs=b.combos();if(cs.some(c=>c.res.short))return{g:[1,0],msg:'⚠️ A short circuit somewhere – check your wires.',kind:'bad'};
+   const ok=cs.every(c=>lit(c,'motors')===Object.values(c.st).every(v=>v));
+   if(!ok&&cs.filter(c=>lit(c,'motors')).length>1)return{g:[1,0],msg:'One key on its own can open the vault – that\'s OR logic! Put the switches in series.',kind:'warn'};
+   return{g:[1,ok],done:ok};},
+  win:'✅ Vault secured! Two switches in series = <b>AND</b>. Both keys are needed.'}),
+ (st,api)=>Circuit.challenge(st,api,{kicker:'Step 5 · Build it',title:'Front door, back door',
+  text:'<p>A house has a <b>push switch</b> at the front door <b>and</b> one at the back door. Pressing <b>either</b> one should sound the same <b>buzzer</b>.</p>',
+  goals:['Use two push switches and a buzzer','Either button rings the buzzer','Silent when nobody presses'],
+  board:{cols:3,rows:3,S:100,parts:{'v-0-0':'battery!'}},tools:['push','buzzer','wire','bin'],
+  hint:'Hint: give each push switch its own branch.',
+  check:b=>{const s=b.summary(),n=s.buzzers.length>=1&&s.pushes.length===2;if(!n)return{g:[0,0,0]};
+   const cs=b.combos();if(cs.some(c=>c.res.short))return{g:[1,0,0],msg:'⚠️ A short circuit somewhere – check your wires.',kind:'bad'};
+   const quiet=!lit(cs[0],'buzzers'),either=cs.every(c=>lit(c,'buzzers')===Object.values(c.st).some(v=>v));
+   if(quiet&&!either&&lit(cs[3],'buzzers'))return{g:[1,0,1],msg:'You have to press both buttons at once – that\'s AND logic! Put the push switches in parallel.',kind:'warn'};
+   return{g:[1,either,quiet],done:either&&quiet};},
+  win:'✅ Ding dong! Two switches in parallel = <b>OR</b>. Either visitor can ring.'}),
+ (st,api)=>quiz(st,api,{title:'AND or OR in real life?',qs:[
+  {q:'A washing machine only starts if the door is closed AND the start button is pressed. How should the two switches be connected?',opts:['In series (AND)','In parallel (OR)'],a:0,two:true,why:'Both conditions must be true, so the switches go in series.'},
+  {q:'A car\'s inside light comes on if the driver\'s door OR the passenger\'s door is opened. How are the door switches connected?',opts:['In parallel (OR)','In series (AND)'],a:0,two:true,why:'Either door will do, so the switches are in parallel.'},
+  {q:'A paper guillotine in the DT room only cuts when the operator presses TWO buttons, one with each hand. Why?',opts:['So both hands are safely away from the blade (AND)','So it can be used by two people (OR)','To save electricity'],a:0,why:'A two-handed control uses AND logic to keep fingers safe.'},
+  {q:'A burglar alarm sounds if the window sensor OR the door sensor is triggered. What happens if both are triggered?',opts:['The alarm sounds','The alarm stays quiet','The alarm breaks'],a:0,why:'OR means one, the other, or both.'}
+ ]})
+]});
+</script>
+</body>
+</html>

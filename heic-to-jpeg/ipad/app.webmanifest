@@ -1,0 +1,21 @@
+{
+ "name": "HEIC to JPEG \u00b7 BSP",
+ "short_name": "HEIC to JPEG",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#1f2328",
+ "theme_color": "#1f2328",
+ "icons": [
+  {
+   "src": "../../book-kit/icons/heic-to-jpeg-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "../../book-kit/icons/heic-to-jpeg-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}

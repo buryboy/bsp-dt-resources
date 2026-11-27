@@ -1,0 +1,21 @@
+{
+ "name": "Polymers \u00b7 BSP D&T",
+ "short_name": "Polymers",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#1f4d36",
+ "theme_color": "#1f4d36",
+ "icons": [
+  {
+   "src": "../../book-kit/icons/polymers-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "../../book-kit/icons/polymers-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}

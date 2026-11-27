@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Processes lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a finishing workshop's test bench: try a finish, watch what happens
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Shaping, forming and processes<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.2.5, 3.2.8</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+
+const S=[
+{t:'Wasting',c:'#C2410C',lead:'Wasting processes shape a product by removing material. The removed material is waste.',
+ cards:[['Examples','Sawing, drilling, filing, planing, turning, milling, laser cutting.'],['Hand or machine','Hand tools for one-offs; CNC machines for accurate batches.'],['Downside','Creates waste (chips, sawdust, offcuts) that has to be managed.'],['Reduce it','Nest parts close together (tessellate) and reuse offcuts.']],
+ demo:{type:'waste',title:'Lab test: turning a chair leg',q:'A 60 mm square blank is turned into a round leg. Roughly how much of the wood becomes waste?',opts:['About 5%','About 40%','About 90%'],right:1,ms:5000,
+  res:'Turning a square into a shaped round leg removes the corners and the shaping, often 30 to 50% of the blank. All of it ends up as shavings. (Illustrative.)'}},
+{t:'Deforming',c:'#2478B3',lead:'Deforming bends or shapes material without adding or removing any.',
+ cards:[['Line bending','Acrylic heated along a line on a strip heater, then bent in a former.'],['Vacuum forming','A heated sheet of HIPS is sucked over a mould.'],['Laminating','Thin layers of wood glued and clamped round a former keep the curve.'],['Metal and card','Metal bent in a vice or folder; card scored and folded.']],
+ demo:{type:'vac',title:'Lab test: vacuum forming a tray',q:'Why do vacuum-forming moulds have sloping sides (a draft angle)?',opts:['To look nicer','So the mould comes out of the plastic','To use less plastic'],right:1,ms:6000,
+  res:'Sloping sides and rounded corners let the mould be pulled out of the formed sheet. Straight sides grip the mould and the plastic may tear.'}},
+{t:'Reforming',c:'#7449B0',lead:'Reforming melts material and shapes it in a mould. It suits large numbers.',
+ cards:[['Injection moulding','Polymer granules melted by a heated screw and forced into a steel mould.'],['Blow moulding','Air blows a hot tube of plastic out against a mould: bottles.'],['Casting','Molten metal (pewter, aluminium) poured into a sand or die mould.'],['Cost','Moulds are very expensive, but each part then costs very little.']],
+ demo:{type:'inject',title:'Lab test: injection moulding a cap',q:'In injection moulding, what happens to the plastic granules first?',opts:['They are melted by heat and a screw','They are cut by a laser','They are glued together'],right:0,ms:6000,
+  res:'Granules fall from the hopper, are heated and pushed along by a turning screw until molten, then forced into the mould. The part cools and is ejected.'}},
+{t:'Addition and joining',c:'#2E8B57',lead:'Addition processes join parts or build material up.',
+ cards:[['Timber','PVA, screws, dowels, mortise and tenon, finger joints.'],['Metal','Rivets, nuts and bolts, soldering, brazing, welding.'],['Polymers','Tensol cement, screws, snap fits.'],['Textiles and electronics','Seams, overlocking; soldering components to a circuit board.'],['3D printing','Builds a part layer by layer from CAD.']],
+ demo:{type:'solder',title:'Lab test: a good solder joint',q:'What does a good solder joint look like?',opts:['A dull, round blob','A shiny, smooth cone','Wire wrapped loosely'],right:1,ms:5000,
+  res:'Heat the pad and the leg together, then feed in solder. A good joint is a shiny cone. A dull ball (dry joint) may not conduct.'}},
+{t:'Route cards',c:'#8B5A2B',lead:'A route card is the plan a factory follows: every step in order, the tool or machine, and safety and quality points.',
+ cards:[['Usual order','Mark out or CAD → cut → shape → join → finish → check.'],['Name tools','"Cut with a tenon saw", not just "cut".'],['Safety','Guards, PPE, clamps, extraction.'],['Quality','Measure against the drawing, check against a template.']],
+ demo:{type:'route',title:'Lab test: sort the steps',q:'For a pine box, which step comes FIRST?',opts:['Glue and pin','Mark out','Apply finish'],right:1,ms:5000,
+  res:'Mark out first, then cut, smooth, join and finish. Finishing before joining would stop the glue sticking.'}},
+{t:'Quick fire',c:'#14213d',lead:'Say the answer before you tap. Then the exam question.',
+ cards:[['Bending acrylic','<em>Strip heater</em> + former'],['Shaping HIPS over a mould','<em>Vacuum forming</em>'],['Millions of bottle caps','<em>Injection moulding</em>'],['Curved wooden chair back','<em>Laminating</em>'],['Pouring molten pewter','<em>Casting</em>'],['Joining components to a PCB','<em>Soldering</em>']],
+ exam:{q:'Describe how a vacuum-formed tray is made from HIPS. (4 marks)',a:'Clamp the HIPS sheet in the frame (1); heat until soft and flexible (1); raise the mould and switch on the vacuum to suck the sheet over it (1); cool, remove the mould and trim the excess (1).'}}
+];
+const DEMOS={
+waste:(t)=>{const k=clamp(t*1.2);let p='',q='';for(let i=0;i<=40;i++){const x=80+i*11,r=lerp(60,40+12*Math.sin(i/40*Math.PI*3)+Math.max(0,8-(i%13)),k);p+=`${x},${150-r} `;q=`${x},${150+r} `+q}
+ return `<rect x="80" y="90" width="440" height="120" fill="#e9d3a8" stroke="#8b5a2b" stroke-dasharray="5 4"/><polygon points="${p}${q}" fill="#d9b382" stroke="#8b5a2b" stroke-width="2"/>`+T(300,250,`Waste so far: ${Math.round(k*40)}%`,'text-anchor="middle" font-weight="700" font-size="18" fill="#c2410c"')+T(300,70,'dashed = original square blank','text-anchor="middle" font-size="13"')},
+vac:(t)=>{const heat=clamp(t*3),up=clamp(t*3-1),s=clamp(t*3-2);const col=heat>0.5?'#e07b39':'#9aa5ae';const my=lerp(250,130,up);
+ const X=[40,200,215,385,400,560],F=[230,230,130,130,230,230];const pts=X.map((x,i)=>`${x},${lerp(120,F[i],s)}`).join(' ');
+ let o=`<rect x="20" y="40" width="560" height="12" rx="4" fill="#c2410c" opacity="${heat>0&&up<1?1:0.15}"/>`+T(300,32,'heater','text-anchor="middle" font-size="13"');
+ o+=`<polygon points="200,${my+100} 215,${my} 385,${my} 400,${my+100}" fill="#8b5a2b"/><rect x="40" y="${my+100}" width="520" height="8" fill="#5b6670"/>`;
+ o+=`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="6" stroke-linejoin="round"/>`+T(300,212,'mould (sloping sides)','text-anchor="middle" font-size="13" fill="#fff"');
+ return o+T(300,290,s>0?'Vacuum on: sheet sucked over the mould':up>0?'Mould rises into the soft sheet':'Heating the HIPS sheet','text-anchor="middle" font-weight="700"')},
+inject:(t)=>{const melt=clamp(t*2),fill=clamp(t*2-1);let o=`<polygon points="60,40 120,40 100,90 80,90" fill="#cdbfa4" stroke="#5b6670"/>`+T(90,30,'hopper','text-anchor="middle" font-size="13"')+`<rect x="60" y="90" width="300" height="50" fill="#5b6670"/>`;
+ for(let i=0;i<10;i++){const x=70+i*28,m=x<70+280*melt;o+=`<circle cx="${x}" cy="115" r="${m?12:6}" fill="${m?'#e07b39':'#fff'}"/>`}
+ o+=`<rect x="380" y="60" width="160" height="110" fill="none" stroke="#1b2a33" stroke-width="6"/><rect x="380" y="${170-110*fill}" width="160" height="${110*fill}" fill="#e07b39"/>`+T(460,195,'steel mould','text-anchor="middle" font-size="13"')+T(200,170,'heated screw','text-anchor="middle" font-size="13" fill="#fff"');
+ return o+T(300,260,fill>=1?'Cool, open, eject the cap':fill>0?'Injecting into the mould':'Granules melting','text-anchor="middle" font-weight="700"')},
+solder:(t)=>{const k=clamp(t*1.3);return `<rect x="60" y="180" width="200" height="16" fill="#2e8b57"/><circle cx="160" cy="180" r="14" fill="#c99a06"/><line x1="160" y1="60" x2="160" y2="200" stroke="#999" stroke-width="5"/><path d="M${160-30*k} 180 Q160 ${180-60*k} ${160+30*k} 180Z" fill="#cfd6dc" stroke="#9aa5ae"/>`+T(160,240,'Good: shiny cone','text-anchor="middle" font-weight="700" fill="#2e8b57"')+
+ `<rect x="340" y="180" width="200" height="16" fill="#2e8b57"/><circle cx="440" cy="180" r="14" fill="#c99a06"/><line x1="440" y1="60" x2="440" y2="200" stroke="#999" stroke-width="5"/><circle cx="440" cy="${170}" r="${22*k}" fill="#8a8f94"/>`+T(440,240,'Bad: dull ball (dry joint)','text-anchor="middle" font-weight="700" fill="#c2410c"')},
+route:(t)=>{const st=['Mark out (try square)','Cut (tenon saw)','Smooth (sand / plane)','Join (PVA and pins)','Finish (wax / oil)'];const k=Math.floor(t*5.5);let o='';
+ st.forEach((s,i)=>{const on=i<k;o+=`<rect x="${40+i*8}" y="${30+i*52}" width="420" height="42" rx="8" fill="${on?'#8b5a2b':'#fff'}" stroke="#8b5a2b" stroke-width="2"/>`+T(60+i*8,57+i*52,(i+1)+'. '+s,'fill="'+(on?'#fff':'#8b5a2b')+'" font-weight="700"')});return o}
+};
+
+
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const AR=(x1,y1,x2,y2,c='#c2410c',w=5)=>{const a=Math.atan2(y2-y1,x2-x1),s=12;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/><polygon points="${x2},${y2} ${x2-s*Math.cos(a-.5)},${y2-s*Math.sin(a-.5)} ${x2-s*Math.cos(a+.5)},${y2-s*Math.sin(a+.5)}" fill="${c}"/>`};
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">${d.run||'Run the test'}</button><button class="go sec" id="reset">Reset</button>${(d.buttons||[]).map(b=>`<button class="opt" data-b="${b}">${b}</button>`).join('')}${d.slider?`<input type="range" id="slider" min="0" max="1000" value="0" aria-label="${d.slider}"><span class="clock" id="clock"></span>`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"${right?'':' style="grid-template-columns:1fr"'}><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt[data-k]').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run'),sl=document.getElementById('slider'),ck=document.getElementById('clock');
+ const D=DEMOS[d.type];let state={mode:d.mode0||(d.buttons||[])[0]};
+ const draw=t=>{st.innerHTML=`<svg viewBox="0 0 600 300">${D(t,state,d)}</svg>`;if(sl){sl.value=Math.round(t*1000);if(d.clock)ck.textContent=d.clock(t)}};
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,done=finish)=>{cancelAnimationFrame(anim);const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);draw(t);if(t<1)anim=requestAnimationFrame(step);else done()};anim=requestAnimationFrame(step)};
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));state.mode=d.mode0||(d.buttons||[])[0];draw(0)};
+ run.onclick=()=>{reset();if(d.runMode)state.mode=d.runMode;play(d.ms||3000)};
+ document.getElementById('reset').onclick=reset;
+ main.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.b;play(d.bms||1600,()=>{})});
+ if(sl)sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/1000);if(sl.value>=1000)finish()};
+ draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+
+}
+</script>
+<script>
+/* Fit to the board: scale each section up so it fills the screen and can be read from the back of the room.
+   It measures the section with every card opened, so tapping a card never makes the page jump or scroll. */
+(() => { const main = document.getElementById('main'); if (!main || !('zoom' in main.style)) return; let busy = false, t = 0;
+  const fit = () => { if (busy) return; busy = true;
+    const side = innerWidth > 1000 ? main.getBoundingClientRect().left : 0, W = innerWidth - side, H = innerHeight;
+    if (innerWidth <= 1000) { main.style.zoom = ''; main.style.width = ''; main.style.height = ''; busy = false; return; }
+    const closed = [...main.querySelectorAll('.card:not(.open)')], hidden = [...main.querySelectorAll('.result:not(.show)')];
+    closed.forEach((c) => c.classList.add('open')); hidden.forEach((r) => r.classList.add('show'));
+    const set = (z) => { main.style.zoom = z; main.style.width = (W / z) + 'px'; main.style.height = (H / z) + 'px'; };
+    let lo = 1, hi = 2.6; for (let k = 0; k < 9; k++) { const z = (lo + hi) / 2; set(z); if (main.scrollHeight <= main.clientHeight + 1 && main.scrollWidth <= main.clientWidth + 1) lo = z; else hi = z; }
+    set(lo); closed.forEach((c) => c.classList.remove('open')); hidden.forEach((r) => r.classList.remove('show')); main.scrollTop = 0;
+    requestAnimationFrame(() => { busy = false; }); };
+  const later = () => { clearTimeout(t); t = setTimeout(fit, 60); };
+  new MutationObserver(later).observe(main, { childList: true }); addEventListener('resize', later); addEventListener('load', later); if (document.fonts && document.fonts.ready) document.fonts.ready.then(later); later();
+})();
+</script>
+</body>
+</html>

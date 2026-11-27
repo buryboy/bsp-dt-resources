@@ -1,0 +1,26 @@
+// Lesson settings for the Metals & alloys workbook.
+window.BOOK_CONFIG = {
+  lesson: "metals-alloys-y10",
+  title: "Metals & alloys",
+  subtitle: "Ferrous, non-ferrous and alloys: where metals come from and how to choose them.",
+  course: 'AQA GCSE Design & Technology · Year 10',
+  emailDomain: 'bspcloud.net',
+  classes: ['10A', '10B', '10C', '10D', '10E', 'Other'],
+  backend: '',
+  mis: {
+    "ferrous-meaning": "Unsure that ferrous = contains iron",
+    "alloy-meaning": "Thinks an alloy is a pure metal, a coating, or a compound formed by re",
+    "alloy-contents": "Wrong ingredients",
+    "carbon-rule": "Thinks more carbon makes steel softer/more ductile",
+    "steel-mixup": "Mixes up low carbon steel, high carbon steel and cast iron properties/",
+    "nonferrous-mixup": "Mixes up aluminium, copper, tin, zinc properties/uses",
+    "alloy-mixup": "Mixes up brass, stainless steel, high speed steel properties/uses",
+    "stainless-family": "Thinks stainless steel is non-ferrous / a pure metal",
+    "rust-conditions": "Thinks rust needs only water or only air",
+    "galvanise-meaning": "Mixes up galvanising with alloying/plating with tin/painting",
+    "tin-can": "Thinks food cans are solid tin / aluminium foil is tin",
+    "ore-extraction": "Mixes up blast furnace and electrolysis, or iron ore and bauxite",
+    "finite-recycle": "Thinks metals are renewable, or lose quality when recycled",
+    "property-word": "Uses the wrong property word",
+  },
+};

@@ -1,0 +1,13 @@
+{
+ "name": "Sound Circuit Build Guide · BSP D&T",
+ "short_name": "Circuit build",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#8f3d22",
+ "theme_color": "#8f3d22",
+ "icons": [
+  {"src": "../../book-kit/icons/circuit-build-192.png", "sizes": "192x192", "type": "image/png"},
+  {"src": "../../book-kit/icons/circuit-build-512.png", "sizes": "512x512", "type": "image/png"}
+ ]
+}

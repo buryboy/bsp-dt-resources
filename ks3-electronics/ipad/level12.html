@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../book-kit/solo-pages.js?h=e80f7906"></script>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/ks3-electronics-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KS3 Electronics – Interactive Workbook">
+<meta name="theme-color" content="#1f4d36">
+<meta name="robots" content="noindex">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 12 · Wire It Up</title>
+<link rel="stylesheet" href="../common.css?h=1095ee77">
+<script type="application/json" id="level-info">
+{"t":"Wire It Up","d":"A puzzle game: tap the tiles to rotate them and connect every bulb into a working circuit – without making a short circuit!","s":"Game · puzzle","c":"#fb8500","emoji":"🧩💡"}
+</script>
+<style>
+.pz{display:grid;gap:4px;margin:12px auto 0;background:#13233b;padding:8px;border-radius:18px;width:fit-content;max-width:100%}
+.tile{width:min(17vw,104px);height:min(17vw,104px);background:#1d3150;border-radius:10px;border:0;padding:0;cursor:pointer;touch-action:manipulation;overflow:hidden}
+.tile.fixed{cursor:default;background:#24406a}
+.tile svg{width:100%;height:100%;display:block;transition:transform .16s ease-out}
+.tile .w{stroke:#8aa4c4;stroke-width:12;stroke-linecap:round;fill:none}
+.tile.live .w{stroke:var(--orange);filter:drop-shadow(0 0 5px #ff9f1c)}
+.tile.shorted .w{stroke:var(--red)}
+.tile .bl{fill:#1d3150;stroke:#cfe0f5;stroke-width:5}
+.tile.lit .bl{fill:#ffd23f;stroke:#fff3b0;filter:drop-shadow(0 0 12px #ffd23f)}
+.tile .x{stroke:#cfe0f5;stroke-width:5}
+.tile.lit .x{stroke:#8a6a00}
+.hud{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.hud .big{font:700 20px Fredoka}
+</style>
+</head>
+<body>
+<script src="../common.js?h=daf867c1"></script>
+<script>
+/* sides: N=1 E=2 S=4 W=8 */
+const rot=m=>((m<<1)|(m>>3))&15, rotN=(m,n)=>{for(let i=0;i<n;i++)m=rot(m);return m;};
+const BASE={I:5,L:3,T:7,X:15,B:5,P:10};
+const DIRS=[[1,0,-1],[2,1,0],[4,0,1],[8,-1,0]]; // bit,dx,dy
+const OPP={1:4,2:8,4:1,8:2};
+function loop(path){const e=[];path.forEach((p,i)=>e.push([p,path[(i+1)%path.length]]));return e;}
+const PUZ=[
+ {name:'Warm up',w:3,h:2,bat:[1,1],bulbs:[[1,0]],edges:loop([[0,1],[1,1],[2,1],[2,0],[1,0],[0,0]])},
+ {name:'The long way round',w:4,h:3,bat:[1,2],bulbs:[[2,0]],edges:loop([[0,2],[1,2],[2,2],[3,2],[3,1],[3,0],[2,0],[1,0],[0,0],[0,1]])},
+ {name:'Two in series',w:4,h:3,bat:[1,2],bulbs:[[1,0],[3,1]],edges:loop([[0,2],[1,2],[2,2],[3,2],[3,1],[3,0],[2,0],[1,0],[0,0],[0,1]])},
+ {name:'Parallel lines',w:3,h:3,bat:[1,2],bulbs:[[1,0],[1,1]],edges:[...loop([[0,2],[1,2],[2,2],[2,1],[2,0],[1,0],[0,0],[0,1]]),[[0,1],[1,1]],[[1,1],[2,1]]]},
+ {name:'The snake',w:5,h:4,bat:[2,3],bulbs:[[2,0],[3,0]],edges:loop([[0,3],[1,3],[2,3],[3,3],[4,3],[4,2],[3,2],[3,1],[4,1],[4,0],[3,0],[2,0],[1,0],[0,0],[0,1],[1,1],[1,2],[0,2]])},
+ {name:'Grand finale',w:4,h:4,bat:[1,3],bulbs:[[2,0],[1,1]],edges:[...loop([[0,3],[1,3],[2,3],[3,3],[3,2],[3,1],[3,0],[2,0],[1,0],[0,0],[0,1],[0,2]]),[[0,1],[1,1]],[[1,1],[2,1]],[[2,1],[3,1]]]}
+];
+
+function build(P){
+ const mask={},key=(x,y)=>x+','+y;
+ P.edges.forEach(([a,b])=>{const dx=b[0]-a[0],dy=b[1]-a[1];const d=DIRS.find(d=>d[1]===dx&&d[2]===dy);mask[key(...a)]=(mask[key(...a)]||0)|d[0];mask[key(...b)]=(mask[key(...b)]||0)|OPP[d[0]];});
+ const isBulb=(x,y)=>P.bulbs.some(b=>b[0]===x&&b[1]===y);
+ const tiles=[];
+ for(let y=0;y<P.h;y++)for(let x=0;x<P.w;x++){
+  const m=mask[key(x,y)];let t;
+  if(x===P.bat[0]&&y===P.bat[1]){t={type:'P',r:0,sol:0,fixed:true};}
+  else if(m){const bits=[1,2,4,8].filter(b=>m&b).length;const type=bits===4?'X':bits===3?'T':(m===5||m===10)?(isBulb(x,y)?'B':'I'):'L';
+   const sol=[0,1,2,3].find(r=>rotN(BASE[type],r)===m);t={type,sol,r:0};}
+  else{const type=['I','L','L','T'][Math.random()*4|0];t={type,sol:null,r:0,decoy:true};}
+  t.x=x;t.y=y;tiles.push(t);}
+ // scramble
+ do{tiles.forEach(t=>{if(!t.fixed)t.r=Math.random()*4|0;});}while(evaluate(P,tiles).win);
+ tiles.forEach(t=>t.deg=t.r*90);
+ return tiles;
+}
+function evaluate(P,tiles){
+ // union-find over ports id = cellIndex*4 + side(0..3)
+ const n=P.w*P.h*4;const at=(x,y)=>tiles[y*P.w+x];
+ const mk=()=>{const p=[...Array(n).keys()];const f=i=>p[i]===i?i:(p[i]=f(p[i]));return{f,u:(a,b)=>{p[f(a)]=f(b);}};};
+ const sides=t=>rotN(BASE[t.type],t.r);
+ const id=(t,bit)=>(t.y*P.w+t.x)*4+[1,2,4,8].indexOf(bit);
+ function uf(skip){const U=mk();
+  tiles.forEach(t=>{const m=sides(t),ps=[1,2,4,8].filter(b=>m&b);
+   if(t.type==='P')return;if(t.type==='B'&&(skip==='all'||skip===t))return;
+   for(let i=1;i<ps.length;i++)U.u(id(t,ps[0]),id(t,ps[i]));
+   DIRS.forEach(([b,dx,dy])=>{if(!(m&b))return;const nx=t.x+dx,ny=t.y+dy;if(nx<0||ny<0||nx>=P.w||ny>=P.h)return;const o=at(nx,ny);if(sides(o)&OPP[b])U.u(id(t,b),id(o,OPP[b]));});});
+  // battery ports still connect to neighbours
+  const bt=at(...P.bat);DIRS.forEach(([b,dx,dy])=>{if(!(10&b))return;const o=at(bt.x+dx,bt.y+dy);if(o&&sides(o)&OPP[b])U.u(id(bt,b),id(o,OPP[b]));});
+  return U;}
+ const bt=at(...P.bat),plus=id(bt,8),minus=id(bt,2);
+ const noB=uf('all');const short=noB.f(plus)===noB.f(minus);
+ const all=uf(null);const closed=all.f(plus)===all.f(minus);
+ const lit=new Set();
+ if(closed&&!short)tiles.filter(t=>t.type==='B').forEach(b=>{const U=uf(b);const ps=[1,2,4,8].filter(x=>sides(b)&x);const a=U.f(id(b,ps[0])),c=U.f(id(b,ps[1])),p=U.f(plus),m=U.f(minus);if((a===p&&c===m)||(a===m&&c===p))lit.add(b);});
+ const live=new Set();if(closed)tiles.forEach(t=>{const ps=[1,2,4,8].filter(x=>sides(t)&x);if(t.type==='P'||ps.some(b=>{const r=all.f(id(t,b));return r===all.f(plus)||r===all.f(minus);}))live.add(t);});
+ const bulbs=tiles.filter(t=>t.type==='B');
+ return{short,closed,lit,live,win:!short&&bulbs.length>0&&bulbs.every(b=>lit.has(b))};
+}
+function art(t){
+ const arm={1:'M50,50 L50,0',2:'M50,50 L100,50',4:'M50,50 L50,100',8:'M50,50 L0,50'};
+ const m=BASE[t.type];let s=`<path class="w" d="${[1,2,4,8].filter(b=>m&b).map(b=>arm[b]).join(' ')}"/>`;
+ if(t.type==='B')s=`<path class="w" d="M50,0 L50,28 M50,72 L50,100"/><circle class="bl" cx="50" cy="50" r="22"/><path class="x" d="M35,35 L65,65 M35,65 L65,35"/>`;
+ if(t.type==='P')s=`<path class="w" d="M0,50 L38,50 M62,50 L100,50"/><line x1="40" y1="24" x2="40" y2="76" stroke="#fff" stroke-width="5"/><line x1="58" y1="36" x2="58" y2="64" stroke="#fff" stroke-width="10"/><text x="22" y="30" fill="#ffd23f" font-family="Fredoka" font-weight="700" font-size="22">+</text>`;
+ if(t.type==='X'||t.type==='T')s+=`<circle cx="50" cy="50" r="10" fill="#8aa4c4" class="dot"/>`;
+ return `<svg viewBox="0 0 100 100" style="transform:rotate(${t.deg||0}deg)">${s}</svg>`;
+}
+
+Level({n:12,title:'Wire It Up',summary:'a working circuit needs a complete loop from + to − that goes THROUGH the bulbs. A path that skips the bulbs is a short circuit.',steps:[
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  c.append(h('div',{class:'kicker'},'Puzzle game'),h('h2',{},'Wire It Up 🧩'),
+   h('div',{class:'lead',html:'<p>Each puzzle has a battery and some bulbs. <b>Tap a tile to rotate it.</b> Connect the wires so that every bulb lights up.</p><p>⚠️ Watch out: if the wires make a path from + to − that <b>misses the bulbs</b>, it\'s a <b style="color:var(--red)">short circuit</b>.</p><p>Solve each puzzle close to the target number of moves to score 2 points.</p>'}),
+   h('div',{class:'row'},api.nextBtn('Start puzzles →')));
+ },
+ (st,api)=>{
+  let pi=0;
+  function show(){
+   st.innerHTML='';const P=PUZ[pi];const tiles=build(P);let moves=0,done=false;
+   const par=tiles.reduce((s,t)=>{if(t.fixed||t.sol==null)return s;const sym=(t.type==='I'||t.type==='B')?2:t.type==='X'?1:4;return s+((t.sol-t.r)%sym+sym)%sym;},0);
+   const c=h('div',{class:'card'});st.append(c);
+   const mv=h('span',{class:'big'},'Moves: 0'),stat=h('div',{class:'msg'},'Tap tiles to rotate them.');
+   c.append(h('div',{class:'hud'},h('div',{},h('div',{class:'kicker'},`Puzzle ${pi+1} of ${PUZ.length}`),h('h2',{style:'margin:0'},P.name)),h('div',{class:'row'},mv,h('span',{class:'big',style:'color:#5a6f8c'},`Target: ${par+2}`))));
+   const g=h('div',{class:'pz',style:`grid-template-columns:repeat(${P.w},auto)`});c.append(g,stat);const after=h('div');c.append(after);
+   const els=tiles.map(t=>{const b=h('button',{class:'tile'+(t.fixed?' fixed':''),html:art(t)});
+    b.onclick=()=>{if(done||t.fixed)return;Sfx.ac();Sfx.click();t.r=(t.r+1)%4;t.deg+=90;b.firstChild.style.transform=`rotate(${t.deg}deg)`;moves++;mv.textContent='Moves: '+moves;refresh();};
+    g.append(b);return b;});
+   function refresh(){const e=evaluate(P,tiles);
+    els.forEach((b,i)=>{const t=tiles[i];b.classList.toggle('live',e.live.has(t)&&!e.short);b.classList.toggle('shorted',e.short&&e.live.has(t));b.classList.toggle('lit',e.lit.has(t));});
+    if(e.short){stat.className='msg bad';stat.textContent='⚠️ Short circuit! The current has a path back to the battery that skips the bulbs.';}
+    else if(e.closed&&!e.win){stat.className='msg warn';stat.textContent=`Complete circuit – but ${[...tiles].filter(t=>t.type==='B'&&!e.lit.has(t)).length} bulb(s) still not lit.`;}
+    else if(!e.win){stat.className='msg';stat.textContent='Not a complete loop yet. Keep rotating!';}
+    if(e.win&&!done){done=true;const pts=moves<=par+2?2:1;api.add(pts,2);Sfx.win();confetti(90);
+     stat.className='msg good';stat.textContent=`💡 Lights on! Solved in ${moves} moves. +${pts}`;
+     after.append(h('div',{class:'row',style:'margin-top:12px'},h('button',{class:'btn go',onclick:()=>{pi++;pi<PUZ.length?show():api.next();}},pi<PUZ.length-1?'Next puzzle →':'Finish level →')));}}
+   refresh();
+  }
+  show();
+ }
+]});
+</script>
+</body>
+</html>

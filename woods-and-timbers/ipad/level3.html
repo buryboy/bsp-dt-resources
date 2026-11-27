@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../book-kit/solo-pages.js?h=e80f7906"></script>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/woods-and-timbers-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Woods &amp; Timbers">
+<meta name="theme-color" content="#1f4d36">
+<meta name="robots" content="noindex">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Woods &amp; Timbers · Level 3: Slice the Log</title>
+<link href="../../fonts/fonts.css?h=2b91edd6" rel="stylesheet">
+<style>
+:root{--forest:#1f4d36;--leaf:#4f9a35;--cream:#fff8ec;--wood:#8a5a32;--ink:#1d2b24;--line:#e8d9bd;--bad:#e2683c;--gold:#ffe36e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;overflow:hidden;font-family:Nunito,system-ui,sans-serif;color:var(--ink)}
+body{background:radial-gradient(1400px 800px at 50% -10%,#eef8e6,#d3e9c6 55%,#b5d4a4)}
+body.flow{display:flex;flex-direction:column}
+header{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:14px;padding:14px 16px;pointer-events:none;z-index:5}
+body.flow header{position:relative;flex:none}
+.brand .lvl{font:600 12px Fredoka,sans-serif;letter-spacing:.12em;background:var(--forest);color:#fff;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.brand h1{margin:5px 0 0;font:700 26px Fredoka,sans-serif;color:var(--forest);text-shadow:0 1px 0 #ffffffaa;white-space:nowrap}
+#steps{display:flex;gap:6px;list-style:none;margin:0 auto;padding:0}
+#steps li{font:600 14px Fredoka,sans-serif;padding:7px 14px;border-radius:99px;background:#ffffffc0;color:#7a8a80;transition:.3s;white-space:nowrap}
+#steps li.on{background:var(--forest);color:#fff;transform:scale(1.06)}
+#steps li.done{background:#d3ebc8;color:var(--forest)}
+.hbtns{display:flex;gap:8px;margin-left:auto;pointer-events:auto}
+#score,.hbtn{font:700 18px Fredoka,sans-serif;background:#fff;padding:7px 15px;border-radius:99px;box-shadow:0 3px 10px #0002;border:0;color:var(--ink);text-decoration:none;cursor:pointer;white-space:nowrap}
+#score.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.3)}}
+#stage{flex:1;position:relative;min-height:0;display:flex;align-items:center;justify-content:center;padding:4px 16px 12px}
+#panel{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(720px,calc(100% - 24px));background:var(--cream);border-radius:24px;padding:16px 20px;box-shadow:0 10px 30px #0003;border:3px solid var(--line);z-index:5;max-height:46vh;overflow:auto}
+body.flow #panel{position:relative;left:auto;bottom:auto;transform:none;margin:0 auto 14px;flex:none;max-height:40vh}
+#panel h2{font:700 23px Fredoka,sans-serif;margin:0 0 6px;color:var(--forest)}
+#panel p{margin:6px 0 12px;font-size:17px;line-height:1.45}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;background:#efe2c9;border-radius:99px;padding:4px}
+.seg button{border:0;background:none;font:600 17px Fredoka,sans-serif;padding:10px 16px;border-radius:99px;color:#6b5a40;cursor:pointer}
+.seg button.on{background:#fff;color:var(--forest);box-shadow:0 2px 6px #0002}
+.cta{font:700 20px Fredoka,sans-serif;border:0;border-radius:16px;background:var(--forest);color:#fff;padding:14px 22px;min-height:56px;box-shadow:0 5px 0 #0f2c1e;cursor:pointer;width:100%;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.cta:active{transform:translateY(4px);box-shadow:0 1px 0 #0f2c1e}
+.cta:disabled{background:#b9c2bc;box-shadow:0 5px 0 #98a29b;color:#f3f3f3}
+.cta.alt{background:#c9762c;box-shadow:0 5px 0 #8a4c15}
+.ghost{font:700 18px Fredoka,sans-serif;border:3px solid var(--forest);border-radius:16px;background:#fff;color:var(--forest);padding:12px 18px;min-height:56px;cursor:pointer;flex:1;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.ghost.on{background:var(--forest);color:#fff}
+.fact{background:#fff;border-radius:14px;padding:12px 14px;border:2px dashed var(--line)}
+.tag{display:inline-block;font:700 15px Fredoka,sans-serif;padding:4px 12px;border-radius:99px;background:var(--gold);color:#5a4300;margin-bottom:4px}
+.tag.bad{background:#ffd6c7;color:#7a2a0c}
+.dots{display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.dots i{width:16px;height:16px;border-radius:50%;background:#e6d8bd}
+.dots i.ok{background:var(--leaf)}.dots i.meh{background:#e9a23b}.dots i.no{background:var(--bad)}
+#prompt{position:fixed;left:50%;top:84px;transform:translateX(-50%) scale(0);background:#fff;border-radius:99px;padding:12px 26px;font:700 24px Fredoka,sans-serif;color:var(--ink);box-shadow:0 8px 24px #0003;z-index:6;transition:transform .35s cubic-bezier(.3,1.6,.5,1);white-space:nowrap;pointer-events:none}
+#prompt.show{transform:translateX(-50%) scale(1)}
+#prompt em{font-style:normal;color:#b8641c}
+#toast{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%) scale(.6);opacity:0;background:#fff;border-radius:20px;padding:14px 22px;font:700 22px Fredoka,sans-serif;box-shadow:0 10px 30px #0004;z-index:40;pointer-events:none;transition:.25s;text-align:center;max-width:86vw}
+#toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#toast.good{border:4px solid var(--leaf)}#toast.bad{border:4px solid var(--bad)}
+.leafc{position:fixed;top:-50px;font-size:34px;z-index:60;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(600deg)}}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.shake{animation:shake .4s}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.stars{font-size:44px;letter-spacing:6px;margin:4px 0}
+.dragging{position:fixed!important;z-index:50!important;pointer-events:none!important;transform:scale(1.07) rotate(-2deg)!important;box-shadow:0 16px 30px #0004!important;transition:none!important}
+.ph{visibility:hidden}
+@media (max-width:860px){#steps{display:none}.brand h1{font-size:21px}}
+@media (max-width:560px){#prompt{font-size:19px;top:74px}.brand .lvl{font-size:10px}}
+input,textarea{-webkit-user-select:text;user-select:text}
+#quiz{position:fixed;inset:0;z-index:70;background:rgba(20,40,30,.55);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#quiz .qc{color:var(--ink);background:var(--cream);border:3px solid var(--line);border-radius:26px;width:min(720px,100%);max-height:100%;overflow:auto;padding:22px 24px;box-shadow:0 20px 50px #0005;animation:pop .3s}
+#quiz h2{font:700 26px Fredoka,sans-serif;color:var(--forest);margin:0 0 6px}
+#quiz .qn{font:700 14px Fredoka,sans-serif;letter-spacing:.08em;color:#8a6a3a}
+#quiz .qq{font:700 22px Fredoka,sans-serif;line-height:1.3;margin:6px 0 14px;color:var(--ink)}
+#quiz .qo{display:grid;gap:10px}
+#quiz .qo button{font:700 17px Nunito,sans-serif;text-align:left;border:3px solid var(--line);background:#fff;border-radius:16px;padding:14px 16px;cursor:pointer;color:var(--ink);min-height:54px}
+#quiz .qo button.right{border-color:var(--leaf);background:#effae8}#quiz .qo button.wrong{border-color:var(--bad);background:#fff0ea}
+#quiz label{display:block;font:700 15px Fredoka,sans-serif;color:var(--forest);margin:10px 0 4px}
+#quiz input,#quiz textarea{width:100%;font:600 18px Nunito,sans-serif;border:3px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff;color:var(--ink);outline:none}
+#quiz input:focus,#quiz textarea:focus{border-color:var(--forest)}
+#quiz textarea{min-height:130px;resize:vertical}
+#quiz .qbar{height:10px;border-radius:99px;background:#efe2c9;margin:6px 0 12px;overflow:hidden}#quiz .qbar i{display:block;height:100%;background:var(--leaf);border-radius:99px;transition:width .3s}
+#quiz .sum{background:#fff;border-radius:14px;padding:12px 14px;font-size:15px;line-height:1.5;border:2px dashed var(--line);white-space:pre-wrap}
+
+</style>
+<style>
+body{background:#c9d3dc}
+#c{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.bar{height:22px;border-radius:99px;background:#efe2c9;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f2c94c,#c9762c);border-radius:99px;transition:width .08s}
+.cutlbl{font:700 17px Fredoka,sans-serif;color:var(--wood);display:flex;justify-content:space-between}
+.rub{display:inline-block;animation:rub 1s ease-in-out infinite}
+@keyframes rub{50%{transform:translateX(18px)}}
+#sorter{position:fixed;left:16px;right:16px;top:86px;bottom:150px;z-index:4;display:none;flex-direction:column;gap:12px}
+#sorter.on{display:flex}
+.deck{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:64px}
+.st{background:#fff;border-radius:14px;padding:10px 14px;font:700 16px Nunito,sans-serif;box-shadow:0 4px 0 #d9c7a3,0 6px 12px #0002;cursor:grab;max-width:300px;text-align:center}
+.st.ok{background:#e3f4d9;box-shadow:none;cursor:default}
+.st.meh{background:#fff2d6;box-shadow:none;cursor:default}
+.bins{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:14px;min-height:0}
+.bin{background:#fff8ecdd;border:3px dashed #c6a46e;border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center;overflow:auto;transition:.2s}
+.bin.over{border-color:var(--forest);background:#fff;transform:scale(1.02)}
+.bin h3{margin:0 0 4px;font:700 21px Fredoka,sans-serif;color:var(--forest);text-align:center}
+.bin .ic{font-size:30px}
+.qbtns{display:flex;gap:10px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<header>
+  <div class="brand"><span class="lvl">WOODS &amp; TIMBERS · LEVEL 3</span><h1>Slice the log</h1></div>
+  <ol id="steps"></ol>
+  <div class="hbtns"><a class="hbtn" href="index.html">🗺️</a><div id="score">⭐ 0</div></div>
+</header>
+<div id="sorter"><div class="deck"></div><div class="bins">
+  <div class="bin" data-b="plain"><div class="ic">🪵🪵🪵</div><h3>Through-and-through<br><small style="font-size:14px;color:#7a6a50">(plain sawn)</small></h3></div>
+  <div class="bin" data-b="quarter"><div class="ic">✳️</div><h3>Quarter sawn<br><small style="font-size:14px;color:#7a6a50">(radial cuts)</small></h3></div></div></div>
+<section id="panel"></section>
+<div id="prompt"></div><div id="toast"></div>
+<script src="../../vendor/three/three.min.js?h=9274bbce"></script>
+<script>
+/* Shared helpers for the Woods & Timbers workbook */
+window.G=(function(){
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function hash(s){let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;}
+
+let score=0;
+function addScore(d){score+=d;const el=$('#score');if(!el)return;el.textContent='⭐ '+score;if(d>0){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}}
+let toastT;
+function toast(html,kind,ms){const t=$('#toast');t.innerHTML=html;t.className='show '+(kind||'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='',ms||1500);}
+function prompt(html){const p=$('#prompt');if(!html){p.classList.remove('show');return;}p.innerHTML=html;p.classList.remove('show');void p.offsetWidth;p.classList.add('show');}
+function leaves(){const e=['🍂','🍃','🍁','⭐','🪵'];for(let i=0;i<40;i++){const s=document.createElement('div');s.className='leafc';s.textContent=e[i%e.length];s.style.left=Math.random()*100+'vw';s.style.animationDuration=(2.4+Math.random()*2)+'s';s.style.animationDelay=(Math.random()*0.8)+'s';document.body.appendChild(s);setTimeout(()=>s.remove(),5500);}}
+function steps(names){$('#steps').innerHTML=names.map((n,i)=>`<li>${i+1} ${n}</li>`).join('');}
+function setStep(i){$$('#steps li').forEach((li,k)=>{li.classList.toggle('on',k===i);li.classList.toggle('done',k<i);});}
+function starsFor(pct){return pct>=0.85?3:pct>=0.6?2:1;}
+function saveStars(level,stars){try{const k='wt-stars-'+level;const old=+localStorage.getItem(k)||0;if(stars>old)localStorage.setItem(k,String(stars));}catch(e){}}
+function getStars(level){try{return +localStorage.getItem('wt-stars-'+level)||0;}catch(e){return 0;}}
+function finish(level,max,msg,nextHref,nextLabel){
+  const stars=starsFor(score/max);saveStars(level,stars);leaves();prompt('🏆 Level complete!');
+  $('#panel').innerHTML=`<h2>Level complete!</h2><div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div><p>${msg||''}${msg?'<br>':''}You scored <b>${score} / ${max}</b>.</p>
+  <button class="cta alt" id="mq" style="margin-bottom:10px">📝 Take the mini quiz (send answers to your teacher)</button>
+  <div class="row"><button class="ghost" onclick="location.reload()">↺ Play again</button>${nextHref?`<a class="cta" style="flex:1;width:auto" href="${nextHref}">${nextLabel||'Next level →'}</a>`:`<a class="cta" style="flex:1;width:auto" href="index.html">🗺️ Back to the map</a>`}</div>`;
+  $('#mq').onclick=()=>quiz(level,score,max);setTimeout(()=>quiz(level,score,max),1600);
+}
+/* Drag an element and drop it on anything matching opts.targets. onDrop(el,target,x,y) returns false to send it back. */
+function drag(el,opts){
+  el.style.touchAction='none';
+  el.addEventListener('pointerdown',e=>{
+    if(el.dataset.locked==='1'||e.button>0)return;e.preventDefault();
+    const r=el.getBoundingClientRect(),ox=e.clientX-r.left,oy=e.clientY-r.top,sx=e.clientX,sy=e.clientY;
+    let moved=false,ph=null;
+    const start=()=>{moved=true;ph=el.cloneNode(true);ph.classList.add('ph');el.parentNode.insertBefore(ph,el);
+      el.style.width=r.width+'px';el.style.height=r.height+'px';el.style.left=r.left+'px';el.style.top=r.top+'px';el.classList.add('dragging');opts.onStart&&opts.onStart(el);};
+    const mv=ev=>{if(!moved){if(Math.hypot(ev.clientX-sx,ev.clientY-sy)<6)return;start();}
+      el.style.left=(ev.clientX-ox)+'px';el.style.top=(ev.clientY-oy)+'px';
+      const t=document.elementFromPoint(ev.clientX,ev.clientY);$$(opts.targets).forEach(x=>x.classList.toggle('over',!!t&&x.contains(t)));};
+    const up=ev=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+      $$(opts.targets).forEach(x=>x.classList.remove('over'));
+      if(!moved){opts.onTap&&opts.onTap(el);return;}
+      const t=document.elementFromPoint(ev.clientX,ev.clientY);const target=t&&t.closest(opts.targets);
+      el.classList.remove('dragging');['width','height','left','top'].forEach(p=>el.style[p]='');
+      ph.parentNode.insertBefore(el,ph);ph.remove();
+      if(target){const ok=opts.onDrop(el,target,ev.clientX,ev.clientY);if(ok===false){el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),400);}}
+      else if(opts.onMiss)opts.onMiss(el);};
+    addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+  });
+}
+/* Procedural wood swatch */
+function swatch(canvas,spec,seed){
+  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height,r=mulberry32(seed||hash(spec.base+spec.dark));
+  ctx.fillStyle=spec.base;ctx.fillRect(0,0,w,h);
+  const lines=spec.fine?70:spec.bold?26:44;
+  for(let i=0;i<lines;i++){const y0=r()*h,amp=(spec.wavy?10:3)+r()*4,fq=0.006+r()*0.01,ph=r()*6;
+    ctx.strokeStyle=spec.dark;ctx.globalAlpha=(spec.bold?0.35:0.18)+r()*0.2;ctx.lineWidth=(spec.bold?2.5:1)+r()*(spec.fine?0.6:2);
+    ctx.beginPath();for(let x=0;x<=w;x+=6){const y=y0+Math.sin(x*fq+ph)*amp+Math.sin(x*0.03+ph*2)*1.2;x?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}
+  if(spec.rays){for(let i=0;i<60;i++){ctx.globalAlpha=0.25;ctx.fillStyle=spec.ray||'#f3dfb8';ctx.fillRect(r()*w,r()*h,6+r()*14,1.5+r()*1.5);}}
+  if(spec.flecks){for(let i=0;i<180;i++){ctx.globalAlpha=0.3;ctx.fillStyle=spec.dark;ctx.fillRect(r()*w,r()*h,1.5,2.5);}}
+  if(spec.knots){const n=spec.knots;for(let k=0;k<n;k++){const cx=w*(0.2+0.6*r()),cy=h*(0.2+0.6*r()),rx=8+r()*10;
+    for(let j=6;j>=0;j--){ctx.globalAlpha=j?0.22:0.85;ctx.strokeStyle=spec.dark;ctx.fillStyle=spec.knot||'#7a4a22';ctx.beginPath();ctx.ellipse(cx,cy,rx+j*5,(rx+j*5)*0.6,0,0,Math.PI*2);j?ctx.stroke():ctx.fill();}}}
+  ctx.globalAlpha=1;
+  const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'rgba(255,255,255,0.12)');g.addColorStop(1,'rgba(0,0,0,0.1)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+}
+const TIMBERS={
+  oak:{name:'Oak',kind:'hardwood',base:'#c99d6b',dark:'#7a5330',rays:true},
+  ash:{name:'Ash',kind:'hardwood',base:'#e6d2a8',dark:'#a88a5a',bold:true},
+  beech:{name:'Beech',kind:'hardwood',base:'#e3b88a',dark:'#b07d50',fine:true,flecks:true},
+  mahogany:{name:'Mahogany',kind:'hardwood',base:'#93422a',dark:'#5a2214',wavy:true},
+  balsa:{name:'Balsa',kind:'hardwood',base:'#f1e6cc',dark:'#cdbb94',fine:true},
+  walnut:{name:'Walnut',kind:'hardwood',base:'#6e4b33',dark:'#3a2416',wavy:true},
+  teak:{name:'Teak',kind:'hardwood',base:'#b47c3e',dark:'#6e4720'},
+  pine:{name:'Pine',kind:'softwood',base:'#ecca8c',dark:'#b98444',bold:true,knots:2},
+  spruce:{name:'Spruce',kind:'softwood',base:'#f0e1bf',dark:'#c9ad7a',fine:true,knots:1},
+  larch:{name:'Larch',kind:'softwood',base:'#d69c63',dark:'#8e5428',bold:true,knots:1},
+  cedar:{name:'Cedar',kind:'softwood',base:'#b96c48',dark:'#7a3a20',bold:true},
+  fir:{name:'Douglas fir',kind:'softwood',base:'#dba36f',dark:'#9a5f2f',bold:true},
+  yew:{name:'Yew',kind:'softwood',base:'#c7713f',dark:'#7d3a18',wavy:true,knots:1}
+};
+
+/* ---------------- Mini quiz + Microsoft Forms hand-off ---------------- */
+/* Paste the teacher's Microsoft Forms "pre-filled URL" here (made with the placeholder words NAME, CLASS, LEVEL, SCORE, ANSWERS, WRITTEN). */
+const FORM_TEMPLATE=''; /* iPad version: nothing is sent anywhere */
+const LEVEL_NAMES={1:'How a tree grows',2:'Forest to timber yard',3:'Slice the log',4:'Timber sort rush',5:'Manufactured boards lab',6:'Timber catcher',7:'Workshop rush',8:'Battle the Rot King'};
+const QUIZ={
+1:{qs:[
+ ['Which part of the trunk makes a new ring of wood every year?',['Cambium','Pith','Heartwood','Bark']],
+ ['Hardwoods come from which type of tree?',['Deciduous (broad-leaved) trees','Coniferous (cone-bearing) trees','Any tree with very hard wood','Evergreen trees with needles']],
+ ['Why is heartwood valued for furniture?',['It is darker, harder and more durable','It carries water and sap up the tree','It is the softest, lightest part','It is the living outer layer']],
+ ['What does one annual ring show?',['One year of growth','One month of growth','One season of growth','Ten years of growth']],
+ ['Which of these is a softwood?',['Pine','Oak','Balsa','Beech']]],
+ w:'Explain one difference between sapwood and heartwood.'},
+2:{qs:[
+ ['Which order is correct?',['Fell → Convert → Season','Season → Fell → Convert','Convert → Fell → Season','Fell → Season → Grow']],
+ ['What is the main purpose of seasoning timber?',['To reduce its moisture content so it is stable and less likely to warp or rot','To make the timber darker','To remove the bark','To make the timber heavier']],
+ ['In air seasoning, what are the spacers between the planks called?',['Stickers','Dowels','Veneers','Battens']],
+ ['Kiln seasoning can dry timber to about…',['8–12% moisture','15–20% moisture','30–40% moisture','0% moisture']],
+ ['Which is a disadvantage of kiln seasoning?',['It costs more and uses energy','It takes several years','It cannot dry timber below 20%','It needs no supervision']]],
+ w:'Give one advantage and one disadvantage of air seasoning.'},
+3:{qs:[
+ ['Through-and-through sawing is also called…',['Plain sawn','Quarter sawn','Radial sawn','Seasoned']],
+ ['Which conversion method wastes more wood?',['Quarter sawn','Through-and-through','They waste the same','Neither wastes any wood']],
+ ['Why do plain-sawn boards often cup as they dry?',['Their growth rings run across the width, and wood shrinks more along the rings','They have too much heartwood','They are cut too thin','The bark pulls them out of shape']],
+ ['What does “converting” timber mean?',['Sawing a log into usable boards','Drying the timber in a kiln','Applying a finish','Planting new trees']],
+ ['Why is quarter-sawn oak used for quality furniture?',['It is stable and shows an attractive ray figure','It is the cheapest option','It has more knots','It dries faster than other boards']]],
+ w:'A furniture maker needs stable boards for a high-quality table top. Which conversion method should they choose, and why?'},
+4:{qs:[
+ ['Balsa is very soft and light. Is it a hardwood or a softwood?',['Hardwood','Softwood','A manufactured board','Neither']],
+ ['Which timber is tough and flexible with good shock resistance, so is used for tool handles?',['Ash','Pine','Balsa','Spruce']],
+ ['Which timber is a softwood with good water resistance, used for cladding?',['Larch','Mahogany','Beech','Oak']],
+ ['Beech is often used for…',['Toys and kitchen utensils','Model making','Roof cladding','Cheap construction framing']],
+ ['Which statement is true?',['“Hardwood” and “softwood” describe the type of tree, not how hard the wood is','All hardwoods are harder than all softwoods','Softwoods come from deciduous trees','Hardwoods grow faster than softwoods']]],
+ w:'Name a timber you would choose for an outdoor bench and justify your choice.'},
+5:{qs:[
+ ['In plywood, each layer’s grain runs…',['At 90° to the layer next to it','In the same direction as all the others','At 45° to the layer next to it','In random directions']],
+ ['MDF is made from…',['Fine wood fibres bonded with resin','Thin layers of veneer','Large wood chips and resin','Solid planks glued edge to edge']],
+ ['What is a main weakness of chipboard?',['It is easily damaged by water and is not very strong','It is very expensive','It is too heavy to cut','It only comes in small pieces']],
+ ['What is the standard size of a manufactured board sheet?',['2440 × 1220 mm','2000 × 1000 mm','1220 × 610 mm','3000 × 1500 mm']],
+ ['Which is an advantage of manufactured boards over solid timber?',['They come in large, stable sheets','They always look more attractive','They are never damaged by water','They are always stronger']]],
+ w:'Explain why MDF is often used for flat-pack furniture.'},
+6:{qs:[
+ ['Which of these is a manufactured board?',['MDF','Oak','Larch','Ash']],
+ ['Which of these is a softwood?',['Spruce','Mahogany','Beech','Balsa']],
+ ['Which of these is a hardwood?',['Mahogany','Larch','Pine','Spruce']],
+ ['Yew is very hard and heavy. What type of timber is it?',['A softwood, because it comes from a conifer','A hardwood, because it is hard','A manufactured board','A hardwood, because it is heavy']],
+ ['What is woodworm?',['Beetle larvae that bore tunnels through timber','A fungus that rots damp wood','A type of softwood','A tool for carving wood']]],
+ w:'Explain why softwoods are usually cheaper than hardwoods.'},
+7:{qs:[
+ ['Which finish is best for garden decking?',['Preservative','Wax','Food-safe oil','Polish']],
+ ['Which finish should be used on a chopping board?',['Food-safe oil','Gloss paint','Preservative','Varnish']],
+ ['Why are children’s wooden toys finished with non-toxic paint?',['So they are safe if chewed','So they are waterproof outdoors','Because it is the cheapest paint','So the grain shows through']],
+ ['Which timber is best for a hammer handle?',['Ash','Balsa','MDF','Pine']],
+ ['What is the main purpose of applying a finish to timber?',['To protect it from moisture, decay and wear and improve its appearance','To make it heavier','To make it easier to cut','To change it into a hardwood']]],
+ w:'A client wants an outdoor picnic table. Choose a timber and a finish, and justify both choices.'},
+8:{qs:[
+ ['What causes dry rot?',['A fungus','An insect','Too much sunlight','Over-seasoning']],
+ ['Which helps stop timber rotting?',['Seasoning it and treating it with preservative','Keeping it damp','Storing it outside uncovered','Cutting it thinner']],
+ ['Which conversion method gives the most stable boards?',['Quarter sawn','Through-and-through','Rotary cut','Slab sawn']],
+ ['Which manufactured board is made from veneers?',['Plywood','MDF','Chipboard','Hardboard']],
+ ['Kiln-seasoned timber for indoor furniture is dried to about…',['8–12% moisture','25–30% moisture','50% moisture','0% moisture']]],
+ w:'Explain how seasoning and preservatives help timber last longer.'}};
+function formURL(fields){if(!FORM_TEMPLATE)return null;let u;try{u=new URL(FORM_TEMPLATE);}catch(e){return null;}
+  const keys=['NAME','CLASS','LEVEL','SCORE','ANSWERS','WRITTEN'];const out=[];
+  for(const [k,v] of u.searchParams.entries()){const bare=v.replace(/^"|"$/g,'').toUpperCase();const hit=keys.find(x=>x===bare);
+    if(hit){const val=String(fields[hit]||'').slice(0,900);out.push([k,v.startsWith('"')?'"'+val.replace(/"/g,"'")+'"':val]);}else out.push([k,v]);}
+  const q=out.map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');return u.origin+u.pathname+'?'+q;}
+function quiz(level,gameScore,gameMax){
+  const bank=QUIZ[level];let i=0,right=0;const res=[];let name='',cls='';try{name=localStorage.getItem('wt-name')||'';cls=localStorage.getItem('wt-class')||'';}catch(e){}
+  const qs=bank.qs.map(([q,o])=>({q,ans:o[0],opts:shuffle(o.slice())}));
+  const ov=document.createElement('div');ov.id='quiz';ov.innerHTML='<div class="qc"></div>';document.body.appendChild(ov);const qc=ov.querySelector('.qc');
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function intro(){qc.innerHTML=`<span class="tag">📝 Mini quiz · Level ${level}</span><h2>${LEVEL_NAMES[level]}</h2><p style="font-size:17px;margin:4px 0 6px">5 quick questions and one written answer. When you finish, save your answers as a PDF and hand it in on Showbie.</p>
+    <label>Your name</label><input id="qname" value="${esc(name)}" autocomplete="name"><label>Your class</label><input id="qclass" value="${esc(cls)}" placeholder="e.g. 10D">
+    <div class="row" style="margin-top:16px"><button class="ghost" id="qx">Not now</button><button class="cta" style="flex:2;width:auto" id="qgo">Start the quiz →</button></div>`;
+    qc.querySelector('#qx').onclick=()=>ov.remove();
+    qc.querySelector('#qgo').onclick=()=>{name=qc.querySelector('#qname').value.trim();cls=qc.querySelector('#qclass').value.trim();
+      if(!name){qc.querySelector('#qname').classList.add('shake');qc.querySelector('#qname').focus();return;}
+      try{localStorage.setItem('wt-name',name);localStorage.setItem('wt-class',cls);}catch(e){}ask();};}
+  function ask(){const Q=qs[i];qc.innerHTML=`<div class="qn">QUESTION ${i+1} OF ${qs.length}</div><div class="qbar"><i style="width:${i/qs.length*100}%"></i></div><div class="qq">${Q.q}</div><div class="qo">${Q.opts.map((o,k)=>`<button data-k="${k}">${o}</button>`).join('')}</div><div id="qf"></div>`;
+    qc.querySelectorAll('.qo button').forEach(b=>b.onclick=()=>{if(qc.querySelector('.qo').dataset.done)return;qc.querySelector('.qo').dataset.done=1;const pick=Q.opts[+b.dataset.k],ok=pick===Q.ans;if(ok)right++;res.push({ok,pick});
+      qc.querySelectorAll('.qo button').forEach(x=>{const o=Q.opts[+x.dataset.k];if(o===Q.ans)x.classList.add('right');else if(x===b)x.classList.add('wrong');});
+      qc.querySelector('#qf').innerHTML=`<button class="cta" style="margin-top:14px" id="qn">${i<qs.length-1?'Next question →':'Last one: written answer →'}</button>`;
+      qc.querySelector('#qn').onclick=()=>{i++;i<qs.length?ask():written();};});}
+  function written(){qc.innerHTML=`<div class="qn">WRITTEN ANSWER</div><div class="qbar"><i style="width:100%"></i></div><div class="qq">${bank.w}</div><textarea id="qw" placeholder="Write your answer in full sentences…"></textarea><button class="cta" style="margin-top:14px" id="qd">Finish ✓</button>`;
+    qc.querySelector('#qd').onclick=()=>{const w=qc.querySelector('#qw').value.trim();if(w.length<3){qc.querySelector('#qw').classList.add('shake');setTimeout(()=>qc.querySelector('#qw').classList.remove('shake'),400);return;}summary(w);};}
+  function summary(w){
+    const answers=qs.map((Q,k)=>`Q${k+1} ${res[k].ok?'✓':'✗'} ${res[k].pick}`).join(' | ');
+    const fields={NAME:name,CLASS:cls,LEVEL:`Level ${level}: ${LEVEL_NAMES[level]}`,SCORE:`Quiz ${right}/${qs.length}`+(gameMax?` · Game ${gameScore}/${gameMax}`:''),ANSWERS:answers,WRITTEN:w};
+    const url=formURL(fields);const text=`${fields.NAME} (${fields.CLASS})\n${fields.LEVEL}\n${fields.SCORE}\n${qs.map((Q,k)=>`Q${k+1} ${res[k].ok?'✓':'✗'} ${res[k].pick}`).join('\n')}\nWritten: ${w}`;
+    try{localStorage.setItem('wt-quiz-'+level,String(right));}catch(e){}
+    qc.innerHTML=`<span class="tag">✓ Quiz complete</span><h2>You scored ${right} / ${qs.length}</h2><p style="font-size:17px;margin:4px 0 10px">${url?'<b>Last step:</b> send your answers to your teacher. The form opens with everything filled in. Just press <b>Submit</b> at the bottom.':'<b>Last step:</b> tap <b>Save as PDF</b> and hand it in on Showbie.'}</p>
+      <div class="sum">${esc(text)}</div>
+      <div class="row" style="margin-top:14px">${url?`<a class="cta" style="flex:2;width:auto" href="${esc(url)}" target="_blank" rel="noopener">📤 Send my answers to my teacher</a>`:''}<button class="cta" style="flex:2;width:auto" onclick="SoloPDF.saveEl(this.closest('.qc'), 'Level ${level} quiz: ${esc(LEVEL_NAMES[level])}')">📄 Save as PDF</button><button class="ghost" id="qc2">📋 Copy answers</button><button class="ghost" id="qcl">Close</button></div>`;
+    qc.querySelector('#qcl').onclick=()=>ov.remove();
+    qc.querySelector('#qc2').onclick=e=>{try{navigator.clipboard.writeText(text).then(()=>e.target.textContent='✓ Copied',()=>e.target.textContent='Copy failed');}catch(err){e.target.textContent='Copy failed';}};
+    if(right>=4)leaves();}
+  intro();}
+
+return{QUIZ,quiz,$,$$,mulberry32,shuffle,clamp,hash,addScore,get score(){return score},toast,prompt,leaves,steps,setStep,starsFor,saveStars,getStars,finish,drag,swatch,TIMBERS};
+})();
+
+</script>
+<script>
+(function(){
+const {$,$$}=G;const panel=$('#panel');
+G.steps(['Through & through','Quarter sawn','2 years later','Sort it']);
+const MAX=10,R=1,L=3.2;
+
+/* ---------- renderer ---------- */
+const canvas=$('#c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+(function(){const c=document.createElement('canvas');c.width=2;c.height=256;const g=c.getContext('2d');const gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#9fb3c6');gr.addColorStop(1,'#e6ebef');g.fillStyle=gr;g.fillRect(0,0,2,256);scene.background=new THREE.CanvasTexture(c);})();
+const camera=new THREE.PerspectiveCamera(42,1,0.1,100);
+scene.add(new THREE.HemisphereLight(0xf2f6ff,0x8a7a66,0.7));
+const sun=new THREE.DirectionalLight(0xfff2dc,0.95);sun.position.set(5,9,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6});scene.add(sun);
+const fill=new THREE.DirectionalLight(0xdfe8ff,0.35);fill.position.set(-6,2,4);scene.add(fill);
+// sawmill floor
+(function(){const c=document.createElement('canvas');c.width=c.height=512;const g=c.getContext('2d');g.fillStyle='#a9a39a';g.fillRect(0,0,512,512);const r=G.mulberry32(3);for(let i=0;i<3000;i++){g.fillStyle=`rgba(${80+r()*60|0},${75+r()*55|0},${70+r()*50|0},0.25)`;g.fillRect(r()*512,r()*512,2,2);}
+  g.strokeStyle='rgba(0,0,0,0.12)';g.lineWidth=3;for(let i=0;i<=512;i+=128){g.beginPath();g.moveTo(i,0);g.lineTo(i,512);g.stroke();g.beginPath();g.moveTo(0,i);g.lineTo(512,i);g.stroke();}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(6,6);
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({map:t,roughness:1}));fl.rotation.x=-Math.PI/2;fl.position.y=-1.35;fl.receiveShadow=true;scene.add(fl);})();
+
+/* ---------- textures ---------- */
+function endTex(){const S=1024,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d'),cx=S/2,Rp=S/2;
+  const wob=th=>1+0.01*Math.sin(3*th+0.7)+0.007*Math.sin(7*th+2.1);
+  const circ=(r,col,rough)=>{x.beginPath();for(let k=0;k<=180;k++){const th=k/180*Math.PI*2;let w=wob(th);if(rough)w*=1-0.025*(0.5+0.5*Math.sin(29*th))*(0.5+0.5*Math.sin(13*th+1));x.lineTo(cx+Math.cos(th)*r*Rp*w,cx+Math.sin(th)*r*Rp*w);}x.closePath();x.fillStyle=col;x.fill();};
+  x.fillStyle='#4a2f1e';x.fillRect(0,0,S,S);
+  circ(1,'#4a2f1e',true);circ(0.935,'#7d5434');
+  const N=30,rn=G.mulberry32(5),ws=[];for(let i=0;i<N;i++)ws.push((1.3-0.6*i/N)*(0.6+0.8*rn()));const tot=ws.reduce((a,b)=>a+b);
+  let acc=0;const rr=ws.map(w=>{const r0=0.05+acc/tot*0.87;acc+=w;return[r0,0.05+acc/tot*0.87];});
+  for(let i=N-1;i>=0;i--){const h=i<14;circ(rr[i][1],h?'#7a4a26':'#c99559');circ(rr[i][0]+0.64*(rr[i][1]-rr[i][0]),h?'#b37b48':'#edd3a0');}
+  circ(0.05,'#5b3a22');
+  x.save();x.beginPath();x.arc(cx,cx,Rp*0.92,0,7);x.clip();const r2=G.mulberry32(9);
+  for(let i=0;i<110;i++){const th=r2()*Math.PI*2;x.strokeStyle='rgba(240,215,170,0.35)';x.lineWidth=2+r2()*2;x.beginPath();x.moveTo(cx+Math.cos(th)*Rp*0.06,cx+Math.sin(th)*Rp*0.06);const e=Rp*(0.4+0.5*r2());x.lineTo(cx+Math.cos(th)*e,cx+Math.sin(th)*e);x.stroke();}
+  for(let i=0;i<2500;i++){x.fillStyle=`rgba(60,30,10,${0.04+r2()*0.05})`;x.fillRect(r2()*S,r2()*S,2,2);}x.restore();
+  const t=new THREE.CanvasTexture(c);t.repeat.set(1/(2*R),1/(2*R));t.offset.set(0.5,0.5);return t;}
+function grainTex(){const c=document.createElement('canvas');c.width=256;c.height=1024;const x=c.getContext('2d');x.fillStyle='#d9b07a';x.fillRect(0,0,256,1024);const r=G.mulberry32(12);
+  for(let i=0;i<60;i++){const x0=r()*256;x.strokeStyle=r()<0.5?'rgba(140,90,45,0.35)':'rgba(255,240,210,0.3)';x.lineWidth=1+r()*3;x.beginPath();for(let y=0;y<=1024;y+=16)x.lineTo(x0+Math.sin(y*0.01+i)*4,y);x.stroke();}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(0.8,0.35);return t;}
+function barkTex(){const c=document.createElement('canvas');c.width=256;c.height=512;const g=c.getContext('2d');const r=G.mulberry32(4);g.fillStyle='#5a3d27';g.fillRect(0,0,256,512);
+  for(let i=0;i<240;i++){g.fillStyle=`rgba(${30+r()*40|0},${20+r()*25|0},${10+r()*15|0},${0.3+r()*0.4})`;g.fillRect(r()*256,0,2+r()*6,512);}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,0.5);return t;}
+const capMat=new THREE.MeshStandardMaterial({map:endTex(),roughness:0.8});
+const sawnMat=new THREE.MeshStandardMaterial({map:grainTex(),roughness:0.85});
+const barkMat=new THREE.MeshStandardMaterial({map:barkTex(),roughness:1});
+const MATS=[capMat,sawnMat,barkMat];
+const wasteMats=[capMat.clone(),sawnMat.clone(),barkMat.clone()];wasteMats.forEach(m=>{m.transparent=true;});
+
+/* ---------- geometry helpers ---------- */
+function arc(a0,a1,n){const p=[];for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n;p.push([Math.cos(a)*R,Math.sin(a)*R]);}return p;}
+function dedupe(p){return p.filter((v,i)=>{const w=p[(i+1)%p.length];return Math.hypot(v[0]-w[0],v[1]-w[1])>1e-4;});}
+function piece(pts,holes,mats){
+  const sh=new THREE.Shape(dedupe(pts).map(p=>new THREE.Vector2(p[0],p[1])));
+  (holes||[]).forEach(h=>sh.holes.push(new THREE.Path(h.map(p=>new THREE.Vector2(p[0],p[1])))));
+  const geo=new THREE.ExtrudeGeometry(sh,{depth:L,bevelEnabled:false,curveSegments:1});geo.translate(0,0,-L/2);
+  // re-group side faces into sawn (1) or bark (2)
+  const g=geo.groups,pos=geo.attributes.position.array;const caps=g[0].count,start=g[1].start,cnt=g[1].count;geo.clearGroups();geo.addGroup(0,caps,0);
+  let cur=-1,runStart=start;
+  for(let t=start;t<start+cnt;t+=3){let sx=0,sy=0;for(let k=0;k<3;k++){sx+=pos[(t+k)*3];sy+=pos[(t+k)*3+1];}const m=Math.hypot(sx/3,sy/3)>0.965?2:1;
+    if(m!==cur){if(cur>=0)geo.addGroup(runStart,t-runStart,cur);cur=m;runStart=t;}}
+  geo.addGroup(runStart,start+cnt-runStart,cur);
+  const mesh=new THREE.Mesh(geo,mats||MATS);mesh.castShadow=true;mesh.receiveShadow=true;
+  mesh.userData.p0=Float32Array.from(pos);return mesh;}
+function rect(theta,r0,r1,h){const d=[Math.cos(theta),Math.sin(theta)],n=[-d[1],d[0]];return[[r0*d[0]-h*n[0],r0*d[1]-h*n[1]],[r1*d[0]-h*n[0],r1*d[1]-h*n[1]],[r1*d[0]+h*n[0],r1*d[1]+h*n[1]],[r0*d[0]+h*n[0],r0*d[1]+h*n[1]]];}
+function polyArea(p){let a=0;for(let i=0;i<p.length;i++){const q=p[(i+1)%p.length];a+=p[i][0]*q[1]-q[0]*p[i][1];}return Math.abs(a)/2;}
+
+/* ---------- build both logs ---------- */
+const BANDS=7,TH=2/BANDS;
+const plainG=new THREE.Group();scene.add(plainG);const plainBoards=[];
+for(let j=0;j<BANDS;j++){const b=1-j*TH,a=b-TH;const sa=Math.asin(G.clamp(a,-1,1)),sb=Math.asin(G.clamp(b,-1,1));
+  const pts=[...arc(sa,sb,Math.max(4,Math.round((sb-sa)*20))),...arc(Math.PI-sb,Math.PI-sa,Math.max(4,Math.round((sb-sa)*20)))];
+  const m=piece(pts);m.userData.band=j;m.userData.yc=(a+b)/2;m.userData.hw=Math.sqrt(Math.max(0,1-Math.min(a*a,b*b)));plainG.add(m);plainBoards.push(m);}
+const quarterG=new THREE.Group();scene.add(quarterG);quarterG.visible=false;const qBoards=[],qWaste=[];
+const QB=[{t:Math.PI/4,r0:0.27,r1:0.92},{t:Math.PI/8,r0:0.5,r1:0.92},{t:3*Math.PI/8,r0:0.5,r1:0.92}],HT=0.1;
+let qUsed=0;
+for(let q=0;q<4;q++){const off=q*Math.PI/2;const holes=[];
+  QB.forEach(b=>{const p=rect(b.t+off,b.r0,b.r1,HT);holes.push(p);qUsed+=polyArea(p);const m=piece(p);m.userData={...m.userData,q,t:b.t+off,kind:'board'};quarterG.add(m);qBoards.push(m);});
+  const sector=[[0,0],...arc(off,off+Math.PI/2,24)];const w=piece(sector,holes.map(h=>h.slice().reverse()),wasteMats);w.userData.q=q;w.userData.kind='waste';quarterG.add(w);qWaste.push(w);}
+// waste figures (inside the wood, not counting bark): plain if edged square, quarter as modelled
+const woodR=0.92;let plainUsed=0;for(let j=0;j<BANDS;j++){const b=1-j*TH,a=b-TH,f=Math.max(Math.abs(a),Math.abs(b));if(f<woodR)plainUsed+=2*Math.sqrt(woodR*woodR-f*f)*TH;}
+const woodA=Math.PI*woodR*woodR;const plainWaste=Math.round(100*(1-plainUsed/woodA)),quarterWaste=Math.round(100*(1-qUsed/woodA));
+
+/* ---------- saw blade + sawdust + kerf ---------- */
+function bladeTex(){const S=512,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d'),cx=S/2;
+  x.fillStyle='#c9ced4';x.beginPath();for(let i=0;i<=96;i++){const a=i/96*Math.PI*2,r=i%2?cx*0.93:cx*0.995;x.lineTo(cx+Math.cos(a)*r,cx+Math.sin(a)*r);}x.fill();
+  x.fillStyle='#9aa1a8';x.beginPath();x.arc(cx,cx,cx*0.82,0,7);x.fill();x.fillStyle='#c9ced4';x.beginPath();x.arc(cx,cx,cx*0.78,0,7);x.fill();
+  x.strokeStyle='#7d858c';x.lineWidth=8;for(let i=0;i<6;i++){const a=i/6*Math.PI*2;x.beginPath();x.moveTo(cx+Math.cos(a)*cx*0.3,cx+Math.sin(a)*cx*0.3);x.lineTo(cx+Math.cos(a+0.4)*cx*0.7,cx+Math.sin(a+0.4)*cx*0.7);x.stroke();}
+  x.fillStyle='#555';x.beginPath();x.arc(cx,cx,cx*0.14,0,7);x.fill();x.fillStyle='#e2683c';x.beginPath();x.arc(cx,cx,cx*0.08,0,7);x.fill();
+  return new THREE.CanvasTexture(c);}
+const BR=1.7;const blade=new THREE.Group();const bladeDisc=new THREE.Mesh(new THREE.CircleGeometry(BR,96),new THREE.MeshStandardMaterial({map:bladeTex(),transparent:true,alphaTest:0.4,metalness:0.6,roughness:0.35,side:THREE.DoubleSide}));blade.add(bladeDisc);blade.visible=false;scene.add(blade);
+const kerf=new THREE.Mesh(new THREE.BoxGeometry(1,1,0.02),new THREE.MeshBasicMaterial({color:0x1a120c}));kerf.visible=false;scene.add(kerf);
+const DUST=260,dustGeo=new THREE.BufferGeometry(),dustPos=new Float32Array(DUST*3),dustVel=[];for(let i=0;i<DUST;i++){dustPos[i*3+1]=-99;dustVel.push([0,0,0,0]);}
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPos,3));
+const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xe0c38f,size:0.045}));scene.add(dust);let dustI=0;
+function spawnDust(x,y,z,n){for(let k=0;k<n;k++){const i=dustI++%DUST;dustPos[i*3]=x;dustPos[i*3+1]=y;dustPos[i*3+2]=z;dustVel[i]=[(Math.random()-0.3)*1.6,Math.random()*1.5,Math.random()*1.2,1];}}
+
+/* ---------- tweens / camera ---------- */
+const tweens=[];const ease=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+function tween(dur,fn,done){tweens.push({t0:performance.now(),dur,fn,done});}
+const camTgt=new THREE.Vector3();
+function moveCam(pos,tgt,dur,done){const p0=camera.position.clone(),t0=camTgt.clone();tween(dur||1200,p=>{camera.position.lerpVectors(p0,pos,p);camTgt.lerpVectors(t0,tgt,p);},done);}
+function fitK(){return Math.max(1,0.95/(innerWidth/innerHeight));}
+camera.position.set(3.4,2.2,6.2);camTgt.set(0,0,0.4);
+
+/* ---------- sawing ---------- */
+let saw=null; // {axis:'h'|'v', at, p, onDone}
+let rubbing=false,lastP=null,rubV=0;
+canvas.addEventListener('pointerdown',e=>{rubbing=true;lastP=[e.clientX,e.clientY];});
+addEventListener('pointerup',()=>{rubbing=false;lastP=null;});addEventListener('pointercancel',()=>{rubbing=false;lastP=null;});
+canvas.addEventListener('pointermove',e=>{if(!rubbing||!lastP)return;const d=Math.abs(e.clientX-lastP[0])+Math.abs(e.clientY-lastP[1]);lastP=[e.clientX,e.clientY];
+  if(saw&&!saw.done){saw.p=Math.min(1,saw.p+d/1100);rubV=Math.min(40,rubV+d*0.15);}});
+function startCut(axis,at,onDone){saw={axis,at,p:0,onDone,done:false};blade.visible=true;kerf.visible=true;
+  blade.rotation.set(0,0,0);if(axis==='h'){blade.rotation.x=-Math.PI/2;}else{blade.rotation.y=Math.PI/2;}
+  placeBlade();}
+function placeBlade(){const front=Math.min(R,-2.9+BR+saw.p*(R-(-2.9+BR)));const cen=front-BR;
+  if(saw.axis==='h'){blade.position.set(cen,saw.at,L/2-0.3);const w=Math.max(0.001,front+R);kerf.scale.set(w,0.03,1);kerf.position.set(-R+w/2,saw.at,L/2+0.012);}
+  else{blade.position.set(saw.at,-cen,L/2-0.3);const w=Math.max(0.001,front+R);kerf.scale.set(0.03,w,1);kerf.position.set(saw.at,R-w/2,L/2+0.012);}
+  return front;}
+function finishCut(){saw.done=true;kerf.visible=false;const s=saw;const st=blade.position.clone();
+  tween(500,p=>{if(s.axis==='h')blade.position.x=st.x-p*2.5;else blade.position.y=st.y+p*2.5;},()=>{blade.visible=false;s.onDone();});}
+
+/* ---------- STEP A: through and through ---------- */
+let cutsDone=[];
+function cutPanel(title,body,i,n){panel.innerHTML=`<h2>${title}</h2><p>${body}</p><div class="cutlbl"><span>Cut ${i} of ${n}</span><span><span class="rub">👆</span> Rub back and forth to saw</span></div><div class="bar"><i id="pb"></i></div>`;}
+function stepA(){G.setStep(0);plainG.visible=true;
+  const k=fitK();moveCam(new THREE.Vector3(2.6*k,1.7*k,4.6*k),new THREE.Vector3(0,0,0.7),1500);
+  G.prompt('🪚 Saw the log into boards');setTimeout(()=>G.prompt(''),2400);nextPlainCut();}
+function plainOffsets(){const n=cutsDone.length;plainBoards.forEach(m=>{const j=m.userData.band;const above=cutsDone.filter(i=>i>=j).length;m.userData.ty=0.09*above-0.045*n;});
+  const from=plainBoards.map(m=>m.position.y);tween(450,p=>plainBoards.forEach((m,i)=>m.position.y=from[i]+(m.userData.ty-from[i])*ease(p)));}
+function nextPlainCut(){const i=cutsDone.length;if(i>=BANDS-1){return plainDone();}
+  cutPanel('Through-and-through','Also called <b>plain sawn</b>. The log is sawn into parallel boards, straight through from one side to the other.',i+1,BANDS-1);
+  const at=1-(i+1)*TH+(plainBoards[i].userData.ty||0);startCut('h',at,()=>{cutsDone.push(i);plainOffsets();setTimeout(nextPlainCut,500);});}
+function plainDone(){G.toast('All boards cut! 🪵','good');
+  panel.innerHTML=`<span class="tag">✓ Plain sawn</span><h2>Quick, cheap and little waste</h2><p>Through-and-through is the <b>fastest and cheapest</b> way to convert a log, and very little is wasted. In this model about <b>${plainWaste}%</b> of the wood is lost when the boards are trimmed square. Look at the boards’ ends, though. Most have growth rings running <b>across their width</b>. Remember that for later…</p><button class="cta" id="nx">Next: quarter sawing →</button>`;
+  $('#nx').onclick=stepB;}
+
+/* ---------- STEP B: quarter sawn ---------- */
+let qCuts=0;
+function qOffsets(){quarterG.children.forEach(m=>{const q=m.userData.q;const sx=(q===0||q===3)?1:-1,sy=(q<2)?1:-1;m.userData.tx=(qCuts>=1?0.06*sx:0);m.userData.ty=(qCuts>=2?0.06*sy:0);});
+  const f=quarterG.children.map(m=>[m.position.x,m.position.y]);tween(450,p=>quarterG.children.forEach((m,i)=>{m.position.x=f[i][0]+(m.userData.tx-f[i][0])*ease(p);m.position.y=f[i][1]+(m.userData.ty-f[i][1])*ease(p);}));}
+function stepB(){G.setStep(1);
+  tween(700,p=>{plainG.position.x=-p*6;},()=>{plainG.visible=false;});
+  quarterG.visible=true;quarterG.position.x=6;tween(900,p=>quarterG.position.x=6*(1-ease(p)),()=>{nextQ();});
+  panel.innerHTML=`<h2>Quarter sawn</h2><p>Here comes a fresh log…</p>`;}
+function nextQ(){if(qCuts>=2)return millQuarter();
+  cutPanel('Quarter sawn','First, saw the log into <b>four quarters</b>. Then the boards are cut <b>radially</b>, from the outside towards the centre, like spokes of a wheel.',qCuts+1,2);
+  if(qCuts===0)startCut('v',0,()=>{qCuts=1;qOffsets();setTimeout(nextQ,500);});
+  else startCut('h',0,()=>{qCuts=2;qOffsets();setTimeout(nextQ,500);});}
+function millQuarter(){
+  panel.innerHTML=`<h2>The mill cuts each quarter…</h2><p>Each quarter is turned and re-cut so every board is sawn along a radius. Watch the offcuts fall away.</p>`;
+  G.prompt('⚙️ Cutting radial boards');
+  qWaste.forEach(w=>{const f=w.position.clone(),q=w.userData.q;const sx=(q===0||q===3)?1:-1,sy=(q<2)?1:-1;
+    tween(1600,p=>{w.position.set(f.x+sx*0.5*p,f.y-p*p*2.2+sy*0.3*p,f.z+p*0.6);w.rotation.z=p*0.5*sx;},()=>{w.visible=false;});});
+  tween(1600,p=>wasteMats.forEach(m=>m.opacity=1-p*0.95));
+  qBoards.forEach(b=>{const f=b.position.clone(),d=[Math.cos(b.userData.t),Math.sin(b.userData.t)];tween(1400,p=>{b.position.x=f.x+d[0]*0.28*ease(p);b.position.y=f.y+d[1]*0.28*ease(p);});});
+  setTimeout(()=>{G.prompt('');panel.innerHTML=`<span class="tag">✓ Quarter sawn</span><h2>Quick question</h2><p>Which method <b>wasted more wood</b>?</p><div class="qbtns"><button class="ghost" data-a="plain">🪵 Through-and-through</button><button class="ghost" data-a="quarter">✳️ Quarter sawn</button></div>`;
+    $$('[data-a]').forEach(b=>b.onclick=()=>{const ok=b.dataset.a==='quarter';if(ok)G.addScore(1);G.toast(ok?'✓ Correct! +1':'It was quarter sawing',ok?'good':'bad');
+      panel.innerHTML=`<span class="tag ${ok?'':'bad'}">${ok?'✓ Correct':'✗ Not quite'}</span><h2>Quarter sawing wastes more</h2><p>In this model about <b>${quarterWaste}%</b> of the wood is lost (through-and-through lost about ${plainWaste}%). The extra cutting and waste make quarter-sawn timber <b>more expensive</b>, so why bother? Let’s find out.</p><button class="cta" id="nx">Next: fast-forward 2 years ⏩</button>`;
+      $('#nx').onclick=stepC;});},1800);}
+
+/* ---------- STEP C: time-lapse ---------- */
+let flatAsked=false;
+function stepC(){G.setStep(2);plainG.visible=true;
+  tween(1200,p=>{const e=ease(p);plainG.position.set(-1.9*e+(-6)*(1-e),0,0);plainG.scale.set(1-0.25*e,1-0.25*e,1-0.75*e);quarterG.position.set(1.9*e,0,0);quarterG.scale.set(1-0.25*e,1-0.25*e,1-0.75*e);});
+  const k=fitK();moveCam(new THREE.Vector3(0,0.9*k,6.6*k),new THREE.Vector3(0,-0.1,0),1400);
+  panel.innerHTML=`<h2>Two years later…</h2><p>Freshly sawn boards keep drying out and <b>shrinking</b>. Wood shrinks about <b>twice as much along the growth rings</b> as across them. Press fast-forward to see what that does to each board.</p><button class="cta alt" id="ff">⏩ Fast-forward 2 years</button>`;
+  $('#ff').onclick=()=>{$('#ff').disabled=true;timeLapse();};}
+function deform(m,p,amt){const pos=m.geometry.attributes.position,a=pos.array,p0=m.userData.p0;
+  for(let i=0;i<a.length;i+=3){const x=p0[i],y=p0[i+1];a[i]=x*(1-0.03*p);a[i+1]=y+amt(x,y)*p;a[i+2]=p0[i+2];}pos.needsUpdate=true;m.geometry.computeVertexNormals();}
+function timeLapse(){
+  tween(2600,p=>{G.prompt(`⏩ Year <em>${(p*2).toFixed(1)}</em>`);
+    plainBoards.forEach(m=>{const yc=m.userData.yc,hw=Math.max(0.2,m.userData.hw),s=Math.sign(Math.round(yc*100)/100);const k=0.34*Math.min(1,Math.abs(yc)/0.6);deform(m,p,(x)=>s*k*(x/hw)*(x/hw));});
+    qBoards.forEach(m=>deform(m,p,()=>0));},()=>{
+    G.prompt('👆 Tap the boards that stayed <em>flattest</em>');flatAsked=true;
+    panel.innerHTML=`<h2>What happened?</h2><p>Look closely at both sets of boards. Then <b>tap the set that stayed flattest</b>.</p>`;});}
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let downAt=null;
+canvas.addEventListener('pointerdown',e=>{downAt=[e.clientX,e.clientY,performance.now()];});
+canvas.addEventListener('pointerup',e=>{if(!downAt||!flatAsked)return;if(Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>12)return;
+  const r=canvas.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);
+  const hit=ray.intersectObjects([...plainBoards,...qBoards],false)[0];if(!hit)return;flatAsked=false;const ok=qBoards.includes(hit.object);
+  if(ok)G.addScore(1);G.toast(ok?'✓ Yes! The quarter-sawn boards +1':'Look again: the plain-sawn boards curled up',ok?'good':'bad',1800);G.prompt('');
+  panel.innerHTML=`<span class="tag ${ok?'':'bad'}">${ok?'✓ Correct':'✗ Not quite'}: quarter sawn stayed flat</span><h2>Why?</h2><p>Plain-sawn boards have rings running <b>across their width</b>. They shrink more along the rings, so they <b>cup</b> (curl away from the heart). Quarter-sawn boards have rings running <b>through their thickness</b>, so they stay <b>stable</b>. That is why they are used for quality furniture and flooring, and why oak shows off its beautiful <b>ray figure</b>.</p><button class="cta" id="nx">Next: sort the facts →</button>`;
+  $('#nx').onclick=stepD;});
+
+/* ---------- STEP D: sort facts ---------- */
+const FACTS=[{t:'Quick and cheap to cut',b:'plain'},{t:'Very little waste',b:'plain'},{t:'Boards can cup and warp as they dry',b:'plain'},{t:'Leaves waney (bark) edges on the boards',b:'plain'},
+ {t:'More waste, so more expensive',b:'quarter'},{t:'Boards stay stable and resist warping',b:'quarter'},{t:'Shows attractive figure, e.g. rays in oak',b:'quarter'},{t:'Slower: the log must be turned and re-cut',b:'quarter'}];
+let placed=0;
+function stepD(){G.setStep(3);$('#sorter').classList.add('on');canvas.style.filter='blur(3px) brightness(1.05)';
+  const deck=$('.deck');G.shuffle(FACTS.slice()).forEach(f=>{const el=document.createElement('div');el.className='st';el.textContent=f.t;el.dataset.b=f.b;deck.appendChild(el);let tries=0;
+    G.drag(el,{targets:'.bin',onDrop:(el,bin)=>{tries++;if(bin.dataset.b===el.dataset.b){el.dataset.locked='1';el.classList.add(tries===1?'ok':'meh');bin.appendChild(el);if(tries===1)G.addScore(1);placed++;
+        G.toast(tries===1?'✓ +1':'✓','good',700);if(placed===FACTS.length)setTimeout(()=>{$('#sorter').classList.remove('on');canvas.style.filter='';G.finish(3,MAX,'You can explain the two main ways of converting a log.','level4.html','Next level: Timber sort rush →');},700);return true;}
+      G.toast('Not that one!','bad',800);return false;}});});
+  panel.innerHTML=`<h2>Sort the facts</h2><p>Drag each statement into the box for the conversion method it describes.</p>`;}
+
+/* ---------- loop ---------- */
+function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}
+addEventListener('resize',resize);resize();
+let last=performance.now();
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(0.05,(now-last)/1000);last=now;
+  for(let i=tweens.length-1;i>=0;i--){const tw=tweens[i];const p=Math.min(1,(now-tw.t0)/tw.dur);tw.fn(p<1?ease(p):1);if(p>=1){tweens.splice(i,1);tw.done&&tw.done();}}
+  if(saw&&!saw.done){const front=placeBlade();bladeDisc.rotation.z-=dt*(2+rubV);rubV*=0.9;const pb=$('#pb');if(pb)pb.style.width=(saw.p*100)+'%';
+    if(rubV>3){if(saw.axis==='h')spawnDust(Math.min(front,R),saw.at,L/2,2);else spawnDust(saw.at,R-(front+R),L/2,2);}
+    if(saw.p>=1)finishCut();}
+  for(let i=0;i<DUST;i++){const v=dustVel[i];if(v[3]<=0)continue;v[1]-=dt*4;dustPos[i*3]+=v[0]*dt;dustPos[i*3+1]+=v[1]*dt;dustPos[i*3+2]+=v[2]*dt;v[3]-=dt*0.7;if(dustPos[i*3+1]<-1.33){dustPos[i*3+1]=-1.33;v[0]=v[1]=v[2]=0;}}
+  dustGeo.attributes.position.needsUpdate=true;
+  camera.lookAt(camTgt);renderer.render(scene,camera);}
+requestAnimationFrame(loop);
+panel.innerHTML=`<h2>Converting a log</h2><p><b>Conversion</b> means sawing a log into usable boards. You’ll try the two main methods and compare them. You are the sawyer!</p><button class="cta" id="go">🪚 Start sawing</button>`;
+$('#go').onclick=stepA;
+})();
+</script>
+</body>
+</html>

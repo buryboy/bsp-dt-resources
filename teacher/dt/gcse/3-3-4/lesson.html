@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Strategies lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a finishing workshop's test bench: try a finish, watch what happens
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Design strategies and communication<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.3.4 to 3.3.6</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+
+const S=[
+{t:'Design strategies',c:'#7449B0',lead:'Designers use strategies to generate good ideas and avoid getting stuck.',
+ cards:[['Design fixation','Getting stuck on one idea, or copying an existing product too closely.'],['Break fixation','Mood boards, random words, SCAMPER, looking at nature or other products.'],['Collaboration','Working with others: users, engineers, clients, other designers.'],['Systems approach','Thinking in inputs, processes and outputs.']],
+ demo:{type:'fix',title:'Lab test: ten ideas for a lamp',q:'A designer sketches ten lamps that all look almost the same. This is called...',opts:['Iteration','Design fixation','Collaboration'],right:1,ms:5000,
+  res:'Design fixation. After a random-word prompt (here: "jellyfish", "origami", "bridge") the ideas become far more varied.'}},
+{t:'Sketching and 3D drawing',c:'#C99A06',lead:'Quick drawings get ideas out of your head and onto paper so others can understand them.',
+ cards:[['Freehand sketches','Fast, rough ideas. Add notes (annotation) to explain them.'],['Isometric','3D drawing with lines at 30°. Good for showing form.'],['Perspective','One- or two-point: looks realistic, as the eye sees it.'],['Rendering','Shading, colour and texture to show materials.']],
+ demo:{type:'iso',title:'Lab test: drawing a box in 3D',q:'In isometric drawing, the side edges are drawn at...',opts:['45°','30°','90°'],right:1,ms:4500,
+  res:'Isometric uses 30° lines from the horizontal for the sides, and vertical lines stay vertical. All edges keep their true length ratio.'}},
+{t:'Working drawings',c:'#5B6670',lead:'Manufacturers need exact information: sizes, views and how parts fit together.',
+ cards:[['Orthographic','Front, side and plan views, usually in third angle, with dimensions in mm.'],['Exploded drawing','Parts pulled apart along lines to show how they fit together.'],['Circuit and systems diagrams','Standard symbols and blocks for electronics.'],['Flowcharts','Steps and decisions, e.g. in manufacture or a program.']],
+ demo:{type:'explode',title:'Lab test: exploding a box',q:'What does an exploded drawing mainly show?',opts:['The colour','How the parts fit together','The cost'],right:1,ms:5000,
+  res:'Parts slide apart along thin lines so you can see each piece and where it goes. Flat-pack instructions use exploded drawings.'}},
+{t:'CAD and models',c:'#2478B3',lead:'Models let designers test ideas in 3D before committing to expensive manufacture.',
+ cards:[['Card model','Quick and cheap: test size, layout and proportion.'],['Foam model','Shape and feel in the hand.'],['CAD model','Accurate, easy to change, test virtually, send to CAM.'],['3D print / prototype','Accurate and can work; shows clients and investors.']],
+ demo:{type:'models',title:'Lab test: which model?',q:'Which model is quickest and cheapest for testing how a handle feels?',opts:['3D print','Foam model','Injection moulded part'],right:1,ms:4500,
+  res:'A foam block can be shaped in minutes for pennies, held, then reshaped. A 3D print takes hours; a moulded part costs thousands. (Illustrative times and costs.)'}},
+{t:'Iteration and feedback',c:'#2E8B57',lead:'Iterative design goes round a cycle: design, model, test, evaluate, improve. Feedback drives each change.',
+ cards:[['The cycle','Design → model → test → evaluate → improve, then round again.'],['Feedback','From users and clients at every cycle.'],['Why','Problems found early are cheap to fix; in the factory they are expensive.'],['Example','Dyson: 5,127 prototypes before the first bagless vacuum.']],
+ demo:{type:'iter',title:'Lab test: the cost of a late fix',q:'When is it cheapest to fix a design problem?',opts:['At the sketch or model stage','In the factory','After it is sold'],right:0,ms:5000,
+  res:'Fixing a sketch costs almost nothing. Fixing a mould in the factory costs thousands. A product recall costs millions. Iterate early. (Illustrative scale.)'}},
+{t:'Quick fire',c:'#14213d',lead:'Say the answer before you tap. Then the exam question.',
+ cards:[['Factory needs exact sizes','<em>Orthographic</em> drawing'],['Stuck on one idea','<em>Design fixation</em>'],['How flat-pack parts fit','<em>Exploded</em> drawing'],['Realistic image for a client','<em>CAD render</em>'],['Test the feel of a handle','<em>Foam</em> model'],['Design, test, improve, repeat','<em>Iterative</em> design']],
+ exam:{q:'Explain two benefits of using CAD to develop a design. (4 marks)',a:'Designs can be changed quickly without redrawing (1), so many versions can be tried (1). Parts can be tested virtually or rendered realistically (1), so problems are found before making and clients can see it (1). Accept: send to CAM, share files, accuracy.'}}
+];
+const DEMOS={
+fix:(t)=>{let o='';const k=clamp(t*2-1);for(let i=0;i<10;i++){const x=40+(i%5)*110,y=40+Math.floor(i/5)*130;
+ if(k<=0){o+=`<rect x="${x+30}" y="${y+60}" width="30" height="8" fill="#7449b0"/><line x1="${x+45}" y1="${y+60}" x2="${x+45}" y2="${y+20}" stroke="#7449b0" stroke-width="3"/><path d="M${x+25} ${y+20} L${x+65} ${y+20} L${x+55} ${y} L${x+35} ${y}Z" fill="#c99a06"/>`}
+ else{const f=[()=>`<path d="M${x+20} ${y+30} Q${x+45} ${y-10} ${x+70} ${y+30}Z" fill="#c99a06"/>`+[0,1,2,3].map(j=>`<path d="M${x+28+j*12} ${y+30} q4 15 0 35" stroke="#7449b0" fill="none" stroke-width="2"/>`).join(''),()=>`<polygon points="${x+45},${y} ${x+75},${y+40} ${x+45},${y+70} ${x+15},${y+40}" fill="#c99a06" stroke="#7449b0"/>`,()=>`<path d="M${x+5} ${y+65} Q${x+45} ${y-15} ${x+85} ${y+65}" stroke="#7449b0" stroke-width="5" fill="none"/><circle cx="${x+45}" cy="${y+25}" r="10" fill="#c99a06"/>`][i%3];o+=f()}}
+ return o+T(300,290,k>0?'After random words: jellyfish, origami, bridge':'Ten ideas... all the same','text-anchor="middle" font-weight="700"')},
+iso:(t)=>{const k=clamp(t*1.3),cx=300,cy=250,c=Math.cos(Math.PI/6),sn=Math.sin(Math.PI/6),L=130*k,H=90*k;const P=(x,y,z)=>`${cx+(x-y)*c},${cy-(x+y)*sn-z}`;
+ return `<line x1="90" y1="${cy}" x2="510" y2="${cy}" stroke="#c2410c" stroke-dasharray="5 5"/><polygon points="${P(0,0,0)} ${P(L,0,0)} ${P(L,0,H)} ${P(0,0,H)}" fill="#f9eeda" stroke="#1b2a33" stroke-width="2"/><polygon points="${P(0,0,0)} ${P(0,L,0)} ${P(0,L,H)} ${P(0,0,H)}" fill="#f0e2c0" stroke="#1b2a33" stroke-width="2"/><polygon points="${P(0,0,H)} ${P(L,0,H)} ${P(L,L,H)} ${P(0,L,H)}" fill="#fff8e8" stroke="#1b2a33" stroke-width="2"/>`+(t>.6?T(400,cy-12,'30°','font-weight="700" fill="#c2410c"')+T(180,cy-12,'30°','font-weight="700" fill="#c2410c"'):'')},
+explode:(t)=>{const k=clamp(t*1.3)*60;const R=(x,y,w,h,c)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" stroke="#1b2a33" stroke-width="2"/>`;
+ let o=R(220,200+k*0.6,160,20,'#d9b382')+R(220-k,110,20,90,'#c9a372')+R(360+k,110,20,90,'#c9a372')+R(240,110-k*0.8,120,20,'#e9c392');
+ if(k>5)o+=`<line x1="230" y1="${220}" x2="230" y2="${200+k*0.6}" stroke="#999" stroke-dasharray="3 3"/><line x1="240" y1="155" x2="${240-k}" y2="155" stroke="#999" stroke-dasharray="3 3"/><line x1="360" y1="155" x2="${360+k}" y2="155" stroke="#999" stroke-dasharray="3 3"/><line x1="300" y1="110" x2="300" y2="${130-k*0.8}" stroke="#999" stroke-dasharray="3 3"/>`;
+ return o+T(300,290,'base · sides · lid','text-anchor="middle" font-size="14"')},
+models:(t)=>{const d=[['Card',10,0.5,'#c99a06'],['Foam',20,2,'#2e8b57'],['3D print',240,5,'#2478b3'],['Moulded part',2000,5000,'#c2410c']];let o=T(20,28,'Time to make (minutes, log scale)','font-size="14" fill="#5b6670"');
+ d.forEach(([n,m,c,col],i)=>{const y=50+i*58,w=Math.log10(m)/Math.log10(2000)*300*clamp(t*1.3);o+=T(20,y+26,n,'font-size="15"')+`<rect x="140" y="${y}" width="${Math.max(2,w)}" height="38" fill="${col}"/>`+(t>.7?T(150+w,y+25,(m>=60?Math.round(m/60)+' h':m+' min')+' · '+(c<1?Math.round(c*100)+'p':'£'+c.toLocaleString()),'font-weight="700" font-size="14"'):'')});return o},
+iter:(t)=>{const st=['Design','Model','Test','Evaluate','Improve'];const k=t*10;let o='';
+ st.forEach((s,i)=>{const a=-Math.PI/2+i*2*Math.PI/5,x=150+95*Math.cos(a),y=150+95*Math.sin(a),on=Math.floor(k)%5===i;o+=`<circle cx="${x}" cy="${y}" r="36" fill="${on?'#2e8b57':'#fff'}" stroke="#2e8b57" stroke-width="3"/>`+T(x,y+5,s,'text-anchor="middle" font-size="11" fill="'+(on?'#fff':'#2e8b57')+'" font-weight="700"')});
+ const c=[['Sketch','£1'],['Model','£10'],['Factory','£10,000'],['Recall','£1,000,000']];c.forEach(([n,v],i)=>{const h=[6,24,90,200][i]*clamp(t*1.4);o+=`<rect x="${330+i*65}" y="${270-h}" width="50" height="${h}" fill="#c2410c"/>`+T(355+i*65,288,n,'text-anchor="middle" font-size="11"')+(t>.75?T(355+i*65,262-h,v,'text-anchor="middle" font-size="11" font-weight="700"'):'')});
+ return o+T(460,30,'Cost to fix a problem','text-anchor="middle" font-size="13" fill="#5b6670"')}
+};
+
+
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const AR=(x1,y1,x2,y2,c='#c2410c',w=5)=>{const a=Math.atan2(y2-y1,x2-x1),s=12;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/><polygon points="${x2},${y2} ${x2-s*Math.cos(a-.5)},${y2-s*Math.sin(a-.5)} ${x2-s*Math.cos(a+.5)},${y2-s*Math.sin(a+.5)}" fill="${c}"/>`};
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">${d.run||'Run the test'}</button><button class="go sec" id="reset">Reset</button>${(d.buttons||[]).map(b=>`<button class="opt" data-b="${b}">${b}</button>`).join('')}${d.slider?`<input type="range" id="slider" min="0" max="1000" value="0" aria-label="${d.slider}"><span class="clock" id="clock"></span>`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"${right?'':' style="grid-template-columns:1fr"'}><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt[data-k]').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run'),sl=document.getElementById('slider'),ck=document.getElementById('clock');
+ const D=DEMOS[d.type];let state={mode:d.mode0||(d.buttons||[])[0]};
+ const draw=t=>{st.innerHTML=`<svg viewBox="0 0 600 300">${D(t,state,d)}</svg>`;if(sl){sl.value=Math.round(t*1000);if(d.clock)ck.textContent=d.clock(t)}};
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,done=finish)=>{cancelAnimationFrame(anim);const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);draw(t);if(t<1)anim=requestAnimationFrame(step);else done()};anim=requestAnimationFrame(step)};
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));state.mode=d.mode0||(d.buttons||[])[0];draw(0)};
+ run.onclick=()=>{reset();if(d.runMode)state.mode=d.runMode;play(d.ms||3000)};
+ document.getElementById('reset').onclick=reset;
+ main.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.b;play(d.bms||1600,()=>{})});
+ if(sl)sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/1000);if(sl.value>=1000)finish()};
+ draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+
+}
+</script>
+<script>
+/* Fit to the board: scale each section up so it fills the screen and can be read from the back of the room.
+   It measures the section with every card opened, so tapping a card never makes the page jump or scroll. */
+(() => { const main = document.getElementById('main'); if (!main || !('zoom' in main.style)) return; let busy = false, t = 0;
+  const fit = () => { if (busy) return; busy = true;
+    const side = innerWidth > 1000 ? main.getBoundingClientRect().left : 0, W = innerWidth - side, H = innerHeight;
+    if (innerWidth <= 1000) { main.style.zoom = ''; main.style.width = ''; main.style.height = ''; busy = false; return; }
+    const closed = [...main.querySelectorAll('.card:not(.open)')], hidden = [...main.querySelectorAll('.result:not(.show)')];
+    closed.forEach((c) => c.classList.add('open')); hidden.forEach((r) => r.classList.add('show'));
+    const set = (z) => { main.style.zoom = z; main.style.width = (W / z) + 'px'; main.style.height = (H / z) + 'px'; };
+    let lo = 1, hi = 2.6; for (let k = 0; k < 9; k++) { const z = (lo + hi) / 2; set(z); if (main.scrollHeight <= main.clientHeight + 1 && main.scrollWidth <= main.clientWidth + 1) lo = z; else hi = z; }
+    set(lo); closed.forEach((c) => c.classList.remove('open')); hidden.forEach((r) => r.classList.remove('show')); main.scrollTop = 0;
+    requestAnimationFrame(() => { busy = false; }); };
+  const later = () => { clearTimeout(t); t = setTimeout(fit, 60); };
+  new MutationObserver(later).observe(main, { childList: true }); addEventListener('resize', later); addEventListener('load', later); if (document.fonts && document.fonts.ready) document.fonts.ready.then(later); later();
+})();
+</script>
+</body>
+</html>

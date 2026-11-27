@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>HEIC to JPEG</title>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/heic-to-jpeg-180.png">
+<meta name="theme-color" content="#1f2328">
+<style>
+:root{--ink:#1f2328;--soft:#5f6670;--acc:#24539c;--ok:#2f7d4a;--bad:#b0402a;--line:#d5d8dc}
+*{box-sizing:border-box}
+body{margin:0;background:#eef0f3;color:var(--ink);font:17px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.bar{background:var(--ink);color:#fff;padding:12px 16px;display:flex;gap:12px;align-items:center}
+.bar h1{font-size:18px;margin:0;flex:1}
+main{max-width:860px;margin:0 auto;padding:18px 14px 60px}
+.card{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+.drop{border:2.5px dashed #9aa3ad;border-radius:14px;padding:34px 16px;text-align:center;background:#fff}
+.drop.over{border-color:var(--acc);background:#eef4fd}
+.btn{font:600 16px inherit;border:0;border-radius:9px;padding:11px 18px;background:var(--acc);color:#fff;cursor:pointer;min-height:44px}
+.btn.ghost{background:#e7e9ec;color:var(--ink)}.btn.small{padding:8px 12px;font-size:15px;min-height:38px}
+.btn:disabled{opacity:.45}
+.opts{display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+select{font:16px inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:#fff}
+label{font-weight:600;font-size:15px}
+.row{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row img{width:64px;height:64px;object-fit:cover;border-radius:8px;background:#e7e9ec;flex:none}
+.row .n{flex:1;min-width:0}.row .n b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row small{color:var(--soft)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.muted{color:var(--soft);font-size:15px}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+</style></head><body>
+<div class="bar"><h1>HEIC to JPEG</h1><span id="updAnchor" data-upd-before data-upd-class="plain"></span></div>
+<main>
+ <div class="drop" id="drop">
+  <p style="margin:0 0 12px;font-size:19px"><b>Turn iPhone and iPad photos (HEIC) into ordinary JPEGs</b></p>
+  <button class="btn" id="pick">Choose photos</button>
+  <input type="file" id="file" accept=".heic,.heif,image/heic,image/heif,image/*" multiple style="display:none">
+  <p class="muted" style="margin:12px 0 0">or drop files here. PNG and WebP pictures are converted too.</p>
+ </div>
+ <div class="card opts">
+  <span><label for="q">Quality</label> <select id="q"><option value="0.92">High (best for printing)</option><option value="0.82" selected>Medium (good for documents)</option><option value="0.65">Small file</option></select></span>
+  <span><label for="mx">Size</label> <select id="mx"><option value="0">Original size</option><option value="2400">Large: 2400 px</option><option value="1600" >Medium: 1600 px</option><option value="1000">Small: 1000 px</option></select></span>
+ </div>
+ <div class="card" id="listCard" style="display:none">
+  <div id="list"></div>
+  <div class="acts"><button class="btn" id="saveAll" disabled>Save all</button><button class="btn ghost" id="clear">Clear</button><span class="muted" id="sum"></span></div>
+ </div>
+ <p class="muted">Your photos never leave this device: the conversion happens here, with no upload and no account. Works offline once added to the Home Screen.</p>
+</main>
+<script>
+'use strict';
+const $ = (q) => document.querySelector(q);
+const items = [];
+const fmt = (b) => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB';
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let libP = null;
+function lib() { return libP || (libP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'heic-to.js'; s.onload = () => res(window.HeicTo); s.onerror = () => rej(new Error('converter could not be loaded')); document.head.appendChild(s); })); }
+function looksHeic(f) { return /\.(heic|heif)$/i.test(f.name) || /hei[cf]/i.test(f.type); }
+async function nativeBitmap(blob) { // works where the browser can decode the format itself (Safari decodes HEIC)
+  try { return await createImageBitmap(blob, { imageOrientation: 'from-image' }); } catch (e) {}
+  return await new Promise((res, rej) => { const u = URL.createObjectURL(blob), im = new Image(); im.onload = () => { URL.revokeObjectURL(u); res(im); }; im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('cannot decode')); }; im.src = u; });
+}
+function toJpeg(src, quality, max) {
+  let w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
+  if (max && Math.max(w, h) > max) { const k = max / Math.max(w, h); w = Math.round(w * k); h = Math.round(h * k); }
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, w, h);
+  return new Promise((res, rej) => c.toBlob((b) => b ? res({ blob: b, w, h }) : rej(new Error('could not make JPEG')), 'image/jpeg', quality));
+}
+async function convert(file) {
+  const quality = +$('#q').value, max = +$('#mx').value;
+  let src;
+  try { src = await nativeBitmap(file); }
+  catch (e) {
+    if (!looksHeic(file)) { const H = await lib(); if (!(await H.isHeic(file))) throw new Error('not a picture this app can read'); }
+    const H = await lib();
+    const jpg = await H({ blob: file, type: 'image/jpeg', quality: 0.95 });
+    src = await nativeBitmap(jpg);
+  }
+  const out = await toJpeg(src, quality, max); if (src.close) src.close();
+  return out;
+}
+function rowHTML(it, i) {
+  const st = it.state === 'work' ? 'Converting…' : it.state === 'err' ? `<span class="bad">Could not convert: ${esc(it.err)}</span>` : `<span class="ok">Done</span> · ${it.w} × ${it.h} · ${fmt(it.file.size)} → ${fmt(it.out.size)}`;
+  return `<div class="row"><img ${it.url ? `src="${it.url}"` : ''} alt=""><div class="n"><b>${esc(it.name)}</b><small>${st}</small></div>${it.state === 'done' ? `<button class="btn small ghost" data-save="${i}">Save</button>` : ''}</div>`;
+}
+function draw() {
+  $('#listCard').style.display = items.length ? '' : 'none';
+  $('#list').innerHTML = items.map(rowHTML).join('');
+  const done = items.filter((i) => i.state === 'done');
+  $('#saveAll').disabled = !done.length; $('#saveAll').textContent = done.length > 1 ? `Save all ${done.length}` : 'Save';
+  const working = items.filter((i) => i.state === 'work').length;
+  $('#sum').textContent = working ? `${working} still converting…` : done.length ? `${done.length} ready` : '';
+  document.querySelectorAll('[data-save]').forEach((b) => b.onclick = () => saveFiles([items[+b.dataset.save]]));
+}
+async function add(files) {
+  for (const f of files) {
+    const base = f.name.replace(/\.[^.]+$/, '') || 'photo';
+    const it = { file: f, name: base + '.jpg', state: 'work' }; items.push(it); draw();
+    try { const r = await convert(f); it.out = new File([r.blob], it.name, { type: 'image/jpeg' }); it.w = r.w; it.h = r.h; it.url = URL.createObjectURL(r.blob); it.state = 'done'; }
+    catch (e) { it.state = 'err'; it.err = e && e.message ? e.message : 'unknown problem'; }
+    draw();
+  }
+}
+async function saveFiles(list) {
+  const files = list.map((i) => i.out);
+  if (navigator.maxTouchPoints > 1 && navigator.canShare && navigator.canShare({ files })) {
+    try { await navigator.share({ files }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  for (const f of files) { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); await new Promise((r) => setTimeout(r, 350)); }
+}
+$('#pick').onclick = () => $('#file').click();
+$('#file').onchange = (e) => { add([...e.target.files]); e.target.value = ''; };
+$('#saveAll').onclick = () => saveFiles(items.filter((i) => i.state === 'done'));
+$('#clear').onclick = () => { items.forEach((i) => i.url && URL.revokeObjectURL(i.url)); items.length = 0; draw(); };
+const d = $('#drop');
+['dragenter', 'dragover'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.add('over'); }));
+['dragleave', 'drop'].forEach((ev) => d.addEventListener(ev, (e) => { e.preventDefault(); d.classList.remove('over'); }));
+d.addEventListener('drop', (e) => add([...e.dataTransfer.files]));
+</script>
+<script>if('serviceWorker' in navigator && location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{});}</script>
+<script src="../../book-kit/updater.js"></script>
+</body></html>

@@ -1,0 +1,25 @@
+// Lesson settings for the Papers & boards workbook.
+window.BOOK_CONFIG = {
+  lesson: "papers-boards-y10",
+  title: "Papers & boards",
+  subtitle: "From tree to packaging: papers, boards, gsm and choosing the right one.",
+  course: 'AQA GCSE Design & Technology · Year 10',
+  emailDomain: 'bspcloud.net',
+  classes: ['10A', '10B', '10C', '10D', '10E', 'Other'],
+  backend: '',
+  mis: {
+    "gsm-meaning": "Thinks gsm is thickness, or grams per sheet",
+    "micron-convert": "Wrong micron ↔ mm conversion",
+    "a-size": "Thinks bigger A-number = bigger sheet, or wrong halving",
+    "paper-source": "Thinks paper comes from hardwood/any plant/oil",
+    "recycle-forever": "Thinks paper can be recycled forever / fibres don't weaken",
+    "layout-vs-tracing": "Mixes up layout and tracing paper",
+    "bleed-meaning": "Doesn't know what bleed-proof means / picks the wrong paper for marker",
+    "paper-mixup": "Other mix-ups between the five papers",
+    "board-mixup": "Mixes up the six boards' structure/uses",
+    "duplex-vs-solid": "Mixes up duplex board and solid white board",
+    "foil-purpose": "Doesn't know what the foil layer is for",
+    "corrugated-structure": "Doesn't know the fluted structure / why it is strong and protective",
+    "renewable-mix": "Thinks paper is non-renewable / not biodegradable",
+  },
+};

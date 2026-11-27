@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Systems approach lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: a finishing workshop's test bench: try a finish, watch what happens
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Systems approach to designing<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.1.4</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+
+const S=[
+{t:'The systems approach',c:'#2E7D5B',lead:'Designers break any electronic product into three blocks: INPUT → PROCESS → OUTPUT. Drawing the block diagram first makes complex products simple.',
+ cards:[['Input','A sensor or switch detects a change: light, heat, pressure, movement, a press.'],['Process','The decision-making part, usually a programmable microcontroller: decides, counts, times.'],['Output','Makes something happen: sound, light, movement.'],['Block diagram','Three labelled boxes joined by arrows in the order the signal flows.'],['Why use it?','Breaks a big problem into small parts; each block can be designed, tested and swapped on its own.']],
+ demo:{type:'block',title:'Lab test: a burglar alarm',q:'In a burglar alarm, which block is the PIR movement sensor?',opts:['Input','Process','Output'],right:0,ms:3500,
+  res:'The PIR sensor is the INPUT: it detects a warm body moving. The microcontroller (PROCESS) decides whether the alarm is armed, and the buzzer is the OUTPUT.'}},
+{t:'Light sensors',c:'#C99A06',lead:'A light-dependent resistor (LDR) changes its resistance with light. The process block reads that change and decides what to do.',
+ cards:[['LDR','Bright light: low resistance. Dark: high resistance.'],['Uses','Night lights, street lights, automatic porch lights, camera exposure.'],['Threshold','The program sets the light level at which the output switches.']],
+ demo:{type:'ldr',title:'Lab test: dusk falls',q:'As it gets darker, what happens to the resistance of the LDR?',opts:['It goes down','It goes up','It stays the same'],right:1,ms:4500,
+  res:'In the dark the LDR\'s resistance rises. When it passes the set threshold, the microcontroller switches the LED on. That is how a street light knows it is night.'}},
+{t:'Temperature sensors',c:'#C2410C',lead:'A thermistor changes its resistance with temperature. Most are NTC: Negative Temperature Coefficient.',
+ cards:[['Thermistor (NTC)','Hotter: resistance goes DOWN. Colder: resistance goes UP.'],['Uses','Thermostats, fire alarms, frost alarms, fridge and oven controls, thermometers.'],['Set point','The program compares the reading to a set temperature, e.g. 30 °C.']],
+ demo:{type:'therm',title:'Lab test: the greenhouse warms up',q:'As the greenhouse gets hotter, what happens to the NTC thermistor\'s resistance?',opts:['It goes down','It goes up','It stays the same'],right:0,ms:4500,
+  res:'An NTC thermistor\'s resistance falls as it heats up. At the 30 °C set point the microcontroller sounds the warning.'}},
+{t:'Switches',c:'#2478B3',lead:'Switches are the simplest inputs: they are either on or off. Choose the one that matches how the product is used.',
+ cards:[['Push-to-make','Only on while pressed. Doorbells, keypads.'],['Micro switch','Tiny force on a lever switches it. Door sensors, machine limits.'],['Tilt switch','A ball rolls to make contact when tilted. Bike alarms, heaters that switch off if knocked over.'],['Reed switch','Two thin metal reeds close near a magnet. Door and window alarms.'],['Pressure pad','Switches when stood on. Visitor counters, alarm mats.']],
+ demo:{type:'reed',title:'Lab test: the window alarm',q:'What closes a reed switch?',opts:['Light','A magnet','Heat'],right:1,ms:3500,
+  res:'A magnet pulls the two thin metal reeds together, completing the circuit. Fix the magnet to a window and the switch to the frame: opening the window changes the signal.'}},
+{t:'Processes',c:'#7449B0',lead:'The process block is the brain. A programmable microcontroller can make decisions, count and time, all in one chip, and can be reprogrammed.',
+ cards:[['Decision','IF a condition is true THEN do something. AND: both must be true. OR: either one.'],['Timer','Wait for a set time, or keep an output on for a set time.'],['Counter','Count events: presses, visitors, turns.'],['Microcontroller','Small programmable chip, e.g. in a BBC micro:bit or Arduino. Cheap and flexible.']],
+ demo:{type:'logic',title:'Lab test: alarm logic',q:'The shed alarm must sound only when it is DARK and something MOVES. Which decision?',opts:['Dark OR movement','Dark AND movement','A timer only'],right:1,ms:5000,
+  res:'AND: the alarm sounds only in the one case where both inputs are true. OR would sound in daylight whenever someone walked in.'}},
+{t:'Outputs',c:'#BE3F66',lead:'The output block turns the signal into something people notice. Pick the one that suits the user and the situation.',
+ cards:[['Buzzer','One loud tone. Alarms, warnings, timers.'],['Speaker','Any sound: tunes, speech, music. Doorbells, toys.'],['Lamp','Bright light. Warning lights, lighting.'],['LED','Low-power light in many colours. Indicators, night lights.'],['Motor','Turns: fans, moving parts.']],
+ demo:{type:'outs',title:'Lab test: buzzer or speaker?',q:'A doorbell must play a short tune. Which output?',opts:['Buzzer','Speaker','LED'],right:1,ms:4000,
+  res:'A buzzer only makes one tone. A speaker can play any sound, including a tune, so the microcontroller can store and play a melody.'}},
+{t:'Quick fire',c:'#14213d',lead:'Name the block or component before you tap. Then the exam question.',
+ cards:[['Detects darkness','<em>LDR</em> (input)'],['Detects a window opening','<em>Reed switch</em> + magnet'],['Counts visitors','<em>Counter</em> (process)'],['Plays a tune','<em>Speaker</em> (output)'],['Bike alarm sensor','<em>Tilt switch</em>'],['Both conditions must be true','<em>AND</em> decision']],
+ exam:{q:'Draw a labelled block diagram for a frost alarm that flashes a lamp when the temperature drops below 2 °C. (3 marks)',a:'INPUT: thermistor (1) → PROCESS: microcontroller decides if below 2 °C and flashes using a timer (1) → OUTPUT: lamp/LED (1). Boxes joined by arrows in order.'}}
+];
+const box=(x,y,w,h,label,sub,on,c)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="${on?c:'#fff'}" stroke="${c}" stroke-width="4"/>`+T(x+w/2,y+h/2-4,label,`text-anchor="middle" font-weight="700" fill="${on?'#fff':'#1b2a33'}"`)+T(x+w/2,y+h/2+20,sub,`text-anchor="middle" font-size="14" fill="${on?'#fff':'#5b6670'}"`);
+const DEMOS={
+block:(t)=>{const p=clamp(t*1.1);return box(20,100,160,90,'INPUT','PIR sensor',p>.1,'#2478b3')+box(220,100,160,90,'PROCESS','microcontroller',p>.45,'#7449b0')+box(420,100,160,90,'OUTPUT','buzzer',p>.8,'#be3f66')+AR(182,145,214,145,'#1b2a33',4)+AR(382,145,414,145,'#1b2a33',4)+`<circle cx="${20+p*560}" cy="235" r="9" fill="#c2410c"/>`+T(20,280,'signal flow →','font-size="15" fill="#5b6670"')+(p>.85?`<path d="M560 80 q12 -14 0 -28 M575 88 q20 -22 0 -44" stroke="#be3f66" stroke-width="4" fill="none"/>`:'')},
+ldr:(t)=>{const L=1-clamp(t*1.1),R=Math.round(lerp(1,200,(1-L)**2)),on=L<.3;const sky=`rgb(${Math.round(lerp(20,140,L))},${Math.round(lerp(30,200,L))},${Math.round(lerp(70,245,L))})`;
+ return `<rect width="600" height="300" fill="${sky}"/><circle cx="${520}" cy="${50+(1-L)*170}" r="30" fill="#ffe14d" opacity="${L}"/>`+`<rect x="40" y="200" width="140" height="70" rx="10" fill="#fff"/>`+T(110,225,'LDR resistance','text-anchor="middle" font-size="14"')+T(110,255,R+' kΩ','text-anchor="middle" font-size="22" font-weight="700"')+`<rect x="210" y="150" width="${Math.min(200,R)}" height="22" fill="#c99a06"/>`+T(210,140,'resistance','font-size="14" fill="#fff"')+`<line x1="${210+120}" y1="140" x2="${210+120}" y2="180" stroke="#fff" stroke-width="3" stroke-dasharray="5 4"/>`+T(305,198,'threshold','font-size="13" fill="#fff"')+`<circle cx="470" cy="240" r="26" fill="${on?'#ffe14d':'#666'}" ${on?'filter="drop-shadow(0 0 14px #ffe14d)"':''}/>`+T(430,290,on?'LED ON':'LED off','font-size="16" font-weight="700" fill="#fff"')},
+therm:(t)=>{const C=Math.round(lerp(15,38,clamp(t*1.1))),R=Math.round(lerp(20,4,(C-15)/23)*10)/10,alarm=C>=30;
+ return `<rect x="60" y="40" width="30" height="200" rx="15" fill="#fff" stroke="#1b2a33" stroke-width="3"/><rect x="66" y="${240-(C-10)*6}" width="18" height="${(C-10)*6-6}" fill="#c2410c"/><circle cx="75" cy="245" r="22" fill="#c2410c"/>`+T(110,140,C+' °C','font-size="30" font-weight="700"')+`<rect x="230" y="60" width="180" height="80" rx="10" fill="#fff" stroke="#c2410c" stroke-width="3"/>`+T(320,90,'Thermistor','text-anchor="middle" font-size="15"')+T(320,122,R+' kΩ','text-anchor="middle" font-size="24" font-weight="700"')+T(230,175,'Set point: 30 °C','font-size="16"')+`<circle cx="500" cy="110" r="34" fill="${alarm?'#c2410c':'#ddd'}"/>`+T(500,116,alarm?'BEEP':'quiet','text-anchor="middle" font-weight="700" fill="'+(alarm?'#fff':'#666')+'"')},
+reed:(t)=>{const mx=lerp(560,330,clamp(t*1.3)),close=mx<370;return `<rect x="120" y="120" width="200" height="40" rx="20" fill="#e8f0f7" stroke="#2478b3" stroke-width="3"/><line x1="140" y1="140" x2="${close?222:215}" y2="${close?140:130}" stroke="#555" stroke-width="5"/><line x1="300" y1="140" x2="${close?218:225}" y2="${close?140:150}" stroke="#555" stroke-width="5"/>`+T(160,105,'reed switch','font-size="15"')+`<rect x="${mx}" y="110" width="120" height="60" fill="#c2410c"/><rect x="${mx+60}" y="110" width="60" height="60" fill="#2478b3"/>`+T(mx+20,147,'N','fill="#fff" font-weight="700"')+T(mx+80,147,'S','fill="#fff" font-weight="700"')+T(mx+20,195,'magnet','font-size="15"')+`<circle cx="220" cy="240" r="24" fill="${close?'#ffe14d':'#888'}"/>`+T(260,247,close?'circuit closed: lamp on':'open: lamp off','font-weight="700"')},
+logic:(t)=>{const cases=[['Day','No movement'],['Day','Movement'],['Night','No movement'],['Night','Movement']];const k=Math.min(3,Math.floor(t*4));let o='';
+ cases.forEach((c,i)=>{const y=30+i*62,act=i===k,on=i===3&&k>=3;o+=`<rect x="20" y="${y}" width="560" height="52" rx="10" fill="${act?'#efe9fb':'#fff'}" stroke="${act?'#7449b0':'#ddd'}" stroke-width="3"/>`+T(40,y+33,c[0])+T(150,y+33,c[1])+T(330,y+33,'AND →','fill="#7449b0" font-weight="700"')+(i<=k?T(440,y+33,i===3?'ALARM':'silent',`font-weight="700" fill="${i===3?'#c2410c':'#5b6670'}"`):'')});return o},
+outs:(t)=>{const p=t*30;let o=`<rect x="70" y="110" width="80" height="80" rx="40" fill="#1b2a33"/>`+T(110,225,'Buzzer','text-anchor="middle"')+`<rect x="370" y="100" width="70" height="100" fill="#1b2a33"/><polygon points="440,100 500,60 500,240 440,200" fill="#be3f66"/>`+T(430,265,'Speaker','text-anchor="middle"');
+ for(let i=0;i<3;i++){const r=20+((p*4+i*20)%60);o+=`<path d="M${150+r} 120 q20 30 0 60" stroke="#999" stroke-width="3" fill="none" opacity="${1-r/80}"/>`}
+ const notes='♪ ♫ ♪ ♬';for(let i=0;i<4;i++){const x=510+((p*6+i*30)%90),y=150-Math.sin(p+i)*40;o+=T(x,y,notes[i*2],'font-size="26" fill="#be3f66"')}
+ return o+T(60,60,'beep beep beep','font-size="15" fill="#5b6670"')+T(360,50,'a tune','font-size="15" fill="#be3f66"')}
+};
+
+
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const AR=(x1,y1,x2,y2,c='#c2410c',w=5)=>{const a=Math.atan2(y2-y1,x2-x1),s=12;return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/><polygon points="${x2},${y2} ${x2-s*Math.cos(a-.5)},${y2-s*Math.sin(a-.5)} ${x2-s*Math.cos(a+.5)},${y2-s*Math.sin(a+.5)}" fill="${c}"/>`};
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">${d.run||'Run the test'}</button><button class="go sec" id="reset">Reset</button>${(d.buttons||[]).map(b=>`<button class="opt" data-b="${b}">${b}</button>`).join('')}${d.slider?`<input type="range" id="slider" min="0" max="1000" value="0" aria-label="${d.slider}"><span class="clock" id="clock"></span>`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"${right?'':' style="grid-template-columns:1fr"'}><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt[data-k]').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run'),sl=document.getElementById('slider'),ck=document.getElementById('clock');
+ const D=DEMOS[d.type];let state={mode:d.mode0||(d.buttons||[])[0]};
+ const draw=t=>{st.innerHTML=`<svg viewBox="0 0 600 300">${D(t,state,d)}</svg>`;if(sl){sl.value=Math.round(t*1000);if(d.clock)ck.textContent=d.clock(t)}};
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,done=finish)=>{cancelAnimationFrame(anim);const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);draw(t);if(t<1)anim=requestAnimationFrame(step);else done()};anim=requestAnimationFrame(step)};
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));state.mode=d.mode0||(d.buttons||[])[0];draw(0)};
+ run.onclick=()=>{reset();if(d.runMode)state.mode=d.runMode;play(d.ms||3000)};
+ document.getElementById('reset').onclick=reset;
+ main.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.b;play(d.bms||1600,()=>{})});
+ if(sl)sl.oninput=()=>{cancelAnimationFrame(anim);draw(sl.value/1000);if(sl.value>=1000)finish()};
+ draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+
+}
+</script>
+<script>
+/* Fit to the board: scale each section up so it fills the screen and can be read from the back of the room.
+   It measures the section with every card opened, so tapping a card never makes the page jump or scroll. */
+(() => { const main = document.getElementById('main'); if (!main || !('zoom' in main.style)) return; let busy = false, t = 0;
+  const fit = () => { if (busy) return; busy = true;
+    const side = innerWidth > 1000 ? main.getBoundingClientRect().left : 0, W = innerWidth - side, H = innerHeight;
+    if (innerWidth <= 1000) { main.style.zoom = ''; main.style.width = ''; main.style.height = ''; busy = false; return; }
+    const closed = [...main.querySelectorAll('.card:not(.open)')], hidden = [...main.querySelectorAll('.result:not(.show)')];
+    closed.forEach((c) => c.classList.add('open')); hidden.forEach((r) => r.classList.add('show'));
+    const set = (z) => { main.style.zoom = z; main.style.width = (W / z) + 'px'; main.style.height = (H / z) + 'px'; };
+    let lo = 1, hi = 2.6; for (let k = 0; k < 9; k++) { const z = (lo + hi) / 2; set(z); if (main.scrollHeight <= main.clientHeight + 1 && main.scrollWidth <= main.clientWidth + 1) lo = z; else hi = z; }
+    set(lo); closed.forEach((c) => c.classList.remove('open')); hidden.forEach((r) => r.classList.remove('show')); main.scrollTop = 0;
+    requestAnimationFrame(() => { busy = false; }); };
+  const later = () => { clearTimeout(t); t = setTimeout(fit, 60); };
+  new MutationObserver(later).observe(main, { childList: true }); addEventListener('resize', later); addEventListener('load', later); if (document.fonts && document.fonts.ready) document.fonts.ready.then(later); later();
+})();
+</script>
+</body>
+</html>

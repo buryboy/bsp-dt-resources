@@ -1,0 +1,21 @@
+{
+ "name": "Tin Can Lamp · BSP D&T",
+ "short_name": "Tin Can Lamp",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#e0662b",
+ "theme_color": "#e0662b",
+ "icons": [
+  {
+   "src": "../../book-kit/icons/tin-can-lamp-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "../../book-kit/icons/tin-can-lamp-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../book-kit/solo-pages.js?h=e80f7906"></script>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/ks3-electronics-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KS3 Electronics – Interactive Workbook">
+<meta name="theme-color" content="#1f4d36">
+<meta name="robots" content="noindex">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 3 · Series or Parallel?</title>
+<link rel="stylesheet" href="../common.css?h=1095ee77">
+</head>
+<body>
+<script src="../common.js?h=daf867c1"></script>
+<script src="../circuit.js?h=8b387158"></script>
+<script>
+const SERIES={'v-0-0':'battery!','h-0-0':'bulb!@A','h-0-1':'bulb!@B','v-0-2':'wire!','h-1-1':'wire!','h-1-0':'wire!'};
+const PARA={'v-0-0':'battery!','h-0-0':'wire!','h-0-1':'wire!','v-0-1':'bulb!@A','v-0-2':'bulb!@B','h-1-1':'wire!','h-1-0':'wire!'};
+const bulbs=b=>b.summary().bulbs;
+const shortMsg='⚠️ Short circuit! A wire is giving the current a shortcut back to the battery. Remove it.';
+
+function predict(st,api,cfg,then){
+ const c=h('div',{class:'card'});st.append(c);
+ c.append(h('div',{class:'kicker'},cfg.kicker),h('h2',{},'Predict first!'));
+ const one=h('div',{style:'max-width:420px'});c.append(h('p',{class:'lead'},'Here is one bulb with a battery. It shines at normal brightness.'),one);
+ new Circuit.Board(one,{mode:'view',parts:{'v-0-0':'battery','h-0-0':'wire','h-0-1':'bulb','v-0-2':'wire','h-1-1':'wire','h-1-0':'wire'},noStatus:true,small:true});
+ mcq(c,{q:cfg.q,opts:['Brighter than one bulb','The same as one bulb','Dimmer than one bulb'],a:cfg.a,why:'Let\'s build it and find out…'},ok=>{api.add(ok?1:0,1);c.append(h('div',{class:'row',style:'margin-top:12px'},h('button',{class:'btn go',onclick:then},'Build it →')));});
+}
+
+Level({n:3,title:'Series or Parallel?',summary:'in a SERIES circuit everything is in one loop – the bulbs share the push from the battery so they are dimmer, and if one breaks they all go out. In a PARALLEL circuit each bulb has its own loop – they stay bright and work on their own.',steps:[
+ // 1. learn
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  c.append(h('div',{class:'kicker'},'Step 1 · Two ways to connect'),h('h2',{},'Series and parallel'),
+   h('p',{class:'lead'},'When a circuit has more than one component, there are two ways to join them.'));
+  const g=h('div',{class:'mini two'});c.append(g);
+  const a=h('div',{},h('h3',{},'🔗 Series'),h('p',{html:'One single loop. The current goes through each bulb <i>one after the other</i>.'}));
+  const b=h('div',{},h('h3',{},'🔀 Parallel'),h('p',{html:'The circuit splits into branches. Each bulb gets its <i>own</i> path back to the battery.'}));
+  g.append(a,b);
+  new Circuit.Board(a,{mode:'view',parts:SERIES,power:false,noStatus:true});
+  new Circuit.Board(b,{mode:'view',parts:PARA,power:false,noStatus:true});
+  c.append(h('div',{class:'fact'},'💡 Look for the big black dots in the parallel circuit. They are called junctions – places where wires join and the current splits.'),
+   h('div',{class:'row',style:'margin-top:14px'},api.nextBtn()));
+ },
+ // 2. series
+ (st,api)=>predict(st,api,{kicker:'Step 2 · Series',q:'If you put TWO bulbs in series (one loop), how bright will they be?',a:2},()=>{st.innerHTML='';
+  Circuit.challenge(st,api,{kicker:'Step 2 · Series',title:'Build a series circuit',
+   text:'<p>Put <b>two bulbs</b> in <b>one loop</b> with the battery. Use wires to fill the other gaps.</p>',
+   goals:['Two bulbs in the circuit','Both bulbs lit','Connected in series (one loop)'],
+   board:{parts:{'v-0-0':'battery!'}},tools:['bulb','wire','bin'],
+   check:b=>{const B=bulbs(b),lit=B.filter(x=>x.s.on);
+    if(b.res.short)return{g:[B.length>=2,0,0],msg:shortMsg,kind:'bad'};
+    const ser=lit.length===2&&Math.abs(Math.abs(lit[0].s.I)-Math.abs(lit[1].s.I))<.002&&lit[0].s.bright<.6;
+    if(lit.length===2&&!ser)return{g:[1,1,0],msg:'Both bulbs are bright – that means they are in parallel! Try again with just one loop.',kind:'warn'};
+    return{g:[B.length>=2,lit.length>=2,ser],done:ser&&B.length===2};},
+   win:'✅ The bulbs are <b>dimmer</b>! In series the two bulbs have to <b>share</b> the battery\'s push (voltage), so less current flows.'});}),
+ // 3. parallel
+ (st,api)=>predict(st,api,{kicker:'Step 3 · Parallel',q:'If you put TWO bulbs in parallel (each on its own branch), how bright will they be?',a:1},()=>{st.innerHTML='';
+  Circuit.challenge(st,api,{kicker:'Step 3 · Parallel',title:'Build a parallel circuit',
+   text:'<p>Give each bulb its <b>own branch</b>. Hint: use the middle upright gap for one bulb and the right-hand gap for the other.</p>',
+   goals:['Two bulbs in the circuit','Each bulb on its own branch','Both bulbs bright'],
+   board:{parts:{'v-0-0':'battery!'}},tools:['bulb','wire','bin'],
+   check:b=>{const B=bulbs(b),br=B.filter(x=>x.s.bright>.8);
+    if(b.res.short)return{g:[B.length>=2,0,0],msg:shortMsg,kind:'bad'};
+    if(B.length===2&&B.every(x=>x.s.on)&&br.length<2)return{g:[1,0,0],msg:'They are lit but dim – that is series. Put them on separate branches.',kind:'warn'};
+    return{g:[B.length>=2,br.length>=2,br.length>=2],done:br.length===2&&B.length===2};},
+   win:'✅ Both bulbs are <b>full brightness</b>! In parallel each bulb gets the battery\'s full push. (The battery does run down faster, though.)'});}),
+ // 4. unscrew test
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  c.append(h('div',{class:'kicker'},'Step 4 · The broken bulb test'),h('h2',{},'What if one bulb breaks?'),
+   h('p',{class:'lead',html:'Tap one bulb in <b>each</b> circuit to unscrew it. Watch what happens to the other bulb.'}));
+  const g=h('div',{class:'mini two'});c.append(g);
+  const done={s:false,p:false};const q=h('div',{});
+  const mk=(host,parts,key,name)=>{host.append(h('h3',{},name));const b=new Circuit.Board(host,{parts,editable:false,noStatus:true,onPartTap:(k,p)=>{if(p.type!=='bulb')return false;b.parts.delete(k);Sfx.pop();b.changed();done[key]=true;if(done.s&&done.p&&!q.childNodes.length)ask();return false;}});
+   host.append(h('button',{class:'btn ghost',style:'margin-top:8px',onclick:()=>{b.load(parts);b.changed();}},'↻ Put the bulb back'));return b;};
+  const A=h('div'),B=h('div');g.append(A,B);
+  mk(A,SERIES,'s','🔗 Series');mk(B,PARA,'p','🔀 Parallel');
+  c.append(q);
+  function ask(){
+   q.append(h('div',{class:'msg'},'In series, removing one bulb breaks the only loop – so the other goes out too. In parallel, the other bulb still has its own loop, so it stays on.'));
+   mcq(q,{q:'The lights in your house are wired so one broken bulb doesn\'t turn off all the others. Which type of circuit is that?',opts:['Parallel','Series'],a:0,two:true,why:'Parallel – each light has its own branch, so they work independently.'},ok=>{api.add(ok?1:0,1);q.append(h('div',{class:'row',style:'margin-top:12px'},api.nextBtn()));});
+  }
+ },
+ // 5. two switches
+ (st,api)=>Circuit.challenge(st,api,{kicker:'Step 5 · Challenge',title:'Two rooms, two switches',
+  text:'<p>Design the lighting for two rooms. Each room has <b>one bulb</b> and its <b>own switch</b>. Turning one room on must <b>not</b> affect the other.</p><p>Test it by tapping the switches.</p>',
+  goals:['Two bulbs and two switches','Each switch controls only its own bulb','Both bulbs bright when on'],
+  board:{cols:3,rows:3,S:100,parts:{'v-0-0':'battery!'}},tools:['bulb','switch','wire','bin'],
+  hint:'Hint: this needs a <b>parallel</b> circuit with a bulb and a switch on each branch.',
+  check:b=>{const s=b.summary();const n=s.bulbs.length>=2&&s.switches.length>=2;
+   if(b.res.short)return{g:[n,0,0],msg:shortMsg,kind:'bad'};
+   const pairs=n&&s.bulbs.length===2&&s.switches.length===2?Circuit.pairCheck(b):null;
+   const bright=!!pairs&&b.combos().every(c=>c.sum.bulbs.every(x=>!x.s.on||x.s.bright>.7));
+   if(pairs&&!bright)return{g:[n,1,0],msg:'Each switch controls its own bulb, but they are dim. Make sure the two branches are in parallel.',kind:'warn'};
+   return{g:[n,!!pairs,bright],done:!!pairs&&bright};},
+  points:2,
+  win:'✅ Perfect! Each branch has its own switch, so the rooms work independently. This is how real house wiring works.'}),
+ // 6. quiz
+ (st,api)=>quiz(st,api,{title:'Check your understanding',qs:[
+  {q:'Three bulbs are connected in series. One bulb blows. What happens?',opts:['All three go out','Only the broken one goes out','The other two get brighter'],a:0,why:'In series there is only one path – one break stops the current everywhere.'},
+  {q:'Which circuit makes bulbs shine brightest?',opts:['Two bulbs in parallel','Two bulbs in series','They are always the same'],a:0,why:'In parallel each bulb gets the full voltage from the battery.'},
+  {q:'What is a junction in a circuit diagram?',opts:['A place where wires join and the current splits','A type of switch','The + end of a battery'],a:0,why:'Junctions are shown with a solid dot.'},
+  {q:'Old Christmas tree lights all went out when one bulb broke. How were they wired?',opts:['In series','In parallel'],a:0,two:true,why:'In series – that\'s why finding the one broken bulb was so annoying!'}
+ ]})
+]});
+</script>
+</body>
+</html>

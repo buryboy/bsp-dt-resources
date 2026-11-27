@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../book-kit/solo-pages.js?h=e80f7906"></script>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/woods-and-timbers-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Woods &amp; Timbers">
+<meta name="theme-color" content="#1f4d36">
+<meta name="robots" content="noindex">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Woods &amp; Timbers · Level 6: Timber Catcher</title>
+<link href="../../fonts/fonts.css?h=2b91edd6" rel="stylesheet">
+<style>
+:root{--forest:#1f4d36;--leaf:#4f9a35;--cream:#fff8ec;--wood:#8a5a32;--ink:#1d2b24;--line:#e8d9bd;--bad:#e2683c;--gold:#ffe36e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;overflow:hidden;font-family:Nunito,system-ui,sans-serif;color:var(--ink)}
+body{background:radial-gradient(1400px 800px at 50% -10%,#eef8e6,#d3e9c6 55%,#b5d4a4)}
+body.flow{display:flex;flex-direction:column}
+header{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:14px;padding:14px 16px;pointer-events:none;z-index:5}
+body.flow header{position:relative;flex:none}
+.brand .lvl{font:600 12px Fredoka,sans-serif;letter-spacing:.12em;background:var(--forest);color:#fff;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.brand h1{margin:5px 0 0;font:700 26px Fredoka,sans-serif;color:var(--forest);text-shadow:0 1px 0 #ffffffaa;white-space:nowrap}
+#steps{display:flex;gap:6px;list-style:none;margin:0 auto;padding:0}
+#steps li{font:600 14px Fredoka,sans-serif;padding:7px 14px;border-radius:99px;background:#ffffffc0;color:#7a8a80;transition:.3s;white-space:nowrap}
+#steps li.on{background:var(--forest);color:#fff;transform:scale(1.06)}
+#steps li.done{background:#d3ebc8;color:var(--forest)}
+.hbtns{display:flex;gap:8px;margin-left:auto;pointer-events:auto}
+#score,.hbtn{font:700 18px Fredoka,sans-serif;background:#fff;padding:7px 15px;border-radius:99px;box-shadow:0 3px 10px #0002;border:0;color:var(--ink);text-decoration:none;cursor:pointer;white-space:nowrap}
+#score.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.3)}}
+#stage{flex:1;position:relative;min-height:0;display:flex;align-items:center;justify-content:center;padding:4px 16px 12px}
+#panel{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(720px,calc(100% - 24px));background:var(--cream);border-radius:24px;padding:16px 20px;box-shadow:0 10px 30px #0003;border:3px solid var(--line);z-index:5;max-height:46vh;overflow:auto}
+body.flow #panel{position:relative;left:auto;bottom:auto;transform:none;margin:0 auto 14px;flex:none;max-height:40vh}
+#panel h2{font:700 23px Fredoka,sans-serif;margin:0 0 6px;color:var(--forest)}
+#panel p{margin:6px 0 12px;font-size:17px;line-height:1.45}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;background:#efe2c9;border-radius:99px;padding:4px}
+.seg button{border:0;background:none;font:600 17px Fredoka,sans-serif;padding:10px 16px;border-radius:99px;color:#6b5a40;cursor:pointer}
+.seg button.on{background:#fff;color:var(--forest);box-shadow:0 2px 6px #0002}
+.cta{font:700 20px Fredoka,sans-serif;border:0;border-radius:16px;background:var(--forest);color:#fff;padding:14px 22px;min-height:56px;box-shadow:0 5px 0 #0f2c1e;cursor:pointer;width:100%;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.cta:active{transform:translateY(4px);box-shadow:0 1px 0 #0f2c1e}
+.cta:disabled{background:#b9c2bc;box-shadow:0 5px 0 #98a29b;color:#f3f3f3}
+.cta.alt{background:#c9762c;box-shadow:0 5px 0 #8a4c15}
+.ghost{font:700 18px Fredoka,sans-serif;border:3px solid var(--forest);border-radius:16px;background:#fff;color:var(--forest);padding:12px 18px;min-height:56px;cursor:pointer;flex:1;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.ghost.on{background:var(--forest);color:#fff}
+.fact{background:#fff;border-radius:14px;padding:12px 14px;border:2px dashed var(--line)}
+.tag{display:inline-block;font:700 15px Fredoka,sans-serif;padding:4px 12px;border-radius:99px;background:var(--gold);color:#5a4300;margin-bottom:4px}
+.tag.bad{background:#ffd6c7;color:#7a2a0c}
+.dots{display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.dots i{width:16px;height:16px;border-radius:50%;background:#e6d8bd}
+.dots i.ok{background:var(--leaf)}.dots i.meh{background:#e9a23b}.dots i.no{background:var(--bad)}
+#prompt{position:fixed;left:50%;top:84px;transform:translateX(-50%) scale(0);background:#fff;border-radius:99px;padding:12px 26px;font:700 24px Fredoka,sans-serif;color:var(--ink);box-shadow:0 8px 24px #0003;z-index:6;transition:transform .35s cubic-bezier(.3,1.6,.5,1);white-space:nowrap;pointer-events:none}
+#prompt.show{transform:translateX(-50%) scale(1)}
+#prompt em{font-style:normal;color:#b8641c}
+#toast{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%) scale(.6);opacity:0;background:#fff;border-radius:20px;padding:14px 22px;font:700 22px Fredoka,sans-serif;box-shadow:0 10px 30px #0004;z-index:40;pointer-events:none;transition:.25s;text-align:center;max-width:86vw}
+#toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#toast.good{border:4px solid var(--leaf)}#toast.bad{border:4px solid var(--bad)}
+.leafc{position:fixed;top:-50px;font-size:34px;z-index:60;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(600deg)}}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.shake{animation:shake .4s}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.stars{font-size:44px;letter-spacing:6px;margin:4px 0}
+.dragging{position:fixed!important;z-index:50!important;pointer-events:none!important;transform:scale(1.07) rotate(-2deg)!important;box-shadow:0 16px 30px #0004!important;transition:none!important}
+.ph{visibility:hidden}
+@media (max-width:860px){#steps{display:none}.brand h1{font-size:21px}}
+@media (max-width:560px){#prompt{font-size:19px;top:74px}.brand .lvl{font-size:10px}}
+input,textarea{-webkit-user-select:text;user-select:text}
+#quiz{position:fixed;inset:0;z-index:70;background:rgba(20,40,30,.55);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#quiz .qc{color:var(--ink);background:var(--cream);border:3px solid var(--line);border-radius:26px;width:min(720px,100%);max-height:100%;overflow:auto;padding:22px 24px;box-shadow:0 20px 50px #0005;animation:pop .3s}
+#quiz h2{font:700 26px Fredoka,sans-serif;color:var(--forest);margin:0 0 6px}
+#quiz .qn{font:700 14px Fredoka,sans-serif;letter-spacing:.08em;color:#8a6a3a}
+#quiz .qq{font:700 22px Fredoka,sans-serif;line-height:1.3;margin:6px 0 14px;color:var(--ink)}
+#quiz .qo{display:grid;gap:10px}
+#quiz .qo button{font:700 17px Nunito,sans-serif;text-align:left;border:3px solid var(--line);background:#fff;border-radius:16px;padding:14px 16px;cursor:pointer;color:var(--ink);min-height:54px}
+#quiz .qo button.right{border-color:var(--leaf);background:#effae8}#quiz .qo button.wrong{border-color:var(--bad);background:#fff0ea}
+#quiz label{display:block;font:700 15px Fredoka,sans-serif;color:var(--forest);margin:10px 0 4px}
+#quiz input,#quiz textarea{width:100%;font:600 18px Nunito,sans-serif;border:3px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff;color:var(--ink);outline:none}
+#quiz input:focus,#quiz textarea:focus{border-color:var(--forest)}
+#quiz textarea{min-height:130px;resize:vertical}
+#quiz .qbar{height:10px;border-radius:99px;background:#efe2c9;margin:6px 0 12px;overflow:hidden}#quiz .qbar i{display:block;height:100%;background:var(--leaf);border-radius:99px;transition:width .3s}
+#quiz .sum{background:#fff;border-radius:14px;padding:12px 14px;font-size:15px;line-height:1.5;border:2px dashed var(--line);white-space:pre-wrap}
+
+</style>
+<style>
+body{background:linear-gradient(#8fd0f5,#d9f1ff 60%,#b8e3a0)}
+.wrap{position:relative;width:100%;max-width:1100px;height:100%;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px #0003;touch-action:none}
+#g{position:absolute;inset:0;width:100%;height:100%;display:block}
+.arcade{display:inline-block;font:700 13px Fredoka,sans-serif;background:#ff5f8f;color:#fff;padding:3px 10px;border-radius:99px;letter-spacing:.08em}
+</style>
+</head>
+<body class="flow">
+<header>
+  <div class="brand"><span class="lvl">WOODS &amp; TIMBERS · LEVEL 6 · ARCADE</span><h1>Timber catcher</h1></div>
+  <ol id="steps"></ol>
+  <div class="hbtns"><a class="hbtn" href="index.html">🗺️</a><div id="score">⭐ 0</div></div>
+</header>
+<main id="stage"><div class="wrap"><canvas id="g"></canvas></div></main>
+<section id="panel"></section>
+<div id="prompt"></div><div id="toast"></div>
+<script>
+/* Shared helpers for the Woods & Timbers workbook */
+window.G=(function(){
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function hash(s){let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;}
+
+let score=0;
+function addScore(d){score+=d;const el=$('#score');if(!el)return;el.textContent='⭐ '+score;if(d>0){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}}
+let toastT;
+function toast(html,kind,ms){const t=$('#toast');t.innerHTML=html;t.className='show '+(kind||'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='',ms||1500);}
+function prompt(html){const p=$('#prompt');if(!html){p.classList.remove('show');return;}p.innerHTML=html;p.classList.remove('show');void p.offsetWidth;p.classList.add('show');}
+function leaves(){const e=['🍂','🍃','🍁','⭐','🪵'];for(let i=0;i<40;i++){const s=document.createElement('div');s.className='leafc';s.textContent=e[i%e.length];s.style.left=Math.random()*100+'vw';s.style.animationDuration=(2.4+Math.random()*2)+'s';s.style.animationDelay=(Math.random()*0.8)+'s';document.body.appendChild(s);setTimeout(()=>s.remove(),5500);}}
+function steps(names){$('#steps').innerHTML=names.map((n,i)=>`<li>${i+1} ${n}</li>`).join('');}
+function setStep(i){$$('#steps li').forEach((li,k)=>{li.classList.toggle('on',k===i);li.classList.toggle('done',k<i);});}
+function starsFor(pct){return pct>=0.85?3:pct>=0.6?2:1;}
+function saveStars(level,stars){try{const k='wt-stars-'+level;const old=+localStorage.getItem(k)||0;if(stars>old)localStorage.setItem(k,String(stars));}catch(e){}}
+function getStars(level){try{return +localStorage.getItem('wt-stars-'+level)||0;}catch(e){return 0;}}
+function finish(level,max,msg,nextHref,nextLabel){
+  const stars=starsFor(score/max);saveStars(level,stars);leaves();prompt('🏆 Level complete!');
+  $('#panel').innerHTML=`<h2>Level complete!</h2><div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div><p>${msg||''}${msg?'<br>':''}You scored <b>${score} / ${max}</b>.</p>
+  <button class="cta alt" id="mq" style="margin-bottom:10px">📝 Take the mini quiz (send answers to your teacher)</button>
+  <div class="row"><button class="ghost" onclick="location.reload()">↺ Play again</button>${nextHref?`<a class="cta" style="flex:1;width:auto" href="${nextHref}">${nextLabel||'Next level →'}</a>`:`<a class="cta" style="flex:1;width:auto" href="index.html">🗺️ Back to the map</a>`}</div>`;
+  $('#mq').onclick=()=>quiz(level,score,max);setTimeout(()=>quiz(level,score,max),1600);
+}
+/* Drag an element and drop it on anything matching opts.targets. onDrop(el,target,x,y) returns false to send it back. */
+function drag(el,opts){
+  el.style.touchAction='none';
+  el.addEventListener('pointerdown',e=>{
+    if(el.dataset.locked==='1'||e.button>0)return;e.preventDefault();
+    const r=el.getBoundingClientRect(),ox=e.clientX-r.left,oy=e.clientY-r.top,sx=e.clientX,sy=e.clientY;
+    let moved=false,ph=null;
+    const start=()=>{moved=true;ph=el.cloneNode(true);ph.classList.add('ph');el.parentNode.insertBefore(ph,el);
+      el.style.width=r.width+'px';el.style.height=r.height+'px';el.style.left=r.left+'px';el.style.top=r.top+'px';el.classList.add('dragging');opts.onStart&&opts.onStart(el);};
+    const mv=ev=>{if(!moved){if(Math.hypot(ev.clientX-sx,ev.clientY-sy)<6)return;start();}
+      el.style.left=(ev.clientX-ox)+'px';el.style.top=(ev.clientY-oy)+'px';
+      const t=document.elementFromPoint(ev.clientX,ev.clientY);$$(opts.targets).forEach(x=>x.classList.toggle('over',!!t&&x.contains(t)));};
+    const up=ev=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+      $$(opts.targets).forEach(x=>x.classList.remove('over'));
+      if(!moved){opts.onTap&&opts.onTap(el);return;}
+      const t=document.elementFromPoint(ev.clientX,ev.clientY);const target=t&&t.closest(opts.targets);
+      el.classList.remove('dragging');['width','height','left','top'].forEach(p=>el.style[p]='');
+      ph.parentNode.insertBefore(el,ph);ph.remove();
+      if(target){const ok=opts.onDrop(el,target,ev.clientX,ev.clientY);if(ok===false){el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),400);}}
+      else if(opts.onMiss)opts.onMiss(el);};
+    addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+  });
+}
+/* Procedural wood swatch */
+function swatch(canvas,spec,seed){
+  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height,r=mulberry32(seed||hash(spec.base+spec.dark));
+  ctx.fillStyle=spec.base;ctx.fillRect(0,0,w,h);
+  const lines=spec.fine?70:spec.bold?26:44;
+  for(let i=0;i<lines;i++){const y0=r()*h,amp=(spec.wavy?10:3)+r()*4,fq=0.006+r()*0.01,ph=r()*6;
+    ctx.strokeStyle=spec.dark;ctx.globalAlpha=(spec.bold?0.35:0.18)+r()*0.2;ctx.lineWidth=(spec.bold?2.5:1)+r()*(spec.fine?0.6:2);
+    ctx.beginPath();for(let x=0;x<=w;x+=6){const y=y0+Math.sin(x*fq+ph)*amp+Math.sin(x*0.03+ph*2)*1.2;x?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}
+  if(spec.rays){for(let i=0;i<60;i++){ctx.globalAlpha=0.25;ctx.fillStyle=spec.ray||'#f3dfb8';ctx.fillRect(r()*w,r()*h,6+r()*14,1.5+r()*1.5);}}
+  if(spec.flecks){for(let i=0;i<180;i++){ctx.globalAlpha=0.3;ctx.fillStyle=spec.dark;ctx.fillRect(r()*w,r()*h,1.5,2.5);}}
+  if(spec.knots){const n=spec.knots;for(let k=0;k<n;k++){const cx=w*(0.2+0.6*r()),cy=h*(0.2+0.6*r()),rx=8+r()*10;
+    for(let j=6;j>=0;j--){ctx.globalAlpha=j?0.22:0.85;ctx.strokeStyle=spec.dark;ctx.fillStyle=spec.knot||'#7a4a22';ctx.beginPath();ctx.ellipse(cx,cy,rx+j*5,(rx+j*5)*0.6,0,0,Math.PI*2);j?ctx.stroke():ctx.fill();}}}
+  ctx.globalAlpha=1;
+  const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'rgba(255,255,255,0.12)');g.addColorStop(1,'rgba(0,0,0,0.1)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+}
+const TIMBERS={
+  oak:{name:'Oak',kind:'hardwood',base:'#c99d6b',dark:'#7a5330',rays:true},
+  ash:{name:'Ash',kind:'hardwood',base:'#e6d2a8',dark:'#a88a5a',bold:true},
+  beech:{name:'Beech',kind:'hardwood',base:'#e3b88a',dark:'#b07d50',fine:true,flecks:true},
+  mahogany:{name:'Mahogany',kind:'hardwood',base:'#93422a',dark:'#5a2214',wavy:true},
+  balsa:{name:'Balsa',kind:'hardwood',base:'#f1e6cc',dark:'#cdbb94',fine:true},
+  walnut:{name:'Walnut',kind:'hardwood',base:'#6e4b33',dark:'#3a2416',wavy:true},
+  teak:{name:'Teak',kind:'hardwood',base:'#b47c3e',dark:'#6e4720'},
+  pine:{name:'Pine',kind:'softwood',base:'#ecca8c',dark:'#b98444',bold:true,knots:2},
+  spruce:{name:'Spruce',kind:'softwood',base:'#f0e1bf',dark:'#c9ad7a',fine:true,knots:1},
+  larch:{name:'Larch',kind:'softwood',base:'#d69c63',dark:'#8e5428',bold:true,knots:1},
+  cedar:{name:'Cedar',kind:'softwood',base:'#b96c48',dark:'#7a3a20',bold:true},
+  fir:{name:'Douglas fir',kind:'softwood',base:'#dba36f',dark:'#9a5f2f',bold:true},
+  yew:{name:'Yew',kind:'softwood',base:'#c7713f',dark:'#7d3a18',wavy:true,knots:1}
+};
+
+/* ---------------- Mini quiz + Microsoft Forms hand-off ---------------- */
+/* Paste the teacher's Microsoft Forms "pre-filled URL" here (made with the placeholder words NAME, CLASS, LEVEL, SCORE, ANSWERS, WRITTEN). */
+const FORM_TEMPLATE=''; /* iPad version: nothing is sent anywhere */
+const LEVEL_NAMES={1:'How a tree grows',2:'Forest to timber yard',3:'Slice the log',4:'Timber sort rush',5:'Manufactured boards lab',6:'Timber catcher',7:'Workshop rush',8:'Battle the Rot King'};
+const QUIZ={
+1:{qs:[
+ ['Which part of the trunk makes a new ring of wood every year?',['Cambium','Pith','Heartwood','Bark']],
+ ['Hardwoods come from which type of tree?',['Deciduous (broad-leaved) trees','Coniferous (cone-bearing) trees','Any tree with very hard wood','Evergreen trees with needles']],
+ ['Why is heartwood valued for furniture?',['It is darker, harder and more durable','It carries water and sap up the tree','It is the softest, lightest part','It is the living outer layer']],
+ ['What does one annual ring show?',['One year of growth','One month of growth','One season of growth','Ten years of growth']],
+ ['Which of these is a softwood?',['Pine','Oak','Balsa','Beech']]],
+ w:'Explain one difference between sapwood and heartwood.'},
+2:{qs:[
+ ['Which order is correct?',['Fell → Convert → Season','Season → Fell → Convert','Convert → Fell → Season','Fell → Season → Grow']],
+ ['What is the main purpose of seasoning timber?',['To reduce its moisture content so it is stable and less likely to warp or rot','To make the timber darker','To remove the bark','To make the timber heavier']],
+ ['In air seasoning, what are the spacers between the planks called?',['Stickers','Dowels','Veneers','Battens']],
+ ['Kiln seasoning can dry timber to about…',['8–12% moisture','15–20% moisture','30–40% moisture','0% moisture']],
+ ['Which is a disadvantage of kiln seasoning?',['It costs more and uses energy','It takes several years','It cannot dry timber below 20%','It needs no supervision']]],
+ w:'Give one advantage and one disadvantage of air seasoning.'},
+3:{qs:[
+ ['Through-and-through sawing is also called…',['Plain sawn','Quarter sawn','Radial sawn','Seasoned']],
+ ['Which conversion method wastes more wood?',['Quarter sawn','Through-and-through','They waste the same','Neither wastes any wood']],
+ ['Why do plain-sawn boards often cup as they dry?',['Their growth rings run across the width, and wood shrinks more along the rings','They have too much heartwood','They are cut too thin','The bark pulls them out of shape']],
+ ['What does “converting” timber mean?',['Sawing a log into usable boards','Drying the timber in a kiln','Applying a finish','Planting new trees']],
+ ['Why is quarter-sawn oak used for quality furniture?',['It is stable and shows an attractive ray figure','It is the cheapest option','It has more knots','It dries faster than other boards']]],
+ w:'A furniture maker needs stable boards for a high-quality table top. Which conversion method should they choose, and why?'},
+4:{qs:[
+ ['Balsa is very soft and light. Is it a hardwood or a softwood?',['Hardwood','Softwood','A manufactured board','Neither']],
+ ['Which timber is tough and flexible with good shock resistance, so is used for tool handles?',['Ash','Pine','Balsa','Spruce']],
+ ['Which timber is a softwood with good water resistance, used for cladding?',['Larch','Mahogany','Beech','Oak']],
+ ['Beech is often used for…',['Toys and kitchen utensils','Model making','Roof cladding','Cheap construction framing']],
+ ['Which statement is true?',['“Hardwood” and “softwood” describe the type of tree, not how hard the wood is','All hardwoods are harder than all softwoods','Softwoods come from deciduous trees','Hardwoods grow faster than softwoods']]],
+ w:'Name a timber you would choose for an outdoor bench and justify your choice.'},
+5:{qs:[
+ ['In plywood, each layer’s grain runs…',['At 90° to the layer next to it','In the same direction as all the others','At 45° to the layer next to it','In random directions']],
+ ['MDF is made from…',['Fine wood fibres bonded with resin','Thin layers of veneer','Large wood chips and resin','Solid planks glued edge to edge']],
+ ['What is a main weakness of chipboard?',['It is easily damaged by water and is not very strong','It is very expensive','It is too heavy to cut','It only comes in small pieces']],
+ ['What is the standard size of a manufactured board sheet?',['2440 × 1220 mm','2000 × 1000 mm','1220 × 610 mm','3000 × 1500 mm']],
+ ['Which is an advantage of manufactured boards over solid timber?',['They come in large, stable sheets','They always look more attractive','They are never damaged by water','They are always stronger']]],
+ w:'Explain why MDF is often used for flat-pack furniture.'},
+6:{qs:[
+ ['Which of these is a manufactured board?',['MDF','Oak','Larch','Ash']],
+ ['Which of these is a softwood?',['Spruce','Mahogany','Beech','Balsa']],
+ ['Which of these is a hardwood?',['Mahogany','Larch','Pine','Spruce']],
+ ['Yew is very hard and heavy. What type of timber is it?',['A softwood, because it comes from a conifer','A hardwood, because it is hard','A manufactured board','A hardwood, because it is heavy']],
+ ['What is woodworm?',['Beetle larvae that bore tunnels through timber','A fungus that rots damp wood','A type of softwood','A tool for carving wood']]],
+ w:'Explain why softwoods are usually cheaper than hardwoods.'},
+7:{qs:[
+ ['Which finish is best for garden decking?',['Preservative','Wax','Food-safe oil','Polish']],
+ ['Which finish should be used on a chopping board?',['Food-safe oil','Gloss paint','Preservative','Varnish']],
+ ['Why are children’s wooden toys finished with non-toxic paint?',['So they are safe if chewed','So they are waterproof outdoors','Because it is the cheapest paint','So the grain shows through']],
+ ['Which timber is best for a hammer handle?',['Ash','Balsa','MDF','Pine']],
+ ['What is the main purpose of applying a finish to timber?',['To protect it from moisture, decay and wear and improve its appearance','To make it heavier','To make it easier to cut','To change it into a hardwood']]],
+ w:'A client wants an outdoor picnic table. Choose a timber and a finish, and justify both choices.'},
+8:{qs:[
+ ['What causes dry rot?',['A fungus','An insect','Too much sunlight','Over-seasoning']],
+ ['Which helps stop timber rotting?',['Seasoning it and treating it with preservative','Keeping it damp','Storing it outside uncovered','Cutting it thinner']],
+ ['Which conversion method gives the most stable boards?',['Quarter sawn','Through-and-through','Rotary cut','Slab sawn']],
+ ['Which manufactured board is made from veneers?',['Plywood','MDF','Chipboard','Hardboard']],
+ ['Kiln-seasoned timber for indoor furniture is dried to about…',['8–12% moisture','25–30% moisture','50% moisture','0% moisture']]],
+ w:'Explain how seasoning and preservatives help timber last longer.'}};
+function formURL(fields){if(!FORM_TEMPLATE)return null;let u;try{u=new URL(FORM_TEMPLATE);}catch(e){return null;}
+  const keys=['NAME','CLASS','LEVEL','SCORE','ANSWERS','WRITTEN'];const out=[];
+  for(const [k,v] of u.searchParams.entries()){const bare=v.replace(/^"|"$/g,'').toUpperCase();const hit=keys.find(x=>x===bare);
+    if(hit){const val=String(fields[hit]||'').slice(0,900);out.push([k,v.startsWith('"')?'"'+val.replace(/"/g,"'")+'"':val]);}else out.push([k,v]);}
+  const q=out.map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');return u.origin+u.pathname+'?'+q;}
+function quiz(level,gameScore,gameMax){
+  const bank=QUIZ[level];let i=0,right=0;const res=[];let name='',cls='';try{name=localStorage.getItem('wt-name')||'';cls=localStorage.getItem('wt-class')||'';}catch(e){}
+  const qs=bank.qs.map(([q,o])=>({q,ans:o[0],opts:shuffle(o.slice())}));
+  const ov=document.createElement('div');ov.id='quiz';ov.innerHTML='<div class="qc"></div>';document.body.appendChild(ov);const qc=ov.querySelector('.qc');
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function intro(){qc.innerHTML=`<span class="tag">📝 Mini quiz · Level ${level}</span><h2>${LEVEL_NAMES[level]}</h2><p style="font-size:17px;margin:4px 0 6px">5 quick questions and one written answer. When you finish, save your answers as a PDF and hand it in on Showbie.</p>
+    <label>Your name</label><input id="qname" value="${esc(name)}" autocomplete="name"><label>Your class</label><input id="qclass" value="${esc(cls)}" placeholder="e.g. 10D">
+    <div class="row" style="margin-top:16px"><button class="ghost" id="qx">Not now</button><button class="cta" style="flex:2;width:auto" id="qgo">Start the quiz →</button></div>`;
+    qc.querySelector('#qx').onclick=()=>ov.remove();
+    qc.querySelector('#qgo').onclick=()=>{name=qc.querySelector('#qname').value.trim();cls=qc.querySelector('#qclass').value.trim();
+      if(!name){qc.querySelector('#qname').classList.add('shake');qc.querySelector('#qname').focus();return;}
+      try{localStorage.setItem('wt-name',name);localStorage.setItem('wt-class',cls);}catch(e){}ask();};}
+  function ask(){const Q=qs[i];qc.innerHTML=`<div class="qn">QUESTION ${i+1} OF ${qs.length}</div><div class="qbar"><i style="width:${i/qs.length*100}%"></i></div><div class="qq">${Q.q}</div><div class="qo">${Q.opts.map((o,k)=>`<button data-k="${k}">${o}</button>`).join('')}</div><div id="qf"></div>`;
+    qc.querySelectorAll('.qo button').forEach(b=>b.onclick=()=>{if(qc.querySelector('.qo').dataset.done)return;qc.querySelector('.qo').dataset.done=1;const pick=Q.opts[+b.dataset.k],ok=pick===Q.ans;if(ok)right++;res.push({ok,pick});
+      qc.querySelectorAll('.qo button').forEach(x=>{const o=Q.opts[+x.dataset.k];if(o===Q.ans)x.classList.add('right');else if(x===b)x.classList.add('wrong');});
+      qc.querySelector('#qf').innerHTML=`<button class="cta" style="margin-top:14px" id="qn">${i<qs.length-1?'Next question →':'Last one: written answer →'}</button>`;
+      qc.querySelector('#qn').onclick=()=>{i++;i<qs.length?ask():written();};});}
+  function written(){qc.innerHTML=`<div class="qn">WRITTEN ANSWER</div><div class="qbar"><i style="width:100%"></i></div><div class="qq">${bank.w}</div><textarea id="qw" placeholder="Write your answer in full sentences…"></textarea><button class="cta" style="margin-top:14px" id="qd">Finish ✓</button>`;
+    qc.querySelector('#qd').onclick=()=>{const w=qc.querySelector('#qw').value.trim();if(w.length<3){qc.querySelector('#qw').classList.add('shake');setTimeout(()=>qc.querySelector('#qw').classList.remove('shake'),400);return;}summary(w);};}
+  function summary(w){
+    const answers=qs.map((Q,k)=>`Q${k+1} ${res[k].ok?'✓':'✗'} ${res[k].pick}`).join(' | ');
+    const fields={NAME:name,CLASS:cls,LEVEL:`Level ${level}: ${LEVEL_NAMES[level]}`,SCORE:`Quiz ${right}/${qs.length}`+(gameMax?` · Game ${gameScore}/${gameMax}`:''),ANSWERS:answers,WRITTEN:w};
+    const url=formURL(fields);const text=`${fields.NAME} (${fields.CLASS})\n${fields.LEVEL}\n${fields.SCORE}\n${qs.map((Q,k)=>`Q${k+1} ${res[k].ok?'✓':'✗'} ${res[k].pick}`).join('\n')}\nWritten: ${w}`;
+    try{localStorage.setItem('wt-quiz-'+level,String(right));}catch(e){}
+    qc.innerHTML=`<span class="tag">✓ Quiz complete</span><h2>You scored ${right} / ${qs.length}</h2><p style="font-size:17px;margin:4px 0 10px">${url?'<b>Last step:</b> send your answers to your teacher. The form opens with everything filled in. Just press <b>Submit</b> at the bottom.':'<b>Last step:</b> tap <b>Save as PDF</b> and hand it in on Showbie.'}</p>
+      <div class="sum">${esc(text)}</div>
+      <div class="row" style="margin-top:14px">${url?`<a class="cta" style="flex:2;width:auto" href="${esc(url)}" target="_blank" rel="noopener">📤 Send my answers to my teacher</a>`:''}<button class="cta" style="flex:2;width:auto" onclick="SoloPDF.saveEl(this.closest('.qc'), 'Level ${level} quiz: ${esc(LEVEL_NAMES[level])}')">📄 Save as PDF</button><button class="ghost" id="qc2">📋 Copy answers</button><button class="ghost" id="qcl">Close</button></div>`;
+    qc.querySelector('#qcl').onclick=()=>ov.remove();
+    qc.querySelector('#qc2').onclick=e=>{try{navigator.clipboard.writeText(text).then(()=>e.target.textContent='✓ Copied',()=>e.target.textContent='Copy failed');}catch(err){e.target.textContent='Copy failed';}};
+    if(right>=4)leaves();}
+  intro();}
+
+return{QUIZ,quiz,$,$$,mulberry32,shuffle,clamp,hash,addScore,get score(){return score},toast,prompt,leaves,steps,setStep,starsFor,saveStars,getStars,finish,drag,swatch,TIMBERS};
+})();
+
+</script>
+<script>
+(function(){
+const {$}=G;const panel=$('#panel'),cv=$('#g'),ctx=cv.getContext('2d');
+const ROUNDS=[{t:'hard',label:'HARDWOODS',ic:'🍂',fact:'Hardwoods come from <b>deciduous</b> (broad-leaved) trees: oak, ash, beech, mahogany, balsa…'},
+ {t:'soft',label:'SOFTWOODS',ic:'🌲',fact:'Softwoods come from <b>coniferous</b> (cone-bearing) trees: pine, spruce, larch, cedar… and yes, <b>yew</b>!'},
+ {t:'board',label:'MANUFACTURED BOARDS',ic:'🧱',fact:'Manufactured boards are made by bonding wood fibres, chips or veneers: <b>MDF, plywood and chipboard</b>.'}];
+G.steps(ROUNDS.map(r=>r.label.charAt(0)+r.label.slice(1).toLowerCase()));
+const T=G.TIMBERS;
+const POOL={hard:['oak','ash','beech','mahogany','balsa','walnut','teak'],soft:['pine','spruce','larch','cedar','fir','yew'],board:['mdf','ply','chip']};
+const BOARDS={mdf:{name:'MDF',base:'#b98d5c'},ply:{name:'Plywood',base:'#dcbd8a'},chip:{name:'Chipboard',base:'#c7a26c'}};
+// pre-render sprites
+const SPR={};
+function sprite(key){if(SPR[key])return SPR[key];const c=document.createElement('canvas');c.width=280;c.height=110;const x=c.getContext('2d');
+  if(key==='bug'){x.font='90px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🐛',140,58);SPR[key]=c;return c;}
+  const tile=document.createElement('canvas');tile.width=280;tile.height=110;
+  if(T[key])G.swatch(tile,T[key],G.hash(key));
+  else{const t=tile.getContext('2d'),b=BOARDS[key],r=G.mulberry32(G.hash(key));t.fillStyle=b.base;t.fillRect(0,0,280,110);
+    if(key==='ply'){for(let i=0;i<5;i++){t.fillStyle=i%2?'#b88a52':'#e8cb98';t.fillRect(0,i*22,280,22);t.fillStyle='rgba(60,30,10,.6)';t.fillRect(0,i*22,280,2);}}
+    else if(key==='chip'){for(let i=0;i<220;i++){t.save();t.translate(r()*280,r()*110);t.rotate(r()*3);t.fillStyle=['#e2c08a','#a87a45','#c99a5e'][i%3];t.fillRect(-8,-3,8+r()*14,4+r()*5);t.restore();}}
+    else{for(let i=0;i<2500;i++){t.fillStyle=r()<.5?'rgba(110,70,30,.35)':'rgba(230,200,150,.35)';t.fillRect(r()*280,r()*110,2,1);}}}
+  x.save();x.beginPath();x.roundRect?x.roundRect(4,4,272,102,18):x.rect(4,4,272,102);x.clip();x.drawImage(tile,0,0);x.restore();
+  x.lineWidth=6;x.strokeStyle='rgba(0,0,0,.25)';x.beginPath();x.roundRect?x.roundRect(4,4,272,102,18):x.rect(4,4,272,102);x.stroke();
+  const name=T[key]?T[key].name:BOARDS[key].name;x.font='700 40px Fredoka, sans-serif';x.textAlign='center';x.textBaseline='middle';
+  x.lineWidth=8;x.strokeStyle='rgba(255,255,255,.95)';x.strokeText(name,140,57);x.fillStyle='#1d2b24';x.fillText(name,140,57);
+  SPR[key]=c;return c;}
+const nameOf=k=>T[k]?T[k].name:BOARDS[k]?BOARDS[k].name:'Woodworm';
+const kindOf=k=>k==='bug'?'bug':T[k]?(T[k].kind==='hardwood'?'hard':'soft'):'board';
+
+let W=0,H=0,items=[],parts=[],floats=[],cartX=0.5,targetX=0.5,round=-1,tLeft=0,running=false,lives=3,combo=0,spawnT=0,shake=0,caught=0;
+function size(){const dpr=Math.min(2,devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);}
+addEventListener('resize',size);size();
+const setX=e=>{const r=cv.getBoundingClientRect();targetX=G.clamp((e.clientX-r.left)/r.width,0.06,0.94);};
+cv.addEventListener('pointerdown',setX);cv.addEventListener('pointermove',setX);
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft')targetX=G.clamp(targetX-0.08,0.06,0.94);if(e.key==='ArrowRight')targetX=G.clamp(targetX+0.08,0.06,0.94);});
+
+function intro(i){round=i;G.setStep(i);const R=ROUNDS[i];running=false;panel.style.display='';
+  panel.innerHTML=`<span class="arcade">ROUND ${i+1} OF 3</span><h2>${R.ic} Catch the ${R.label}!</h2><p>${R.fact} Slide your finger to move the cart. Catch the right ones, dodge the wrong ones and <b>avoid the woodworm 🐛</b>. You have 3 lives ❤️.</p><button class="cta" id="go">▶ Go!</button>`;
+  $('#go').onclick=()=>{panel.style.display='none';tLeft=25;spawnT=0;running=true;G.prompt(`${R.ic} Catch <em>${R.label}</em>`);setTimeout(()=>G.prompt(''),1800);};}
+function spawn(){const R=ROUNDS[round],r=Math.random();let key;
+  if(r<0.1)key='bug';else if(r<0.55)key=POOL[R.t][Math.floor(Math.random()*POOL[R.t].length)];
+  else{const others=Object.keys(POOL).filter(k=>k!==R.t);const o=others[Math.floor(Math.random()*others.length)];key=POOL[o][Math.floor(Math.random()*POOL[o].length)];}
+  const w=Math.min(150,W*0.2);items.push({key,x:w/2+Math.random()*(W-w),y:-60,w,h:w*110/280,vy:(110+round*35)*(H/600)*(0.85+Math.random()*0.4),rot:(Math.random()-0.5)*0.4,vr:(Math.random()-0.5)*1.2});}
+function burst(x,y,col){for(let i=0;i<18;i++)parts.push({x,y,vx:(Math.random()-0.5)*260,vy:-Math.random()*260,a:1,c:col});}
+function float(x,y,txt,col){floats.push({x,y,txt,col,a:1});}
+function catchIt(it){const k=kindOf(it.key),R=ROUNDS[round];
+  if(k===R.t){caught++;combo++;G.addScore(1);burst(it.x,H-70,'#ffd34d');float(it.x,H-110,'+1','#2f7d1e');
+    if(combo%5===0){G.addScore(1);float(it.x,H-150,`🔥 ${combo} combo! +1`,'#c9762c');}}
+  else{combo=0;lives--;shake=0.4;burst(it.x,H-70,'#e2683c');
+    float(it.x,H-110,k==='bug'?'🐛 Woodworm!':`✗ ${nameOf(it.key)} is ${k==='hard'?'a hardwood':k==='soft'?'a softwood':'a board'}`,'#c0392b');
+    if(lives<=0){running=false;setTimeout(()=>end(true),900);}}}
+function end(dead){running=false;items=[];G.prompt('');panel.style.display='';
+  G.finish(6,Math.max(30,G.score),dead?'Out of lives… but great catching!':`You caught ${caught} correctly. Target: 30 points.`,'level7.html','Next level: Workshop rush →');}
+function drawCart(x){const cw=Math.min(190,W*0.24),ch=58,y=H-74;ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='#8a5a32';ctx.beginPath();ctx.moveTo(-cw/2,0);ctx.lineTo(cw/2,0);ctx.lineTo(cw/2-14,ch);ctx.lineTo(-cw/2+14,ch);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#6b4423';ctx.lineWidth=3;for(let i=1;i<3;i++){ctx.beginPath();ctx.moveTo(-cw/2+4,i*ch/3);ctx.lineTo(cw/2-4,i*ch/3);ctx.stroke();}
+  ctx.fillStyle='#2b3138';[-cw/3,cw/3].forEach(wx=>{ctx.beginPath();ctx.arc(wx,ch+6,13,0,7);ctx.fill();ctx.fillStyle='#9aa4ad';ctx.beginPath();ctx.arc(wx,ch+6,5,0,7);ctx.fill();ctx.fillStyle='#2b3138';});
+  ctx.fillStyle='#c9762c';ctx.fillRect(-cw/2-6,-6,cw+12,10);ctx.restore();return cw;}
+let last=performance.now();
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(0.05,(now-last)/1000);last=now;
+  if(cv.clientWidth!==W||cv.clientHeight!==H)size();
+  cartX+=(targetX-cartX)*Math.min(1,dt*14);
+  ctx.save();if(shake>0){shake-=dt;ctx.translate((Math.random()-0.5)*16*shake/0.4,(Math.random()-0.5)*10*shake/0.4);}
+  // background: sky, hills, forest silhouettes
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#86ccf2');g.addColorStop(0.7,'#dff3ff');g.addColorStop(1,'#cdeab8');ctx.fillStyle=g;ctx.fillRect(-20,-20,W+40,H+40);
+  ctx.fillStyle='#9fd48a';ctx.beginPath();ctx.moveTo(0,H*0.82);for(let x=0;x<=W;x+=20)ctx.lineTo(x,H*0.8-Math.sin(x*0.008)*28-Math.sin(x*0.02)*10);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+  ctx.fillStyle='#5aa154';for(let i=0;i<14;i++){const tx=(i+0.5)*W/14,th=50+((i*37)%30);ctx.beginPath();ctx.moveTo(tx,H*0.8-th-Math.sin(tx*0.008)*28);ctx.lineTo(tx-18,H*0.82-Math.sin(tx*0.008)*28);ctx.lineTo(tx+18,H*0.82-Math.sin(tx*0.008)*28);ctx.fill();}
+  ctx.fillStyle='#7cbf62';ctx.fillRect(0,H-20,W,20);
+  const cx=cartX*W;const cw=drawCart(cx);
+  if(running){tLeft-=dt;spawnT-=dt;if(spawnT<=0){spawn();spawnT=Math.max(0.42,0.95-round*0.15-(25-tLeft)*0.008);}
+    if(tLeft<=0){running=false;items=[];if(round<2){G.toast(`Round ${round+1} complete!`,'good');setTimeout(()=>intro(round+1),900);}else end(false);}}
+  for(const it of items){if(running){it.y+=it.vy*dt;it.rot+=it.vr*dt;}
+    if(!it.done&&it.y+it.h/2>=H-74&&it.y<H-40&&Math.abs(it.x-cx)<cw/2+it.w*0.25){it.done=true;catchIt(it);}
+    ctx.save();ctx.translate(it.x,it.y);ctx.rotate(it.rot);ctx.drawImage(sprite(it.key),-it.w/2,-it.h/2,it.w,it.h);ctx.restore();}
+  items=items.filter(it=>!it.done&&it.y<H+80);
+  for(const p of parts){p.vy+=600*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.a-=dt*1.4;ctx.globalAlpha=Math.max(0,p.a);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,5,5);}ctx.globalAlpha=1;parts=parts.filter(p=>p.a>0);
+  for(const f of floats){f.y-=40*dt;f.a-=dt*0.7;ctx.globalAlpha=Math.max(0,f.a);ctx.font='700 22px Fredoka, sans-serif';ctx.textAlign='center';ctx.lineWidth=6;ctx.strokeStyle='#fff';ctx.strokeText(f.txt,f.x,f.y);ctx.fillStyle=f.col;ctx.fillText(f.txt,f.x,f.y);}ctx.globalAlpha=1;floats=floats.filter(f=>f.a>0);
+  // HUD
+  if(round>=0){ctx.font='700 26px Fredoka, sans-serif';ctx.textAlign='left';ctx.fillStyle='#1d2b24';ctx.fillText('❤️'.repeat(Math.max(0,lives))+'🤍'.repeat(3-Math.max(0,lives)),16,38);
+    ctx.textAlign='right';ctx.fillText(`⏱ ${Math.max(0,Math.ceil(tLeft))}s`,W-16,38);
+    const R=ROUNDS[round];ctx.textAlign='center';ctx.font='700 20px Fredoka, sans-serif';const lbl=`${R.ic} Catch ${R.label}`;const tw=ctx.measureText(lbl).width+30;
+    ctx.fillStyle='rgba(255,255,255,.85)';ctx.beginPath();ctx.roundRect?ctx.roundRect(W/2-tw/2,14,tw,36,18):ctx.rect(W/2-tw/2,14,tw,36);ctx.fill();ctx.fillStyle='#1f4d36';ctx.fillText(lbl,W/2,39);
+    if(combo>=3){ctx.fillStyle='#c9762c';ctx.fillText(`🔥 combo ${combo}`,W/2,76);}}
+  ctx.restore();}
+requestAnimationFrame(loop);
+intro(0);
+})();
+</script>
+</body>
+</html>

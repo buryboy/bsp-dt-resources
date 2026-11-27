@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New materials lesson</title>
+<link rel="stylesheet" href="../../../../fonts/lexend.css">
+<style>
+/* VOICE: clear, calm teaching board, readable from the back row
+   IDEA: an R&amp;D lab bench: predict, then test the new material
+   PICTURE: a live lab test on every section, run after the class predicts
+   COLOUR and TYPE: workshop paper white, ink, one colour per material area; Lexend
+   LAYOUT: section tabs down the side, finish cards left, lab test right */
+:root{color-scheme:light;--bg:#f6f4ef;--card:#fff;--ink:#1b2a33;--mut:#5b6670;--line:#d8d3c7;--ok:#2e8b57;--a:#0f766e}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 "Lexend",system-ui,sans-serif;display:grid;grid-template-columns:260px 1fr;overflow:hidden}
+nav{background:var(--ink);color:#fff;padding:18px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+nav h1{font-size:20px;line-height:1.15;margin:4px 8px 14px;font-weight:700}
+nav button{all:unset;cursor:pointer;padding:12px 14px;border-radius:12px;font-size:17px;display:flex;gap:10px;align-items:center;min-height:44px}
+nav button:hover{background:#ffffff14}
+nav button[aria-current=true]{background:#fff;color:var(--ink);font-weight:700}
+nav button:focus-visible{outline:3px solid #ffe14d}
+nav .dot{width:14px;height:14px;border-radius:4px;flex:none}
+main{overflow:auto;padding:28px 34px}
+.head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:6px}
+h2{font-size:40px;line-height:1.05;margin:0}
+.lead{color:var(--mut);margin:0 0 20px;max-width:70ch;font-size:19px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{all:unset;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:118px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s}
+.card:hover{transform:translateY(-2px)}
+.card:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.card b{font-size:20px}
+.card .hint{color:var(--mut);font-size:14px;margin-top:auto}
+.card .back{display:none;font-size:15.5px;line-height:1.4}
+.card.open{border-color:var(--c,var(--a))}
+.card.open .back{display:block}.card.open .hint{display:none}
+.back em{font-style:normal;font-weight:700;color:var(--c,var(--a))}
+.lab{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.lab h3{margin:0 0 4px;font-size:24px}
+.lab .q{font-size:20px;margin:6px 0 12px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.opt{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:8px 16px;font-size:16px;min-height:28px}
+.opt.sel{border-color:var(--ink);background:#1b2a330d;font-weight:700}
+.opt.right{border-color:var(--ok);background:#2e8b571a;color:#1d6b40;font-weight:700}
+.stage{position:relative;border-radius:14px;background:#efeae0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.go{all:unset;cursor:pointer;background:var(--ink);color:#fff;border-radius:12px;padding:12px 22px;font-weight:700;min-height:20px}
+.go.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.clock{font-size:22px;font-weight:700;margin-left:auto}
+input[type=range]{width:220px;accent-color:var(--ink)}
+.result{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;background:#2e8b5714;border-left:6px solid var(--ok);font-size:17px}
+.result.show{display:block}
+.qa{display:grid;gap:10px}
+.qa .card{min-height:0}
+@media(max-width:1000px){body{grid-template-columns:1fr;overflow:auto}nav{flex-direction:row;flex-wrap:wrap;padding:10px}nav h1{width:100%}.grid{grid-template-columns:1fr}main{overflow:visible;padding:18px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<nav id="nav"><h1>Developments in new materials<br><span style="font-weight:400;font-size:14px;opacity:.75">AQA GCSE D&amp;T 3.1.3</span></h1></nav>
+<main id="main"></main>
+<script>
+{
+const S=[
+{id:'kinds',t:'Four kinds',c:'#14213d',lead:'New materials are developed because ordinary ones cannot do a job well enough. AQA groups them into four kinds. Tap each one.',
+ cards:[['Modern materials','<em>What:</em> materials made possible by new processes and research.<br><em>Examples:</em> graphene, metal foam, titanium.'],['Smart materials','<em>What:</em> react to a change in their surroundings (heat, light) and change back when it is removed.<br><em>Examples:</em> shape memory alloy, thermochromic and photochromic pigments.'],['Composites','<em>What:</em> two or more materials combined to get better properties than either alone. Fibres give strength, resin holds them.<br><em>Examples:</em> CFRP, GRP.'],['Technical textiles','<em>What:</em> fabrics engineered for performance, not looks.<br><em>Examples:</em> conductive fabric, fire-resistant fabric, Kevlar, micro-encapsulated fibres.'],['Why develop them?','<em>Lighter</em> products use less fuel. <em>Stronger</em> ones last longer. <em>Smart</em> ones add safety and new functions.'],['The catch','Most are <em>expensive</em> and some are hard to make in large quantities or to recycle.']]},
+{id:'modern',t:'Modern materials',c:'#2478B3',lead:'Modern materials give much more performance for their weight. That matters for anything that moves or is carried.',
+ cards:[['Graphene','<em>What:</em> a sheet of carbon one atom thick.<br><em>Properties:</em> extremely strong, flexible, almost transparent, conducts electricity and heat.<br><em>Uses:</em> flexible screens, sports equipment, batteries.<br><em>Limit:</em> very expensive and hard to make in bulk.'],['Metal foam','<em>What:</em> metal (often aluminium) full of gas bubbles.<br><em>Properties:</em> light, stiff, crushes slowly to absorb impact energy.<br><em>Uses:</em> car crash structures, lightweight panels.'],['Titanium','<em>What:</em> a light, very strong metal.<br><em>Properties:</em> high strength-to-weight, does not corrode, safe in the body.<br><em>Uses:</em> hip joints, aircraft parts, bike frames.<br><em>Limit:</em> expensive.']],
+ demo:{type:'bars',title:'Lab test: carry the same load',q:'Three beams are designed to carry exactly the same load. Which beam is lightest?',opts:['Mild steel','Aluminium','Titanium'],right:2,
+  bars:[['Mild steel',100,'#7f8b95'],['Aluminium',58,'#b9c3cb'],['Titanium',42,'#2478B3']],
+  res:'For the same strength, titanium needs the least mass. That is called a high strength-to-weight ratio. It is why titanium is used where weight matters and cost is less important, such as aircraft and medical implants. (Bar lengths are approximate.)'}},
+{id:'smart',t:'Smart materials',c:'#BE3F66',lead:'Smart materials change in response to their surroundings, then change back. The key question is always: what does it react to, and what does it do?',
+ cards:[['Shape memory alloy (SMA)','<em>Reacts to:</em> heat.<br><em>Does:</em> returns to a remembered shape. Very springy (super-elastic).<br><em>Uses:</em> glasses frames, dental braces, stents.'],['Thermochromic pigment','<em>Reacts to:</em> heat.<br><em>Does:</em> changes colour at a set temperature.<br><em>Uses:</em> baby spoons, kettles, mugs, battery testers.'],['Photochromic pigment','<em>Reacts to:</em> UV light.<br><em>Does:</em> changes colour or darkens.<br><em>Uses:</em> reaction lenses, UV-warning beads, T-shirt prints.']],
+ demo:{type:'smart',title:'Lab test: heat and light',q:'We turn up the HEAT only (no extra light). Which items will change?',opts:['Only the mug','The mug and the wire','All three'],right:1,
+  res:'Both the thermochromic mug and the shape memory alloy react to heat: the mug changes colour and the bent wire springs back to its straight remembered shape. The photochromic lens only reacts to UV light, so it stays clear. Now try the light slider.'}},
+{id:'comp',t:'Composites',c:'#5B6670',lead:'A composite combines materials. In CFRP and GRP, strong fibres carry the load and a resin matrix holds them together and gives the shape.',
+ cards:[['CFRP','<em>What:</em> carbon fibres in epoxy resin.<br><em>Properties:</em> extremely strong and stiff for its weight.<br><em>Uses:</em> racing bikes, F1 cars, tennis rackets, aircraft.<br><em>Limit:</em> very expensive.'],['GRP','<em>What:</em> glass fibres in polyester resin.<br><em>Properties:</em> strong, tough, waterproof, moulds into big curves.<br><em>Uses:</em> boat hulls, kayaks, car body panels.<br><em>Plus:</em> far cheaper than CFRP.'],['Fibres and matrix','<em>Fibres</em> resist pulling and bending. <em>Resin (matrix)</em> bonds them and transfers the load. Resin on its own is brittle.']],
+ demo:{type:'bend',title:'Lab test: the same load on three beams',q:'Resin only, GRP and CFRP beams carry the same weight. Which bends the LEAST?',opts:['Resin only','GRP','CFRP'],right:2,
+  res:'Resin on its own is brittle and cracks. Glass fibres make GRP much stronger, but it still bends. Carbon fibres are stiffer still, so CFRP bends the least. That stiffness, for very little weight, is why it is used on racing bikes.'}},
+{id:'tex',t:'Technical textiles',c:'#7449B0',lead:'Technical textiles are chosen for what they do: carry current, resist fire, stop blades, or release substances.',
+ cards:[['Conductive fabric','<em>What:</em> conductive threads woven in.<br><em>Uses:</em> touchscreen gloves, heated jackets, wearable tech.'],['Fire-resistant fabric','<em>What:</em> fibres such as Nomex that will not burn or melt.<br><em>Uses:</em> firefighters\' and racing drivers\' suits.'],['Kevlar','<em>What:</em> aramid fibres, about five times stronger than steel by weight.<br><em>Uses:</em> body armour, cut-resistant gloves, ropes.'],['Micro-encapsulation','<em>What:</em> tiny capsules on microfibres burst when rubbed.<br><em>Releases:</em> scent, moisturiser, insect repellent, antibacterial agents.<br><em>Uses:</em> socks, sportswear.']],
+ demo:{type:'flame',title:'Lab test: the flame test',q:'Plain cotton and a fire-resistant fabric are held over a flame for 10 seconds. What happens?',opts:['Both burn','Cotton burns, fire-resistant only chars','Neither burns'],right:1,
+  res:'The cotton catches fire and burns through. The fire-resistant fibres will not burn or melt: the surface chars but the fabric stays whole, protecting the wearer underneath.'}},
+{id:'sum',t:'Choose the material',c:'#C99A06',lead:'Quick fire. Name the material and its category before you tap. Then the exam question.',
+ cards:[['Lenses that darken outdoors','<em>Photochromic</em> (smart): darkens in UV light.'],['A kayak hull on a budget','<em>GRP</em> (composite): strong, waterproof, mouldable, affordable.'],['A hip replacement','<em>Titanium</em> (modern): strong, does not corrode, safe in the body.'],['Gloves that work on a phone','<em>Conductive fabric</em> (technical textile).'],['A car crash zone','<em>Metal foam</em> (modern): absorbs impact energy.'],['A kettle that shows it is hot','<em>Thermochromic</em> (smart): changes colour with heat.']],
+ exam:{q:'Explain why shape memory alloy is used for children\'s glasses frames. (2 marks)',a:'Shape memory alloy is super-elastic and returns to its original shape (1), so if the frames are bent or sat on they spring back and do not break (1).'}}
+];
+const nav=document.getElementById('nav'),main=document.getElementById('main');let cur=0,anim=null;
+S.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=`<span class="dot" style="background:${s.c}"></span>${i+1}. ${s.t}`;b.onclick=()=>show(i);nav.appendChild(b)});
+function show(i){cur=i;cancelAnimationFrame(anim);[...nav.querySelectorAll('button')].forEach((b,k)=>b.setAttribute('aria-current',k===i));const s=S[i];
+ const cards=s.cards.map(([n,b])=>`<button class="card" style="--c:${s.c}"><b>${n}</b><span class="back">${b}</span><span class="hint">Tap to reveal</span></button>`).join('');
+ let right='';
+ if(s.demo){const d=s.demo;right=`<section class="lab"><h3>${d.title}</h3><p class="q">${d.q}</p><div class="opts">${d.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div><div class="stage" id="stage"></div><div class="row"><button class="go" id="run">Run the test</button><button class="go sec" id="reset">Reset</button>${d.type==='smart'?`<label>Heat <input type="range" id="heat" min="0" max="100" value="0"></label><label>Light (UV) <input type="range" id="uv" min="0" max="100" value="0"></label>`:''}</div><div class="result" id="res">${d.res}</div></section>`}
+ if(s.exam)right=`<section class="lab"><h3>Exam question</h3><p class="q">${s.exam.q}</p><button class="go" id="ex">Show a model answer</button><div class="result" id="res">${s.exam.a}</div></section>`;
+ main.innerHTML=`<div class="head"><h2 style="color:${s.c}">${s.t}</h2></div><p class="lead">${s.lead}</p><div class="grid"${right?'':' style="grid-template-columns:1fr"'}><div class="cards">${cards}</div>${right}</div>`;
+ main.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+ main.querySelectorAll('.opt').forEach(o=>o.onclick=()=>o.classList.toggle('sel'));
+ if(s.exam)document.getElementById('ex').onclick=()=>document.getElementById('res').classList.add('show');
+ if(s.demo)setup(s.demo);main.scrollTop=0}
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-family="Lexend" font-size="18" fill="#1b2a33" ${o}>${t}</text>`;
+const lerp=(a,b,t)=>a+(b-a)*t;const mix=(c1,c2,t)=>{const p=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));const a=p(c1),b=p(c2);return '#'+a.map((v,i)=>Math.round(lerp(v,b[i],t)).toString(16).padStart(2,'0')).join('')};
+function setup(d){const st=document.getElementById('stage'),res=document.getElementById('res'),run=document.getElementById('run');
+ const finish=()=>{res.classList.add('show');main.querySelector(`.opt[data-k="${d.right}"]`).classList.add('right')};
+ const play=(ms,f)=>{const t0=performance.now();const step=now=>{const t=Math.min(1,(now-t0)/ms);f(t);if(t<1)anim=requestAnimationFrame(step);else finish()};anim=requestAnimationFrame(step)};
+ let draw;
+ if(d.type==='bars'){draw=t=>{let s=`<svg viewBox="0 0 600 300">`+T(20,30,'Mass needed to carry the same load (approx.)','fill="#5b6670" font-size="16"');d.bars.forEach(([l,v,c],k)=>{const y=60+k*75,w=Math.min(1,t*1.2)*v*3.6;s+=`<rect x="140" y="${y}" width="${w}" height="44" rx="6" fill="${c}"/>`+T(20,y+29,l)+(t>.85?T(150+w,y+29,v===100?'heaviest':v<50?'lightest':'',''):'')});st.innerHTML=s+'</svg>'};
+  run.onclick=()=>{reset();play(2600,draw)}}
+ if(d.type==='smart'){const h=document.getElementById('heat'),u=document.getElementById('uv');
+  draw=()=>{const H=h.value/100,U=u.value/100,wire=Math.min(1,Math.max(0,(H-.4)/.3)),mug=Math.min(1,Math.max(0,(H-.5)/.2));
+   const bend=(1-wire)*70;
+   st.innerHTML=`<svg viewBox="0 0 600 300"><rect width="600" height="300" fill="${mix('#efeae0','#ffd6c2',H*.8)}"/>`+
+   `<path d="M40 170 Q110 ${170-bend*1.6} 180 ${170-bend*.2}" stroke="#9aa3ab" stroke-width="9" fill="none" stroke-linecap="round"/>`+T(40,250,'SMA wire')+
+   `<rect x="240" y="110" width="110" height="110" rx="12" fill="${mix('#22313f','#e0583c',mug)}"/><path d="M350 135 q40 0 40 30 q0 30 -40 30" stroke="${mix('#22313f','#e0583c',mug)}" stroke-width="12" fill="none"/>${mug>.5?`<path d="M270 100 q8 -18 0 -30 M295 100 q8 -18 0 -30 M320 100 q8 -18 0 -30" stroke="#ffffffaa" stroke-width="4" fill="none"/>`:''}`+T(240,250,'Thermochromic mug')+
+   `<ellipse cx="470" cy="165" rx="52" ry="40" fill="${mix('#dff3ff','#2b2f3a',U*.9)}" stroke="#333" stroke-width="6"/><ellipse cx="560" cy="165" rx="0" ry="0"/>`+T(420,250,'Photochromic lens')+
+   T(20,32,`Heat ${Math.round(H*100)}%   Light ${Math.round(U*100)}%`,'font-size="16" fill="#5b6670"')+`</svg>`};
+  h.oninput=draw;u.oninput=draw;run.onclick=()=>{reset();u.value=0;play(3500,t=>{h.value=t*100;draw()})};
+  var reset0=()=>{h.value=0;u.value=0}}
+ if(d.type==='bend'){draw=t=>{const L=[['Resin only','#d9c79a',90,1],['GRP','#cfd8dc',40,0],['CFRP','#2b2f3a',12,0]];let s=`<svg viewBox="0 0 600 300">`;
+  L.forEach(([l,c,def,brk],k)=>{const x=20+k*195,y=90,dd=Math.min(1,t*1.3)*def,crack=brk&&t>.6;
+   s+=`<rect x="${x}" y="${y+40}" width="14" height="60" fill="#6f7a84"/><rect x="${x+156}" y="${y+40}" width="14" height="60" fill="#6f7a84"/>`;
+   s+=crack?`<path d="M${x} ${y+30} L${x+84} ${y+30+dd*.6}" stroke="${c}" stroke-width="16"/><path d="M${x+86} ${y+38+dd} L${x+170} ${y+30}" stroke="${c}" stroke-width="16"/><path d="M${x+80} ${y+20} l8 12 -6 6 8 14" stroke="#c0392b" stroke-width="3" fill="none"/>`:`<path d="M${x} ${y+30} Q${x+85} ${y+30+dd*2} ${x+170} ${y+30}" stroke="${c}" stroke-width="16" fill="none"/>`;
+   if(!brk&&k>0)s+=[...Array(6)].map((_,f)=>`<path d="M${x+8} ${y+25+f*2} Q${x+85} ${y+25+f*2+dd*2} ${x+162} ${y+25+f*2}" stroke="${k===2?'#555':'#fff'}" stroke-width="1" fill="none" opacity=".7"/>`).join('');
+   const wy=y+30+(crack?dd+20:dd)-48;s+=`<rect x="${x+65}" y="${wy}" width="40" height="34" rx="4" fill="#14213d"/>`+T(x+71,wy+23,'10 kg','fill="#fff" font-size="13"')+T(x+40,270,l)});
+  st.innerHTML=s+'</svg>'};run.onclick=()=>{reset();play(3000,draw)}}
+ if(d.type==='flame'){draw=t=>{let s=`<svg viewBox="0 0 600 300">`;[['Plain cotton','#f2efe6',1],['Fire-resistant fabric','#e8d070',0]].forEach(([l,c,burn],k)=>{const x=60+k*280,y=40;const hole=burn?Math.max(0,t-.25)*120:0,ch=Math.min(1,t*1.4);
+   s+=`<defs><clipPath id="fc${k}"><rect x="${x}" y="${y}" width="200" height="140"/></clipPath></defs><rect x="${x}" y="${y}" width="200" height="140" fill="${c}"/><g clip-path="url(#fc${k})">`;
+   s+=`<ellipse cx="${x+100}" cy="${y+140}" rx="${burn?40+hole*.6:55}" ry="${burn?18+hole*.4:14}" fill="#3a2a20" opacity="${ch*.8}"/>`;
+   if(burn&&hole>0)s+=`<ellipse cx="${x+100}" cy="${y+140}" rx="${hole*.9}" ry="${hole*.7}" fill="#efeae0" stroke="#ff7a1a" stroke-width="4"/>`;s+='</g>';
+   const fh=34+Math.sin(t*40+k)*6;s+=`<path d="M${x+100} ${y+150} q-26 ${40} 0 ${fh+40} q26 -${40} 0 -${fh+40}z" fill="#ff7a1a" opacity="${t>0?.9:0}" transform="translate(0 -12)"/><path d="M${x+100} ${y+170} q-12 20 0 40 q12 -20 0 -40z" fill="#ffe14d" opacity="${t>0?1:0}" transform="translate(0 -6)"/>`;
+   if(burn&&t>.3)s+=`<path d="M${x+80} ${y+110-hole*.5} q8 -${20+Math.sin(t*30)*6} 0 -36 M${x+120} ${y+112-hole*.5} q8 -${22+Math.cos(t*30)*6} 0 -36" stroke="#ff7a1a" stroke-width="10" fill="none" stroke-linecap="round" opacity=".85"/>`;
+   s+=T(x+30,290,l)});st.innerHTML=s+'</svg>'};run.onclick=()=>{reset();play(4000,draw)}}
+ const reset=()=>{cancelAnimationFrame(anim);res.classList.remove('show');main.querySelectorAll('.opt').forEach(o=>o.classList.remove('right'));if(d.type==='smart'){document.getElementById('heat').value=0;document.getElementById('uv').value=0;draw()}else draw(0)};
+ document.getElementById('reset').onclick=reset;d.type==='smart'?draw():draw(0)}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'||e.key==='PageDown')show(Math.min(S.length-1,cur+1));if(e.key==='ArrowUp'||e.key==='PageUp')show(Math.max(0,cur-1))});
+show(0);
+}
+</script>
+<script>
+/* Fit to the board: scale each section up so it fills the screen and can be read from the back of the room.
+   It measures the section with every card opened, so tapping a card never makes the page jump or scroll. */
+(() => { const main = document.getElementById('main'); if (!main || !('zoom' in main.style)) return; let busy = false, t = 0;
+  const fit = () => { if (busy) return; busy = true;
+    const side = innerWidth > 1000 ? main.getBoundingClientRect().left : 0, W = innerWidth - side, H = innerHeight;
+    if (innerWidth <= 1000) { main.style.zoom = ''; main.style.width = ''; main.style.height = ''; busy = false; return; }
+    const closed = [...main.querySelectorAll('.card:not(.open)')], hidden = [...main.querySelectorAll('.result:not(.show)')];
+    closed.forEach((c) => c.classList.add('open')); hidden.forEach((r) => r.classList.add('show'));
+    const set = (z) => { main.style.zoom = z; main.style.width = (W / z) + 'px'; main.style.height = (H / z) + 'px'; };
+    let lo = 1, hi = 2.6; for (let k = 0; k < 9; k++) { const z = (lo + hi) / 2; set(z); if (main.scrollHeight <= main.clientHeight + 1 && main.scrollWidth <= main.clientWidth + 1) lo = z; else hi = z; }
+    set(lo); closed.forEach((c) => c.classList.remove('open')); hidden.forEach((r) => r.classList.remove('show')); main.scrollTop = 0;
+    requestAnimationFrame(() => { busy = false; }); };
+  const later = () => { clearTimeout(t); t = setTimeout(fit, 60); };
+  new MutationObserver(later).observe(main, { childList: true }); addEventListener('resize', later); addEventListener('load', later); if (document.fonts && document.fonts.ready) document.fonts.ready.then(later); later();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="../../book-kit/solo-pages.js?h=e80f7906"></script>
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="../../book-kit/icons/ks3-electronics-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KS3 Electronics – Interactive Workbook">
+<meta name="theme-color" content="#1f4d36">
+<meta name="robots" content="noindex">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Level 8 · Conductor or Insulator?</title>
+<link rel="stylesheet" href="../common.css?h=1095ee77">
+<script type="application/json" id="level-info">
+{"t":"Conductor or Insulator?","d":"Clip ten everyday materials into a test circuit. Predict which ones let electricity through – some might surprise you.","s":"Materials","c":"#8d6e63","emoji":"🪙📏🔑"}
+</script>
+<style>
+.mat{display:flex;gap:16px;align-items:center;background:#f2f7fd;border-radius:18px;padding:14px;margin:10px 0}
+.mat .em{font-size:64px;line-height:1}
+.mat b{font:600 24px Fredoka}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.col{border-radius:16px;padding:10px 12px;min-height:80px}
+.col h3{margin:0 0 6px}
+.col.c{background:#dcfaf0}.col.i{background:#ffe8ee}
+.tagm{display:inline-block;background:#fff;border-radius:99px;padding:4px 10px;margin:3px;font-weight:800}
+</style>
+</head>
+<body>
+<script src="../common.js?h=daf867c1"></script>
+<script src="../circuit.js?h=8b387158"></script>
+<script>
+const M=[
+ {n:'Steel paperclip',e:'📎',c:1,why:'Steel is a metal. All metals are conductors.'},
+ {n:'Plastic ruler',e:'📏',c:0,why:'Plastic is an insulator – that\'s why it\'s used to cover wires.'},
+ {n:'Copper coin',e:'🪙',c:1,why:'Coins are made of metal, so they conduct.'},
+ {n:'Wooden lolly stick',e:'🪵',c:0,why:'Dry wood is an insulator.'},
+ {n:'Brass key',e:'🔑',c:1,why:'Brass is a metal (copper + zinc), so it conducts.'},
+ {n:'Rubber balloon',e:'🎈',c:0,why:'Rubber is a very good insulator – it\'s used for electricians\' gloves.'},
+ {n:'Pencil "lead"',e:'✏️',c:2,why:'Surprise! Pencil "lead" is really graphite (a form of carbon). It conducts, but not very well – so the bulb is dim.'},
+ {n:'Glass marble',e:'🔮',c:0,why:'Glass is an insulator.'},
+ {n:'Metal spoon',e:'🥄',c:1,why:'Stainless steel is a metal, so it conducts.'},
+ {n:'Paper',e:'📄',c:0,why:'Dry paper is an insulator.'}
+];
+const BASE={'v-0-0':'battery!','h-0-0':'wire!','h-0-1':'bulb!','v-0-2':'wire!','h-1-1':'wire!'};
+function overlay(b,m){const [x,y]=b.pos(b.cols);const mx=x+b.S/2,my=y;const ns='http://www.w3.org/2000/svg';
+ const g=document.createElementNS(ns,'g');g.innerHTML=`<rect x="${mx-34}" y="${my-30}" width="68" height="60" rx="14" fill="#fff" stroke="#c8d6e8" stroke-width="3"/><text x="${mx}" y="${my+15}" text-anchor="middle" font-size="40">${m.e}</text>`;
+ b.svg.insertBefore(g,b.svg.lastChild);}
+
+Level({n:8,title:'Conductor or Insulator?',summary:'conductors let electricity flow through them – all metals, and graphite (carbon). Insulators do not – plastic, rubber, wood, glass and paper. Wires are made of a conductor (copper) covered in an insulator (plastic) to keep us safe.',steps:[
+ (st,api)=>{
+  const c=h('div',{class:'card'});st.append(c);
+  c.append(h('div',{class:'kicker'},'Step 1 · The test circuit'),h('h2',{},'Will it let electricity through?'),
+   h('div',{class:'lead',html:'<p>A <b>conductor</b> is a material that lets electricity flow through it. An <b>insulator</b> does not.</p><p>We can test any material by putting it in the <b>gap</b> in a circuit. If the bulb lights, the material is a conductor.</p>'}));
+  const d=h('div',{style:'max-width:460px'});c.append(d);
+  new Circuit.Board(d,{mode:'view',parts:Object.fromEntries(Object.entries(BASE).map(([k,v])=>[k,v.replace('!','')])),noStatus:true,small:true});
+  c.append(h('p',{style:'font-weight:700',html:'The two hollow rings at the bottom are the crocodile clips. For each material, <b>predict first</b>, then test it.'}),h('div',{class:'row'},api.nextBtn('Start testing →')));
+ },
+ (st,api)=>{
+  const order=shuffle(M);let i=0;const res=[];
+  const w=h('div',{class:'split'});st.append(w);const L=h('div',{class:'card'}),R=h('div',{class:'card'});w.append(L,R);
+  const b=new Circuit.Board(R,{parts:BASE,editable:false,noStatus:true});
+  const cols=h('div',{class:'cols',html:'<div class="col c"><h3>✅ Conductors</h3><div></div></div><div class="col i"><h3>❌ Insulators</h3><div></div></div>'});R.append(cols);
+  function show(){
+   L.innerHTML='';const m=order[i];
+   b.load(BASE);b.changed();
+   L.append(h('div',{class:'kicker'},`Material ${i+1} of ${order.length}`),h('div',{class:'mat',html:`<span class="em">${m.e}</span><b>${m.n}</b>`}),h('p',{class:'lead',style:'font-weight:800'},'Predict: will it conduct electricity?'));
+   const row=h('div',{class:'opts two'});L.append(row);let done=false;
+   [['✅ Conductor',true],['❌ Insulator',false]].forEach(([t,v])=>row.append(h('button',{class:'opt',style:'text-align:center',onclick:e=>{
+    if(done)return;done=true;const isC=m.c>0,ok=v===isC;e.currentTarget.classList.add(ok?'right':'wrong');[...row.children].forEach(x=>x.disabled=true);
+    api.add(ok?1:0,1);
+    if(m.c===1)b.set('h-1-0','wire!');else if(m.c===2)b.set('h-1-0','resistor!:22');else{b.load(BASE);b.changed();}
+    overlay(b,m);ok?Sfx.good():Sfx.bad();
+    cols.querySelector(isC?'.c div':'.i div').append(h('span',{class:'tagm'},m.e+' '+m.n));
+    L.append(h('div',{class:'msg '+(ok?'good':'bad')},(isC?'💡 The bulb lights – it\'s a conductor. ':'🌑 The bulb stays off – it\'s an insulator. ')+m.why),
+     h('div',{class:'row',style:'margin-top:12px'},h('button',{class:'btn go',onclick:()=>{i++;i<order.length?show():api.next();}},i<order.length-1?'Next material →':'Finish testing →')));
+   }},t)));
+  }
+  show();
+ },
+ (st,api)=>quiz(st,api,{title:'Using conductors and insulators',qs:[
+  {q:'Why are electrical wires made of copper covered in plastic?',opts:['Copper conducts the electricity; plastic insulates it to keep us safe','Plastic conducts and copper insulates','To make them more colourful'],a:0,why:'The conductor carries the current and the insulator stops it reaching you.'},
+  {q:'Which material would be best for the handle of an electrician\'s screwdriver?',opts:['Plastic or rubber','Steel','Copper'],a:0,why:'An insulating handle protects the electrician from shocks.'},
+  {q:'What do ALL metals have in common?',opts:['They are conductors','They are insulators','They are magnetic'],a:0,why:'All metals conduct electricity (but not all metals are magnetic!).'},
+  {q:'Why did the pencil lead make the bulb dim?',opts:['Graphite conducts, but has more resistance than metal','Graphite is an insulator','The pencil was too short'],a:0,why:'Graphite is a conductor with quite a high resistance, so less current flows.'}
+ ]})
+]});
+</script>
+</body>
+</html>

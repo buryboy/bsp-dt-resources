@@ -1,30 +1,39 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="robots" content="noindex">
 <title>Levers and linkages lab</title>
 <style>
-:root{--bg:#f1f3ef;--ink:#1f2a24;--soft:#5d6862;--green:#1e5c3a;--blue:#2456a6;--red:#b8402c;--card:#fff;--line:rgba(31,42,36,.18)}
-*{box-sizing:border-box}html,body{margin:0;height:100%}body{background:var(--bg);color:var(--ink);font:400 17px/1.45 -apple-system,'Segoe UI',Roboto,Arial,sans-serif;display:flex;flex-direction:column}
-header{background:var(--green);color:#fff;padding:10px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}header h1{font-size:20px;margin:0;flex:1;min-width:200px}header a{color:#fff;opacity:.85;font-size:14px}
-.tabs{display:flex;gap:8px}.tabs button{font:600 15px inherit;border:0;border-radius:20px;padding:9px 16px;background:rgba(255,255,255,.18);color:#fff;cursor:pointer}.tabs button.on{background:#fff;color:var(--green)}
-.wrap{flex:1;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:14px;padding:14px;min-height:0}
-.stage{position:relative;background:linear-gradient(#fff,#e8ece6);border-radius:16px;overflow:hidden;min-height:340px;touch-action:none}.stage canvas{display:block;width:100%;height:100%}
-.stage .hint{position:absolute;left:12px;bottom:9px;font-size:12.5px;color:var(--soft);pointer-events:none}.stage .big{position:absolute;left:14px;top:12px;font-weight:700;font-size:19px;background:rgba(255,255,255,.85);border-radius:10px;padding:6px 12px}
-.side{display:flex;flex-direction:column;gap:12px;overflow:auto;min-height:0}
-.card{background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.06)}.card h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin:0 0 6px}
-.card p{margin:4px 0}.muted{color:var(--soft);font-size:15px}
-.ctl{display:grid;grid-template-columns:118px 1fr;gap:6px 10px;align-items:center;margin-top:4px}.ctl label{font-weight:600;font-size:15px}
-input[type=range]{width:100%;height:36px;accent-color:var(--blue);margin:0}input.push{accent-color:var(--red)}
-.read{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.read div{background:#f3f6f2;border-radius:10px;padding:8px 10px}.read b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.read small{color:var(--soft);font-size:13px}
-.q{border-left:6px solid var(--blue)}.opts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.opts button,.next{font:600 16px inherit;border:2px solid var(--line);background:#fff;border-radius:10px;padding:11px 16px;cursor:pointer;color:var(--ink)}
-.opts button.right{background:#e2f3e7;border-color:#2f7d4a}.opts button.wrong{background:#fbe6e1;border-color:var(--red)}.fb{margin-top:8px;font-weight:600}.next{background:var(--blue);color:#fff;border-color:var(--blue);margin-top:8px}
-@media(max-width:820px){body{height:auto}.wrap{grid-template-columns:1fr}.stage{height:56vw;min-height:280px}.side{overflow:visible}}
+:root{--bg:#eef1ec;--ink:#1f2a24;--soft:#5d6862;--green:#1e5c3a;--blue:#2456a6;--red:#b8402c;--amber:#b7791f;--card:#fff;--line:rgba(31,42,36,.18)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.4 -apple-system,'Segoe UI',Roboto,Arial,sans-serif;display:grid;grid-template-rows:auto minmax(0,1fr);height:100vh;height:100dvh;-webkit-user-select:none;user-select:none}
+header{background:var(--green);color:#fff;padding:8px 14px;display:flex;gap:10px;align-items:center}
+header h1{font-size:17px;margin:0;white-space:nowrap}header a{color:#fff;opacity:.8;font-size:13px;white-space:nowrap}
+.tabs{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}.tabs button{font:600 14.5px inherit;border:0;border-radius:18px;padding:8px 14px;background:rgba(255,255,255,.18);color:#fff;cursor:pointer}.tabs button.on{background:#fff;color:var(--green)}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:10px;padding:10px;min-height:0}
+.stage{position:relative;background:linear-gradient(#fff,#e3e9e0);border-radius:14px;overflow:hidden;min-height:0;touch-action:none}
+.stage canvas{display:block;width:100%;height:100%}
+.title{position:absolute;left:12px;top:10px;right:12px;font-weight:700;font-size:18px;pointer-events:none}.title small{display:block;font-weight:400;font-size:13.5px;color:var(--soft)}
+.tag{position:absolute;transform:translate(-50%,-50%);font:700 13px inherit;padding:3px 9px;border-radius:12px;color:#fff;white-space:nowrap;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.tag.b{background:var(--blue)}.tag.r{background:var(--red)}.tag.k{background:#3b4450}.tag.a{background:var(--amber)}
+.bar{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:10px;background:rgba(255,255,255,.92);border-radius:12px;padding:6px 12px;box-shadow:0 1px 6px rgba(0,0,0,.12)}
+.bar label{flex:1;font-weight:700;font-size:13px;display:flex;flex-direction:column;min-width:0}.bar label span{display:flex;align-items:center;gap:6px}.bar i{width:11px;height:11px;border-radius:50%;display:inline-block}
+input[type=range]{width:100%;height:30px;margin:0;accent-color:var(--ink)}
+.side{display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:10px;min-height:0}
+.card{background:var(--card);border-radius:12px;padding:10px 12px;box-shadow:0 1px 5px rgba(0,0,0,.06);min-height:0;overflow:hidden}
+.card h2{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin:0 0 4px}.card p{margin:0;font-size:14.5px}
+.read{display:grid;grid-template-columns:1fr 1fr;gap:6px}.read div{background:#f1f5f0;border-radius:9px;padding:6px 9px}.read b{display:block;font-size:19px;font-variant-numeric:tabular-nums;line-height:1.2}.read small{color:var(--soft);font-size:12px;line-height:1.2;display:block}
+.say{margin-top:6px!important;color:var(--soft);font-size:13.5px!important}
+.q{border-left:6px solid var(--blue);display:flex;flex-direction:column}.q p{font-size:15px}.opts{display:grid;gap:6px;margin-top:8px}
+.opts button,.next{font:600 15px inherit;border:2px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;cursor:pointer;color:var(--ink);text-align:left}
+.opts button.right{background:#e2f3e7;border-color:#2f7d4a}.opts button.wrong{background:#fbe6e1;border-color:var(--red)}
+.fb{margin-top:6px!important;font-size:13.5px!important;font-weight:600}.next{background:var(--blue);color:#fff;border-color:var(--blue);margin-top:6px;text-align:center}
+@media (max-aspect-ratio:1/1){.wrap{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}.side{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}.q{grid-row:1/3;grid-column:2}header h1{display:none}}
 </style></head>
 <body>
 <header><h1>Levers and linkages lab</h1><div class="tabs" id="tabs"></div><a href="../">Test bench</a></header>
 <div class="wrap">
- <div class="stage" id="stage"><div class="big" id="big"></div><span class="hint">drag the model to turn it · use the sliders to change it</span></div>
+ <div class="stage" id="stage"><div class="title" id="big"></div><div class="bar" id="ctl"></div></div>
  <div class="side">
   <div class="card"><h2>Where have you seen this?</h2><p id="ctx"></p></div>
-  <div class="card"><h2>Change it</h2><div class="ctl" id="ctl"></div><div class="read" id="read"></div><p class="muted" id="say"></p></div>
+  <div class="card"><h2>What is happening</h2><div class="read" id="read"></div><p class="say" id="say"></p></div>
   <div class="card q"><h2>Predict, then test</h2><p id="qt"></p><div class="opts" id="qo"></div><p class="fb" id="qf"></p><button class="next" id="qn" type="button" style="display:none">Next question</button></div>
  </div>
 </div>
@@ -38,73 +47,159 @@ const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1.5, .1, 
 scene.add(new THREE.HemisphereLight(0xffffff, 0xb8bcc4, .45)); const sun = new THREE.DirectionalLight(0xffffff, .6); sun.position.set(-4, 7, 6); cam.add(sun);
 const orbit = new THREE.OrbitControls(cam, renderer.domElement); orbit.enablePan = false; orbit.enableDamping = true; orbit.minPolarAngle = .9; orbit.maxPolarAngle = 1.56; orbit.minAzimuthAngle = -.9; orbit.maxAzimuthAngle = .9;
 const ramp = new THREE.DataTexture(new Uint8Array([150, 150, 150, 215, 215, 215, 255, 255, 255]), 3, 1, THREE.RGBFormat); ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
-const toon = (c, o) => new THREE.MeshToonMaterial(Object.assign({ color: c, gradientMap: ramp }, o || {})), INK = 0x1f2328;
-const edged = (geo, c, o) => { const m = new THREE.Mesh(geo, toon(c, o)); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: INK }))); return m; };
+const toon = (c, o) => new THREE.MeshToonMaterial(Object.assign({ color: c, gradientMap: ramp }, o || {})), INK = 0x1f2328, line = () => new THREE.LineBasicMaterial({ color: INK });
+const edged = (geo, c, o, ang) => { const m = new THREE.Mesh(geo, toon(c, o)); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, ang || 30), line())); return m; };
 const box = (w, h, d, c, o) => edged(new THREE.BoxGeometry(w, h, d), c, o);
 const cyl = (r, h, c, seg) => edged(new THREE.CylinderGeometry(r, r, h, seg || 24), c);
-function arrow(c) { const g = new THREE.Group(), sh = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, 1, 12), new THREE.MeshBasicMaterial({ color: c })), hd = new THREE.Mesh(new THREE.ConeGeometry(.1, .22, 16), new THREE.MeshBasicMaterial({ color: c })); g.add(sh, hd);
- g.set = (x, y, z, len, down) => { g.position.set(x, y, z); const L = Math.max(.25, len); sh.scale.y = L - .2; if (down) { sh.position.y = .2 + (L - .2) / 2; hd.position.y = .11; hd.rotation.z = Math.PI; } else { sh.position.y = (L - .2) / 2; hd.position.y = L - .11; hd.rotation.z = 0; } }; return g; }
+const pin = (r, len, c) => { const m = cyl(r, len, c); m.rotation.x = Math.PI / 2; return m; };
+// a rounded slab: outline with rounded corners (w × h, radius r) pushed through depth d, centred
+function pill(w, h, r, d, c, bevel) { const s = new THREE.Shape(), x = -w / 2, y = -h / 2; s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+ const g = new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: !!bevel, bevelSize: bevel || 0, bevelThickness: bevel || 0, bevelSegments: 3, curveSegments: 8 }); g.translate(0, 0, -d / 2); return edged(g, c, null, 40); }
 function between(mesh, a, b) { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A); mesh.position.copy(A).addScaledVector(d, .5); mesh.scale.y = d.length(); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
-const ground = () => { const g = new THREE.Mesh(new THREE.CircleGeometry(4, 48), new THREE.MeshBasicMaterial({ color: 0xdfe5dc })); g.rotation.x = -Math.PI / 2; return g; };
-const BLUE = 0x2456a6, RED = 0xb8402c, WOOD = 0xdfc08f, STEEL = 0xcfd5dc, DARK = 0x98a2b0;
-let need = true; orbit.addEventListener('change', () => { need = true; });
-function size() { const w = host.clientWidth, h = host.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); need = true; } new ResizeObserver(size).observe(host);
-(function loop() { requestAnimationFrame(loop); orbit.update(); if (need) { need = false; renderer.render(scene, cam); } })();
+const ground = (r) => { const g = new THREE.Mesh(new THREE.CircleGeometry(r || 4, 48), new THREE.MeshBasicMaterial({ color: 0xdbe2d7 })); g.rotation.x = -Math.PI / 2; return g; };
+const WOOD = 0xdfc08f, STEEL = 0xcfd5dc, DARK = 0x7d8794, SKIN = 0xf2c66d, RED = 0xc8472f, BLUE = 0x2f66c4, AMBER = 0xe0a030;
 
-/* ---------- controls and questions shared by every station ---------- */
-let V = {}, station = null, root = null, qi = 0;
-function sliders(list) { $('#ctl').innerHTML = list.map((s) => `<label for="s-${s[0]}">${s[1]}</label><input type="range" id="s-${s[0]}" min="${s[2]}" max="${s[3]}" step="${s[5] || .01}" value="${s[4]}"${s[0] === 'push' ? ' class="push"' : ''}>`).join(''); V = {};
- list.forEach((s) => { V[s[0]] = +s[4]; $('#s-' + s[0]).oninput = (e) => { V[s[0]] = +e.target.value; station.update(); need = true; }; }); }
+// a cartoon hand on a sleeve: the palm sits at the origin, fingers point along -x
+function hand() { const g = new THREE.Group(), palm = pill(.24, .08, .035, .24, SKIN, .012); palm.position.set(0, .05, 0); g.add(palm);
+ [-.09, -.03, .03, .09].forEach((z, i) => { const f = pill(.17 - Math.abs(i - 1.5) * .02, .055, .025, .05, SKIN, .008); f.position.set(-.19, .045, z); f.rotation.z = .12; g.add(f); });
+ const th = pill(.13, .055, .025, .05, SKIN, .008); th.position.set(-.07, .04, .155); th.rotation.y = -.7; g.add(th);
+ const arm = cyl(.075, .5, 0x3f6fb5, 20); arm.rotation.z = -1.0; arm.position.set(.32, .2, 0); g.add(arm); const cuff = cyl(.085, .08, 0xffffff, 20); cuff.rotation.z = -1.0; cuff.position.set(.14, .085, 0); g.add(cuff); return g; }
+// a school rucksack, about 30 cm wide
+function rucksack() { const g = new THREE.Group(), body = pill(.34, .44, .11, .2, 0x1f8a8a, .03); body.position.y = .25; g.add(body);
+ const pocket = pill(.24, .2, .06, .06, 0x176b6b, .02); pocket.position.set(0, .17, .14); g.add(pocket); const flap = pill(.3, .13, .05, .05, 0x25a3a3, .02); flap.position.set(0, .4, .125); g.add(flap);
+ const zip = box(.2, .012, .012, 0xf2f2f2); zip.position.set(0, .255, .178); g.add(zip); const badge = pin(.03, .012, AMBER); badge.position.set(.07, .4, .158); g.add(badge);
+ const handle = edged(new THREE.TorusGeometry(.06, .015, 8, 16, Math.PI), 0x12494a); handle.position.set(0, .49, 0); g.add(handle);
+ [-.1, .1].forEach((x) => { const s = pill(.05, .36, .02, .03, 0x12494a, .006); s.position.set(x, .25, -.135); g.add(s); }); return g; }
+// a trainer for pressing the pedal: the sole sits at the origin, toe along -x
+function trainer() { const g = new THREE.Group(), sole = pill(.5, .06, .03, .2, 0xffffff, .01); sole.position.y = .04; g.add(sole); const up = pill(.46, .13, .06, .18, 0xd94f3d, .015); up.position.set(.01, .13, 0); g.add(up);
+ const toe = pill(.16, .07, .03, .19, 0xffffff, .01); toe.position.set(-.17, .09, 0); g.add(toe); const ankle = cyl(.085, .34, 0x2b3a55, 20); ankle.position.set(.13, .34, 0); g.add(ankle); const sock = cyl(.09, .06, 0xffffff, 20); sock.position.set(.13, .2, 0); g.add(sock); return g; }
+// a flat link bar with round ends, lying along x from 0 to len, with holes drawn as dark pins
+function link(len, c) { const g = new THREE.Group(), b = pill(len + .16, .16, .08, .05, c, .008); b.position.set(len / 2, 0, 0); g.add(b); return g; }
+
+/* ---------- render loop, labels that follow parts, dragging parts ---------- */
+let need = true, tags = [], drags = [], V = {}, RNG = {}, station = null, root = null, qi = 0; orbit.addEventListener('change', () => { need = true; });
+function tag(text, cls, pos) { const el = document.createElement('div'); el.className = 'tag ' + cls; el.textContent = text; host.appendChild(el); const t = { el, pos }; tags.push(t); return t; }
+const v3 = new THREE.Vector3();
+function place() { const w = host.clientWidth, h = host.clientHeight; tags.forEach((t) => { const p = t.pos(); v3.set(p[0], p[1], p[2] || 0).project(cam); t.el.style.left = ((v3.x + 1) / 2 * w).toFixed(1) + 'px'; t.el.style.top = ((1 - v3.y) / 2 * h).toFixed(1) + 'px'; }); }
+function size() { const w = host.clientWidth, h = host.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); cam.aspect = w / h; cam.fov = w / h < 1.15 ? 40 : 30; cam.updateProjectionMatrix(); need = true; } new ResizeObserver(size).observe(host);
+(function loop() { requestAnimationFrame(loop); orbit.update(); if (need) { need = false; renderer.render(scene, cam); place(); } })();
+const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hitP = new THREE.Vector3(); let drag = null;
+const pointAt = (e) => { const b = renderer.domElement.getBoundingClientRect(); ray.setFromCamera({ x: (e.clientX - b.left) / b.width * 2 - 1, y: -(e.clientY - b.top) / b.height * 2 + 1 }, cam); return ray; };
+renderer.domElement.addEventListener('pointerdown', (e) => { pointAt(e); let best = null; drags.forEach((d) => { const h = ray.intersectObject(d.obj, true).find((x) => x.object.isMesh); if (h && (!best || h.distance < best.h.distance)) best = { d, h }; }); if (!best) return;
+ plane.constant = -best.h.point.z; ray.ray.intersectPlane(plane, hitP); drag = { d: best.d, x: hitP.x, y: hitP.y, v: Object.assign({}, V), mode: null }; orbit.enabled = false; renderer.domElement.setPointerCapture(e.pointerId); e.stopPropagation(); }, true);
+renderer.domElement.addEventListener('pointermove', (e) => { if (!drag) return; pointAt(e); if (!ray.ray.intersectPlane(plane, hitP)) return; const dx = hitP.x - drag.x, dy = hitP.y - drag.y; if (!drag.mode && Math.hypot(dx, dy) > .03) drag.mode = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'; drag.d.move(dx, dy, drag.v, drag.mode); });
+const drop = () => { if (drag) { drag = null; orbit.enabled = true; } }; renderer.domElement.addEventListener('pointerup', drop); renderer.domElement.addEventListener('pointercancel', drop);
+function setV(k, val) { const r = RNG[k]; V[k] = Math.max(r[0], Math.min(r[1], val)); $('#s-' + k).value = V[k]; station.update(); need = true; }
+function sliders(list) { $('#ctl').innerHTML = list.map((s) => `<label><span><i style="background:${s[5]}"></i>${s[1]}</span><input type="range" id="s-${s[0]}" min="${s[2]}" max="${s[3]}" step=".01" value="${s[4]}" aria-label="${s[1]}"></label>`).join(''); V = {}; RNG = {};
+ list.forEach((s) => { V[s[0]] = +s[4]; RNG[s[0]] = [s[2], s[3]]; $('#s-' + s[0]).oninput = (e) => { V[s[0]] = +e.target.value; station.update(); need = true; }; }); }
 const readout = (rows) => { $('#read').innerHTML = rows.map((r) => `<div><b>${r[0]}</b><small>${r[1]}</small></div>`).join(''); };
-function ask() { const q = station.qs[qi % station.qs.length]; $('#qt').textContent = q[0]; $('#qf').textContent = ''; $('#qn').style.display = 'none';
+function ask() { const q = station.qs[qi % station.qs.length]; $('#qt').textContent = q[0]; $('#qf').textContent = ''; $('#qn').style.display = 'none'; $('#qo').style.display = '';
  $('#qo').innerHTML = q[1].map((o, i) => `<button type="button" data-i="${i}">${o}</button>`).join('');
  $('#qo').onclick = (e) => { const b = e.target.closest('button'); if (!b || $('#qn').style.display !== 'none') return; const ok = +b.dataset.i === q[2]; b.classList.add(ok ? 'right' : 'wrong'); if (!ok) $('#qo').children[q[2]].classList.add('right');
-  $('#qf').textContent = (ok ? 'Yes. ' : 'Not quite. ') + q[3] + ' Now test it with the sliders.'; $('#qn').style.display = ''; }; }
+  [...$('#qo').children].forEach((c, i) => { if (i !== q[2] && c !== b) c.style.display = 'none'; }); $('#qf').textContent = (ok ? 'Yes. ' : 'Not quite. ') + q[3] + ' Now try it on the model.'; $('#qn').style.display = ''; }; }
 $('#qn').onclick = () => { qi++; ask(); };
-function open(k) { if (root) scene.remove(root); station = STATIONS[k]; [...$('#tabs').children].forEach((b, i) => b.classList.toggle('on', i === k)); root = new THREE.Group(); scene.add(root); $('#ctx').innerHTML = station.ctx; station.build(root); qi = 0; ask(); station.update();
+function open(k) { if (root) scene.remove(root); tags.forEach((t) => t.el.remove()); tags = []; drags = []; station = STATIONS[k]; [...$('#tabs').children].forEach((b, i) => b.classList.toggle('on', i === k)); root = new THREE.Group(); scene.add(root); $('#ctx').innerHTML = station.ctx; station.build(root); qi = 0; ask(); station.update();
  orbit.target.set(...station.look); cam.position.set(...station.eye); orbit.update(); need = true; }
 
-/* ---------- station 1: one lever, three classes ---------- */
-const lever = { name: 'Lever', look: [0, .55, 0], eye: [0, 1.5, 5.2],
- ctx: 'A lever is a rigid bar that turns on a <b>pivot</b> (fulcrum). You use dozens every day: <b>scissors</b>, a <b>bottle opener</b>, <b>tweezers</b>, a <b>door handle</b>, the trigger on a <b>game controller</b>, even your <b>forearm</b>. Here the load is a 6 kg school bag, which weighs about 60 newtons.',
- qs: [['You slide the pivot closer to the bag. Lifting the bag will take…', ['more effort', 'less effort', 'the same effort'], 1, 'The bag is now on a short arm and your hand is on a long one, so a small effort balances a big load.'],
-  ['The pivot is near the bag and you push your end down a long way. The bag rises…', ['further than your hand moves', 'the same distance', 'less far than your hand moves'], 2, 'You gain force but lose distance. Nothing is free: effort × its distance = load × its distance.'],
-  ['Put the effort between the pivot and the bag, like tweezers. The effort needed is now…', ['bigger than the load', 'smaller than the load', 'the same as the load'], 0, 'A class 3 lever loses force but gains movement and control, which is what you want from tweezers or a fishing rod.']],
- build(r) { r.add(ground()); const tri = new THREE.Shape(); tri.moveTo(-.2, 0); tri.lineTo(.2, 0); tri.lineTo(0, .3); const fg = new THREE.ExtrudeGeometry(tri, { depth: .34, bevelEnabled: false }); fg.translate(0, 0, -.17); this.ful = edged(fg, DARK); r.add(this.ful);
-  this.g = new THREE.Group(); r.add(this.g); this.beam = box(2.1, .06, .26, WOOD); this.bag = box(.3, .34, .22, 0x3f7d55); this.strap = box(.2, .06, .05, 0x2d5a3d); this.bag.add(this.strap); this.strap.position.y = .2; this.g.add(this.beam, this.bag);
-  this.ae = arrow(BLUE); this.al = arrow(RED); r.add(this.ae, this.al);
-  sliders([['f', 'Pivot', -1, 1, -.3], ['l', 'Bag', -1, 1, -.8], ['e', 'Your hand', -1, 1, .9], ['push', 'Push or pull', 0, 1, 0]]); },
- update() { let { f, l, e, push } = V; const far = (a) => (Math.abs(a - f) < .12 ? f + (a >= f ? .12 : -.12) : a); l = far(l); e = far(e); if (Math.abs(l - e) < .01) e += .02;
+/* ---------- station: one lever, three classes ---------- */
+const lever = { name: 'Lever', look: [0, .6, 0], eye: [0, 1.5, 5.4],
+ ctx: 'A lever is a stiff bar that turns on a <b>pivot</b>. Scissors, a bottle opener, tweezers, a door handle and the trigger on a game controller are all levers. The rucksack weighs about 60 newtons (6 kg).',
+ qs: [['You slide the pivot closer to the bag. Lifting the bag will take…', ['more effort', 'less effort', 'the same effort'], 1, 'The bag is on a short arm and your hand is on a long one, so a small effort balances a big load.'],
+  ['The pivot is near the bag. You push your end down a long way. The bag rises…', ['further than your hand moves', 'the same distance', 'less far than your hand moves'], 2, 'You gain force but lose distance.'],
+  ['Put your hand between the pivot and the bag, like tweezers. The effort is now…', ['bigger than the load', 'smaller than the load', 'the same as the load'], 0, 'A class 3 lever loses force but gains movement and control.']],
+ build(r) { r.add(ground()); const tri = new THREE.Shape(); tri.moveTo(-.22, 0); tri.lineTo(.22, 0); tri.lineTo(0, .3); const fg = new THREE.ExtrudeGeometry(tri, { depth: .34, bevelEnabled: false }); fg.translate(0, 0, -.17); this.ful = edged(fg, AMBER); r.add(this.ful);
+  this.g = new THREE.Group(); r.add(this.g); this.beam = pill(2.1, .07, .03, .28, WOOD); this.bag = rucksack(); this.g.add(this.beam, this.bag); this.hand = hand(); r.add(this.hand);
+  sliders([['f', 'Pivot', -1, 1, -.3, '#e0a030'], ['l', 'Bag', -1, 1, -.8, '#1f8a8a'], ['e', 'Your hand', -1, 1, .9, '#2f66c4'], ['push', 'Push or lift', 0, 1, 0, '#c8472f']]);
+  this.tf = tag('pivot ↔', 'a', () => [V.f, .1, .3]); this.tl = tag('', 'r', () => this.pl); this.te = tag('', 'b', () => this.pe);
+  drags.push({ obj: this.ful, move: (dx, dy, v) => setV('f', v.f + dx) }, { obj: this.bag, move: (dx, dy, v) => setV('l', v.l + dx) },
+   { obj: this.hand, move: (dx, dy, v, m) => { if (m === 'x') setV('e', v.e + dx); else if (m === 'y') setV('push', v.push + dy * this.sgn * 3); } }); },
+ update() { let { f, l, e, push } = V; const far = (a) => (Math.abs(a - f) < .14 ? f + (a >= f ? .14 : -.14) : a); l = far(l); e = far(e);
   const aL = Math.abs(l - f), aE = Math.abs(e - f), eff = 60 * aL / aE, opp = (l - f) * (e - f) < 0, cls = opp ? 1 : aL < aE ? 2 : 3, maxArm = Math.max(1.05 + f, 1.05 - f), tmax = Math.min(.3, Math.asin(Math.min(.95, .26 / maxArm))), th = push * tmax * Math.sign(l - f);
-  this.ful.position.x = f; this.g.position.set(f, .3, 0); this.g.rotation.z = th; this.beam.position.set(-f, .03, 0); this.bag.position.set(l - f, .23, 0);
-  const P = (p, up) => [f + (p - f) * Math.cos(th) - up * Math.sin(th), .3 + (p - f) * Math.sin(th) + up * Math.cos(th)], pe = P(e, .07), pl = P(l, .42), len = .3 + Math.min(1.5, eff / 80);
-  if (opp) this.ae.set(pe[0], pe[1], 0, len, true); else this.ae.set(pe[0], pe[1], 0, len, false); this.al.set(pl[0], pl[1], 0, .75, true);
+  this.ful.position.x = f; this.g.position.set(f, .3, 0); this.g.rotation.z = th; this.beam.position.set(-f, .035, 0); this.bag.position.set(l - f, .07, 0);
+  const P = (p, up) => [f + (p - f) * Math.cos(th) - up * Math.sin(th), .3 + (p - f) * Math.sin(th) + up * Math.cos(th), 0], he = P(e, opp ? .07 : 0);
+  this.hand.position.set(he[0], he[1], 0); this.hand.rotation.z = th; this.hand.scale.set(e > f ? 1 : -1, opp ? 1 : -1, 1); this.sgn = opp ? -1 : 1;
+  this.pe = [he[0] + (e > f ? .25 : -.25), he[1] + (opp ? .62 : -.62), 0]; this.pl = P(l, .78); this.te.el.textContent = (opp ? 'push ' : 'lift ') + Math.round(eff) + ' N ↕'; this.tl.el.textContent = 'bag 60 N ↔';
   const dE = aE * Math.sin(tmax) * 100, dL = aL * Math.sin(tmax) * 100;
-  $('#big').textContent = 'Class ' + cls + ' lever: ' + ['like scissors or a see-saw', 'like a wheelbarrow or a bottle opener', 'like tweezers or your forearm'][cls - 1];
-  readout([[Math.round(eff) + ' N', 'effort needed (blue arrow)'], ['60 N', 'load: the bag (red arrow)'], [(aE / aL).toFixed(2), 'mechanical advantage = load ÷ effort'], [Math.round(dE) + ' cm → ' + Math.round(dL) + ' cm', 'your hand moves → the bag rises']]);
-  $('#say').textContent = (cls === 1 ? 'Pivot in the middle: you push down and the bag goes up. ' : cls === 2 ? 'Load in the middle: you lift up at the end, with less effort than the load. ' : 'Effort in the middle: you need more effort than the load, but the bag moves further. ') + (eff < 60 ? 'This lever makes the job easier.' : eff > 60 ? 'This lever makes you work harder, but gives more movement.' : ''); } };
+  $('#big').innerHTML = 'Class ' + cls + ' lever <small>' + ['pivot in the middle, like scissors or a see-saw', 'load in the middle, like a wheelbarrow or a bottle opener', 'effort in the middle, like tweezers or your forearm'][cls - 1] + ' · drag the pivot, the bag or the hand</small>';
+  readout([[Math.round(eff) + ' N', 'effort from your hand'], ['60 N', 'load: the bag'], [(aE / aL).toFixed(2), 'mechanical advantage (load ÷ effort)'], [Math.round(dE) + ' → ' + Math.round(dL) + ' cm', 'hand moves → bag rises']]);
+  $('#say').textContent = eff < 59 ? 'This lever makes the job easier, but your hand moves further than the bag.' : eff > 61 ? 'This lever makes you work harder, but the bag moves further than your hand.' : 'Equal arms: the effort equals the load.'; } };
 
-/* ---------- station 2: the pedal bin, two levers joined by a rod ---------- */
-const bin = { name: 'Pedal bin', look: [0, 1.35, 0], eye: [-1.4, 2.3, 8],
- ctx: 'A <b>pedal bin</b> is a linkage: two levers joined by a rod. Your foot pushes the pedal <b>down</b> and the lid swings <b>up</b>. The same idea works a <b>piano key and hammer</b>, a <b>bike brake</b> and the <b>flush on a toilet</b>.',
- qs: [['You press the pedal down. The other end of the pedal lever moves…', ['down', 'up', 'not at all'], 1, 'The pedal is a class 1 lever with its pivot between the two ends, so it reverses the direction.'],
-  ['Slide the pivot towards the pedal. For the same press, the lid now opens…', ['less far', 'the same', 'further'], 2, 'The arm behind the pivot is now much longer than the pedal arm, so the far end moves a lot more. The price is that your foot must push harder.'],
-  ['Why does the rod push the lid close to its hinge and not at the front edge?', ['So a small push makes a big swing', 'To make the lid lighter', 'It makes no difference'], 0, 'Pushing near the hinge is like a class 3 lever: a small movement of the rod gives a big movement at the front of the lid.']],
- build(r) { r.add(ground()); const body = box(1.7, 1.8, 1.2, 0x8fb3d9, { transparent: true, opacity: .22, depthWrite: false }); body.position.set(0, 1.05, 0); r.add(body); const base = box(1.7, .06, 1.2, DARK); base.position.set(0, .12, 0); r.add(base);
-  this.lev = new THREE.Group(); r.add(this.lev); this.bar = box(1.9, .06, .16, STEEL); this.pad = box(.34, .05, .4, 0x3b4450); this.lev.add(this.bar, this.pad);
-  this.piv = cyl(.07, .5, DARK); this.piv.rotation.x = Math.PI / 2; r.add(this.piv); this.rod = cyl(.03, 1, RED, 12); r.add(this.rod);
-  this.lid = new THREE.Group(); this.lid.position.set(.85, 1.97, 0); const top = box(1.76, .07, 1.26, 0x5b6470); top.position.set(-.86, .03, 0); this.lid.add(top); r.add(this.lid); const hinge = cyl(.05, 1.26, DARK); hinge.rotation.x = Math.PI / 2; hinge.position.set(.85, 1.97, 0); r.add(hinge);
-  this.af = arrow(BLUE); r.add(this.af);
-  sliders([['p', 'Pivot', -.9, -.2, -.75], ['push', 'Press the pedal', 0, 1, 0]]); },
+/* ---------- station: the pedal bin, two levers joined by a rod ---------- */
+const bin = { name: 'Pedal bin', look: [0, 1.3, 0], eye: [-1.4, 2.2, 8.2],
+ ctx: 'A <b>pedal bin</b> is a linkage: two levers joined by a rod. Your foot goes <b>down</b> and the lid swings <b>up</b>. A piano key, a bike brake and a toilet flush work the same way.',
+ qs: [['You press the pedal down. The other end of the pedal lever moves…', ['down', 'up', 'not at all'], 1, 'The pedal is a class 1 lever, so it reverses the direction.'],
+  ['Slide the pivot towards the pedal. For the same press, the lid now opens…', ['less far', 'the same', 'further'], 2, 'The arm behind the pivot is now much longer, so its end moves more. Your foot has to push harder.'],
+  ['Why does the rod push the lid close to its hinge?', ['So a small push makes a big swing', 'To make the lid lighter', 'It makes no difference'], 0, 'Pushing near the hinge turns a small movement of the rod into a big movement at the front of the lid.']],
+ build(r) { r.add(ground()); const body = box(1.7, 1.8, 1.2, 0x8fb3d9, { transparent: true, opacity: .2, depthWrite: false }); body.position.set(0, 1.05, 0); r.add(body); const base = box(1.7, .06, 1.2, DARK); base.position.set(0, .12, 0); r.add(base);
+  this.lev = new THREE.Group(); r.add(this.lev); this.bar = pill(1.9, .07, .03, .16, STEEL); this.pad = pill(.4, .05, .02, .42, 0x3b4450); this.lev.add(this.bar, this.pad);
+  this.piv = pin(.08, .5, AMBER); r.add(this.piv); this.rod = cyl(.03, 1, RED, 12); r.add(this.rod);
+  this.lid = new THREE.Group(); this.lid.position.set(.85, 1.97, 0); const top = pill(1.76, .08, .035, 1.26, 0x5b6470); top.position.set(-.86, .03, 0); this.lid.add(top); r.add(this.lid); const hinge = pin(.05, 1.26, DARK); hinge.position.set(.85, 1.97, 0); r.add(hinge);
+  this.shoe = trainer(); r.add(this.shoe);
+  sliders([['p', 'Pivot', -.9, -.2, -.75, '#e0a030'], ['push', 'Press the pedal', 0, 1, 0, '#c8472f']]);
+  tag('pivot ↔', 'a', () => [V.p, -.02, .35]); tag('press ↕', 'b', () => this.ps); tag('push rod', 'r', () => [.95, 1.1, .1]); tag('lid', 'k', () => this.pt);
+  drags.push({ obj: this.piv, move: (dx, dy, v) => setV('p', v.p + dx) }, { obj: this.shoe, move: (dx, dy, v) => setV('push', v.push - dy * 4) }, { obj: this.pad, move: (dx, dy, v) => setV('push', v.push - dy * 4) }); },
  update() { const { p, push } = V, a1 = p + 1.25, a2 = .65 - p, y0 = .2, al = Math.asin(Math.min(.9, push * .2 / a1)); let rise = a2 * Math.sin(al); const capped = rise > .82; rise = Math.min(.82, rise); const al2 = Math.asin(rise / a2), phi = Math.atan(rise / .15);
   this.lev.position.set(p, y0, 0); this.lev.rotation.z = al2; this.bar.position.set(-.3 - p, 0, 0); this.pad.position.set(-1.25 - p, .05, 0); this.piv.position.set(p, y0, 0);
-  const rear = [p + a2 * Math.cos(al2), y0 + a2 * Math.sin(al2), 0]; this.lid.rotation.z = -phi; between(this.rod, rear, [.7, 1.97 + .15 * Math.tan(phi) * Math.cos(phi) * Math.cos(phi), 0]);
-  const fx = p - a1 * Math.cos(al2), fy = y0 - a1 * Math.sin(al2); this.af.set(fx, fy + .12, 0, .3 + .5 * a2 / a1 * .5, true);
-  $('#big').textContent = 'Pedal down, lid up'; const down = a1 * Math.sin(al2) * 25, up = rise * 25;
-  readout([[down.toFixed(1) + ' cm', 'pedal goes down'], [up.toFixed(1) + ' cm', 'rod goes up'], [Math.round(phi * 180 / Math.PI) + '°', 'lid opens'], ['× ' + (a2 / a1).toFixed(1), 'movement multiplied (force divided)']]);
-  $('#say').textContent = capped ? 'The lid is fully open, so the pedal cannot go any further.' : a2 / a1 > 1.5 ? 'A short pedal arm and a long arm behind the pivot: a small press gives a big movement, but your foot has to push harder.' : 'With the pivot further back the pedal is easier to press, but the lid does not open as far.'; } };
+  const rear = [p + a2 * Math.cos(al2), y0 + a2 * Math.sin(al2), 0]; this.lid.rotation.z = -phi; between(this.rod, rear, [.7, 1.97 + .15 * Math.sin(phi) * Math.cos(phi), 0]);
+  const fx = p - a1 * Math.cos(al2), fy = y0 - a1 * Math.sin(al2); this.shoe.position.set(fx + .05, fy + .08, 0); this.shoe.rotation.z = al2; this.ps = [fx - .1, fy + .75, 0]; this.pt = [.85 - 1.5 * Math.cos(phi), 2.1 + 1.5 * Math.sin(phi), 0];
+  $('#big').innerHTML = 'Pedal down, lid up <small>drag the trainer down to press the pedal · drag the pivot along</small>'; const down = a1 * Math.sin(al2) * 25, up = rise * 25;
+  readout([[down.toFixed(1) + ' cm', 'pedal goes down'], [up.toFixed(1) + ' cm', 'rod goes up'], [Math.round(phi * 180 / Math.PI) + '°', 'lid opens'], ['× ' + (a2 / a1).toFixed(1), 'movement multiplied']]);
+  $('#say').textContent = capped ? 'The lid is fully open, so the pedal cannot go any further.' : a2 / a1 > 1.5 ? 'Short pedal arm, long arm behind the pivot: a small press gives a big movement, but your foot pushes harder.' : 'With the pivot further back the pedal is easier to press, but the lid opens less.'; } };
 
-const STATIONS = [lever, bin];
+/* ---------- stations: three linkages on a board ---------- */
+// shared parts: a board, a knob to drag for the input and a block for the output, each sliding in a slot
+function board(r, w, h) { const b = pill(w, h, .12, .08, 0xf4efe2); b.position.set(0, 0, -.1); r.add(b); }
+function knob(r) { const g = new THREE.Group(), k = edged(new THREE.SphereGeometry(.17, 20, 14), BLUE, null, 80); k.position.z = .16; const st = pin(.05, .16, DARK); st.position.z = .08; g.add(k, st); r.add(g); return g; }
+function outBlock(r) { const g = pill(.42, .3, .06, .12, RED, .01); g.position.z = .06; r.add(g); return g; }
+function ghost(r, x, y, horiz) { const g = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(horiz ? .42 : .3, horiz ? .3 : .42, .02)), new THREE.LineDashedMaterial({ color: INK, dashSize: .05, gapSize: .04 })); g.computeLineDistances(); g.position.set(x, y, .02); r.add(g); }
+function slot(r, x, y, len, horiz) { const s = pill(horiz ? len : .09, horiz ? .09 : len, .04, .01, 0xcfc7b3); s.position.set(x, y, -.05); r.add(s); }
+const fixedPin = (r, x, y) => { const p = pin(.09, .2, AMBER); p.position.set(x, y, .05); r.add(p); return p; }, movePin = (r) => { const p = pin(.055, .16, 0xffffff); r.add(p); return p; };
+const linkBetween = (g, a, b, z) => { g.position.set(a[0], a[1], z); g.rotation.z = Math.atan2(b[1] - a[1], b[0] - a[0]); };
+const linkQs = (dir, extra) => [[`You push the blue knob to the right. The red block moves…`, dir.o, dir.a, dir.why]].concat(extra);
+
+const reverse = { name: 'Reverse motion', look: [0, 0, 0], eye: [0, .5, 8.6],
+ ctx: 'A <b>reverse motion</b> linkage turns a push into a pull. It is in pop-up cards with waving arms, folding clothes airers and the levers that work a <b>bike gear shifter</b>.',
+ qs: linkQs({ o: ['to the right', 'to the left', 'up'], a: 1, why: 'The bar turns on a fixed pivot in the middle, so its two ends move in opposite directions.' }, [['Move the pivot up, nearer the blue rod. For the same push, the red block moves…', ['less far', 'the same', 'further'], 2, 'The lower arm is now longer than the upper one, so the bottom moves further. It also pushes with less force.']]),
+ build(r) { board(r, 5.6, 3.6); slot(r, -2, 1.2 - .0, 1.5, true); slot(r, 2, -1.2, 2.4, true); slot(r, 0, 0, 1.5, false); this.bar = link(2.4, STEEL); this.in = link(2, 0x9db4ea); this.out = link(2, 0xf0a39b); r.add(this.bar, this.in, this.out);
+  this.pv = fixedPin(r, 0, 0); this.j1 = movePin(r); this.j2 = movePin(r); this.k = knob(r); this.b = outBlock(r); ghost(r, 2, -1.2, true);
+  sliders([['p', 'Pivot', -.6, .6, 0, '#e0a030'], ['d', 'Push or pull', -.5, .5, 0, '#2f66c4']]); tag('drag ↔', 'b', () => [this.k.position.x, 1.62, .2]); tag('output', 'r', () => [this.b.position.x, -1.6, .2]); tag('fixed pivot ↕', 'a', () => [.75, V.p, .2]);
+  drags.push({ obj: this.k, move: (dx, dy, v) => setV('d', v.d + dx) }, { obj: this.pv, move: (dx, dy, v) => setV('p', v.p + dy) }); },
+ update() { const { p, d } = V, a1 = 1.2 - p, a2 = 1.2 + p, al = Math.asin(Math.max(-.6, Math.min(.6, d / a1))), top = [a1 * Math.sin(al), p + a1 * Math.cos(al)], bot = [-a2 * Math.sin(al), p - a2 * Math.cos(al)];
+  this.pv.position.set(0, p, .05); linkBetween(this.bar, bot, top, .06); this.j1.position.set(top[0], top[1], .1); this.j2.position.set(bot[0], bot[1], .1);
+  const kx = -2 + top[0], bx = 2 + bot[0]; linkBetween(this.in, [kx, 1.2], top, .0); linkBetween(this.out, bot, [bx, -1.2], .0); this.k.position.set(kx, 1.2, 0); this.b.position.set(bx, -1.2, .06);
+  $('#big').innerHTML = 'Reverse motion linkage <small>drag the blue knob left and right · drag the pivot up and down</small>'; const i = top[0] * 25, o = bot[0] * 25, way = (v) => (Math.abs(v) < .2 ? '' : v > 0 ? ' right' : ' left');
+  readout([[Math.abs(i).toFixed(1) + ' cm' + way(i), 'input: blue knob'], [Math.abs(o).toFixed(1) + ' cm' + way(o), 'output: red block'], ['× ' + (a2 / a1).toFixed(2), 'movement multiplied'], ['÷ ' + (a2 / a1).toFixed(2), 'force divided']]);
+  $('#say').textContent = Math.abs(p) < .05 ? 'Pivot in the middle: same distance, opposite direction.' : p > 0 ? 'Pivot nearer the input: the output moves further, with less force.' : 'Pivot nearer the output: the output moves less far, with more force.'; } };
+
+const pushpull = { name: 'Push-pull', look: [0, 0, 0], eye: [0, .5, 8.6],
+ ctx: 'A <b>push-pull</b> (parallel motion) linkage keeps the movement going the <b>same way</b>. Tool boxes and sewing boxes with trays that swing out level use it, and so do scissor lifts.',
+ qs: linkQs({ o: ['to the right', 'to the left', 'not at all'], a: 0, why: 'The first bar reverses the push, then the second bar reverses it back again.' }, [['Move the second pivot down, nearer the link. For the same push, the red block moves…', ['less far', 'the same', 'further'], 2, 'The second bar now has a short lower arm and a long upper arm, so its top end moves further.']]),
+ build(r) { board(r, 6, 3.6); slot(r, -2.4, 1.2, 1.4, true); slot(r, 2.4, 1.2, 2.2, true); slot(r, .9, 0, 1.5, false); this.b1 = link(2.4, STEEL); this.b2 = link(2.4, STEEL); this.mid = link(1.8, 0xb9c2cc); this.in = link(1.5, 0x9db4ea); this.out = link(1.5, 0xf0a39b); r.add(this.b1, this.b2, this.mid, this.in, this.out);
+  fixedPin(r, -.9, 0); this.pv = fixedPin(r, .9, 0); this.js = [0, 1, 2, 3].map(() => movePin(r)); this.k = knob(r); this.b = outBlock(r); ghost(r, 2.4, 1.2, true);
+  sliders([['p', 'Second pivot', -.6, .6, 0, '#e0a030'], ['d', 'Push or pull', -.5, .5, 0, '#2f66c4']]); tag('drag ↔', 'b', () => [this.k.position.x, 1.62, .2]); tag('output', 'r', () => [this.b.position.x, 1.62, .2]); tag('fixed pivot ↕', 'a', () => [1.65, V.p, .2]);
+  drags.push({ obj: this.k, move: (dx, dy, v) => setV('d', v.d + dx) }, { obj: this.pv, move: (dx, dy, v) => setV('p', v.p + dy) }); },
+ update() { const { p, d } = V, al = Math.asin(Math.max(-.6, Math.min(.6, d / 1.2))), t1 = [-.9 + 1.2 * Math.sin(al), 1.2 * Math.cos(al)], m1 = [-.9 - 1.2 * Math.sin(al), -1.2 * Math.cos(al)], a2 = 1.2 + p, a1 = 1.2 - p, be = Math.asin(Math.max(-.7, Math.min(.7, (m1[0] + .9) / a2))), m2 = [.9 + a2 * Math.sin(be), p - a2 * Math.cos(be)], t2 = [.9 - a1 * Math.sin(be), p + a1 * Math.cos(be)];
+  this.pv.position.set(.9, p, .05); linkBetween(this.b1, m1, t1, .06); linkBetween(this.b2, m2, t2, .06); linkBetween(this.mid, m1, m2, .0); [t1, m1, t2, m2].forEach((q, i) => this.js[i].position.set(q[0], q[1], .1));
+  const kx = -2.4 + (t1[0] + .9), bx = 2.4 + (t2[0] - .9); linkBetween(this.in, [kx, 1.2], t1, .0); linkBetween(this.out, t2, [bx, 1.2], .0); this.k.position.set(kx, 1.2, 0); this.b.position.set(bx, 1.2, .06);
+  $('#big').innerHTML = 'Push-pull (parallel motion) linkage <small>drag the blue knob left and right · drag the second pivot up and down</small>'; const i = (t1[0] + .9) * 25, o = (t2[0] - .9) * 25, way = (v) => (Math.abs(v) < .2 ? '' : v > 0 ? ' right' : ' left');
+  readout([[Math.abs(i).toFixed(1) + ' cm' + way(i), 'input: blue knob'], [Math.abs(o).toFixed(1) + ' cm' + way(o), 'output: red block'], ['× ' + (a1 / a2).toFixed(2), 'movement multiplied'], ['same way', 'direction']]);
+  $('#say').textContent = Math.abs(p) < .05 ? 'Both pivots in the middle: same distance, same direction.' : 'Moving a pivot changes how far the output goes, but never its direction.'; } };
+
+const bell = { name: 'Bell crank', look: [0, 0, 0], eye: [0, .5, 8.6],
+ ctx: 'A <b>bell crank</b> turns a movement through <b>90°</b>. It is how a bike brake turns the pull of the cable into the squeeze of the pads, and how a go-kart turns the steering column’s twist into a sideways push on the wheels.',
+ qs: linkQs({ o: ['to the left', 'down', 'up'], a: 1, why: 'The L-shaped crank turns on its corner, so a sideways push on one arm becomes an up-and-down movement on the other.' }, [['Make the output arm longer. For the same push, the red block moves…', ['less far', 'the same', 'further'], 2, 'A longer output arm sweeps a bigger arc, so the block moves further but with less force.']]),
+ build(r) { board(r, 5.6, 3.8); slot(r, -2, 1.3, 1.5, true); slot(r, 1.2, -1.3, 2.2, true); this.a1 = link(1.2, STEEL); this.a2 = link(1.8, STEEL); this.in = link(2, 0x9db4ea); this.out = link(1.3, 0xf0a39b); r.add(this.a1, this.a2, this.in, this.out);
+  fixedPin(r, 0, .1); this.j1 = movePin(r); this.j2 = movePin(r); this.k = knob(r); this.b = outBlock(r); this.b.rotation.z = Math.PI / 2;
+  sliders([['a', 'Output arm', .6, 1.8, 1.2, '#e0a030'], ['d', 'Push or pull', -.5, .5, 0, '#2f66c4']]); tag('drag ↔', 'b', () => [this.k.position.x, 1.72, .2]); tag('output', 'r', () => [this.b.position.x + .62, this.b.position.y, .2]); tag('fixed pivot', 'a', () => [-.55, -.12, .2]);
+  drags.push({ obj: this.k, move: (dx, dy, v) => setV('d', v.d + dx) }); },
+ update() { const { a, d } = V, al = Math.asin(Math.max(-.6, Math.min(.6, d / 1.2))), c = [0, .1], top = [1.2 * Math.sin(al), .1 + 1.2 * Math.cos(al)], end = [a * Math.cos(al), .1 - a * Math.sin(al)];
+  linkBetween(this.a1, c, top, .06); this.a2.children[0].scale.x = (a + .16) / 1.96; this.a2.children[0].position.x = a / 2; linkBetween(this.a2, c, end, .06); this.j1.position.set(top[0], top[1], .1); this.j2.position.set(end[0], end[1], .1);
+  const kx = -2 + top[0], by = -1.3 + (end[1] - .1); linkBetween(this.in, [kx, 1.3], top, .0); linkBetween(this.out, end, [end[0], by], .0); this.k.position.set(kx, 1.3, 0); this.b.position.set(end[0], by, .06);
+  $('#big').innerHTML = 'Bell crank <small>drag the blue knob left and right · change the length of the output arm</small>'; const i = top[0] * 25, o = (end[1] - .1) * 25;
+  readout([[Math.abs(i).toFixed(1) + ' cm' + (Math.abs(i) < .2 ? '' : i > 0 ? ' right' : ' left'), 'input: blue knob'], [Math.abs(o).toFixed(1) + ' cm' + (Math.abs(o) < .2 ? '' : o > 0 ? ' up' : ' down'), 'output: red block'], ['× ' + (a / 1.2).toFixed(2), 'movement multiplied'], ['90°', 'direction turned through']]);
+  $('#say').textContent = Math.abs(a - 1.2) < .05 ? 'Equal arms: same distance, turned through a right angle.' : a > 1.2 ? 'Longer output arm: more movement, less force.' : 'Shorter output arm: less movement, more force.'; } };
+
+const STATIONS = [lever, bin, reverse, pushpull, bell];
 $('#tabs').innerHTML = STATIONS.map((s, i) => `<button type="button" data-i="${i}">${s.name}</button>`).join(''); $('#tabs').onclick = (e) => { const b = e.target.closest('button'); if (b) open(+b.dataset.i); };
-size(); open(0); window.__lab = { open, V: () => V, set: (k, v) => { const el = $('#s-' + k); el.value = v; el.oninput({ target: el }); } };
+size(); open(0); window.__lab = { open, set: setV, px: (x, y, z) => { const b = renderer.domElement.getBoundingClientRect(), q = new THREE.Vector3(x, y, z || 0).project(cam); return [b.left + (q.x + 1) / 2 * b.width, b.top + (1 - q.y) / 2 * b.height]; } };
 </script></body></html>

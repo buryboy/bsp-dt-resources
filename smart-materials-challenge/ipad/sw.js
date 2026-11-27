@@ -1,5 +1,5 @@
 // Offline cache for the smart materials design challenge. Bump CACHE when index.html changes.
-const CACHE = 'ipad-smart-materials-challenge-7f12341d54b9';
+const CACHE = 'ipad-smart-materials-challenge-bc613dcebeb4';
 const FILES = [
  "./",
  "app.webmanifest",

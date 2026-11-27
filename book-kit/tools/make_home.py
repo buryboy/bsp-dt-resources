@@ -50,8 +50,13 @@ ONE_OFFS = [
       '20 minutes: sketch the design on the page, then say where each smart material goes, what sets it off and what it does.',
       'Homework: a 4-mark question on why a smart material beats a normal one.',
       'Students save the page as a PDF and hand it in on Showbie. Nothing is sent from the page.']),
+    ('board:year7-making-steps', 'Year 7: today\'s making steps', 'Year 7 · practical lesson', 'On the board for the whole lesson',
+     'A board page that cycles through six cards: cut the base, smooth the edges, colour the backboard, cut extra pieces, plan the acrylic pieces, stay safe.',
+     ['Put it on the board at the start of a practical lesson and leave it running.',
+      'It is a page for the board, not for students, so there is no student link.',
+      'It needs the internet for its fonts; without it the page still works in a plain font.']),
 ]
-WB.update({o[0]: (o[0], o[1], 'one-off', o[2]) for o in ONE_OFFS})
+WB.update({o[0]: (o[0], o[1], 'one-off', o[2]) for o in ONE_OFFS if not o[0].startswith('board:')})
 NEA_GCSE = [('a', 'Identifying & investigating design possibilities'), ('b', 'Producing a design brief & specification'), ('c', 'Generating design ideas'), ('d', 'Developing design ideas'), ('e', 'Realising design ideas'), ('f', 'Analysing & evaluating')]
 NEA_ALEVEL = [(1, 'Identification & investigation of a design possibility'), (2, 'Investigation of needs & research'), (3, 'Specification'), (4, 'Design ideas'), (5, 'Development of design ideas'), (6, 'Final design solution'), (7, 'Review of development & final design'), (8, 'Communication of design ideas'), (9, 'Tools & equipment'), (10, 'Quality & accuracy'), (11, 'Testing & evaluation')]
 STAGES = [('ks3', 'Key Stage 3', 'Years 7 to 9'), ('ks4', 'Key Stage 4', 'GCSE · AQA Design & Technology 8552'), ('ks5', 'Key Stage 5', 'A level · Edexcel Design & Technology (Product Design)'), ('tools', 'Tools', 'Small apps that run on your iPad. Nothing is uploaded.')]
@@ -149,11 +154,15 @@ def main():
     # teacher: one-off lessons (student pages that are not on the home page; the teacher shares the link)
     oo = ['<h1>One-off lessons</h1><p class="sub">Single lessons and design tasks, kept here to use again. These pages are not on the students\' home page: give the class the link, for example in Showbie.</p>']
     for f, t, who, mins, what, notes in ONE_OFFS:
+        head = '<section><h2>%s</h2><p class="sub">%s · %s</p><p>%s</p>' % (E(t), E(who), E(mins), E(what))
+        how = '<p style="margin:14px 0 4px"><b>How it runs</b></p><ul style="margin:0;padding-left:22px">' + ''.join('<li>%s</li>' % E(n) for n in notes) + '</ul></section>'
+        if f.startswith('board:'):   # a page for the board, kept in teacher/dt/one-off/<name>/
+            oo.append(head + '<div class="spec"><a class="row" href="%s/"><span class="code">Board</span><span class="t"><b>Open the board page</b><small>Opens full screen for the projector</small></span></a></div>' % E(f[6:]) + how)
+            continue
         url = 'https://dt.bsphosted.fr/%s/ipad/' % f
-        oo.append('<section><h2>%s</h2><p class="sub">%s · %s</p><p>%s</p><div class="wbs">%s</div>' % (E(t), E(who), E(mins), E(what), wb_card(f, '../../../', 'Open the student page'))
+        oo.append(head + '<div class="wbs">%s</div>' % wb_card(f, '../../../', 'Open the student page')
                   + '<p style="margin:14px 0 4px"><b>Link for students</b></p><p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0"><code style="background:#fff;border:1px solid rgba(0,0,0,.15);border-radius:8px;padding:8px 10px;font-size:15px;word-break:break-all">%s</code>'
-                    '<button type="button" data-copy="%s" style="font:600 14px inherit;border:0;border-radius:8px;padding:9px 14px;background:#1e5c3a;color:#fff;cursor:pointer">Copy link</button></p>' % (E(url), E(url))
-                  + '<p style="margin:14px 0 4px"><b>How it runs</b></p><ul style="margin:0;padding-left:22px">' + ''.join('<li>%s</li>' % E(n) for n in notes) + '</ul></section>')
+                    '<button type="button" data-copy="%s" style="font:600 14px inherit;border:0;border-radius:8px;padding:9px 14px;background:#1e5c3a;color:#fff;cursor:pointer">Copy link</button></p>' % (E(url), E(url)) + how)
     oo.append("<script>document.addEventListener('click',function(e){var b=e.target.closest('[data-copy]');if(!b)return;var u=b.getAttribute('data-copy');function ok(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy link'},1800)}"
               "if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(ok,function(){b.textContent='Select the link and copy it'})}else{b.textContent='Select the link and copy it'}});</script>")
     page('teacher/dt/one-off/index.html', 'One-off lessons', [('Home', ''), ('Teachers', 'teacher/'), ('Design & Technology', 'teacher/dt/')], ''.join(oo), 3)

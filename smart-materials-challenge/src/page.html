@@ -77,9 +77,10 @@ table.m textarea{min-height:64px}
 <p>Pick a starting point, or use your own idea.</p>
 <div class="chips" id="themes"></div>
 <div class="two"><div><label class="l" for="f-title">Name of your design</label><input type="text" id="f-title" data-k="title"></div><div><label class="l" for="f-user">Who is it for, and what problem does it solve?</label><input type="text" id="f-user" data-k="user"></div></div>
-<label class="l">Sketch it and label where each smart material goes</label>
+<label class="l">Sketch it here, or take a photo of a drawing on paper. Label where each smart material goes.</label>
 <div class="pad"><canvas id="pad" width="1400" height="820"></canvas></div>
-<div class="tools"><span id="sws"></span><button class="btn small ghost" id="thin" type="button">Fine pen</button><button class="btn small ghost" id="rub" type="button">Rubber</button><button class="btn small ghost" id="undo" type="button">Undo</button><button class="btn small ghost" id="clear" type="button">Clear</button><span class="muted">Or draw on paper and add a photo in Showbie.</span></div>
+<div class="tools"><span id="sws"></span><button class="btn small ghost" id="thin" type="button">Fine pen</button><button class="btn small ghost" id="rub" type="button">Rubber</button><button class="btn small ghost" id="undo" type="button">Undo</button><button class="btn small ghost" id="clear" type="button">Clear</button></div>
+<div class="tools"><label class="btn small" for="photo" style="background:var(--acc2)">Take or choose a photo</label><input type="file" id="photo" accept="image/*" style="position:absolute;left:-9999px"><button class="btn small ghost" id="noPhoto" type="button" style="display:none">Remove the photo</button><span class="muted">Photograph your drawing only, with no people in the picture. You can draw labels on top of it.</span></div>
 <label class="l">The smart materials in your design</label>
 <table class="m"><thead><tr><th style="width:22%">Smart material</th><th style="width:22%">Where is it?</th><th style="width:24%">Stimulus: what sets it off?</th><th>Response: what does it do, and why is that useful?</th></tr></thead><tbody id="rows"></tbody></table>
 <label class="l" for="f-prob">One problem with your design, and how you would solve it</label><textarea id="f-prob" data-k="prob"></textarea>
@@ -137,11 +138,14 @@ document.querySelectorAll('[data-k]').forEach((el) => { const k = el.dataset.k; 
 const cv = $('#pad'), cx = cv.getContext('2d'), COLS = ['#22262b', '#c0392b', '#1f6f9c', '#2f7d4a', '#e39a1c']; let strokes = [], cur = null, col = COLS[0], wide = 5, rub = false;
 try { strokes = JSON.parse(localStorage.getItem(KEY + '-ink') || '[]'); } catch (e) { strokes = []; }
 const keep = () => { try { localStorage.setItem(KEY + '-ink', JSON.stringify(strokes)); } catch (e) { /* too big to keep: the drawing stays on screen */ } };
-function paint() { cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.lineCap = cx.lineJoin = 'round'; strokes.concat(cur ? [cur] : []).forEach((s) => { cx.strokeStyle = s.c; cx.lineWidth = s.w; cx.beginPath(); s.p.forEach((q, i) => (i ? cx.lineTo(q[0], q[1]) : cx.moveTo(q[0], q[1]))); if (s.p.length === 1) cx.lineTo(s.p[0][0] + .1, s.p[0][1]); cx.stroke(); }); }
+let photo = null; const PK = KEY + '-photo';
+function showPhoto(src) { if (!src) { photo = null; $('#noPhoto').style.display = 'none'; paint(); return; } const im = new Image(); im.onload = () => { photo = im; $('#noPhoto').style.display = ''; paint(); }; im.src = src; }
+function paint() { cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); if (photo) { const k = Math.min(cv.width / photo.width, cv.height / photo.height), w = photo.width * k, h = photo.height * k; cx.drawImage(photo, (cv.width - w) / 2, (cv.height - h) / 2, w, h); } cx.lineCap = cx.lineJoin = 'round'; strokes.concat(cur && !cur.rub ? [cur] : []).forEach((s) => { cx.strokeStyle = s.c; cx.lineWidth = s.w; cx.beginPath(); s.p.forEach((q, i) => (i ? cx.lineTo(q[0], q[1]) : cx.moveTo(q[0], q[1]))); if (s.p.length === 1) cx.lineTo(s.p[0][0] + .1, s.p[0][1]); cx.stroke(); }); }
 const at = (e) => { const b = cv.getBoundingClientRect(); return [Math.round((e.clientX - b.left) / b.width * cv.width), Math.round((e.clientY - b.top) / b.height * cv.height)]; };
-cv.addEventListener('pointerdown', (e) => { e.preventDefault(); cv.setPointerCapture(e.pointerId); cur = { c: rub ? '#ffffff' : col, w: rub ? 34 : wide, p: [at(e)] }; paint(); });
-cv.addEventListener('pointermove', (e) => { if (!cur) return; cur.p.push(at(e)); paint(); });
-const end = () => { if (!cur) return; strokes.push(cur); cur = null; keep(); paint(); }; cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+cv.addEventListener('pointerdown', (e) => { e.preventDefault(); cv.setPointerCapture(e.pointerId); if (rub) { cur = { rub: 1 }; erase(at(e)); return; } cur = { c: col, w: wide, p: [at(e)] }; paint(); });
+const erase = (q) => { const n = strokes.length; strokes = strokes.filter((s) => !s.p.some((a) => Math.hypot(a[0] - q[0], a[1] - q[1]) < 26)); if (strokes.length !== n) paint(); };
+cv.addEventListener('pointermove', (e) => { if (!cur) return; if (cur.rub) return erase(at(e)); cur.p.push(at(e)); paint(); });
+const end = () => { if (!cur) return; if (!cur.rub) strokes.push(cur); cur = null; keep(); paint(); }; cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
 $('#sws').innerHTML = COLS.map((c, i) => `<button type="button" class="sw${i ? '' : ' on'}" style="background:${c}" data-c="${c}" aria-label="Pen colour ${i + 1}"></button>`).join(' ');
 $('#sws').addEventListener('click', (e) => { const b = e.target.closest('.sw'); if (!b) return; col = b.dataset.c; rub = false; $('#rub').classList.remove('btn-on'); $('#rub').textContent = 'Rubber'; document.querySelectorAll('.sw').forEach((x) => x.classList.toggle('on', x === b)); });
 $('#thin').onclick = () => { wide = wide === 5 ? 2.5 : 5; $('#thin').textContent = wide === 5 ? 'Fine pen' : 'Thick pen'; };
@@ -149,6 +153,13 @@ $('#rub').onclick = () => { rub = !rub; $('#rub').textContent = rub ? 'Back to p
 $('#undo').onclick = () => { strokes.pop(); keep(); paint(); };
 let armed = 0; $('#clear').onclick = () => { if (Date.now() - armed < 3000) { strokes = []; keep(); paint(); $('#clear').textContent = 'Clear'; armed = 0; } else { armed = Date.now(); $('#clear').textContent = 'Tap again to clear'; setTimeout(() => { $('#clear').textContent = 'Clear'; }, 3000); } };
 paint();
+// a photo is shrunk and kept on this iPad only
+$('#photo').onchange = (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return; const im = new Image(), u = URL.createObjectURL(f);
+ im.onload = () => { const k = Math.min(1, 1400 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+  const d = c.toDataURL('image/jpeg', .8); try { localStorage.setItem(PK, d); } catch (err) { /* too big to keep after a restart, but it still shows now */ } showPhoto(d); };
+ im.onerror = () => { URL.revokeObjectURL(u); $('#noPhoto').style.display = ''; $('#noPhoto').textContent = 'That photo could not be opened. Try again.'; setTimeout(() => { $('#noPhoto').textContent = 'Remove the photo'; if (!photo) $('#noPhoto').style.display = 'none'; }, 3000); }; im.src = u; };
+$('#noPhoto').onclick = () => { try { localStorage.removeItem(PK); } catch (e) { /* nothing stored */ } showPhoto(null); };
+try { showPhoto(localStorage.getItem(PK)); } catch (e) { /* no stored photo */ }
 
 /* PDF: a picture of the page, cut into A4 sheets */
 $('#pdfBtn').onclick = async () => { const ov = $('#ov'); ov.style.display = 'flex'; document.body.classList.add('pdfmode'); await new Promise((r) => setTimeout(r, 60));

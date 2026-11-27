@@ -26,4 +26,10 @@ A notes figure can also be shown moving. `diagrams/01-motion-kit.js` holds the f
 - `MODELS[id]` gives it a **3D model** tab: drag to turn, pinch to zoom, tap a part for its name and job. Models are built in code from simple shapes with the helpers in the kit. three.js lives in `book-kit/three/` and is only fetched the first time a 3D tab is opened; the service worker caches it for offline use.
 - The engine adds the tabs to any notes figure whose id is in `ANIMS` or `MODELS`. The saved PDF always shows the still.
 
-So far: injection moulding (still, animation, 3D), extrusion, blow moulding, vacuum forming, die casting and offset lithography (animation), centre lathe and wood joints (3D), and for GCSE the types of movement, linkages, cams and gear trains (animation, `60-mechanisms.js`).
+So far:
+
+- Still, animation and 3D: injection moulding, FDM printer.
+- Animation: extrusion, blow moulding, vacuum forming, rotational moulding, compression moulding, press forming, die casting, sand casting, offset lithography, flexography, gravure, screen printing, SLA, laser cutter, and the tensile, Izod impact and hardness tests.
+- 3D: centre lathe, wood joints (eight joints that pull apart).
+- GCSE mechanisms (`60-mechanisms.js`): types of movement, linkages, cams and gear trains.
+- Not yet: investment casting, milling, MIG welding, CNC router.

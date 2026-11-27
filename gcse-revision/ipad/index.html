@@ -1164,6 +1164,91 @@ DIAGRAMS['rotational-moulding'] = { t: 'Rotational moulding', w: 320, h: 266, st
   ANIMS['die-casting'] = { stages: ST, draw, w: W, h: H, start: .37 }; }
 })();
 
+/* Rotational moulding, compression moulding, press forming and sand casting in motion. See 01-motion-kit.js for the format. */
+(() => {
+ const K = Object.assign({ cast: '#b9c2cc' }, D.K), P = Math.PI, { sm, mix } = FIGX;
+
+ /* ---- rotational moulding ---- */
+ { const u = U2(22, 230, 150), { X, Y, R, C, AR, ROT, T } = u, W = 460, H = 300;
+  const ST = [[0, .15, 'Load', 'A measured amount of polymer powder, usually polyethylene, is put into the cold, open mould. The mould is then closed.'],
+   [.15, .55, 'Heat and rotate', 'The mould is moved into an oven and turned slowly about two axes at once. The powder melts and coats the inside of the mould in an even layer.'],
+   [.55, .8, 'Cool', 'The mould keeps turning while it is cooled with air or a water spray, so the wall stays an even thickness as it sets.'],
+   [.8, 1, 'Unload', 'The mould is opened and the hollow, seamless product is taken out. Used for large hollow items such as water tanks, kayaks and traffic cones.', .93]];
+  const half = (sg, dx, r0, r1, f) => { const cx = X(dx * sg), cy = Y(0), a = r0 * 22, b = r1 * 22, sw = sg > 0 ? 1 : 0; return `<path d="M${cx} ${cy - a}A${a} ${a} 0 0 ${sw} ${cx} ${cy + a}L${cx} ${cy + b}A${b} ${b} 0 0 ${1 - sw} ${cx} ${cy - b}Z" fill="${f}" ${u.sk(2)}/>`; };
+  const draw = (t, id) => { const o = [], heat = sm(.15, .2, t) - sm(.55, .6, t), cool = sm(.56, .62, t) - sm(.8, .84, t), spin = t >= .15 && t < .8, th = spin ? (t - .15) * 1500 : 0, melt = sm(.2, .52, t), open = t < .15 ? (1 - sm(.1, .15, t)) * .22 : sm(.82, .92, t), dx = open * 2.2, col = mix(K.hot, K.mat, sm(.58, .78, t));
+   o.push(`<defs><clipPath id="rmc${id}"><circle cx="${X(0)}" cy="${Y(0)}" r="${2.3 * 22}"/></clipPath></defs>`);
+   o.push(R(-9.6, 9.6, -5.6, 5.6, mix('#ffffff', '#fbd9d2', heat), 10, 1.5).replace('stroke-width="1.5"', 'stroke-width="1.5" stroke-dasharray="6 5"'));
+   if (cool > .05) o.push(R(-9.6, 9.6, -5.6, 5.6, K.cool, 10, 0).replace(/stroke="[^"]*"/, `stroke="none" opacity="${(cool * .28).toFixed(2)}"`));
+   if (heat > .5) [-7.6, 7.6].forEach((x) => [-3, 0, 3].forEach((y) => o.push(R(x - .3, x + .3, y - 1, y + 1, 'hot', 4))));
+   if (cool > .5) [[-7.6, 3], [7.6, 3], [-7.6, -3], [7.6, -3]].forEach((q) => o.push(AR(q[0], q[1], q[0] * .55, q[1] * .55, 'cool')));
+   o.push(R(-9.6, -3, -.25, .25, 'dark'), R(3, 9.6, -.25, .25, 'dark'));
+   o.push(`<g transform="rotate(${(th % 360).toFixed(1)} ${X(0)} ${Y(0)})">`, half(1, dx, 2.7, 2.3, K.steel), half(-1, dx, 2.7, 2.3, K.steel));
+   [1, -1].forEach((sg) => [1, -1].forEach((m) => o.push(R(sg * dx + (sg > 0 ? 0 : -.35), sg * dx + (sg > 0 ? .35 : 0), m > 0 ? 2.7 : -3.4, m > 0 ? 3.4 : -2.7, 'dark', 2)))); o.push('</g>');
+   if (melt > 0 && t < .82) o.push(`<circle cx="${X(0)}" cy="${Y(0)}" r="${(2.3 - melt * .16) * 22}" fill="none" stroke="${col}" stroke-width="${(melt * 7).toFixed(1)}"/>`);
+   if (t >= .82) o.push(`<circle cx="${X(0)}" cy="${Y(0)}" r="${2.12 * 22}" fill="#fff" stroke="${K.mat}" stroke-width="7"/><circle cx="${X(0)}" cy="${Y(0)}" r="${2.28 * 22}" fill="none" ${u.sk(1.5)}/><circle cx="${X(0)}" cy="${Y(0)}" r="${1.96 * 22}" fill="none" ${u.sk(1.5)}/>`);
+   if (t < .5) { const lvl = (1 - melt) * 1.1; o.push(`<g clip-path="url(#rmc${id})"><rect x="${X(-2.4)}" y="${Y(-2.3 + lvl)}" width="${4.8 * 22}" height="${(lvl * 22).toFixed(1)}" fill="${K.mat}" stroke="${K.ink}" stroke-width="1.2"/></g>`); }
+   if (spin) o.push(ROT(0, 0, 3.9, 205, 245), ROT(0, 0, 3.9, 25, 65), `<ellipse cx="${X(-6)}" cy="${Y(0)}" rx="9" ry="26" fill="none" stroke="${K.ink2}" stroke-width="3"/>`, AR(-5.62, .9, -5.6, 1.25), T(0, -4.9, 'turning about two axes', 12, 'middle', 'ink2'));
+   if (t < .1) o.push(AR(0, 4.6, 0, 2.2), T(1.9, 4.2, 'powder in', 12, 'start', 'ink2')); if (heat > .5) o.push(T(0, 4.8, 'oven', 12)); if (cool > .5) o.push(T(0, 4.8, 'cooling', 12, 'middle', 'ink2'));
+   return o.join(''); };
+  ANIMS['rotational-moulding'] = { stages: ST, draw, w: W, h: H, start: .36 }; }
+
+ /* ---- compression moulding ---- */
+ { const u = U2(22, 220, 150), { X, Y, R, PG, C, AR, T } = u, W = 440, H = 310;
+  const ST = [[0, .2, 'Load the charge', 'A weighed amount of thermosetting polymer, called the charge or preform, is placed in the heated lower half of the mould.'],
+   [.2, .42, 'Close', 'The upper half of the mould is pressed down. Heat and pressure make the charge soften and flow to fill the cavity.'],
+   [.42, .7, 'Cure', 'The mould is held closed. Cross-links form between the polymer chains, so the thermoset sets hard and can never be remelted.'],
+   [.7, 1, 'Open and eject', 'The mould opens and an ejector pin pushes the moulding out while it is still hot. The thin flash round the edge is trimmed off.', .9]];
+  const outer = [[-2.5, -.5], [-2, -2.5], [2, -2.5], [2.5, -.5]], inner = [[2.1, -.5], [1.6, -2.1], [-1.6, -2.1], [-2.1, -.5]];
+  const draw = (t, id) => { const o = [], h = 'cmh' + id, close = t < .5 ? sm(.2, .4, t) : 1 - sm(.7, .82, t), uy = (1 - close) * 3.6, flow = sm(.3, .4, t), cure = sm(.42, .7, t), ej = sm(.84, .94, t) * 1.8, col = mix(K.mat, '#b5651d', cure), drop = sm(.02, .14, t);
+   o.push(`<defs>${u.hatchDef(h)}</defs>`, R(-6, 6, -5.6, -4.6, 'dark', 3), R(-.9, .9, 4.2 + uy * .0, 6.6, 'steel'), R(-6, 6, 6.2, 6.8, 'dark', 3));
+   const low = [[-4.4, -4.6], [4.4, -4.6], [4.4, -.5], [2.5, -.5], [2, -2.5], [-2, -2.5], [-2.5, -.5], [-4.4, -.5]], up = [[-4.4, -.5], [-2.1, -.5], [-1.6, -2.1], [1.6, -2.1], [2.1, -.5], [4.4, -.5], [4.4, 2.6], [-4.4, 2.6]];
+   o.push(PG(low, 'steel'), PG(low, `url(#${h})`, 0), R(-.2, .2, -4.6 + ej, -2.5 + ej, 'pale', 0, 1.3));
+   [[-3.4, -1.6], [-3.4, -3.4], [3.4, -1.6], [3.4, -3.4], [0, -3.6]].forEach((c) => o.push(C(c[0], c[1], .22, 'hot', 1.3)));
+   if (t < .3 || flow < 1 && t < .5) { const w = .9 + flow * .9, hh = 1 - flow * .55, y0 = -2.5 + (1 - drop) * 4; if (flow < .98) o.push(R(-w, w, y0, y0 + hh, K.mat, 5)); }
+   if (flow > .5 && t < .99) o.push(PG(outer.concat(inner), col, 2, 0, ej)); if (flow > .5 && close > .9) o.push(R(-3, -2.5, -.56, -.44, col, 0, 1), R(2.5, 3, -.56, -.44, col, 0, 1));
+   o.push(PG(up, 'steel', 2, 0, uy), PG(up, `url(#${h})`, 0, 0, uy), R(-.9, .9, 2.6 + uy, 6.2, 'steel')); [[-3.4, 1.4], [3.4, 1.4], [0, 1.4]].forEach((c) => o.push(C(c[0], c[1] + uy, .22, 'hot', 1.3)));
+   if (t >= .2 && t < .42) o.push(AR(5.4, 4.6, 5.4, 2.4)); if (t >= .42 && t < .7) o.push(T(0, -6.2, 'heat and pressure held', 12, 'middle', 'ink2')); if (t >= .7 && t < .84) o.push(AR(5.4, 2.4, 5.4, 4.6)); if (t >= .84) o.push(AR(.9, -4, .9, -3));
+   return o.join(''); };
+  ANIMS['compression-moulding'] = { stages: ST, draw, w: W, h: H, start: .5 }; }
+
+ /* ---- press forming (deep drawing) ---- */
+ { const u = U2(22, 220, 130), { X, Y, R, PG, PL, AR, T } = u, W = 440, H = 300;
+  const ST = [[0, .12, 'Place the blank', 'A flat sheet of ductile metal, the blank, is placed over the opening in the die.'],
+   [.12, .28, 'Clamp', 'The blank holder (pressure pad) comes down on the edge of the blank. It stops the sheet wrinkling but still lets it slide inwards.'],
+   [.28, .62, 'Draw', 'The punch pushes the sheet down into the die. The metal is stretched beyond its elastic limit, so it keeps the new shape.'],
+   [.62, .8, 'Withdraw', 'The punch and blank holder lift clear.'],
+   [.8, 1, 'Eject', 'An ejector lifts the pressing out of the die. The flange is trimmed if it is not needed.', .92]];
+  const draw = (t, id) => { const o = [], h = 'pfh' + id, hold = t < .5 ? sm(.12, .26, t) : 1 - sm(.62, .74, t), d = sm(.28, .6, t) * 2.6, pun = t < .62 ? d : 2.6 - sm(.62, .78, t) * 5, ej = sm(.82, .96, t) * 2.9, w = 4.3 - d * .42;
+   o.push(`<defs>${u.hatchDef(h)}</defs>`, R(-6, 6, -5.2, -4.4, 'dark', 3));
+   [1, -1].forEach((m) => { const q = [[1.95 * m, 0], [5.2 * m, 0], [5.2 * m, -4.4], [1.95 * m, -4.4]]; o.push(PG(q, 'steel'), PG(q, `url(#${h})`, 0)); });
+   o.push(R(-1.8, 1.8, -3.5 + ej, -3.1 + ej, 'pale'), R(-.25, .25, -4.4, -3.5 + ej, 'pale', 0, 1.3));
+   const y = .1 + ej, sheet = [[-w, y], [-1.92, y], [-1.76, y - d], [1.76, y - d], [1.92, y], [w, y]]; o.push(PL(sheet, 7, K.ink), PL(sheet, 4.2, '#7fa3c9'));
+   [1, -1].forEach((m) => o.push(R(m > 0 ? 2.25 : -5.2, m > 0 ? 5.2 : -2.25, .25 + (1 - hold) * 2.4, 1.3 + (1 - hold) * 2.4, 'dark', 2)));
+   o.push(R(-1.6, 1.6, .22 - pun + (t < .28 ? 2.6 * (1 - sm(.14, .28, t)) : 0), 5.4, 'steel', 6), T(0, 4, 'punch', 12));
+   o.push(T(-3.8, -2.4, 'die', 12), T(3.8, -2.4, 'die', 12)); if (t >= .12 && t < .28) o.push(AR(-5.6, 3.4, -5.6, 1.6), AR(5.6, 3.4, 5.6, 1.6)); if (t >= .28 && t < .62) o.push(AR(2.4, 5, 2.4, 3)); if (t >= .82) o.push(AR(.9, -4.3, .9, -3.3));
+   return o.join(''); };
+  ANIMS['press-forming'] = { stages: ST, draw, w: W, h: H, start: .46 }; }
+
+ /* ---- sand casting ---- */
+ { const u = U2(22, 280, 150), { X, Y, R, PG, AR, T } = u, W = 560, H = 310;
+  const ST = [[0, .1, 'The mould is ready', 'The pattern has been taken out, leaving a cavity in the packed sand. The top box (cope) sits on the bottom box (drag).'],
+   [.1, .5, 'Pour', 'Molten metal is poured into the pouring basin. It runs down the runner (sprue) and through the gate, fills the cavity and rises up the riser.'],
+   [.5, .75, 'Solidify', 'The metal cools and shrinks. The riser holds extra molten metal to feed the casting as it shrinks, and lets air and gases escape.'],
+   [.75, 1, 'Break out', 'The sand mould is broken away, so a new mould is needed for every casting. The runner and riser are cut off and the casting is cleaned up (fettling).', .92]];
+  const chan = [[[-5.9, 3.5], [-4.7, 3.5], [-5, 2.6], [-5, -.5], [-3, -.5], [-3, -1], [-5.6, -1], [-5.6, 2.6]], [[-3, -1.5], [3, -1.5], [3, 1], [-3, 1]], [[3, -1], [5, -1], [5, 3.5], [4.2, 3.5], [4.2, -.5], [3, -.5]]];
+  let seed = 3; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }; const spk = Array.from({ length: 150 }, () => [-7.7 + rnd() * 15.4, -3.3 + rnd() * 6.6]);
+  const draw = (t, id) => { const o = [], pour = sm(.1, .14, t) - sm(.46, .5, t), lvl = -1.6 + sm(.16, .48, t) * 5.1, col = mix(K.hot, K.cast, sm(.5, .75, t)), gone = sm(.76, .9, t), op = (1 - gone).toFixed(2);
+   o.push(`<defs><clipPath id="scl${id}"><rect x="0" y="${Y(lvl)}" width="${W}" height="${H}"/></clipPath></defs>`);
+   o.push(`<g opacity="${op}">`, R(-8, 8, -3.5, 0, 'sand'), R(-8, 8, 0, 3.5, 'sand'), spk.map((s) => `<circle cx="${X(s[0])}" cy="${Y(s[1])}" r="1" fill="${K.ink}" opacity=".3"/>`).join(''), R(-8.4, -8, -3.5, 3.5, 'dark'), R(8, 8.4, -3.5, 3.5, 'dark'), R(-9, 9, -4.1, -3.5, 'dark', 3));
+   chan.forEach((c) => o.push(PG(c, '#fff', 1.5))); o.push('</g>');
+   if (t >= .14) o.push(`<g clip-path="url(#scl${id})">` + chan.map((c) => PG(c, col, gone > 0 ? 2 : 1.5)).join('') + '</g>');
+   if (pour > .01) { o.push(`<g transform="rotate(${(38 * pour).toFixed(1)} ${X(-7.4)} ${Y(5)})">` + PG([[-9.6, 6], [-7.3, 6], [-7.6, 4.3], [-9.3, 4.3]], 'dark') + PG([[-9.4, 5.7], [-7.5, 5.7], [-7.7, 4.5], [-9.2, 4.5]], K.hot, 1.2) + '</g>'); if (pour > .9) o.push(R(-5.5, -5.15, Math.max(lvl, -1), 4.4, K.hot, 0, 0).replace(/stroke="[^"]*"/, 'stroke="none"')); }
+   if (gone < .5) o.push(T(-6.9, .45, 'cope', 11), T(-6.9, -.75, 'drag', 11), T(0, 1.6, 'cavity', 11), T(2.6, 2.6, 'riser', 11), T(-3.4, 2.2, 'runner', 11)); if (t >= .5 && t < .75) o.push(AR(4.6, 4.9, 4.6, 6.2, 'ink'), T(6.3, 5.4, 'gases', 11));
+   if (gone > .9) o.push(T(0, -2.6, 'casting, with the runner and riser still attached', 12));
+   return o.join(''); };
+  ANIMS['sand-casting'] = { stages: ST, draw, w: W, h: H, start: .34 }; }
+})();
+
 /* Casting, forming, machining and joining metals */
 (() => { const { r, c, e, p, l, a, rot, t, hatch, dots } = D;
 
@@ -1332,6 +1417,60 @@ DIAGRAMS['screen-printing'] = { t: 'Screen printing', w: 680, h: 340,
   'The plate cylinder transfers (offsets) the inked image on to the rubber blanket cylinder. The image on the blanket is reversed.', 'The blanket cylinder prints the image on to the paper, which is pressed against it by the impression cylinder. The plate never touches the paper, so it lasts for long runs.'] };
 })();
 
+/* Flexography, gravure and screen printing in motion. See 01-motion-kit.js for the format. */
+(() => {
+ const K = D.K, P = Math.PI, INK = '#2b4fa8', { sm } = FIGX;
+ const kit = (u) => ({ arc: (cx, cy, r, a0, a1, col, w, dash) => { const q = (a) => [u.X(cx + r * Math.cos(a)), u.Y(cy + r * Math.sin(a))], s = q(a0), e = q(a1); return `<path d="M${s[0]} ${s[1]}A${r * u.S} ${r * u.S} 0 ${Math.abs(a1 - a0) > P ? 1 : 0} ${a1 > a0 ? 0 : 1} ${e[0]} ${e[1]}" fill="none" stroke="${col}" stroke-width="${w}"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`; },
+  spoke: (cx, cy, r, a) => `<line x1="${u.X(cx)}" y1="${u.Y(cy)}" x2="${u.X(cx + r * Math.cos(a))}" y2="${u.Y(cy + r * Math.sin(a))}" stroke="${K.ink}" stroke-width="1.6" opacity=".6"/>`,
+  num: (x, y, n) => `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>` });
+
+ /* ---- flexography ---- */
+ { const u = U2(22, 240, 190), { X, Y, R, PG, C, AR, T } = u, { arc, spoke, num } = kit(u), W = 480, H = 330;
+  const draw = (t, id) => { const o = [], th = 2 * P * t;
+   o.push(`<defs><clipPath id="fxp${id}"><rect x="${X(.3)}" y="0" width="${W}" height="${H}"/></clipPath></defs>`);
+   o.push(PG([[-6.4, -2.6], [-2.6, -2.6], [-3, -5], [-6, -5]], 'pale'), PG([[-6.3, -3.2], [-2.7, -3.2], [-3, -5], [-6, -5]], INK, 0));
+   o.push(C(-4.4, -3.4, 1.1, '#7f95cf'), spoke(-4.4, -3.4, 1.1, -th * 1.82), C(-2.6, -1.9, 1.2, '#aab8e0'), arc(-2.6, -1.9, 1.2, 0, 1.99 * P, INK, 3, '2 3'), spoke(-2.6, -1.9, 1.2, th * 1.67));
+   o.push(`<line x1="${X(-5.6)}" y1="${Y(.6)}" x2="${X(-3.45)}" y2="${Y(-1.05)}" stroke="${K.ink}" stroke-width="4" stroke-linecap="round"/>`);
+   o.push(C(.3, -.55, 2, 'steel'), spoke(.3, -.55, 1.9, -th)); [0, 1, 2].forEach((j) => { const a = P / 2 - th + j * 2.094; o.push(arc(.3, -.55, 2.06, a - .4, a + .4, '#4a5560', 7), arc(.3, -.55, 2.2, a - .4, a + .4, INK, 3)); });
+   o.push(C(.3, 3.55, 2, 'steel'), spoke(.3, 3.55, 2, th), C(.3, -.55, .3, 'dark'), C(.3, 3.55, .3, 'dark'));
+   o.push(R(-10.6, 10.6, 1.46, 1.56, '#fff', 0, 1.5), `<g clip-path="url(#fxp${id})">`); [0, 1, 2].forEach((k) => { const c = .3 + (((3 * t) % 1) + k) * 4.189; o.push(`<rect x="${X(c - .8)}" y="${Y(1.44)}" width="${1.6 * 22}" height="5" fill="${INK}"/>`); }); o.push('</g>');
+   o.push(T(.3, 4.5, 'impression', 12), T(.3, -1.9, 'plate', 12), T(-7.6, 2.1, 'substrate in', 12), AR(-9.6, .7, -6.8, .7), T(7.6, 2.1, 'printed', 12));
+   o.push(num(-7.2, -3.8, 1), num(-5.2, -.2, 2), num(3.2, -1.9, 3), num(3.2, 2.6, 4)); return o.join(''); };
+  ANIMS['flexography'] = { loop: true, dur: 6000, w: W, h: H, draw, watch: ['The fountain roller turns in the ink pan and carries thin, quick-drying ink upwards.', 'The anilox roller is engraved with tiny cells that hold a measured amount of ink. A doctor blade scrapes off the extra.', 'The flexible plate has a raised image (relief). Only the raised parts touch the anilox roller and pick up ink.', 'The plate prints directly on to the substrate, which is pressed against it by the impression cylinder. Used for packaging films, labels and corrugated card.'] }; }
+
+ /* ---- gravure ---- */
+ { const u = U2(22, 240, 178), { X, Y, R, PG, C, AR, T } = u, { arc, spoke, num } = kit(u), W = 480, H = 330;
+  const draw = (t, id) => { const o = [], th = 2 * P * t;
+   o.push(`<defs><clipPath id="grp${id}"><rect x="${X(0)}" y="0" width="${W}" height="${H}"/></clipPath></defs>`);
+   o.push(PG([[-3.8, -1.9], [3.8, -1.9], [3.4, -4.9], [-3.4, -4.9]], 'pale'), PG([[-3.72, -2.5], [3.72, -2.5], [3.4, -4.9], [-3.4, -4.9]], INK, 0));
+   o.push(C(0, -1.1, 2.2, 'steel'), spoke(0, -1.1, 2.1, -th)); [0, 1].forEach((j) => { const a = P / 2 - th + j * P; o.push(arc(0, -1.1, 2.08, a - .6, a + .6, INK, 6, '3 3')); });
+   o.push(`<line x1="${X(-5.2)}" y1="${Y(1.2)}" x2="${X(-1.98)}" y2="${Y(-.2)}" stroke="${K.ink}" stroke-width="4" stroke-linecap="round"/>`);
+   o.push(C(0, 3.25, 2, '#b9d3c0'), spoke(0, 3.25, 2, th * 1.1), C(0, -1.1, .3, 'dark'), C(0, 3.25, .3, 'dark'));
+   o.push(R(-10.6, 10.6, 1.12, 1.22, '#fff', 0, 1.5), `<g clip-path="url(#grp${id})">`); [0, 1].forEach((k) => { const c = (((2 * t) % 1) + k) * 6.91; o.push(`<rect x="${X(c - 1.3)}" y="${Y(1.1)}" width="${2.6 * 22}" height="5" fill="${INK}"/>`); }); o.push('</g>');
+   o.push(T(0, 4.2, 'impression', 12), T(6.9, -1.2, 'gravure cylinder', 12), T(6.9, -3.6, 'ink trough', 12), T(-7.6, 1.8, 'paper in', 12), AR(-9.6, .4, -6.8, .4), T(7.6, 1.8, 'printed', 12));
+   o.push(num(4.9, -3.6, 1), num(-6, 1.7, 2), num(3.2, 2.4, 3)); return o.join(''); };
+  ANIMS['gravure'] = { loop: true, dur: 6500, w: W, h: H, draw, watch: ['The image is engraved into the copper-plated cylinder as tiny cells. As it turns in the ink trough, the cells fill with thin ink.', 'The doctor blade wipes the surface clean, so ink is left only in the cells. Deeper cells hold more ink and print darker.', 'The rubber impression roller presses the paper on to the cylinder and the ink is drawn out of the cells. The cylinders are very expensive, so gravure is used for very long, high-quality runs such as magazines and packaging.'] }; }
+
+ /* ---- screen printing ---- */
+ { const u = U2(22, 280, 120), { X, Y, R, PG, PL, AR, T } = u, W = 560, H = 250;
+  const ST = [[0, .16, 'Set up', 'The substrate is placed on the bed under the screen. A stencil blocks the mesh everywhere except the image area. Ink is poured along one edge.'],
+   [.16, .62, 'Pull the squeegee', 'The squeegee is pulled across the screen. It presses the mesh down on to the substrate and forces ink through the open areas of the stencil.'],
+   [.62, .8, 'Lift the screen', 'The screen is lifted clear, leaving the printed image on the substrate.'],
+   [.8, 1, 'Dry and repeat', 'The print is dried or cured. Each colour needs its own screen, printed one after another in register.', .9]];
+  const draw = (t) => { const o = [], pull = sm(.16, .62, t), bx = -5.6 + pull * 11.2, on = t >= .16 && t < .62, lift = sm(.62, .78, t) * 2.4, done = Math.max(-3, Math.min(3, bx));
+   o.push(R(-9, 9, -2.4, -1.3, 'dark', 4), R(-5, 5, -1.3, -.75, '#fff'), T(0, -2, 'bed', 12, 'middle', '#fff'));
+   if (pull > 0 && done > -3) o.push(`<rect x="${X(-3)}" y="${Y(-.75) - 4}" width="${((done + 3) * 22).toFixed(1)}" height="4" fill="${INK}"/>`);
+   o.push(`<g transform="translate(0 ${(-lift * 22).toFixed(1)})">`, R(-8, -7, 0, .9, 'wood'), R(7, 8, 0, .9, 'wood'));
+   const dip = on ? -.72 : 0, pts = on ? [[-7, 0], [bx, dip], [7, 0]] : [[-7, 0], [7, 0]];
+   o.push(PL(pts, 2, K.ink, '3 3'), PL(on ? [[-7, .05], [Math.min(bx, -3), (Math.min(bx, -3) + 7) / (bx + 7) * dip + .05]] : [[-7, .05], [-3, .05]], 5, '#3f7d55'), PL(on && bx > 3 ? [[3, dip * (7 - 3) / (7 - bx) + .05], [7, .05]] : on ? [[Math.max(3, bx), .05 + (bx > 3 ? dip : dip * (7 - 3) / (7 - bx))], [7, .05]] : [[3, .05], [7, .05]], 5, '#3f7d55'));
+   if (t < .62) { const ix = on ? bx + .7 : -5; o.push(`<ellipse cx="${X(ix)}" cy="${Y((on ? dip * .6 : 0) + .25)}" rx="${on ? 12 : 16}" ry="6" fill="${INK}"/>`); }
+   if (t < .62) { const sx = on ? bx : -6.2, sy = on ? dip : .5; o.push(`<g transform="rotate(${on ? 18 : 0} ${X(sx)} ${Y(sy)})">` + R(sx - .18, sx + .18, sy, sy + 1.7, '#e8c25a', 2) + R(sx - .45, sx + .45, sy + 1.7, sy + 3, 'wood', 3) + '</g>'); }
+   o.push('</g>'); if (on) o.push(AR(bx + 1.6, 3.6, bx + 3.6, 3.6)); if (t >= .62 && t < .8) o.push(AR(8.6, .4, 8.6, 2.4));
+   o.push(T(-7.5, -lift + 1.5, 'frame', 12), T(0, -3.2, t >= .16 ? 'the print' : 'substrate', 12));
+   return o.join(''); };
+  ANIMS['screen-printing'] = { stages: ST, draw, w: W, h: H, start: .4 }; }
+})();
+
 /* Materials, forces and testing */
 (() => { const { r, c, e, p, l, a, rot, t, hatch, dots } = D;
 const axes = (x0, y0, x1, y1, xl, yl) => l(x0, y0, x0, y1, 2.5) + l(x0, y0, x1, y0, 2.5) + t((x0 + x1) / 2, y0 + 34, xl, 14) + `<g transform="rotate(-90 ${x0 - 30} ${(y0 + y1) / 2})">${t(x0 - 30, (y0 + y1) / 2, yl, 14)}</g>`;
@@ -1410,6 +1549,120 @@ DIAGRAMS['composite-layup'] = { t: 'Laying up a fibre-reinforced composite (GRP 
   r(404, 96, 70, 20, 'pale', 10) + l(440, 96, 480, 50, 4) + rot(439, 106, 20, 200, 340) + r(40, 200, 50, 50, 'pale', 4) + r(46, 222, 38, 26, 'mat', 0, 0),
  parts: [[60, 150, 'Mould (former), polished and waxed', 180, 220], [200, 60, 'Release agent, then gel coat for a smooth outer surface', 232, 200], [330, 40, 'Fibre mat: glass or carbon fibre gives the strength', 330, 166],
   [560, 90, 'Roller removes trapped air and works the resin in', 470, 106], [600, 190, 'Resin (polyester or epoxy) bonds the fibres and sets hard', 520, 204], [40, 290, 'Resin mixed with hardener', 64, 236]] };
+})();
+
+/* Materials tests (tensile, Izod impact, hardness) and digital manufacture (FDM, SLA, laser cutter) in motion, plus a 3D model of an FDM printer. */
+(() => {
+ const K = D.K, P = Math.PI, { sm, mix } = FIGX;
+ const num = (u, x, y, n) => `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+
+ /* ---- tensile test, with the force–extension graph drawn as it goes ---- */
+ { const u = U2(22, 130, 160), { X, Y, R, PG, PL, C, AR, T } = u, W = 600, H = 320;
+  const ST = [[0, .25, 'Elastic', 'The test piece is pulled with a steadily increasing force. At first it stretches in proportion to the force, and it would spring back if the force were removed.'],
+   [.25, .6, 'Yield and plastic deformation', 'Past the yield point the metal stretches permanently. The force needed keeps rising until it reaches the ultimate tensile strength (UTS).'],
+   [.6, .88, 'Necking', 'After the UTS the test piece narrows at one place, called necking, and less force is needed to keep stretching it.'],
+   [.88, 1, 'Fracture', 'The test piece breaks at the neck. A ductile material shows a lot of stretch before it breaks; a brittle one snaps with almost none.', .95]];
+  const curve = (p) => (p < .25 ? [.1 * p / .25, .6 * p / .25] : p < .6 ? [.1 + .45 * (p - .25) / .35, .6 + .35 * Math.sin((p - .25) / .35 * P / 2)] : [.55 + .3 * (p - .6) / .28, .95 - .17 * Math.pow((p - .6) / .28, 1.6)]);
+  const draw = (t) => { const o = [], p = Math.min(t, .88), ext = curve(p)[0] * 2.6, neck = sm(.6, .88, t), brk = t >= .88, gap = brk ? .5 + sm(.88, .96, t) * .5 : 0, top = 2.2 + ext + gap, wN = .3 - neck * .2;
+   o.push(R(-3.4, 3.4, -5.6, -4.8, 'dark', 3), R(-3, -2.5, -4.8, 5.6, 'steel'), R(2.5, 3, -4.8, 5.6, 'steel'), R(-3.4, 3.4, 5.6, 6.2, 'dark', 3), R(-1.1, 1.1, -4.8, -3.2, 'dark', 3), R(-3, 3, top + 1.1, top + 1.7, 'dark', 2), R(-1.1, 1.1, top - .5, top + 1.1, 'dark', 3));
+   const mid = (-2.2 + top - 1) / 2 + .5 - gap / 2;
+   if (!brk) o.push(PG([[-.6, -3.4], [.6, -3.4], [.6, -2.4], [.3, -2], [wN, mid], [.3, top - 1.2], [.6, top - .8], [.6, top + .3], [-.6, top + .3], [-.6, top - .8], [-.3, top - 1.2], [-wN, mid], [-.3, -2], [-.6, -2.4]], '#7fa3c9'));
+   else { const m0 = (-2.2 + 2.2 + ext - 1) / 2 + .5; o.push(PG([[-.6, -3.4], [.6, -3.4], [.6, -2.4], [.3, -2], [.1, m0], [0, m0 - .12], [-.1, m0], [-.3, -2], [-.6, -2.4]], '#7fa3c9'), PG([[.1, m0 + gap], [.3, top - 1.2], [.6, top - .8], [.6, top + .3], [-.6, top + .3], [-.6, top - .8], [-.3, top - 1.2], [-.1, m0 + gap], [0, m0 + gap - .12]], '#7fa3c9')); }
+   if (!brk) o.push(AR(-4.4, top - .4, -4.4, top + 1.4), T(-4.4, top - 1.1, 'force', 12, 'middle', 'ink2'));
+   // the graph
+   const gx = (v) => 7 + v * 13, gy = (v) => -4.6 + v * 9.2, pts = []; for (let q = 0; q <= p + .0001; q += .01) { const c = curve(q); pts.push([gx(c[0]), gy(c[1])]); }
+   o.push(PL([[7, 5.6], [7, -4.6], [20.6, -4.6]], 2.5), T(13.8, -5.9, 'Extension', 13), `<text transform="translate(${X(6.1)} ${Y(.5)}) rotate(-90)" font-family="Arial,sans-serif" font-size="13" font-weight="600" text-anchor="middle" fill="${K.ink}">Force</text>`);
+   if (pts.length > 1) o.push(PL(pts, 3.5, K.hot)); const c = curve(p); o.push(C(gx(c[0]), gy(c[1]), .22, K.hot, 1.5));
+   if (t >= .25) o.push(C(gx(.1), gy(.6), .14, K.ink, 0), T(gx(.1) + .4, gy(.6) - .7, 'yield point', 12, 'start')); if (t >= .6) o.push(C(gx(.55), gy(.95), .14, K.ink, 0), T(gx(.55), gy(.95) + .5, 'UTS', 12)); if (brk) o.push(T(gx(.85), gy(.78) + .6, 'fracture', 12));
+   if (t < .25) o.push(T(gx(.1) + 1.2, gy(.2), 'elastic region', 12, 'start', 'ink2'));
+   return o.join(''); };
+  ANIMS['tensile-test'] = { stages: ST, draw, w: W, h: H, start: .5 }; }
+
+ /* ---- Izod impact test ---- */
+ { const u = U2(22, 250, 150), { X, Y, R, PG, PL, C, AR, T } = u, W = 500, H = 360, L = 5.4, A0 = 1.75, A1 = 1.0;
+  const ST = [[0, .2, 'Raise the pendulum', 'A notched test piece is clamped upright in the vice. The pendulum is lifted to a set height, so it always starts with the same energy.'],
+   [.2, .44, 'Release', 'The pendulum is released and swings down, gaining speed.'],
+   [.44, .72, 'Strike', 'It strikes the test piece just above the notch and breaks it. Breaking the test piece takes energy out of the pendulum, so it does not swing as high on the other side.'],
+   [.72, 1, 'Read the scale', 'The difference between the start height and the finish height shows the energy absorbed. A tough material absorbs a lot of energy; a brittle one absorbs very little.', .88]];
+  const draw = (t) => { const o = [], th = t < .2 ? A0 * sm(0, .2, t) : t < .44 ? A0 * Math.cos((t - .2) / .24 * P / 2) : -A1 * Math.sin(Math.min(1, (t - .44) / .28) * P / 2), bx = L * Math.sin(th), by = 4 - L * Math.cos(th), hit = t >= .44, fly = sm(.44, .7, t);
+   o.push(R(-7, 7, -5.2, -4.4, 'dark', 3), R(-.5, .5, -4.4, 4.4, 'steel'), R(-1.5, 1.5, -4.4, -3.2, 'dark', 2), R(-1.3, -.3, -3.2, -2.3, 'steel'), R(.3, 1.3, -3.2, -2.3, 'steel'));
+   const pos = (a, r) => [r * Math.sin(a), 4 - r * Math.cos(a)]; const arcP = []; for (let a = -A0; a <= A0 + .01; a += .1) arcP.push(pos(a, L + 1.2)); o.push(PL(arcP, 1.5, K.ink, '2 5'));
+   const m0 = pos(A0, L + 1.2), m1 = pos(-A1, L + 1.2); o.push(C(m0[0], m0[1], .16, K.ink2, 0), T(m0[0] + .3, m0[1] + .5, 'start', 12, 'start', 'ink2')); if (t >= .7) o.push(C(m1[0], m1[1], .16, K.hot, 0), T(m1[0] - .3, m1[1] + .5, 'finish', 12, 'end', 'hot'));
+   o.push(R(-.3, .3, -3.2, hit ? -2 : -.9, '#7fa3c9'), PG([[.3, -2.1], [.08, -2], [.3, -1.9]], '#fff', 1.2));
+   if (hit) o.push(`<g transform="translate(${(-fly * 70).toFixed(1)} ${(-Math.sin(fly * P) * 26 + fly * 40).toFixed(1)}) rotate(${(-fly * 200).toFixed(0)} ${X(0)} ${Y(-1.45)})">` + R(-.3, .3, -2, -.9, '#7fa3c9') + '</g>');
+   o.push(`<line x1="${X(0)}" y1="${Y(4)}" x2="${X(bx)}" y2="${Y(by)}" stroke="${K.ink}" stroke-width="5" stroke-linecap="round"/>`, `<g transform="rotate(${(-th * 180 / P).toFixed(1)} ${X(bx)} ${Y(by)})">` + R(bx - .8, bx + .8, by - .5, by + .5, 'dark', 4) + '</g>', C(0, 4, .3, 'dark'));
+   if (t >= .72) o.push(PL([[-7.8, m0[1]], [-7.8, m1[1]]], 2.5, K.hot), PL([[-8.1, m0[1]], [-7.5, m0[1]]], 2.5, K.hot), PL([[-8.1, m1[1]], [-7.5, m1[1]]], 2.5, K.hot), PL([[-7.5, m0[1]], [m0[0], m0[1]]], 1.2, K.hot, '4 4'), T(-8.2, (m0[1] + m1[1]) / 2 + .1, 'energy', 12, 'end', 'hot'), T(-8.2, (m0[1] + m1[1]) / 2 - .6, 'absorbed', 12, 'end', 'hot'));
+   o.push(T(2.6, -2.9, 'vice', 12), T(1.6, -1.6, 'notch', 12, 'start'));
+   return o.join(''); };
+  ANIMS['impact-test'] = { stages: ST, draw, w: W, h: H, start: .1 }; }
+
+ /* ---- hardness: the same load on a softer and a harder material ---- */
+ { const u = U2(22, 240, 110), { X, Y, R, C, AR, T, PL } = u, W = 480, H = 260;
+  const ST = [[0, .2, 'Position', 'A hardened steel ball or a diamond point, called the indenter, is placed over the flat, polished surface of each sample.'],
+   [.2, .55, 'Apply the load', 'The same known force is pressed on to each indenter for a set time.'],
+   [.55, .75, 'Remove', 'The indenter is lifted away, leaving a dent in the surface.'],
+   [.75, 1, 'Measure', 'The size of the dent is measured. The softer material has the larger dent; the harder material has the smaller dent. Brinell, Vickers and Rockwell tests all work this way.', .9]];
+  const draw = (t) => { const o = [], press = sm(.2, .5, t), up = sm(.55, .72, t), show = t >= .75;
+   [[-5, 1, 'softer material', '#c9d8ea'], [5, .4, 'harder material', '#8fa2b8']].forEach(([cx, dmax, name, col]) => { const d = dmax * press, w = Math.sqrt(Math.max(0, 2 * 1.3 * d - d * d)), by = -1 + 1.3 - d + up * 2.6 + (1 - sm(.04, .18, t)) * 1.6;
+    o.push(`<path d="M${X(cx - 3.6)} ${Y(-4)}L${X(cx - 3.6)} ${Y(-1)}L${X(cx - w)} ${Y(-1)}A${1.3 * 22} ${1.3 * 22} 0 0 0 ${X(cx + w)} ${Y(-1)}L${X(cx + 3.6)} ${Y(-1)}L${X(cx + 3.6)} ${Y(-4)}Z" fill="${col}" ${u.sk(2)}/>`);
+    o.push(R(cx - .5, cx + .5, by + .9, by + 3.4, 'steel'), C(cx, by, 1.3, 'dark'), T(cx, -4.8, name, 13));
+    if (t >= .2 && t < .55) o.push(AR(cx + 1.9, 3.9, cx + 1.9, 2.1), T(cx + 2.3, 3.4, 'same force', 11.5, 'start', 'ink2'));
+    if (show) o.push(PL([[cx - w, -.4], [cx + w, -.4]], 2.5, K.hot), PL([[cx - w, -.7], [cx - w, -.1]], 2.5, K.hot), PL([[cx + w, -.7], [cx + w, -.1]], 2.5, K.hot), T(cx, .1, dmax > .5 ? 'large dent' : 'small dent', 12, 'middle', 'hot')); });
+   return o.join(''); };
+  ANIMS['hardness-test'] = { stages: ST, draw, w: W, h: H, start: .4 }; }
+
+ /* ---- FDM 3D printer ---- */
+ const LAY = [1.9, 2.1, 2.2, 2.1, 1.8, 1.5, 1.3, 1.3, 1.5, 1.8], FW = ['The filament, a thermoplastic such as PLA, is pulled off the spool by the drive gear in the print head.', 'The heated nozzle melts the filament and squeezes out a thin bead.', 'The head follows the path worked out by the slicing software from the CAD model, drawing one layer.', 'The gap between nozzle and bed then increases by one layer thickness and the next layer is fused on top. Overhangs need support material.'];
+ { const u = U2(22, 230, 232), { X, Y, R, PG, C, AR, T, PL } = u, W = 460, H = 320;
+  const draw = (t) => { const o = [], n = LAY.length, li = Math.min(n - 1, Math.floor(t * n)), f = (t * n) % 1, dir = li % 2 ? -1 : 1, w = LAY[li], hx = dir * (-w + f * 2 * w), bedY = 3.2 - li * .32;
+   o.push(R(-7.6, 7.6, -1.6, -.9, 'dark', 3), R(-7, -6.4, -.9, 8.6, 'steel'), R(6.4, 7, -.9, 8.6, 'steel'), R(-7.4, 7.4, 8.6, 9.2, 'dark', 3), R(-7, 7, 5.9, 6.4, 'steel'));
+   o.push(C(-4.6, 10, 1.3, 'mat'), C(-4.6, 10, .45, '#fff'), PL([[-3.6, 9.2], [hx - .1, 8.4], [hx, 6.9]], 2.5, K.mat));
+   o.push(R(-.25, .25, -.9, bedY - .3, 'steel'), R(-4.6, 4.6, bedY - .3, bedY, 'dark', 2));
+   for (let k = 0; k < li; k++) o.push(R(-LAY[k], LAY[k], bedY + k * .32, bedY + (k + 1) * .32, 'mat', 2, 1.2));
+   const a = dir > 0 ? -w : hx, b = dir > 0 ? hx : w; if (b - a > .02) o.push(R(a, b, bedY + li * .32, bedY + (li + 1) * .32, K.hot, 2, 1.2));
+   o.push(R(hx - .9, hx + .9, 5.3, 6.9, 'dark', 3), PG([[hx - .35, 5.3], [hx + .35, 5.3], [hx + .08, 4.5], [hx - .08, 4.5]], 'hot'));
+   o.push(AR(hx - dir * 1.2, 7.5, hx + dir * 1.2, 7.5), num(u, -2.4, 10.3, 1), num(u, hx + 1.7, 4.9, 2), num(u, 5.4, 7.3, 3), num(u, 5.6, bedY - .2, 4));
+   return o.join(''); };
+  ANIMS['fdm-printer'] = { loop: true, dur: 14000, w: W, h: H, draw, watch: FW }; }
+ MODELS['fdm-printer'] = { stages: [[0, 1, 'Printing', 'The head moves left and right and the bed moves forwards and backwards, so the nozzle can draw any shape in a layer. After each layer the head rises by one layer thickness. Here the layers are drawn much thicker than real ones, which are about 0.2 mm.', .5]], dur: 20000, build(M) {
+  const { THREE, tag, box, rev, cyl } = M, root = new THREE.Group(), gan = new THREE.Group(), head = new THREE.Group(), bed = new THREE.Group(); root.add(gan, bed); gan.add(head);
+  root.add(tag('frame', box(-7, 7, -1, 0, -6, 6, 'dark')), tag('frame', box(-6.6, -5.8, 0, 12, -.4, .4, 'steel')), tag('frame', box(5.8, 6.6, 0, 12, -.4, .4, 'steel')), tag('frame', box(-6.6, 6.6, 12, 12.8, -.4, .4, 'steel')));
+  root.add(tag('spool', rev(cyl(-.5, .5, 2), 'mat', { whole: true, oy: 14.4, oz: 0 }).back));
+  gan.add(tag('gantry', box(-5.8, 5.8, 0, .6, -.3, .3, 'steel'))); head.add(tag('head', box(-.9, .9, -.2, 1.6, .3, 1.7, 'dark')), tag('nozzle', rev([[0, 0], [.6, .45], [.6, 0]], 'hot', { whole: true, axis: 'y', cx: 0, oz: 1 }).back)); head.children[1].position.y = -.8;
+  bed.add(tag('bed', box(-4.2, 4.2, .3, .6, -4.2, 4.2, '#5b6470')));
+  const layers = LAY.map((r, k) => { const g = tag('part', rev(cyl(0, 1, r), 'mat', { whole: true, axis: 'y', n: 32 }).back); g.children.forEach((c) => { c.geometry.translate(0, 0, 0); }); g.scale.y = .42; g.position.y = .6 + k * .42; bed.add(g); return g; });
+  const parts = { frame: ['Frame', 'Holds everything square and rigid, so the layers line up.'], spool: ['Filament spool', 'A reel of thermoplastic filament such as PLA or ABS, usually 1.75 mm thick.'], gantry: ['X-axis gantry', 'The head slides left and right along it. The whole gantry rises on the Z axis after each layer.'],
+   head: ['Print head (extruder)', 'A drive gear pushes the filament into the hot end.'], nozzle: ['Heated nozzle', 'Melts the filament at about 200 °C and lays down a thin bead.'], bed: ['Print bed', 'Moves forwards and backwards (the Y axis). It is often heated so the first layer sticks and does not warp.'], part: ['The print', 'Built up in layers from the bottom. Each new layer fuses to the one below.'] };
+  const frame = (t) => { const n = LAY.length, li = Math.min(n - 1, Math.floor(t * n)), f = (t * n) % 1, r = LAY[li], a = f * 2 * P; layers.forEach((g, k) => { g.visible = k <= li; g.scale.y = k < li ? .42 : .42 * Math.max(.05, f); });
+   gan.position.y = 1.9 + li * .42 + .42 * f; head.position.x = r * Math.cos(a); bed.position.z = 1 - r * Math.sin(a); };
+  return { root, frame, parts, home: { t: [0, 6, 0], d: 52, v: [.35, .25, .9] } };
+ } };
+
+ /* ---- SLA ---- */
+ { const u = U2(22, 230, 210), { X, Y, R, PG, C, AR, T, PL } = u, W = 460, H = 320, SL = [1.2, 1.5, 1.9, 2.2, 2.2, 1.9, 1.5, 1.2];
+  const draw = (t) => { const o = [], n = SL.length, li = Math.min(n - 1, Math.floor(t * n)), f = (t * n) % 1, w = SL[li], sx = -w + (f < .8 ? f / .8 : 1) * 2 * w, top = 3, py = top - (li + 1) * .34;
+   o.push(R(-6, 6, -3.4, 3.6, 'pale', 3), `<rect x="${X(-5.9)}" y="${Y(top)}" width="${11.8 * 22}" height="${(top + 3.3) * 22}" fill="${K.cool}" opacity=".55"/>`, PL([[-5.9, top], [5.9, top]], 1.5));
+   o.push(R(4.4, 4.9, py - .3, 6.6, 'steel'), R(-4, 4.9, py - .3, py, 'dark', 2));
+   for (let k = 0; k < li; k++) o.push(R(-SL[k], SL[k], py + k * .34, py + (k + 1) * .34, 'mat', 0, 1.2));
+   if (f < .8) o.push(R(-w, sx, py + li * .34, top, K.hot, 0, 1.2)); else o.push(R(-w, w, py + li * .34, top, 'mat', 0, 1.2));
+   o.push(R(-8.6, -5.4, 7.2, 8.4, 'dark', 4), T(-7, 7.6, 'UV laser', 11, 'middle', '#fff'), PG([[-.2, 8.6], [.9, 7.5], [.6, 7.2], [-.5, 8.3]], 'steel'));
+   if (f < .8) o.push(PL([[-5.4, 7.8], [.2, 7.9], [sx, top]], 2.5, '#8a3ffc'), C(sx, top, .16, '#8a3ffc', 0));
+   o.push(num(u, -3.6, 9, 1), num(u, 2, 8.6, 2), num(u, sx + 1.1, top + .8, 3), num(u, 6.2, py + 1.4, 4), T(0, -2.6, 'liquid photopolymer resin', 12));
+   return o.join(''); };
+  ANIMS['sla-printer'] = { loop: true, dur: 13000, w: W, h: H, draw, watch: ['An ultraviolet laser makes a fine beam of light.', 'A computer-controlled mirror steers the beam across the surface of the resin, following the shape of one layer.', 'Where the light hits, the liquid photopolymer cures and turns solid.', 'The platform moves down by one layer thickness, fresh resin covers the top, and the next layer is cured on to it. The finished part is washed and given a final cure. SLA gives a smoother, more detailed finish than FDM.'] }; }
+
+ /* ---- CNC laser cutter ---- */
+ { const u = U2(22, 240, 190), { X, Y, R, PG, C, AR, T, PL } = u, W = 480, H = 300;
+  const CUTS = [-3.6, -1.2, 1.2, 3.6];
+  const draw = (t) => { const o = [], k = Math.min(3, Math.floor(t * 4)), f = (t * 4) % 1, hx = f < .3 ? (k ? CUTS[k - 1] : -5) + ((CUTS[k]) - (k ? CUTS[k - 1] : -5)) * sm(0, .3, f) : CUTS[k], cutting = f >= .35, depth = cutting ? sm(.35, .9, f) : 0;
+   o.push(R(-8.4, 8.4, -5, 6.4, 'pale', 6), R(-8.4, 8.4, -5.8, -5, 'dark', 3), R(-6.6, 6.6, -2.2, -1.8, 'dark'), [...Array(14)].map((_, i) => `<line x1="${X(-6.3 + i * .97)}" y1="${Y(-1.8)}" x2="${X(-6.3 + i * .97)}" y2="${Y(-2.2)}" stroke="#fff" stroke-width="1.5"/>`).join(''));
+   o.push(R(-5.6, 5.6, -1.8, -1.3, 'wood')); CUTS.forEach((c, i) => { if (i < k || (i === k && depth > 0)) o.push(`<rect x="${X(c) - 1.5}" y="${Y(-1.3)}" width="3" height="${((i < k ? 1 : depth) * 11).toFixed(1)}" fill="${K.ink}"/>`); });
+   o.push(R(-8, -5.2, 4.3, 5.5, 'dark', 4), T(-6.6, 4.7, 'laser tube', 10.5, 'middle', '#fff'), R(-7.8, 7.8, 3.2, 3.7, 'steel'), R(hx - .8, hx + .8, 2.4, 5.6, 'dark', 3), PG([[hx - .4, 2.4], [hx + .4, 2.4], [hx + .15, 1.5], [hx - .15, 1.5]], 'steel'), PG([[hx - .45, 5.2], [hx + .1, 4.65], [hx - .1, 4.45], [hx - .65, 5]], '#fff', 1.3), `<ellipse cx="${X(hx)}" cy="${Y(2.9)}" rx="8" ry="3" fill="${K.cool}" stroke="${K.ink}" stroke-width="1.2"/>`);
+   if (cutting) o.push(PL([[-5.2, 4.9], [hx - .25, 4.9], [hx, 4.7], [hx, 2.9]], 2.5, K.hot), PG([[hx - .28, 2.9], [hx + .28, 2.9], [hx, -1.3]], K.hot, 0).replace('<polygon', '<polygon opacity=".8"'), C(hx, -1.3, .2, '#ffd54a', 1), PL([[hx + .3, -1], [hx + .9, -.2], [hx + .7, .5]], 1.5, '#8b949e', '3 3'));
+   o.push(R(5.4, 7.9, -4.6, -3.2, 'steel', 4), T(6.65, -4.1, 'extraction', 10.5), AR(3.4, -3.9, 5.2, -3.9, 'dark'));
+   o.push(num(u, -8.6, 6.5, 1), num(u, hx + 1.6, 5.6, 2), num(u, hx + 1.5, 2.3, 3), num(u, 0, -.4, 4), T(0, -3.4, 'honeycomb bed', 11));
+   return o.join(''); };
+  ANIMS['laser-cutter'] = { loop: true, dur: 9000, w: W, h: H, draw, watch: ['The CO₂ laser tube produces an intense beam of infrared light.', 'Mirrors reflect the beam along the gantry to the cutting head.', 'A lens focuses the beam to a tiny spot on the material, where it burns or vaporises a narrow slot called the kerf. Lower power or higher speed only marks the surface (engraving).', 'The head moves along the gantry (X) and the gantry moves front to back (Y), following the vector lines of the CAD drawing. Fumes are extracted and filtered.'] }; }
 })();
 
 /* Digital manufacture, wood joints, and the charts used in industry and planning */

@@ -1,0 +1,110 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Levers and linkages lab</title>
+<style>
+:root{--bg:#f1f3ef;--ink:#1f2a24;--soft:#5d6862;--green:#1e5c3a;--blue:#2456a6;--red:#b8402c;--card:#fff;--line:rgba(31,42,36,.18)}
+*{box-sizing:border-box}html,body{margin:0;height:100%}body{background:var(--bg);color:var(--ink);font:400 17px/1.45 -apple-system,'Segoe UI',Roboto,Arial,sans-serif;display:flex;flex-direction:column}
+header{background:var(--green);color:#fff;padding:10px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}header h1{font-size:20px;margin:0;flex:1;min-width:200px}header a{color:#fff;opacity:.85;font-size:14px}
+.tabs{display:flex;gap:8px}.tabs button{font:600 15px inherit;border:0;border-radius:20px;padding:9px 16px;background:rgba(255,255,255,.18);color:#fff;cursor:pointer}.tabs button.on{background:#fff;color:var(--green)}
+.wrap{flex:1;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:14px;padding:14px;min-height:0}
+.stage{position:relative;background:linear-gradient(#fff,#e8ece6);border-radius:16px;overflow:hidden;min-height:340px;touch-action:none}.stage canvas{display:block;width:100%;height:100%}
+.stage .hint{position:absolute;left:12px;bottom:9px;font-size:12.5px;color:var(--soft);pointer-events:none}.stage .big{position:absolute;left:14px;top:12px;font-weight:700;font-size:19px;background:rgba(255,255,255,.85);border-radius:10px;padding:6px 12px}
+.side{display:flex;flex-direction:column;gap:12px;overflow:auto;min-height:0}
+.card{background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.06)}.card h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin:0 0 6px}
+.card p{margin:4px 0}.muted{color:var(--soft);font-size:15px}
+.ctl{display:grid;grid-template-columns:118px 1fr;gap:6px 10px;align-items:center;margin-top:4px}.ctl label{font-weight:600;font-size:15px}
+input[type=range]{width:100%;height:36px;accent-color:var(--blue);margin:0}input.push{accent-color:var(--red)}
+.read{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.read div{background:#f3f6f2;border-radius:10px;padding:8px 10px}.read b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.read small{color:var(--soft);font-size:13px}
+.q{border-left:6px solid var(--blue)}.opts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.opts button,.next{font:600 16px inherit;border:2px solid var(--line);background:#fff;border-radius:10px;padding:11px 16px;cursor:pointer;color:var(--ink)}
+.opts button.right{background:#e2f3e7;border-color:#2f7d4a}.opts button.wrong{background:#fbe6e1;border-color:var(--red)}.fb{margin-top:8px;font-weight:600}.next{background:var(--blue);color:#fff;border-color:var(--blue);margin-top:8px}
+@media(max-width:820px){body{height:auto}.wrap{grid-template-columns:1fr}.stage{height:56vw;min-height:280px}.side{overflow:visible}}
+</style></head>
+<body>
+<header><h1>Levers and linkages lab</h1><div class="tabs" id="tabs"></div><a href="../">Test bench</a></header>
+<div class="wrap">
+ <div class="stage" id="stage"><div class="big" id="big"></div><span class="hint">drag the model to turn it · use the sliders to change it</span></div>
+ <div class="side">
+  <div class="card"><h2>Where have you seen this?</h2><p id="ctx"></p></div>
+  <div class="card"><h2>Change it</h2><div class="ctl" id="ctl"></div><div class="read" id="read"></div><p class="muted" id="say"></p></div>
+  <div class="card q"><h2>Predict, then test</h2><p id="qt"></p><div class="opts" id="qo"></div><p class="fb" id="qf"></p><button class="next" id="qn" type="button" style="display:none">Next question</button></div>
+ </div>
+</div>
+<script src="../../book-kit/three/three.min.js"></script><script src="../../book-kit/three/OrbitControls.js"></script>
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s), host = $('#stage');
+/* ---------- 3D set-up: flat toon shading with ink edges ---------- */
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); host.insertBefore(renderer.domElement, host.firstChild);
+const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1.5, .1, 100); scene.add(cam);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb8bcc4, .45)); const sun = new THREE.DirectionalLight(0xffffff, .6); sun.position.set(-4, 7, 6); cam.add(sun);
+const orbit = new THREE.OrbitControls(cam, renderer.domElement); orbit.enablePan = false; orbit.enableDamping = true; orbit.minPolarAngle = .9; orbit.maxPolarAngle = 1.56; orbit.minAzimuthAngle = -.9; orbit.maxAzimuthAngle = .9;
+const ramp = new THREE.DataTexture(new Uint8Array([150, 150, 150, 215, 215, 215, 255, 255, 255]), 3, 1, THREE.RGBFormat); ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+const toon = (c, o) => new THREE.MeshToonMaterial(Object.assign({ color: c, gradientMap: ramp }, o || {})), INK = 0x1f2328;
+const edged = (geo, c, o) => { const m = new THREE.Mesh(geo, toon(c, o)); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: INK }))); return m; };
+const box = (w, h, d, c, o) => edged(new THREE.BoxGeometry(w, h, d), c, o);
+const cyl = (r, h, c, seg) => edged(new THREE.CylinderGeometry(r, r, h, seg || 24), c);
+function arrow(c) { const g = new THREE.Group(), sh = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, 1, 12), new THREE.MeshBasicMaterial({ color: c })), hd = new THREE.Mesh(new THREE.ConeGeometry(.1, .22, 16), new THREE.MeshBasicMaterial({ color: c })); g.add(sh, hd);
+ g.set = (x, y, z, len, down) => { g.position.set(x, y, z); const L = Math.max(.25, len); sh.scale.y = L - .2; if (down) { sh.position.y = .2 + (L - .2) / 2; hd.position.y = .11; hd.rotation.z = Math.PI; } else { sh.position.y = (L - .2) / 2; hd.position.y = L - .11; hd.rotation.z = 0; } }; return g; }
+function between(mesh, a, b) { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A); mesh.position.copy(A).addScaledVector(d, .5); mesh.scale.y = d.length(); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
+const ground = () => { const g = new THREE.Mesh(new THREE.CircleGeometry(4, 48), new THREE.MeshBasicMaterial({ color: 0xdfe5dc })); g.rotation.x = -Math.PI / 2; return g; };
+const BLUE = 0x2456a6, RED = 0xb8402c, WOOD = 0xdfc08f, STEEL = 0xcfd5dc, DARK = 0x98a2b0;
+let need = true; orbit.addEventListener('change', () => { need = true; });
+function size() { const w = host.clientWidth, h = host.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); need = true; } new ResizeObserver(size).observe(host);
+(function loop() { requestAnimationFrame(loop); orbit.update(); if (need) { need = false; renderer.render(scene, cam); } })();
+
+/* ---------- controls and questions shared by every station ---------- */
+let V = {}, station = null, root = null, qi = 0;
+function sliders(list) { $('#ctl').innerHTML = list.map((s) => `<label for="s-${s[0]}">${s[1]}</label><input type="range" id="s-${s[0]}" min="${s[2]}" max="${s[3]}" step="${s[5] || .01}" value="${s[4]}"${s[0] === 'push' ? ' class="push"' : ''}>`).join(''); V = {};
+ list.forEach((s) => { V[s[0]] = +s[4]; $('#s-' + s[0]).oninput = (e) => { V[s[0]] = +e.target.value; station.update(); need = true; }; }); }
+const readout = (rows) => { $('#read').innerHTML = rows.map((r) => `<div><b>${r[0]}</b><small>${r[1]}</small></div>`).join(''); };
+function ask() { const q = station.qs[qi % station.qs.length]; $('#qt').textContent = q[0]; $('#qf').textContent = ''; $('#qn').style.display = 'none';
+ $('#qo').innerHTML = q[1].map((o, i) => `<button type="button" data-i="${i}">${o}</button>`).join('');
+ $('#qo').onclick = (e) => { const b = e.target.closest('button'); if (!b || $('#qn').style.display !== 'none') return; const ok = +b.dataset.i === q[2]; b.classList.add(ok ? 'right' : 'wrong'); if (!ok) $('#qo').children[q[2]].classList.add('right');
+  $('#qf').textContent = (ok ? 'Yes. ' : 'Not quite. ') + q[3] + ' Now test it with the sliders.'; $('#qn').style.display = ''; }; }
+$('#qn').onclick = () => { qi++; ask(); };
+function open(k) { if (root) scene.remove(root); station = STATIONS[k]; [...$('#tabs').children].forEach((b, i) => b.classList.toggle('on', i === k)); root = new THREE.Group(); scene.add(root); $('#ctx').innerHTML = station.ctx; station.build(root); qi = 0; ask(); station.update();
+ orbit.target.set(...station.look); cam.position.set(...station.eye); orbit.update(); need = true; }
+
+/* ---------- station 1: one lever, three classes ---------- */
+const lever = { name: 'Lever', look: [0, .55, 0], eye: [0, 1.5, 5.2],
+ ctx: 'A lever is a rigid bar that turns on a <b>pivot</b> (fulcrum). You use dozens every day: <b>scissors</b>, a <b>bottle opener</b>, <b>tweezers</b>, a <b>door handle</b>, the trigger on a <b>game controller</b>, even your <b>forearm</b>. Here the load is a 6 kg school bag, which weighs about 60 newtons.',
+ qs: [['You slide the pivot closer to the bag. Lifting the bag will take…', ['more effort', 'less effort', 'the same effort'], 1, 'The bag is now on a short arm and your hand is on a long one, so a small effort balances a big load.'],
+  ['The pivot is near the bag and you push your end down a long way. The bag rises…', ['further than your hand moves', 'the same distance', 'less far than your hand moves'], 2, 'You gain force but lose distance. Nothing is free: effort × its distance = load × its distance.'],
+  ['Put the effort between the pivot and the bag, like tweezers. The effort needed is now…', ['bigger than the load', 'smaller than the load', 'the same as the load'], 0, 'A class 3 lever loses force but gains movement and control, which is what you want from tweezers or a fishing rod.']],
+ build(r) { r.add(ground()); const tri = new THREE.Shape(); tri.moveTo(-.2, 0); tri.lineTo(.2, 0); tri.lineTo(0, .3); const fg = new THREE.ExtrudeGeometry(tri, { depth: .34, bevelEnabled: false }); fg.translate(0, 0, -.17); this.ful = edged(fg, DARK); r.add(this.ful);
+  this.g = new THREE.Group(); r.add(this.g); this.beam = box(2.1, .06, .26, WOOD); this.bag = box(.3, .34, .22, 0x3f7d55); this.strap = box(.2, .06, .05, 0x2d5a3d); this.bag.add(this.strap); this.strap.position.y = .2; this.g.add(this.beam, this.bag);
+  this.ae = arrow(BLUE); this.al = arrow(RED); r.add(this.ae, this.al);
+  sliders([['f', 'Pivot', -1, 1, -.3], ['l', 'Bag', -1, 1, -.8], ['e', 'Your hand', -1, 1, .9], ['push', 'Push or pull', 0, 1, 0]]); },
+ update() { let { f, l, e, push } = V; const far = (a) => (Math.abs(a - f) < .12 ? f + (a >= f ? .12 : -.12) : a); l = far(l); e = far(e); if (Math.abs(l - e) < .01) e += .02;
+  const aL = Math.abs(l - f), aE = Math.abs(e - f), eff = 60 * aL / aE, opp = (l - f) * (e - f) < 0, cls = opp ? 1 : aL < aE ? 2 : 3, maxArm = Math.max(1.05 + f, 1.05 - f), tmax = Math.min(.3, Math.asin(Math.min(.95, .26 / maxArm))), th = push * tmax * Math.sign(l - f);
+  this.ful.position.x = f; this.g.position.set(f, .3, 0); this.g.rotation.z = th; this.beam.position.set(-f, .03, 0); this.bag.position.set(l - f, .23, 0);
+  const P = (p, up) => [f + (p - f) * Math.cos(th) - up * Math.sin(th), .3 + (p - f) * Math.sin(th) + up * Math.cos(th)], pe = P(e, .07), pl = P(l, .42), len = .3 + Math.min(1.5, eff / 80);
+  if (opp) this.ae.set(pe[0], pe[1], 0, len, true); else this.ae.set(pe[0], pe[1], 0, len, false); this.al.set(pl[0], pl[1], 0, .75, true);
+  const dE = aE * Math.sin(tmax) * 100, dL = aL * Math.sin(tmax) * 100;
+  $('#big').textContent = 'Class ' + cls + ' lever: ' + ['like scissors or a see-saw', 'like a wheelbarrow or a bottle opener', 'like tweezers or your forearm'][cls - 1];
+  readout([[Math.round(eff) + ' N', 'effort needed (blue arrow)'], ['60 N', 'load: the bag (red arrow)'], [(aE / aL).toFixed(2), 'mechanical advantage = load ÷ effort'], [Math.round(dE) + ' cm → ' + Math.round(dL) + ' cm', 'your hand moves → the bag rises']]);
+  $('#say').textContent = (cls === 1 ? 'Pivot in the middle: you push down and the bag goes up. ' : cls === 2 ? 'Load in the middle: you lift up at the end, with less effort than the load. ' : 'Effort in the middle: you need more effort than the load, but the bag moves further. ') + (eff < 60 ? 'This lever makes the job easier.' : eff > 60 ? 'This lever makes you work harder, but gives more movement.' : ''); } };
+
+/* ---------- station 2: the pedal bin, two levers joined by a rod ---------- */
+const bin = { name: 'Pedal bin', look: [0, 1.35, 0], eye: [-1.4, 2.3, 8],
+ ctx: 'A <b>pedal bin</b> is a linkage: two levers joined by a rod. Your foot pushes the pedal <b>down</b> and the lid swings <b>up</b>. The same idea works a <b>piano key and hammer</b>, a <b>bike brake</b> and the <b>flush on a toilet</b>.',
+ qs: [['You press the pedal down. The other end of the pedal lever moves…', ['down', 'up', 'not at all'], 1, 'The pedal is a class 1 lever with its pivot between the two ends, so it reverses the direction.'],
+  ['Slide the pivot towards the pedal. For the same press, the lid now opens…', ['less far', 'the same', 'further'], 2, 'The arm behind the pivot is now much longer than the pedal arm, so the far end moves a lot more. The price is that your foot must push harder.'],
+  ['Why does the rod push the lid close to its hinge and not at the front edge?', ['So a small push makes a big swing', 'To make the lid lighter', 'It makes no difference'], 0, 'Pushing near the hinge is like a class 3 lever: a small movement of the rod gives a big movement at the front of the lid.']],
+ build(r) { r.add(ground()); const body = box(1.7, 1.8, 1.2, 0x8fb3d9, { transparent: true, opacity: .22, depthWrite: false }); body.position.set(0, 1.05, 0); r.add(body); const base = box(1.7, .06, 1.2, DARK); base.position.set(0, .12, 0); r.add(base);
+  this.lev = new THREE.Group(); r.add(this.lev); this.bar = box(1.9, .06, .16, STEEL); this.pad = box(.34, .05, .4, 0x3b4450); this.lev.add(this.bar, this.pad);
+  this.piv = cyl(.07, .5, DARK); this.piv.rotation.x = Math.PI / 2; r.add(this.piv); this.rod = cyl(.03, 1, RED, 12); r.add(this.rod);
+  this.lid = new THREE.Group(); this.lid.position.set(.85, 1.97, 0); const top = box(1.76, .07, 1.26, 0x5b6470); top.position.set(-.86, .03, 0); this.lid.add(top); r.add(this.lid); const hinge = cyl(.05, 1.26, DARK); hinge.rotation.x = Math.PI / 2; hinge.position.set(.85, 1.97, 0); r.add(hinge);
+  this.af = arrow(BLUE); r.add(this.af);
+  sliders([['p', 'Pivot', -.9, -.2, -.75], ['push', 'Press the pedal', 0, 1, 0]]); },
+ update() { const { p, push } = V, a1 = p + 1.25, a2 = .65 - p, y0 = .2, al = Math.asin(Math.min(.9, push * .2 / a1)); let rise = a2 * Math.sin(al); const capped = rise > .82; rise = Math.min(.82, rise); const al2 = Math.asin(rise / a2), phi = Math.atan(rise / .15);
+  this.lev.position.set(p, y0, 0); this.lev.rotation.z = al2; this.bar.position.set(-.3 - p, 0, 0); this.pad.position.set(-1.25 - p, .05, 0); this.piv.position.set(p, y0, 0);
+  const rear = [p + a2 * Math.cos(al2), y0 + a2 * Math.sin(al2), 0]; this.lid.rotation.z = -phi; between(this.rod, rear, [.7, 1.97 + .15 * Math.tan(phi) * Math.cos(phi) * Math.cos(phi), 0]);
+  const fx = p - a1 * Math.cos(al2), fy = y0 - a1 * Math.sin(al2); this.af.set(fx, fy + .12, 0, .3 + .5 * a2 / a1 * .5, true);
+  $('#big').textContent = 'Pedal down, lid up'; const down = a1 * Math.sin(al2) * 25, up = rise * 25;
+  readout([[down.toFixed(1) + ' cm', 'pedal goes down'], [up.toFixed(1) + ' cm', 'rod goes up'], [Math.round(phi * 180 / Math.PI) + '°', 'lid opens'], ['× ' + (a2 / a1).toFixed(1), 'movement multiplied (force divided)']]);
+  $('#say').textContent = capped ? 'The lid is fully open, so the pedal cannot go any further.' : a2 / a1 > 1.5 ? 'A short pedal arm and a long arm behind the pivot: a small press gives a big movement, but your foot has to push harder.' : 'With the pivot further back the pedal is easier to press, but the lid does not open as far.'; } };
+
+const STATIONS = [lever, bin];
+$('#tabs').innerHTML = STATIONS.map((s, i) => `<button type="button" data-i="${i}">${s.name}</button>`).join(''); $('#tabs').onclick = (e) => { const b = e.target.closest('button'); if (b) open(+b.dataset.i); };
+size(); open(0); window.__lab = { open, V: () => V, set: (k, v) => { const el = $('#s-' + k); el.value = v; el.oninput({ target: el }); } };
+</script></body></html>

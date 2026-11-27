@@ -29,7 +29,7 @@ A notes figure can also be shown moving. `diagrams/01-motion-kit.js` holds the f
 So far:
 
 - Still, animation and 3D: injection moulding, FDM printer.
-- Animation: extrusion, blow moulding, vacuum forming, rotational moulding, compression moulding, press forming, die casting, sand casting, offset lithography, flexography, gravure, screen printing, SLA, laser cutter, and the tensile, Izod impact and hardness tests.
+- Animation: extrusion, blow moulding, vacuum forming, rotational moulding, compression moulding, press forming, die casting, sand casting, investment casting, milling, MIG welding, offset lithography, flexography, gravure, screen printing, SLA, laser cutter, CNC router, and the tensile, Izod impact and hardness tests.
 - 3D: centre lathe, wood joints (eight joints that pull apart).
 - GCSE mechanisms (`60-mechanisms.js`): types of movement, linkages, cams and gear trains.
-- Not yet: investment casting, milling, MIG welding, CNC router.
+- `90-stills.js` redraws the still of every animated diagram as one frame of its animation, with its labels, so the figure, the label activity, the stage-ordering activity and the model sketch all match the animation.

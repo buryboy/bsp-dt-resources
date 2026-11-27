@@ -1,7 +1,7 @@
 /* Animations for extrusion, blow moulding, vacuum forming and pressure die casting. See 01-motion-kit.js for the format. */
 (() => {
  const K = Object.assign({ melt: '#ec7a3c', trans: '#f8cf8f', cast: '#b9c2cc' }, D.K), { sm, mix } = FIGX;
- const num = (u, x, y, n) => `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+ const num = (u, x, y, n) => FIGX.still ? '' : `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
  const lerpP = (A, B, e) => A.map((p, i) => [p[0] + (B[i][0] - p[0]) * e, p[1] + (B[i][1] - p[1]) * e]);
 
  /* ---- extrusion: runs all the time ---- */

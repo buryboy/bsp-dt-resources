@@ -3,7 +3,7 @@
  const u = U2(22, 230, 196), { X, Y, R, PG, C, AR, T } = u, K = D.K, W = 460, H = 350, INK = '#2b4fa8', P = Math.PI;
  const arc = (cx, cy, r, a0, a1, col, w) => { const q = (a) => [X(cx + r * Math.cos(a)), Y(cy + r * Math.sin(a))], s = q(a0), e = q(a1); return `<path d="M${s[0]} ${s[1]}A${r * 22} ${r * 22} 0 ${Math.abs(a1 - a0) > P ? 1 : 0} ${a1 > a0 ? 0 : 1} ${e[0]} ${e[1]}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="butt"/>`; };
  const spoke = (cx, cy, r, a) => `<line x1="${X(cx)}" y1="${Y(cy)}" x2="${X(cx + r * Math.cos(a))}" y2="${Y(cy + r * Math.sin(a))}" stroke="${K.ink}" stroke-width="1.6" opacity=".6"/>`;
- const num = (x, y, n) => `<circle cx="${X(x)}" cy="${Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${X(x)}" y="${Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+ const num = (x, y, n) => FIGX.still ? '' : `<circle cx="${X(x)}" cy="${Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${X(x)}" y="${Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
  const draw = (t, id) => { const o = [], th = 2 * P * t, half = .87;
   o.push(`<defs><clipPath id="olp${id}"><rect x="${X(0)}" y="0" width="${W}" height="${H}"/></clipPath></defs>`);
   // ink duct and water trough, with their roller trains

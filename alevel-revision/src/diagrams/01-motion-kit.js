@@ -18,7 +18,7 @@ const U2 = (S, ox, oy) => {
   const SH = (x0, x1, y0, y1) => `<rect x="${X(x0)}" y="${Y(y1)}" width="${f1((x1 - x0) * S)}" height="${f1((y1 - y0) * S)}" fill="#fff" opacity=".45"/>`;
   const AR = (x1, y1, x2, y2, c) => D.a(X(x1), Y(y1), X(x2), Y(y2), c || 'ink2', 3.5);
   const ROT = (x, y, r, a0, a1, c) => D.rot(X(x), Y(y), r * S, a0, a1, c);
-  const T = (x, y, s, size, anchor, c) => D.t(X(x), Y(y), s, size || 13, anchor, c);
+  const T = (x, y, s, size, anchor, c) => FIGX.still === true ? '' : D.t(X(x), Y(y), s, size || 13, anchor, c);
   const both = (pf) => pf.concat(pf.slice().reverse().map((p) => [p[0], -p[1]]));
   const hatchDef = (id) => `<pattern id="${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="${ink}" stroke-width="1" opacity=".38"/></pattern>`;
   return { X, Y, S, R, PG, PL, C, SH, AR, ROT, T, both, sk, hatchDef, col };
@@ -169,5 +169,5 @@ const FIGX = (() => {
     const pane = fx.querySelector(`.fpane[data-fp="${want}"]`); if (pane.dataset.ready || want === 'still') return; pane.dataset.ready = 1;
     if (want === 'anim') openAnim(pane, id); else openModel(pane, id);
   });
-  return { has, wrap, sm, mix };
+  return { has, wrap, sm, mix, still: false };   // still: set while a still picture is being drawn from an animation, so watch-point numbers (and, when true, captions) are left out
 })();

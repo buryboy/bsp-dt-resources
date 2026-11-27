@@ -3,7 +3,7 @@
  const K = D.K, P = Math.PI, INK = '#2b4fa8', { sm } = FIGX;
  const kit = (u) => ({ arc: (cx, cy, r, a0, a1, col, w, dash) => { const q = (a) => [u.X(cx + r * Math.cos(a)), u.Y(cy + r * Math.sin(a))], s = q(a0), e = q(a1); return `<path d="M${s[0]} ${s[1]}A${r * u.S} ${r * u.S} 0 ${Math.abs(a1 - a0) > P ? 1 : 0} ${a1 > a0 ? 0 : 1} ${e[0]} ${e[1]}" fill="none" stroke="${col}" stroke-width="${w}"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`; },
   spoke: (cx, cy, r, a) => `<line x1="${u.X(cx)}" y1="${u.Y(cy)}" x2="${u.X(cx + r * Math.cos(a))}" y2="${u.Y(cy + r * Math.sin(a))}" stroke="${K.ink}" stroke-width="1.6" opacity=".6"/>`,
-  num: (x, y, n) => `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>` });
+  num: (x, y, n) => FIGX.still ? '' : `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>` });
 
  /* ---- flexography ---- */
  { const u = U2(22, 240, 190), { X, Y, R, PG, C, AR, T } = u, { arc, spoke, num } = kit(u), W = 480, H = 330;

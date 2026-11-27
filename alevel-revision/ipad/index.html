@@ -675,7 +675,7 @@ const U2 = (S, ox, oy) => {
   const SH = (x0, x1, y0, y1) => `<rect x="${X(x0)}" y="${Y(y1)}" width="${f1((x1 - x0) * S)}" height="${f1((y1 - y0) * S)}" fill="#fff" opacity=".45"/>`;
   const AR = (x1, y1, x2, y2, c) => D.a(X(x1), Y(y1), X(x2), Y(y2), c || 'ink2', 3.5);
   const ROT = (x, y, r, a0, a1, c) => D.rot(X(x), Y(y), r * S, a0, a1, c);
-  const T = (x, y, s, size, anchor, c) => D.t(X(x), Y(y), s, size || 13, anchor, c);
+  const T = (x, y, s, size, anchor, c) => FIGX.still === true ? '' : D.t(X(x), Y(y), s, size || 13, anchor, c);
   const both = (pf) => pf.concat(pf.slice().reverse().map((p) => [p[0], -p[1]]));
   const hatchDef = (id) => `<pattern id="${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="${ink}" stroke-width="1" opacity=".38"/></pattern>`;
   return { X, Y, S, R, PG, PL, C, SH, AR, ROT, T, both, sk, hatchDef, col };
@@ -826,7 +826,7 @@ const FIGX = (() => {
     const pane = fx.querySelector(`.fpane[data-fp="${want}"]`); if (pane.dataset.ready || want === 'still') return; pane.dataset.ready = 1;
     if (want === 'anim') openAnim(pane, id); else openModel(pane, id);
   });
-  return { has, wrap, sm, mix };
+  return { has, wrap, sm, mix, still: false };   // still: set while a still picture is being drawn from an animation, so watch-point numbers (and, when true, captions) are left out
 })();
 
 /* Polymer moulding and forming */
@@ -1043,7 +1043,7 @@ DIAGRAMS['rotational-moulding'] = { t: 'Rotational moulding', w: 320, h: 266, st
 /* Animations for extrusion, blow moulding, vacuum forming and pressure die casting. See 01-motion-kit.js for the format. */
 (() => {
  const K = Object.assign({ melt: '#ec7a3c', trans: '#f8cf8f', cast: '#b9c2cc' }, D.K), { sm, mix } = FIGX;
- const num = (u, x, y, n) => `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+ const num = (u, x, y, n) => FIGX.still ? '' : `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
  const lerpP = (A, B, e) => A.map((p, i) => [p[0] + (B[i][0] - p[0]) * e, p[1] + (B[i][1] - p[1]) * e]);
 
  /* ---- extrusion: runs all the time ---- */
@@ -1349,6 +1349,73 @@ DIAGRAMS['powder-coating'] = { t: 'Powder coating', w: 680, h: 340,
  parts: [[120, 70, 'Overhead conveyor', 160, 40], [120, 170, 'Metal part, cleaned and earthed', 204, 170], [394, 280, 'Polymer powder with an electrostatic charge', 394, 210], [600, 110, 'Spray gun', 520, 150], [120, 290, 'Next: an oven melts and cures the powder', 270, 240]] };
 })();
 
+/* Investment casting, milling, MIG welding and the CNC router in motion. See 01-motion-kit.js for the format. */
+(() => {
+ const K = Object.assign({ cast: '#b9c2cc' }, D.K), P = Math.PI, { sm, mix } = FIGX, G = '#9cc4a8';
+ const num = (u, x, y, n) => FIGX.still ? '' : `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+
+ /* ---- investment (lost wax) casting ---- */
+ { const u = U2(22, 230, 172), { X, Y, R, PG, AR, T } = u, W = 460, H = 310;
+  const ST = [[0, .2, 'Make the wax tree', 'Wax patterns, each an exact copy of the part, are injection moulded and joined to a central wax runner to make a tree.'],
+   [.2, .45, 'Build the shell', 'The tree is dipped again and again in ceramic slurry and coated with fine sand. This builds up a hard, heat-proof shell round the wax.'],
+   [.45, .65, 'Melt out the wax', 'The shell is turned upside down and heated. The wax melts and runs out, which is why it is called lost wax casting. A hollow, one-piece mould is left.'],
+   [.65, 1, 'Pour and break out', 'Molten metal is poured into the hot shell. When it has set, the shell is broken away and the castings are cut off the runner. They are very accurate, with a fine surface finish.', .8]];
+  const shapes = [[[-1, 3.2], [1, 3.2], [.3, 2.4], [-.3, 2.4]], [[-.3, 2.4], [.3, 2.4], [.3, -2.2], [-.3, -2.2]]];
+  [1.4, -.1, -1.6].forEach((y) => [1, -1].forEach((m) => shapes.push([[.3 * m, y + .13], [1.1 * m, y + .13], [1.1 * m, y - .13], [.3 * m, y - .13]], [[1.1 * m, y + .5], [2.3 * m, y + .5], [2.3 * m, y - .5], [1.1 * m, y - .5]])));
+  const tree = (attr) => shapes.map((s) => `<polygon points="${s.map((p) => X(p[0]) + ',' + Y(p[1])).join(' ')}" ${attr}/>`).join('');
+  const draw = (t, id) => { const o = [], shell = sm(.22, .44, t), dip = t >= .2 && t < .45 ? -Math.abs(Math.sin((t - .2) / .25 * 2 * P)) * 4.6 : 0, inv = sm(.45, .49, t) - sm(.62, .66, t), melt = sm(.5, .62, t), fill = sm(.69, .82, t), cool = sm(.83, .9, t), gone = sm(.9, .98, t), pour = sm(.66, .69, t) - sm(.81, .84, t);
+   const inside = t < .5 ? K.yellow : fill > 0 ? mix(K.hot, K.cast, cool) : '#fff';
+   o.push(`<defs><clipPath id="icf${id}"><rect x="0" y="${Y(-2.4 + fill * 5.8)}" width="${W}" height="${H}"/></clipPath><clipPath id="icw${id}"><rect x="0" y="0" width="${W}" height="${Y(3.3 - (1 - melt) * 5.6)}"/></clipPath></defs>`);
+   if (t >= .45 && t < .65) o.push(R(-7.4, 7.4, -5, 6.6, '#fbd9d2', 10, 1.5), [-6.2, 6.2].map((x) => [-2.4, 1, 4.2].map((y) => R(x - .3, x + .3, y - 1, y + 1, 'hot', 4)).join('')).join(''));
+   o.push(`<g transform="translate(0 ${(-(1.2 + dip) * 22).toFixed(1)}) rotate(${(inv * 180).toFixed(1)} ${X(0)} ${Y(.5)})">`);
+   if (shell > 0) o.push(`<g opacity="${(1 - gone).toFixed(2)}">` + tree(`fill="none" stroke="${K.ink}" stroke-width="${(shell * 16 + 3).toFixed(1)}" stroke-linejoin="round"`) + tree(`fill="none" stroke="${K.sand}" stroke-width="${(shell * 16).toFixed(1)}" stroke-linejoin="round"`) + '</g>');
+   if (t < .5) o.push(tree(`fill="${K.yellow}" stroke="${K.ink}" stroke-width="1.6" stroke-linejoin="round"`));
+   else { o.push(tree(`fill="#fff" stroke="${K.ink}" stroke-width="1.2" stroke-linejoin="round"`)); if (melt < 1) o.push(`<g clip-path="url(#icw${id})">` + tree(`fill="${K.yellow}" stroke="none"`) + '</g>'); if (fill > 0) o.push(`<g clip-path="url(#icf${id})">` + tree(`fill="${inside}" stroke="${K.ink}" stroke-width="${gone > .2 ? 1.8 : 1}" stroke-linejoin="round"`) + '</g>'); }
+   o.push('</g>');
+   if (t >= .2 && t < .45) o.push(R(-4.4, 4.4, -6, -1.6, K.sand, 4).replace('<rect', '<rect opacity=".93"'), T(0, -4.2, 'ceramic slurry', 12));
+   if (t >= .5 && t < .64) [0, 1, 2].forEach((k) => { const yy = -2.2 - (((t * 9) + k / 3) % 1) * 2.4; o.push(`<ellipse cx="${X((k - 1) * .35)}" cy="${Y(yy)}" rx="3.2" ry="5" fill="${K.yellow}" stroke="${K.ink}" stroke-width="1"/>`); });
+   if (pour > .01) { o.push(`<g transform="rotate(${(40 * pour).toFixed(1)} ${X(-2.4)} ${Y(6.4)})">` + PG([[-4.6, 7.2], [-2.3, 7.2], [-2.6, 5.6], [-4.3, 5.6]], 'dark') + PG([[-4.4, 6.9], [-2.5, 6.9], [-2.7, 5.8], [-4.2, 5.8]], K.hot, 1.2) + '</g>'); if (pour > .9) o.push(R(-.5, -.2, 4.2, 5.8, K.hot, 0, 0).replace(/stroke="[^"]*"/, 'stroke="none"')); }
+   if (t < .2) o.push(T(4.6, 2.6, 'wax pattern', 12), T(4.4, 5, 'wax runner', 12)); if (t >= .45 && t < .65) o.push(T(0, 5.9, 'furnace', 12)); if (gone > .9) o.push(T(0, -3.6, 'castings on the runner', 12));
+   return o.join(''); };
+  ANIMS['investment-casting'] = { stages: ST, draw, w: W, h: H, start: .3 }; }
+
+ /* ---- vertical milling machine ---- */
+ { const u = U2(22, 200, 170), { X, Y, R, PG, C, AR, T } = u, W = 440, H = 320;
+  const draw = (t) => { const o = [], cutting = t < .8, s = cutting ? -2.9 + 5.8 * t / .8 : 2.9 - 5.8 * sm(.8, 1, t), a = Math.max(-.4, -2.2 + s), top = (x0, x1, y) => (x1 > x0 ? R(x0, x1, -.4, y, '#7fa3c9') : '');
+   o.push(R(-4, 7.5, -6.4, -5.6, 'dark', 3), R(4.6, 7, -5.6, 6.4, G), R(-1.6, 7, 3.8, 6.4, G, 4), R(-.7, .7, 2.4, 3.8, 'steel'), R(-2.6, 4.6, -5, -3.6, G), R(-3.4, 3.4, -3.6, -2.8, 'steel'));
+   o.push(R(-5 + s, 5 + s, -2.8, -2.1, 'dark', 2), R(-2.7 + s, 2.7 + s, -2.1, -.4, 'steel'));
+   if (cutting) o.push(top(-2.2 + s, Math.min(-.4, 2.2 + s), .9), top(a, 2.2 + s, .6)); else o.push(top(-2.2 + s, 2.2 + s, .6));
+   o.push(R(-.4, .4, .6, 2.4, 'pale', 2)); for (let k = 0; k < 4; k++) { const y = .7 + ((k * .45 + t * 14) % 1.7); o.push(`<line x1="${X(-.4)}" y1="${Y(y)}" x2="${X(.4)}" y2="${Y(Math.min(2.4, y + .3))}" stroke="${K.ink}" stroke-width="1.4"/>`); }
+   if (cutting && 2.2 + s > -.4 && -2.2 + s < .4) [0, 1, 2].forEach((k) => { const q = ((t * 30) + k / 3) % 1; o.push(C(-.5 - q * 1.2, .9 + Math.sin(q * P) * .9, .08, K.ink, 0)); });
+   o.push(u.ROT(0, 3.1, 1.3, 200, 340), AR(-7.5, 2.2, -5.5, 2.2), num(u, 2.8, 7, 1), num(u, -4.2, .4 + 0, 2), num(u, -7.6, -2.4, 3), num(u, 2, 1.5, 4));
+   return o.join(''); };
+  ANIMS['milling'] = { loop: true, dur: 9000, w: W, h: H, draw, watch: ['The motor in the head turns the spindle and the multi-tooth cutter.', 'The work is clamped firmly in a machine vice bolted to the table.', 'The table feeds the work slowly past the cutter. Handwheels or CNC motors move it in X and Y; the depth of cut is set in Z.', 'Each tooth cuts away a small chip. Milling makes flat faces, steps and slots, which is why it is a wasting process.'] }; }
+
+ /* ---- MIG welding ---- */
+ { const u = U2(22, 240, 150), { X, Y, R, PG, PL, C, AR, T } = u, W = 480, H = 300;
+  const draw = (t) => { const o = [], tx = -7 + 14 * t, fl = .28 + .1 * Math.sin(t * 400);
+   o.push(R(-10.4, 10.4, -2.6, -2, 'dark', 3), R(-9, 9, -2, -1.2, 'steel'), R(-10.4, -7.4, -6.2, -3.2, 'dark', 4), T(-8.9, -4.9, 'power', 11, 'middle', '#fff'), PL([[-7.4, -4.6], [8, -4.6], [8, -2]], 2.5), R(7.6, 8.4, -1.5, -.9, 'hot', 2));
+   o.push(C(-8.6, 4.8, 1.3, 'steel'), C(-8.6, 4.8, .4, 'dark'), `<path d="M${X(-7.5)} ${Y(5.4)}Q${X(tx - 3)} ${Y(7.4)} ${X(tx - 1.25)} ${Y(2.2)}" fill="none" stroke="${K.ink}" stroke-width="5" stroke-linecap="round"/>`);
+   for (let x = -7; x < tx - .1; x += .42) o.push(`<ellipse cx="${X(x)}" cy="${Y(-1.16)}" rx="7.5" ry="4.5" fill="${mix(K.hot, '#6b7480', Math.min(1, (tx - x) / 3))}" stroke="${K.ink}" stroke-width="1.1"/>`);
+   o.push(`<g transform="rotate(-20 ${X(tx)} ${Y(-1.15)})">`, PG([[tx - .5, .1], [tx + .5, .1], [tx + 1.3, -1.15], [tx - 1.3, -1.15]], K.cool, 0).replace('<polygon', '<polygon opacity=".5"'), R(tx - .28, tx + .28, 1.3, 3.7, 'dark', 4), PG([[tx - .45, 1.4], [tx + .45, 1.4], [tx + .32, .1], [tx - .32, .1]], 'hot'), PL([[tx, .1], [tx, -.85]], 2.5, '#8a5a1c'), '</g>');
+   o.push(`<polygon points="${Array.from({ length: 10 }, (_, i) => { const r = (i % 2 ? fl * .45 : fl) * 22, an = i * P / 5 + t * 60; return (X(tx) + r * Math.cos(an)).toFixed(1) + ',' + (Y(-1.12) + r * Math.sin(an)).toFixed(1); }).join(' ')}" fill="#ffd54a" stroke="${K.ink}" stroke-width="1"/>`);
+   o.push(AR(1.5, 5.8, 4.5, 5.8), num(u, -6.4, 6.6, 1), num(u, tx + 1.6, -.2, 2), num(u, tx - 2.4, .4, 3), num(u, Math.max(-6.6, tx - 3.4), -3.3, 4));
+   return o.join(''); };
+  ANIMS['mig-welding'] = { loop: true, dur: 9000, w: W, h: H, draw, watch: ['The wire electrode is fed continuously from the reel through the torch. It is consumable: it melts to become the filler metal.', 'An electric arc between the tip of the wire and the work melts the wire and the edges of the parent metal into a weld pool.', 'Shielding gas, argon or an argon and CO₂ mix, flows from the nozzle to keep the air away from the hot metal so it does not oxidise.', 'Behind the torch the pool cools and sets as a weld bead that is fused to both pieces.'] }; }
+
+ /* ---- CNC router ---- */
+ { const u = U2(22, 240, 196), { X, Y, R, PG, C, AR, T } = u, W = 480, H = 330;
+  const draw = (t) => { const o = [], cx = t < .15 ? -6 + 3 * sm(0, .15, t) : t < .3 ? -3 : t < .75 ? -3 + 6 * (t - .3) / .45 : t < .88 ? 3 : 3 - 9 * sm(.88, 1, t), zb = -.6 - 1.3 * (sm(.15, .3, t) - sm(.75, .88, t)), cutTo = t < .3 ? null : Math.min(3, -3 + 6 * (t - .3) / .45);
+   o.push(R(-9.4, 9.4, -3, -2.2, 'dark', 3), R(-8.8, -7.8, -5.6, -3, 'steel'), R(7.8, 8.8, -5.6, -3, 'steel'), R(-6.5, 6.5, -2.2, -1.4, 'wood'), R(-6.9, -6.1, -1.4, -1.1, 'dark', 2), R(6.1, 6.9, -1.4, -1.1, 'dark', 2));
+   if (cutTo != null) o.push(R(-3.2, cutTo + .2, -1.9, -1.4, '#fff', 0, 1.3));
+   o.push(R(-8.6, -7.6, -2.2, 5.2, G), R(7.6, 8.6, -2.2, 5.2, G), R(-8.6, 8.6, 5.2, 6.4, 'steel', 3), R(cx - 1.3, cx + 1.3, 4.6, 7.1, 'dark', 3), R(cx - .7, cx + .7, zb + 1, zb + 3.8, 'steel', 4), R(cx - .16, cx + .16, zb, zb + 1, 'pale', 0, 1.4));
+   if (zb < -1.5 && t >= .3 && t < .75) [0, 1, 2].forEach((k) => { const q = ((t * 30) + k / 3) % 1; o.push(C(cx - .3 - q, -1.3 + Math.sin(q * P) * .7, .07, K.ink, 0)); });
+   o.push(AR(-6.2, 1.4, -4.4, 1.4), AR(-6.2, 1.4, -6.2, 3.2), AR(-6.2, 1.4, -5.2, 2.2), T(-4, 1.25, 'X', 12, 'middle', 'ink2'), T(-6.2, 3.5, 'Z', 12, 'middle', 'ink2'), T(-4.8, 2.4, 'Y', 12, 'middle', 'ink2'));
+   o.push(num(u, 5.4, 7.6, 1), num(u, cx + 2.2, 6.2, 2), num(u, cx + 1.6, zb + 2.6, 3), num(u, cx + 1.2, zb + .2, 4));
+   return o.join(''); };
+  ANIMS['cnc-router'] = { loop: true, dur: 10000, w: W, h: H, draw, watch: ['The gantry spans the bed and moves along it from front to back. That is the Y axis.', 'The spindle carriage moves left and right along the gantry. That is the X axis.', 'The spindle moves down and up to set the depth of cut. That is the Z axis.', 'The spinning cutter removes material along the toolpath. CAM software turns the CAD drawing into the G-code that drives the three motors.'] }; }
+})();
+
 /* Printing processes */
 (() => { const { r, c, e, p, l, a, rot, t, hatch, dots } = D;
 const web = (y, x1, x2) => l(x1, y, x2, y, 5).replace('stroke="#1f2328"', 'stroke="#98a2b0"');
@@ -1399,7 +1466,7 @@ DIAGRAMS['screen-printing'] = { t: 'Screen printing', w: 680, h: 340,
  const u = U2(22, 230, 196), { X, Y, R, PG, C, AR, T } = u, K = D.K, W = 460, H = 350, INK = '#2b4fa8', P = Math.PI;
  const arc = (cx, cy, r, a0, a1, col, w) => { const q = (a) => [X(cx + r * Math.cos(a)), Y(cy + r * Math.sin(a))], s = q(a0), e = q(a1); return `<path d="M${s[0]} ${s[1]}A${r * 22} ${r * 22} 0 ${Math.abs(a1 - a0) > P ? 1 : 0} ${a1 > a0 ? 0 : 1} ${e[0]} ${e[1]}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="butt"/>`; };
  const spoke = (cx, cy, r, a) => `<line x1="${X(cx)}" y1="${Y(cy)}" x2="${X(cx + r * Math.cos(a))}" y2="${Y(cy + r * Math.sin(a))}" stroke="${K.ink}" stroke-width="1.6" opacity=".6"/>`;
- const num = (x, y, n) => `<circle cx="${X(x)}" cy="${Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${X(x)}" y="${Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+ const num = (x, y, n) => FIGX.still ? '' : `<circle cx="${X(x)}" cy="${Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${X(x)}" y="${Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
  const draw = (t, id) => { const o = [], th = 2 * P * t, half = .87;
   o.push(`<defs><clipPath id="olp${id}"><rect x="${X(0)}" y="0" width="${W}" height="${H}"/></clipPath></defs>`);
   // ink duct and water trough, with their roller trains
@@ -1424,7 +1491,7 @@ DIAGRAMS['screen-printing'] = { t: 'Screen printing', w: 680, h: 340,
  const K = D.K, P = Math.PI, INK = '#2b4fa8', { sm } = FIGX;
  const kit = (u) => ({ arc: (cx, cy, r, a0, a1, col, w, dash) => { const q = (a) => [u.X(cx + r * Math.cos(a)), u.Y(cy + r * Math.sin(a))], s = q(a0), e = q(a1); return `<path d="M${s[0]} ${s[1]}A${r * u.S} ${r * u.S} 0 ${Math.abs(a1 - a0) > P ? 1 : 0} ${a1 > a0 ? 0 : 1} ${e[0]} ${e[1]}" fill="none" stroke="${col}" stroke-width="${w}"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`; },
   spoke: (cx, cy, r, a) => `<line x1="${u.X(cx)}" y1="${u.Y(cy)}" x2="${u.X(cx + r * Math.cos(a))}" y2="${u.Y(cy + r * Math.sin(a))}" stroke="${K.ink}" stroke-width="1.6" opacity=".6"/>`,
-  num: (x, y, n) => `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>` });
+  num: (x, y, n) => FIGX.still ? '' : `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>` });
 
  /* ---- flexography ---- */
  { const u = U2(22, 240, 190), { X, Y, R, PG, C, AR, T } = u, { arc, spoke, num } = kit(u), W = 480, H = 330;
@@ -1556,7 +1623,7 @@ DIAGRAMS['composite-layup'] = { t: 'Laying up a fibre-reinforced composite (GRP 
 /* Materials tests (tensile, Izod impact, hardness) and digital manufacture (FDM, SLA, laser cutter) in motion, plus a 3D model of an FDM printer. */
 (() => {
  const K = D.K, P = Math.PI, { sm, mix } = FIGX;
- const num = (u, x, y, n) => `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+ const num = (u, x, y, n) => FIGX.still ? '' : `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
 
  /* ---- tensile test, with the force–extension graph drawn as it goes ---- */
  { const u = U2(22, 130, 160), { X, Y, R, PG, PL, C, AR, T } = u, W = 600, H = 320;
@@ -1894,6 +1961,39 @@ DIAGRAMS['go-no-go'] = { t: 'Go / no-go gauge', w: 640, h: 300,
    return o.join(''); };
   DIAGRAMS['gear-train'] = { t: 'Gear trains', w: W, h: H, svg: draw(.03) };
   ANIMS['gear-train'] = { loop: true, dur: 9000, draw, watch: ['Gears that mesh turn in opposite directions. Watch the dot on each gear.', 'Gear ratio = teeth on the driven gear ÷ teeth on the driver gear = 24 ÷ 12 = 2, written 2:1. The driven gear turns at half the speed of the driver, but with more turning force.', 'An idler gear sits between the driver and the driven gear so they both turn the same way. It does not change the gear ratio: here 12 ÷ 12 = 1:1.'] }; }
+})();
+
+/* Stills that match the animations: each still is one frame of the animation, with the same label names as before,
+   so the notes figure, the label-the-diagram activity, the stage-ordering activity and the model sketch all use the new drawing.
+   Positions are in each drawing's own units: [marker x, y, 'Label', target x, y]. */
+(() => {
+ const mk = (S, ox, oy) => (m) => [+(ox + m[0] * S).toFixed(1), +(oy - m[1] * S).toFixed(1), m[2], +(ox + m[3] * S).toFixed(1), +(oy - m[4] * S).toFixed(1)];
+ const frame = (id, t, text) => { FIGX.still = text ? 1 : true; const s = ANIMS[id].draw(t, 's' + Math.round(t * 100)); FIGX.still = false; return s; };
+ // id: [scale, origin x, origin y, time of the frame, labels]
+ const ONE = {
+  'die-casting': [20, 300, 150, .2, [[-12.2, 3.2, 'Hydraulic ram', -12.2, 1.2], [-9, -3, 'Plunger (piston)', -7.3, -.5], [-3, -3.2, 'Shot chamber (sleeve)', -3, -1.15], [-1.6, 5.9, 'Ladle of molten metal', -3.9, 3.9], [-8.2, 3.4, 'Pouring hole', -5, 1.3], [1, 5.6, 'Fixed die half', 1, 2.6], [3.6, 5.6, 'Moving die half', 3.6, 2.6], [1.7, -3.9, 'Die cavity', 1.7, -1.5], [6.6, -3.4, 'Ejector pins', 6, -1.5], [12.9, 3.4, 'Clamping force', 12.9, 1.4]]],
+  'compression-moulding': [22, 220, 150, .16, [[-8, 4.6, 'Upper mould half (heated)', -3.6, 4.6], [-8, -3, 'Lower mould half (heated)', -3.9, -3], [8, -1.6, 'Heaters', 3.6, -1.6], [-8, .6, 'Charge (slug) of thermosetting polymer', -.6, -1.9], [8, .6, 'Mould cavity', 1.6, -1.2], [8, -3.8, 'Ejector pin', .2, -3.8], [8, 5.4, 'Pressure applied', .9, 5.6]]],
+  'press-forming': [22, 220, 130, .46, [[-3.6, 4.9, 'Force from the press', -1.2, 4.9], [3.6, 3.4, 'Punch', 1.3, 2.6], [8, 2.2, 'Blank holder (pressure pad)', 4.6, .8], [-8.6, 2.6, 'Sheet metal blank being drawn into the die', -2.08, .1], [8.4, -2, 'Die', 4.6, -2], [-8.4, -3.4, 'Die cavity', -1, -2.2]]],
+  'sand-casting': [22, 280, 150, .3, [[-11, 1.8, 'Cope (top moulding box)', -8.2, 1.8], [-11, -1.8, 'Drag (bottom moulding box)', -8.2, -1.8], [7.4, 5.2, 'Riser (shows the mould is full and feeds shrinkage)', 4.6, 2.8], [-2.6, 5.6, 'Pouring basin and sprue', -5.1, 3], [-4.2, -5.4, 'Runner and gate', -4.2, -.75], [0, -5.4, 'Mould cavity, left by the pattern', 0, .4], [11, -2.6, 'Green sand, rammed round the pattern', 6.6, -2.2], [11, .6, 'Parting line', 7, 0], [-11.4, 4.2, 'Crucible of molten metal', -9, 5.2]]],
+  'offset-litho': [22, 230, 196, .2, [[6.4, 3.6, 'Plate cylinder (carries the image)', 1.6, 3.6], [6.4, .4, 'Rubber blanket cylinder (image is offset onto it)', 1.7, .2], [6.4, -4.6, 'Impression cylinder (presses the paper on)', 1.7, -4.4], [7.6, 6.2, 'Ink rollers (oil-based ink sticks to the image area)', 2.7, 6.7], [-7.6, 6.2, 'Damping rollers (water keeps ink off the non-image area)', -2.7, 6.7], [-7, -3.8, 'Paper or board', -5, -2.05], [-6.8, 8.2, 'Water (fount solution)', -4.4, 7.5]]],
+  'flexography': [22, 240, 190, .2, [[-8.6, -4.4, 'Ink trough', -5.8, -4.4], [-8.6, -2, 'Fountain roller (picks up ink)', -5, -3], [-.8, -4.4, 'Anilox roller (tiny cells meter the ink)', -2.3, -2.6], [-7.8, .6, 'Doctor blade (scrapes off extra ink)', -5, .15], [5.8, -1.6, 'Plate cylinder with a flexible raised (relief) plate', 2, -1], [5.8, 4.6, 'Impression cylinder', 2, 4], [-7, 3.6, 'Substrate: film, foil, card or paper from a reel', -6, 1.5]]],
+  'gravure': [22, 240, 178, .2, [[5.6, 4.4, 'Impression roller (rubber covered)', 1.8, 3.6], [6.8, -.6, 'Gravure cylinder: the image is engraved as tiny cells', 2, -.6], [6.8, -3.8, 'Ink bath (thin, fast-drying ink)', 3, -3.8], [-6.6, -1.2, 'Doctor blade wipes the surface, leaving ink only in the cells', -3.6, .5], [-7, 3.4, 'Substrate (web)', -6.4, 1.2]]],
+  'screen-printing': [22, 280, 120, .4, [[-10.6, 2.4, 'Frame', -7.5, .6], [-2.8, 4.2, 'Squeegee', .9, 1.8], [3.4, 4.5, 'Ink', 1.3, -.1], [6.2, 3.2, 'Fine mesh screen', 2.6, -.3], [10.8, 2.4, 'Stencil blocks the mesh where no ink is wanted', 5, .15], [-10.8, -.4, 'Ink forced through the open mesh', -1.6, -.66], [10.8, -.9, 'Substrate: paper, card, fabric, polymer', 4.4, -1], [8.4, 4.6, 'Direction of pull', 4.4, 3.6]]],
+  'tensile-test': [22, 130, 160, .5, [[-5, 5.7, 'Moving crosshead pulls the specimen', -2.2, 4.7], [-5, -3.2, 'Grips (jaws)', -1, -4], [4.6, .6, 'Test piece of standard size', .3, .6]], 1],
+  'impact-test': [22, 250, 150, .2, [[8.8, 2.6, 'Pendulum hammer released from a set height', 5.6, 4.6], [-3, 5.6, 'Pivot', -.2, 4.1], [-5, -1.6, 'Notched test piece held upright in a vice', -.3, -1.6]]],
+  'hardness-test': [22, 240, 110, .9, [], 1],
+  'fdm-printer': [22, 230, 232, .55, [[-8.6, 9.3, 'Reel of thermoplastic filament (PLA, ABS)', -5.7, 9.7], [3.8, 7.8, 'Print head moves in X and Y', .8, 6.4], [3.8, 4.4, 'Heated nozzle melts and extrudes the filament', .2, 4.9], [-8.8, 3.4, 'Part built up one layer at a time', -1.6, 2.4], [-8.8, .2, 'Heated build plate (bed)', -4, 1.45], [9, 5, 'Frame and guide rails', 6.7, 5]]],
+  'sla-printer': [22, 230, 210, .56, [[-7, 5.8, 'Ultraviolet laser', -7, 7.2], [3.6, 8.6, 'Moving mirror steers the beam', .7, 7.9], [-8.6, -1, 'Vat of liquid photopolymer resin', -5.4, -1], [-3.8, 5, 'The resin cures (hardens) where the laser touches the surface', .3, 3.05], [-8.6, 2, 'Part: cured layers', -1.4, 2], [8.6, 4.6, 'Platform lowers by one layer each time', 4.65, 4.6]]],
+  'laser-cutter': [22, 240, 190, .15, [[-9.9, 6.6, 'Laser tube produces the beam', -7.6, 5.2], [-.8, 7.4, 'Mirrors direct the beam to the head', -3.8, 4.9], [1.2, 4.6, 'Cutting head moves on X and Y rails', -2.9, 3.9], [.2, 1.8, 'Lens focuses the beam to a fine point', -3.3, 2.9], [-9.9, -.4, 'Material is burned or vaporised along the CAD path', -3.7, -1.4], [9.9, -1.6, 'Honeycomb bed supports the work', 6, -2], [9.9, -3.9, 'Extraction removes fumes', 7.8, -3.9]]],
+  'milling': [22, 200, 170, .4, [[-5, 5.4, 'Head (motor and gears)', -1, 5.2], [-4.2, 3.4, 'Spindle', -.6, 3.2], [-4.8, 1.4, 'Rotating multi-tooth cutter', -.4, 1.5], [-6.8, -.2, 'Workpiece', -1.8, .3], [-7.6, -1.4, 'Machine vice', -2.5, -1.4], [-7.6, -3.6, 'Table (moves the work past the cutter)', -4.4, -2.45], [9.4, 1, 'Column', 6.2, 1], [-8, 3.8, 'Feed direction', -6.5, 2.35]]],
+  'mig-welding': [22, 240, 150, .5, [[3.4, 3.4, 'Welding torch', -.8, 1.6], [3.8, .4, 'Consumable wire electrode', .15, -.6], [1.8, -3.8, 'Electric arc', 0, -1.15], [-3.8, 1.8, 'Shielding gas (argon / CO₂)', -.5, -.7], [-4.4, -3.8, 'Weld bead', -4, -1.2], [5.2, -3.4, 'Parent metal', 5.2, -1.7], [-5.6, 5.9, 'Wire feed reel', -7.6, 5.3], [-5.4, -5.6, 'Power source', -7.6, -5.4], [9.8, .6, 'Earth clamp', 8, -1.2], [6.4, 6.3, 'Direction of travel', 3.6, 5.85]]],
+  'cnc-router': [22, 240, 196, .55, [[-5, 7.8, 'Gantry carries the spindle across the bed', -5, 5.8], [3.6, 3.4, 'Spindle motor', .9, 1.4], [3.6, .2, 'Rotating cutter (router bit)', .4, -1.2], [5.2, .8, 'Sheet material held by clamps or a vacuum bed', 5, -1.8], [0, -4.4, 'Machine bed', 0, -2.6], [-3, 3.6, 'X: left and right. Y: front to back. Z: up and down', -5.3, 2]], 1] };
+ Object.keys(ONE).forEach((id) => { const [S, ox, oy, t, marks, text] = ONE[id], a = ANIMS[id], old = DIAGRAMS[id] || {}; if (!a) return;
+  DIAGRAMS[id] = { t: old.t, w: a.w, h: a.h, svg: frame(id, t, text), parts: marks.map(mk(S, ox, oy)) }; });
+ // processes shown as a strip of stages: one frame for each of the captions already written
+ const STRIP = { 'blow-moulding': [.14, .3, .46, .95], 'vacuum-forming': [.3, .46, .6, .97], 'rotational-moulding': [.08, .4, .68, .93], 'investment-casting': [.1, .36, .58, .8] };
+ Object.keys(STRIP).forEach((id) => { const a = ANIMS[id], old = DIAGRAMS[id]; if (!a || !old || !old.stages || old.stages.length !== STRIP[id].length) return;
+  DIAGRAMS[id] = { t: old.t, w: a.w, h: a.h, stages: STRIP[id].map((t, i) => [frame(id, t), old.stages[i][1]]) }; });
 })();
 
 /* Topic 1: Materials (Edexcel 9DT0 1.1–1.7) */

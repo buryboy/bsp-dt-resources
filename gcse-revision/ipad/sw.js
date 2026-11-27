@@ -1,5 +1,5 @@
 // Offline cache for the GCSE Design & Technology revision app (one self-contained page). Bump CACHE when index.html changes.
-const CACHE = 'ipad-gcse-revision-14bd04da247b';
+const CACHE = 'ipad-gcse-revision-f17cc1024985';
 const FILES = [
  "./",
  "app.webmanifest",

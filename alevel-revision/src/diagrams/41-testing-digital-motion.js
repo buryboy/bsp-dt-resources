@@ -1,7 +1,7 @@
 /* Materials tests (tensile, Izod impact, hardness) and digital manufacture (FDM, SLA, laser cutter) in motion, plus a 3D model of an FDM printer. */
 (() => {
  const K = D.K, P = Math.PI, { sm, mix } = FIGX;
- const num = (u, x, y, n) => `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
+ const num = (u, x, y, n) => FIGX.still ? '' : `<circle cx="${u.X(x)}" cy="${u.Y(y)}" r="11" fill="${K.ink2}" stroke="#fff" stroke-width="1.5"/><text x="${u.X(x)}" y="${u.Y(y) + 4.5}" font-family="Arial,sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#fff">${n}</text>`;
 
  /* ---- tensile test, with the force–extension graph drawn as it goes ---- */
  { const u = U2(22, 130, 160), { X, Y, R, PG, PL, C, AR, T } = u, W = 600, H = 320;
